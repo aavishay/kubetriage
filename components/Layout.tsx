@@ -1,19 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { LayoutDashboard, AlertCircle, Scale, Settings, Box, ChevronLeft, ChevronRight, Wifi, Sun, Moon, ChevronsUpDown, Check, Server, User, LogOut, Plus, X, Globe, Cloud, Share2, Key, MapPin, Building, Copy, CheckCircle2, Loader2, ArrowRight, Menu, Users, Bell, BookOpen, ExternalLink, Network, Database, Layers, Zap } from 'lucide-react';
-import { ViewState, Cluster } from '../types';
+import { LayoutDashboard, AlertCircle, Scale, Settings, Box, ChevronLeft, ChevronRight, Sun, Moon, ChevronsUpDown, Check, Server, LogOut, Plus, X, Globe, Cloud, Bell, BookOpen, Menu, Key, Zap } from 'lucide-react';
+import { NavLink, Outlet, useLocation } from 'react-router-dom';
+import { useMonitoring } from '../contexts/MonitoringContext';
+import { Cluster } from '../types';
 
 interface LayoutProps {
-  children: React.ReactNode;
-  currentView: ViewState;
-  onChangeView: (view: ViewState) => void;
-  isDarkMode: boolean;
-  toggleTheme: () => void;
-  currentCluster: Cluster;
-  allClusters: Cluster[];
-  onClusterChange: (cluster: Cluster) => void;
-  onAddCluster: (cluster: Cluster) => void;
-  onLogout?: () => void;
-  onChangeApiKey?: () => void;
+  children?: React.ReactNode;
 }
 
 const ProviderIcon = ({ provider, className }: { provider: Cluster['provider'], className?: string }) => {
@@ -25,26 +17,28 @@ const ProviderIcon = ({ provider, className }: { provider: Cluster['provider'], 
   }
 };
 
-export const Layout: React.FC<LayoutProps> = ({ 
-  children, 
-  currentView, 
-  onChangeView, 
-  isDarkMode, 
-  toggleTheme,
-  currentCluster,
-  allClusters,
-  onClusterChange,
-  onAddCluster,
-  onLogout,
-  onChangeApiKey
-}) => {
+export const Layout: React.FC<LayoutProps> = () => {
+  const {
+    isDarkMode,
+    toggleTheme,
+    selectedCluster,
+    clusters,
+    setSelectedCluster,
+    isAuthenticated,
+    logout,
+    selectApiKey,
+    users
+  } = useMonitoring();
+
+  const location = useLocation();
+
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [apiLatency, setApiLatency] = useState(24);
   const [apiStatus, setApiStatus] = useState<'Connected' | 'Degraded'>('Connected');
   const [isClusterMenuOpen, setIsClusterMenuOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
-  
+
   const clusterMenuRef = useRef<HTMLDivElement>(null);
   const userMenuRef = useRef<HTMLDivElement>(null);
 
@@ -65,13 +59,18 @@ export const Layout: React.FC<LayoutProps> = ({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  // Close mobile menu on route change
+  useEffect(() => {
+    setIsMobileMenuOpen(false);
+  }, [location.pathname]);
+
   const navItems = [
-    { id: 'dashboard', label: 'Overview', icon: LayoutDashboard },
-    { id: 'templates', label: 'Playbook Library', icon: BookOpen },
-    { id: 'triage', label: 'Incident Triage', icon: AlertCircle },
-    { id: 'rightsizing', label: 'Right Sizing', icon: Scale },
-    { id: 'topology', label: 'Architecture', icon: Share2 },
-    { id: 'notifications', label: 'Alerting', icon: Bell },
+    { path: '/', label: 'Overview', icon: LayoutDashboard },
+    { path: '/templates', label: 'Playbook Library', icon: BookOpen },
+    { path: '/triage', label: 'Incident Triage', icon: AlertCircle },
+    { path: '/rightsizing', label: 'Right Sizing', icon: Scale },
+    { path: '/topology', label: 'Architecture', icon: Cloud }, // Changed icon to match generic infrastructure
+    { path: '/notifications', label: 'Alerting', icon: Bell },
   ];
 
   const getStatusColor = (status: string) => {
@@ -82,17 +81,14 @@ export const Layout: React.FC<LayoutProps> = ({
     }
   };
 
-  const handleNavClick = (view: ViewState) => {
-    onChangeView(view);
-    setIsMobileMenuOpen(false);
-  };
+  const currentUser = users[0]; // Mock current user
 
   return (
     <div className="flex h-screen bg-zinc-50 dark:bg-[#09090b] text-zinc-900 dark:text-zinc-300 overflow-hidden flex-col md:flex-row">
-      
+
       {/* Mobile Sidebar Overlay */}
       {isMobileMenuOpen && (
-        <div 
+        <div
           className="fixed inset-0 bg-black/50 z-40 md:hidden animate-in fade-in"
           onClick={() => setIsMobileMenuOpen(false)}
         />
@@ -120,121 +116,122 @@ export const Layout: React.FC<LayoutProps> = ({
 
         <nav className="flex-1 p-4 space-y-1.5 overflow-y-auto">
           {navItems.map((item) => (
-            <button
-              key={item.id}
-              onClick={() => handleNavClick(item.id as ViewState)}
-              className={`flex items-center w-full p-3 rounded-xl transition-all group ${currentView === item.id ? 'bg-indigo-600 text-white shadow-xl shadow-indigo-600/20' : 'text-zinc-500 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800/50 hover:text-zinc-900 dark:hover:text-white'}`}
+            <NavLink
+              key={item.path}
+              to={item.path}
+              className={({ isActive }) => `flex items-center w-full p-3 rounded-xl transition-all group ${isActive ? 'bg-indigo-600 text-white shadow-xl shadow-indigo-600/20' : 'text-zinc-500 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800/50 hover:text-zinc-900 dark:hover:text-white'}`}
             >
               <item.icon className={`w-5 h-5 shrink-0 transition-transform group-hover:scale-110 ${isCollapsed && !isMobileMenuOpen ? 'mx-auto' : 'mr-3'}`} />
               {(!isCollapsed || isMobileMenuOpen) && <span className="font-bold text-sm truncate tracking-tight">{item.label}</span>}
-            </button>
+            </NavLink>
           ))}
         </nav>
 
         <div className="p-4 border-t border-zinc-100 dark:border-zinc-800 hidden md:block">
-           <button onClick={() => setIsCollapsed(!isCollapsed)} className="flex items-center justify-center w-full p-2.5 rounded-xl hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-400 transition-all active:scale-95">
-              {isCollapsed ? <ChevronRight className="w-5 h-5" /> : <ChevronLeft className="w-5 h-5" />}
-           </button>
+          <button onClick={() => setIsCollapsed(!isCollapsed)} className="flex items-center justify-center w-full p-2.5 rounded-xl hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-400 transition-all active:scale-95">
+            {isCollapsed ? <ChevronRight className="w-5 h-5" /> : <ChevronLeft className="w-5 h-5" />}
+          </button>
         </div>
       </aside>
 
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col overflow-hidden relative">
-        
+
         {/* Header */}
         <header className="h-16 md:h-20 border-b border-zinc-200 dark:border-zinc-800 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-md flex items-center justify-between px-4 md:px-8 z-30 shrink-0">
           <div className="flex items-center gap-4">
-             {/* Mobile Toggle */}
-             <button 
-               className="p-2 md:hidden text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg transition-colors"
-               onClick={() => setIsMobileMenuOpen(true)}
-             >
-                <Menu className="w-6 h-6" />
-             </button>
+            {/* Mobile Toggle */}
+            <button
+              className="p-2 md:hidden text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg transition-colors"
+              onClick={() => setIsMobileMenuOpen(true)}
+            >
+              <Menu className="w-6 h-6" />
+            </button>
 
-             {/* Cluster Switcher Dropdown */}
-             <div className="relative" ref={clusterMenuRef}>
-               <button 
-                 onClick={() => setIsClusterMenuOpen(!isClusterMenuOpen)}
-                 className="flex items-center gap-3 px-3 md:px-4 py-2 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-2xl hover:border-indigo-500/50 transition-all shadow-sm active:scale-[0.98]"
-               >
-                 <ProviderIcon provider={currentCluster.provider} className="w-4 h-4" />
-                 <div className="hidden sm:block text-left">
-                   <div className="text-[9px] font-black uppercase text-zinc-400 leading-none mb-1">Target Cluster</div>
-                   <div className="text-xs font-black text-zinc-900 dark:text-white leading-none flex items-center gap-2 tracking-tight">
-                     {currentCluster.name}
-                     <div className={`w-1.5 h-1.5 rounded-full ${getStatusColor(currentCluster.status)} animate-pulse`} />
-                   </div>
-                 </div>
-                 <ChevronsUpDown className="w-4 h-4 text-zinc-400 ml-1" />
-               </button>
+            {/* Cluster Switcher Dropdown */}
+            <div className="relative" ref={clusterMenuRef}>
+              <button
+                onClick={() => setIsClusterMenuOpen(!isClusterMenuOpen)}
+                className="flex items-center gap-3 px-3 md:px-4 py-2 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-2xl hover:border-indigo-500/50 transition-all shadow-sm active:scale-[0.98]"
+              >
+                <ProviderIcon provider={selectedCluster.provider} className="w-4 h-4" />
+                <div className="hidden sm:block text-left">
+                  <div className="text-[9px] font-black uppercase text-zinc-400 leading-none mb-1">Target Cluster</div>
+                  <div className="text-xs font-black text-zinc-900 dark:text-white leading-none flex items-center gap-2 tracking-tight">
+                    {selectedCluster.name}
+                    <div className={`w-1.5 h-1.5 rounded-full ${getStatusColor(selectedCluster.status)} animate-pulse`} />
+                  </div>
+                </div>
+                <ChevronsUpDown className="w-4 h-4 text-zinc-400 ml-1" />
+              </button>
 
-               {isClusterMenuOpen && (
-                 <div className="absolute top-full left-0 mt-3 w-72 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl shadow-2xl py-2 animate-in fade-in zoom-in-95 duration-150 origin-top-left z-50">
-                    <div className="px-4 py-3 border-b border-zinc-100 dark:border-zinc-800 mb-2">
-                      <p className="text-[10px] font-black uppercase tracking-widest text-zinc-400">Control Plane Fleet</p>
-                    </div>
-                    {allClusters.map(cluster => (
-                      <button 
-                        key={cluster.id}
-                        onClick={() => { onClusterChange(cluster); setIsClusterMenuOpen(false); }}
-                        className={`w-full flex items-center gap-3 px-4 py-3 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors text-left ${currentCluster.id === cluster.id ? 'bg-indigo-50/50 dark:bg-indigo-900/10 border-l-4 border-indigo-600' : 'border-l-4 border-transparent'}`}
-                      >
-                        <ProviderIcon provider={cluster.provider} className="w-5 h-5 shrink-0" />
-                        <div className="flex-1 min-w-0">
-                          <p className={`text-sm font-bold truncate ${currentCluster.id === cluster.id ? 'text-indigo-600 dark:text-indigo-400' : 'text-zinc-700 dark:text-zinc-300'}`}>{cluster.name}</p>
-                          <p className="text-[10px] text-zinc-500 font-medium uppercase">{cluster.region} • {cluster.provider}</p>
-                        </div>
-                        {currentCluster.id === cluster.id && <Check className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />}
-                      </button>
-                    ))}
-                    <div className="h-px bg-zinc-100 dark:border-zinc-800 my-2" />
-                    <button className="w-full flex items-center gap-3 px-4 py-2.5 text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors">
-                      <Plus className="w-4 h-4" /> Register New Cluster
+              {isClusterMenuOpen && (
+                <div className="absolute top-full left-0 mt-3 w-72 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl shadow-2xl py-2 animate-in fade-in zoom-in-95 duration-150 origin-top-left z-50">
+                  <div className="px-4 py-3 border-b border-zinc-100 dark:border-zinc-800 mb-2">
+                    <p className="text-[10px] font-black uppercase tracking-widest text-zinc-400">Control Plane Fleet</p>
+                  </div>
+                  {clusters.map(cluster => (
+                    <button
+                      key={cluster.id}
+                      onClick={() => { setSelectedCluster(cluster); setIsClusterMenuOpen(false); }}
+                      className={`w-full flex items-center gap-3 px-4 py-3 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors text-left ${selectedCluster.id === cluster.id ? 'bg-indigo-50/50 dark:bg-indigo-900/10 border-l-4 border-indigo-600' : 'border-l-4 border-transparent'}`}
+                    >
+                      <ProviderIcon provider={cluster.provider} className="w-5 h-5 shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <p className={`text-sm font-bold truncate ${selectedCluster.id === cluster.id ? 'text-indigo-600 dark:text-indigo-400' : 'text-zinc-700 dark:text-zinc-300'}`}>{cluster.name}</p>
+                        <p className="text-[10px] text-zinc-500 font-medium uppercase">{cluster.region} • {cluster.provider}</p>
+                      </div>
+                      {selectedCluster.id === cluster.id && <Check className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />}
                     </button>
-                 </div>
-               )}
-             </div>
+                  ))}
+                  <div className="h-px bg-zinc-100 dark:border-zinc-800 my-2" />
+                  <button className="w-full flex items-center gap-3 px-4 py-2.5 text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors">
+                    <Plus className="w-4 h-4" /> Register New Cluster
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
 
           <div className="flex items-center gap-2 md:gap-4">
-             <div className="hidden lg:flex items-center gap-2 px-3 py-1.5 bg-zinc-100 dark:bg-zinc-800/50 rounded-full border border-zinc-200 dark:border-zinc-700">
-                <div className="relative flex h-2 w-2">
-                   <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${apiStatus === 'Connected' ? 'bg-emerald-400' : 'bg-amber-400'}`}></span>
-                   <span className={`relative inline-flex rounded-full h-2 w-2 ${apiStatus === 'Connected' ? 'bg-emerald-500' : 'bg-amber-500'}`}></span>
+            <div className="hidden lg:flex items-center gap-2 px-3 py-1.5 bg-zinc-100 dark:bg-zinc-800/50 rounded-full border border-zinc-200 dark:border-zinc-700">
+              <div className="relative flex h-2 w-2">
+                <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${apiStatus === 'Connected' ? 'bg-emerald-400' : 'bg-amber-400'}`}></span>
+                <span className={`relative inline-flex rounded-full h-2 w-2 ${apiStatus === 'Connected' ? 'bg-emerald-500' : 'bg-amber-500'}`}></span>
+              </div>
+              <span className="text-[10px] font-black uppercase text-zinc-500">{apiLatency}ms <span className="opacity-40">IO</span></span>
+            </div>
+
+            <button onClick={toggleTheme} className="p-2.5 rounded-xl bg-zinc-100 dark:bg-zinc-800 text-zinc-500 hover:text-indigo-500 dark:hover:text-indigo-400 transition-all shadow-sm">
+              {isDarkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+            </button>
+
+            <div className="relative" ref={userMenuRef}>
+              <button onClick={() => setIsUserMenuOpen(!isUserMenuOpen)} className="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-500 to-purple-600 p-0.5 shadow-lg active:scale-95 transition-transform">
+                <div className="w-full h-full rounded-[10px] bg-white dark:bg-zinc-900 flex items-center justify-center font-bold text-zinc-900 dark:text-white text-xs">{(currentUser?.name || "AU").substring(0, 2).toUpperCase()}</div>
+              </button>
+              {isUserMenuOpen && (
+                <div className="absolute right-0 mt-3 w-60 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl shadow-2xl py-2 animate-in fade-in zoom-in-95 duration-150 origin-top-right">
+                  <div className="px-4 py-3 border-b border-zinc-100 dark:border-zinc-800 mb-2">
+                    <p className="font-bold text-sm">{currentUser?.name || "Admin User"}</p>
+                    <p className="text-[10px] text-zinc-500 uppercase tracking-widest font-black">{currentUser?.role || "SRE Lead"}</p>
+                  </div>
+                  <button className="w-full flex items-center gap-3 px-4 py-2.5 text-sm font-bold text-zinc-600 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors"><Settings className="w-4 h-4" /> Preferences</button>
+                  <button onClick={selectApiKey} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm font-bold text-zinc-600 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors"><Key className="w-4 h-4" /> API Credentials</button>
+                  <div className="h-px bg-zinc-100 dark:border-zinc-800 my-2" />
+                  <button onClick={logout} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm font-bold text-red-500 hover:bg-red-50 dark:hover:bg-red-900/10 transition-colors"><LogOut className="w-4 h-4" /> Sign Out</button>
                 </div>
-                <span className="text-[10px] font-black uppercase text-zinc-500">{apiLatency}ms <span className="opacity-40">IO</span></span>
-             </div>
-
-             <button onClick={toggleTheme} className="p-2.5 rounded-xl bg-zinc-100 dark:bg-zinc-800 text-zinc-500 hover:text-indigo-500 dark:hover:text-indigo-400 transition-all shadow-sm">
-                {isDarkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
-             </button>
-
-             <div className="relative" ref={userMenuRef}>
-                <button onClick={() => setIsUserMenuOpen(!isUserMenuOpen)} className="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-500 to-purple-600 p-0.5 shadow-lg active:scale-95 transition-transform">
-                   <div className="w-full h-full rounded-[10px] bg-white dark:bg-zinc-900 flex items-center justify-center font-bold text-zinc-900 dark:text-white text-xs">AU</div>
-                </button>
-                {isUserMenuOpen && (
-                   <div className="absolute right-0 mt-3 w-60 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl shadow-2xl py-2 animate-in fade-in zoom-in-95 duration-150 origin-top-right">
-                      <div className="px-4 py-3 border-b border-zinc-100 dark:border-zinc-800 mb-2">
-                        <p className="font-bold text-sm">Admin User</p>
-                        <p className="text-[10px] text-zinc-500 uppercase tracking-widest font-black">SRE Fleet Lead</p>
-                      </div>
-                      <button className="w-full flex items-center gap-3 px-4 py-2.5 text-sm font-bold text-zinc-600 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors"><Settings className="w-4 h-4" /> Preferences</button>
-                      <button onClick={onChangeApiKey} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm font-bold text-zinc-600 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors"><Key className="w-4 h-4" /> API Credentials</button>
-                      <div className="h-px bg-zinc-100 dark:border-zinc-800 my-2" />
-                      <button onClick={onLogout} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm font-bold text-red-500 hover:bg-red-50 dark:hover:bg-red-900/10 transition-colors"><LogOut className="w-4 h-4" /> Sign Out</button>
-                   </div>
-                )}
-             </div>
+              )}
+            </div>
           </div>
         </header>
 
         {/* Content Container */}
         <div className="flex-1 overflow-y-auto p-4 md:p-8">
-           <div className="mx-auto max-w-7xl h-full">
-              {children}
-           </div>
+          <div className="mx-auto max-w-7xl h-full">
+            {/* Router Outlet for Page Content */}
+            <Outlet />
+          </div>
         </div>
       </div>
     </div>
