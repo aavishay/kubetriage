@@ -1,0 +1,5 @@
+{
+  "name": "KubeOptima - Triage & Rightsizing",
+  "description": "A Kubernetes platform engineering template for workload triage and resource optimization (right-sizing) powered by Gemini AI.",
+  "requestFramePermissions": []
+}
