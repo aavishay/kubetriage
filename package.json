@@ -7,6 +7,11 @@
     "scripts": {
         "dev:frontend": "npm run dev --workspace=frontend",
         "build:frontend": "npm run build --workspace=frontend",
-        "install:all": "npm install"
+        "install:all": "npm install",
+        "prepare": "husky"
+    },
+    "lint-staged": {
+        "frontend/**/*.{ts,tsx}": [
+            "npm run lint:fix --workspace=frontend"
+        ]
     }
-}

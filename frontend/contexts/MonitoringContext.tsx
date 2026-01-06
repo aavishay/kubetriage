@@ -22,6 +22,7 @@ interface MonitoringContextType {
   hasApiKey: boolean;
   isCheckingKey: boolean;
   activeNotification: TriggeredAlert | null;
+  unreadReports: number;
 
   // Actions
   login: () => void;
@@ -77,12 +78,61 @@ export const MonitoringProvider: React.FC<MonitoringProviderProps> = ({ children
   const [selectedCluster, setSelectedCluster] = useState<Cluster>(MOCK_CLUSTERS[0]);
   const [organizations, setOrganizations] = useState<Organization[]>(MOCK_ORGANIZATIONS);
   const [users, setUsers] = useState<User[]>(MOCK_USERS);
+  const [unreadReports, setUnreadReports] = useState<number>(0);
 
   // Fetch Workloads
+  // Fetch Data
+  useEffect(() => {
+    const fetchClusters = async () => {
+      try {
+        const response = await fetch('/api/clusters');
+        if (response.ok) {
+          const data = await response.json();
+          // Map backend response to frontend Cluster type
+          const mappedClusters = data.map((c: any) => ({
+            id: c.id,
+            name: c.name,
+            provider: c.provider || 'On-Prem',
+            status: c.status || 'Active',
+            region: 'local', // Default for now
+          }));
+
+          if (mappedClusters.length > 0) {
+            setClusters(mappedClusters);
+            // Only set default if we haven't selected one yet (or persisted it)
+            // For now, simple default:
+            setSelectedCluster(prev => mappedClusters.find((c: any) => c.id === prev.id) || mappedClusters[0]);
+          }
+        }
+      } catch (err) {
+        console.error("Failed to fetch clusters", err);
+      }
+    };
+    fetchClusters();
+  }, []);
+
+  // Poll for unread reports
+  useEffect(() => {
+    const fetchReports = async () => {
+      try {
+        const res = await fetch('/api/reports');
+        if (res.ok) {
+          const data = await res.json();
+          setUnreadReports(data.filter((r: any) => !r.IsRead).length);
+        }
+      } catch (e) { console.error(e); }
+    };
+    fetchReports();
+    const interval = setInterval(fetchReports, 60000); // Check every minute
+    return () => clearInterval(interval);
+  }, []);
+
   useEffect(() => {
     const fetchWorkloads = async () => {
+      if (!selectedCluster) return;
+
       try {
-        const response = await fetch('/api/cluster/workloads');
+        const response = await fetch(`/api/cluster/workloads?cluster=${selectedCluster.id}`);
         if (response.ok) {
           const data = await response.json();
           setWorkloads(data);
@@ -96,7 +146,7 @@ export const MonitoringProvider: React.FC<MonitoringProviderProps> = ({ children
       }
     };
     fetchWorkloads();
-  }, []);
+  }, [selectedCluster]);
 
   // --- Notifications & Alerting State ---
   const [notificationChannels, setNotificationChannels] = useState<NotificationChannel[]>(MOCK_NOTIFICATION_CHANNELS);
@@ -267,7 +317,8 @@ export const MonitoringProvider: React.FC<MonitoringProviderProps> = ({ children
       deleteAlertRule,
       dismissNotification,
       isDarkMode,
-      toggleTheme
+      toggleTheme,
+      unreadReports
     }}>
       {children}
     </MonitoringContext.Provider>

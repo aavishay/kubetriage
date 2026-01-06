@@ -126,3 +126,12 @@ export interface ViewPropsWithChat {
 // Templates
 export type OptimizationProfile = 'Balanced' | 'Cost-Saver' | 'Performance' | 'Burstable' | 'Density';
 export type DiagnosticPlaybook = 'General Health' | 'Network Connectivity' | 'Security Audit' | 'Resource Constraints' | 'Data Integrity' | 'Scheduling & Affinity';
+
+export interface Playbook {
+  id: string;
+  name: string;
+  description: string;
+  prompt: string;
+  createdAt: string;
+  updatedAt: string;
+}

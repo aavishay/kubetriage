@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { MonitoringProvider, useMonitoring } from './contexts/MonitoringContext';
+import { AuthProvider } from './contexts/AuthContext';
 import { Layout } from './components/Layout';
 import { Dashboard } from './components/Dashboard';
 import { TriageView } from './components/TriageView';
@@ -168,13 +169,15 @@ const AppContent: React.FC = () => {
 };
 const App: React.FC = () => {
   return (
-    <MonitoringProvider>
-      <BrowserRouter>
-        <ErrorBoundary>
-          <AppContent />
-        </ErrorBoundary>
-      </BrowserRouter>
-    </MonitoringProvider>
+    <AuthProvider>
+      <MonitoringProvider>
+        <BrowserRouter>
+          <ErrorBoundary>
+            <AppContent />
+          </ErrorBoundary>
+        </BrowserRouter>
+      </MonitoringProvider>
+    </AuthProvider>
   );
 };
 

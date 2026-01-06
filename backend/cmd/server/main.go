@@ -8,6 +8,8 @@ import (
 	"github.com/aavishay/kubetriage/backend/internal/api"
 	"github.com/aavishay/kubetriage/backend/internal/db"
 	"github.com/aavishay/kubetriage/backend/internal/k8s"
+	"github.com/aavishay/kubetriage/backend/internal/prometheus"
+	"github.com/aavishay/kubetriage/backend/internal/scheduler"
 	"github.com/aavishay/kubetriage/backend/internal/telemetry"
 	"github.com/joho/godotenv"
 )
@@ -30,7 +32,7 @@ func main() {
 	}
 
 	// Init K8s Client
-	_, err := k8s.InitK8sClient()
+	_, err = k8s.InitK8sClient()
 	if err != nil {
 		log.Printf("Warning: Failed to initialize K8s client: %v", err)
 	} else {
@@ -43,6 +45,14 @@ func main() {
 		log.Printf("Error connecting to DB: %v", err)
 	}
 
+	// Init Prometheus Client
+	err = prometheus.InitPrometheusClient()
+	if err != nil {
+		log.Printf("Warning: Failed to init Prometheus client: %v", err)
+	} else {
+		log.Println("Prometheus client initialized")
+	}
+
 	// Setup Router
 	r := api.SetupRouter()
 
@@ -50,6 +60,10 @@ func main() {
 	if port == "" {
 		port = "3001"
 	}
+
+	// Init Scheduler
+	scheduler.InitScheduler()
+	defer scheduler.StopScheduler()
 
 	log.Printf("Starting server on port %s", port)
 	if err := r.Run(":" + port); err != nil {

@@ -26,3 +26,25 @@ type Session struct {
 	UpdatedAt time.Time
 	DeletedAt gorm.DeletedAt `gorm:"index"`
 }
+
+// Playbook model for custom diagnostic recipes
+type Playbook struct {
+	ID          uuid.UUID `gorm:"type:uuid;default:gen_random_uuid();primaryKey"`
+	Name        string    `gorm:"not null"`
+	Description string
+	Prompt      string `gorm:"type:text;not null"`
+	CreatedAt   time.Time
+	UpdatedAt   time.Time
+	DeletedAt   gorm.DeletedAt `gorm:"index"`
+}
+
+type TriageReport struct {
+	gorm.Model
+	ClusterID    string
+	Namespace    string
+	WorkloadName string
+	Kind         string
+	Analysis     string // Markdown analysis
+	Severity     string // Low, Medium, High, Critical
+	IsRead       bool   `gorm:"default:false"`
+}

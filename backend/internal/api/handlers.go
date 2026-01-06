@@ -11,6 +11,7 @@ import (
 	"github.com/aavishay/kubetriage/backend/internal/k8s"
 	"github.com/gin-gonic/gin"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/kubernetes"
 )
 
 // ResourceMetrics mock struct
@@ -96,8 +97,59 @@ func getMockMetrics() ResourceMetrics {
 	}
 }
 
+type ClusterResponse struct {
+	ID       string `json:"id"`
+	Name     string `json:"name"`
+	Provider string `json:"provider"`
+	Status   string `json:"status"`
+}
+
+func ClustersHandler(c *gin.Context) {
+	if k8s.Manager == nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Cluster Manager not initialized"})
+		return
+	}
+
+	clusters := k8s.Manager.ListClusters()
+	response := make([]ClusterResponse, 0, len(clusters))
+
+	for _, cls := range clusters {
+		// Simple heuristic for provider based on name
+		provider := "Unknown"
+		if cls.Name == "minikube" {
+			provider = "Minikube"
+		} else if cls.Name == "docker-desktop" {
+			provider = "Docker Desktop"
+		} else {
+			provider = "Kubernetes"
+		}
+
+		response = append(response, ClusterResponse{
+			ID:       cls.ID,
+			Name:     cls.Name,
+			Provider: provider,
+			Status:   "Active", // Mock status for now
+		})
+	}
+	c.JSON(http.StatusOK, response)
+}
+
 func WorkloadsHandler(c *gin.Context) {
-	client := k8s.ClientSet
+	clusterID := c.Query("cluster")
+	var client *kubernetes.Clientset
+
+	if clusterID != "" && k8s.Manager != nil {
+		cls, err := k8s.Manager.GetCluster(clusterID)
+		if err != nil {
+			c.JSON(http.StatusNotFound, gin.H{"error": "Cluster not found"})
+			return
+		}
+		client = cls.ClientSet
+	} else {
+		// Fallback to default
+		client = k8s.ClientSet
+	}
+
 	if client == nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "K8s client not initialized"})
 		return

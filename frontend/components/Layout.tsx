@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { LayoutDashboard, AlertCircle, Scale, Settings, Box, ChevronLeft, ChevronRight, Sun, Moon, ChevronsUpDown, Check, Server, LogOut, Plus, X, Globe, Cloud, Bell, BookOpen, Menu, Key, Zap } from 'lucide-react';
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
 import { useMonitoring } from '../contexts/MonitoringContext';
+import { useAuth } from '../contexts/AuthContext';
 import { Cluster } from '../types';
 
 interface LayoutProps {
@@ -27,7 +28,9 @@ export const Layout: React.FC<LayoutProps> = () => {
     isAuthenticated,
     logout,
     selectApiKey,
-    users
+    selectApiKey,
+    users,
+    unreadReports
   } = useMonitoring();
 
   const location = useLocation();
@@ -81,7 +84,7 @@ export const Layout: React.FC<LayoutProps> = () => {
     }
   };
 
-  const currentUser = users[0]; // Mock current user
+  const { user } = useAuth();
 
   return (
     <div className="flex h-screen bg-zinc-50 dark:bg-[#09090b] text-zinc-900 dark:text-zinc-300 overflow-hidden flex-col md:flex-row">
@@ -199,6 +202,16 @@ export const Layout: React.FC<LayoutProps> = () => {
                 <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${apiStatus === 'Connected' ? 'bg-emerald-400' : 'bg-amber-400'}`}></span>
                 <span className={`relative inline-flex rounded-full h-2 w-2 ${apiStatus === 'Connected' ? 'bg-emerald-500' : 'bg-amber-500'}`}></span>
               </div>
+
+              <button className="relative p-2.5 rounded-xl bg-zinc-100 dark:bg-zinc-800 text-zinc-500 hover:text-indigo-500 dark:hover:text-indigo-400 transition-all shadow-sm">
+                <Bell className="w-5 h-5" />
+                {unreadReports > 0 && (
+                  <span className="absolute top-1.5 right-1.5 flex h-3 w-3">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-3 w-3 bg-rose-500 text-[8px] font-bold text-white items-center justify-center">{unreadReports}</span>
+                  </span>
+                )}
+              </button>
               <span className="text-[10px] font-black uppercase text-zinc-500">{apiLatency}ms <span className="opacity-40">IO</span></span>
             </div>
 
@@ -208,13 +221,13 @@ export const Layout: React.FC<LayoutProps> = () => {
 
             <div className="relative" ref={userMenuRef}>
               <button onClick={() => setIsUserMenuOpen(!isUserMenuOpen)} className="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-500 to-purple-600 p-0.5 shadow-lg active:scale-95 transition-transform">
-                <div className="w-full h-full rounded-[10px] bg-white dark:bg-zinc-900 flex items-center justify-center font-bold text-zinc-900 dark:text-white text-xs">{(currentUser?.name || "AU").substring(0, 2).toUpperCase()}</div>
+                <div className="w-full h-full rounded-[10px] bg-white dark:bg-zinc-900 flex items-center justify-center font-bold text-zinc-900 dark:text-white text-xs">{(user?.email || "AU").substring(0, 2).toUpperCase()}</div>
               </button>
               {isUserMenuOpen && (
                 <div className="absolute right-0 mt-3 w-60 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl shadow-2xl py-2 animate-in fade-in zoom-in-95 duration-150 origin-top-right">
                   <div className="px-4 py-3 border-b border-zinc-100 dark:border-zinc-800 mb-2">
-                    <p className="font-bold text-sm">{currentUser?.name || "Admin User"}</p>
-                    <p className="text-[10px] text-zinc-500 uppercase tracking-widest font-black">{currentUser?.role || "SRE Lead"}</p>
+                    <p className="font-bold text-sm">{user?.email || "Admin User"}</p>
+                    <p className="text-[10px] text-zinc-500 uppercase tracking-widest font-black">{user?.role || "SRE Lead"}</p>
                   </div>
                   <button className="w-full flex items-center gap-3 px-4 py-2.5 text-sm font-bold text-zinc-600 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors"><Settings className="w-4 h-4" /> Preferences</button>
                   <button onClick={selectApiKey} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm font-bold text-zinc-600 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors"><Key className="w-4 h-4" /> API Credentials</button>
