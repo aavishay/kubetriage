@@ -2,14 +2,11 @@
     "name": "kubetriage-monorepo",
     "private": true,
     "workspaces": [
-        "frontend",
-        "backend"
+        "frontend"
     ],
     "scripts": {
         "dev:frontend": "npm run dev --workspace=frontend",
         "build:frontend": "npm run build --workspace=frontend",
-        "dev:backend": "npm run dev --workspace=backend",
-        "build:backend": "npm run build --workspace=backend",
         "install:all": "npm install"
     }
 }

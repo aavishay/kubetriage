@@ -1,12 +1,12 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
 import { Workload, Cluster, Organization, User, NotificationChannel, AlertRule, TriggeredAlert } from '../types';
-import { 
-  MOCK_WORKLOADS, 
-  MOCK_CLUSTERS, 
-  MOCK_ORGANIZATIONS, 
-  MOCK_USERS, 
-  MOCK_NOTIFICATION_CHANNELS, 
-  MOCK_ALERT_RULES 
+import {
+  MOCK_WORKLOADS,
+  MOCK_CLUSTERS,
+  MOCK_ORGANIZATIONS,
+  MOCK_USERS,
+  MOCK_NOTIFICATION_CHANNELS,
+  MOCK_ALERT_RULES
 } from '../constants';
 
 interface MonitoringContextType {
@@ -22,7 +22,7 @@ interface MonitoringContextType {
   hasApiKey: boolean;
   isCheckingKey: boolean;
   activeNotification: TriggeredAlert | null;
-  
+
   // Actions
   login: () => void;
   logout: () => void;
@@ -36,7 +36,7 @@ interface MonitoringContextType {
   updateAlertRule: (rule: AlertRule) => void;
   deleteAlertRule: (id: string) => void;
   dismissNotification: () => void;
-  
+
   // Theme
   isDarkMode: boolean;
   toggleTheme: () => void;
@@ -72,11 +72,31 @@ export const MonitoringProvider: React.FC<MonitoringProviderProps> = ({ children
   const toggleTheme = () => setIsDarkMode(!isDarkMode);
 
   // --- Core Data State ---
-  const [workloads, setWorkloads] = useState<Workload[]>(MOCK_WORKLOADS);
+  const [workloads, setWorkloads] = useState<Workload[]>([]); // Initialize empty, fetch real data
   const [clusters, setClusters] = useState<Cluster[]>(MOCK_CLUSTERS);
   const [selectedCluster, setSelectedCluster] = useState<Cluster>(MOCK_CLUSTERS[0]);
   const [organizations, setOrganizations] = useState<Organization[]>(MOCK_ORGANIZATIONS);
   const [users, setUsers] = useState<User[]>(MOCK_USERS);
+
+  // Fetch Workloads
+  useEffect(() => {
+    const fetchWorkloads = async () => {
+      try {
+        const response = await fetch('/api/cluster/workloads');
+        if (response.ok) {
+          const data = await response.json();
+          setWorkloads(data);
+        } else {
+          console.error("Failed to fetch workloads, falling back to mocks");
+          setWorkloads(MOCK_WORKLOADS);
+        }
+      } catch (err) {
+        console.error("Error fetching workloads", err);
+        setWorkloads(MOCK_WORKLOADS);
+      }
+    };
+    fetchWorkloads();
+  }, []);
 
   // --- Notifications & Alerting State ---
   const [notificationChannels, setNotificationChannels] = useState<NotificationChannel[]>(MOCK_NOTIFICATION_CHANNELS);
@@ -87,15 +107,15 @@ export const MonitoringProvider: React.FC<MonitoringProviderProps> = ({ children
   // --- Helpers ---
   const login = () => setIsAuthenticated(true);
   const logout = () => setIsAuthenticated(false);
-  
+
   const selectApiKey = async () => {
     if ((window as any).aistudio) {
-        try {
-            await (window as any).aistudio.openSelectKey();
-            setHasApiKey(true); 
-        } catch (e) {
-            console.error("Failed to select key", e);
-        }
+      try {
+        await (window as any).aistudio.openSelectKey();
+        setHasApiKey(true);
+      } catch (e) {
+        console.error("Failed to select key", e);
+      }
     }
   };
 
@@ -111,13 +131,13 @@ export const MonitoringProvider: React.FC<MonitoringProviderProps> = ({ children
   const addAlertRule = (rule: AlertRule) => setAlertRules(prev => [...prev, rule]);
   const updateAlertRule = (updatedRule: AlertRule) => setAlertRules(prev => prev.map(r => r.id === updatedRule.id ? updatedRule : r));
   const deleteAlertRule = (id: string) => setAlertRules(prev => prev.filter(r => r.id !== id));
-  
+
   const dismissNotification = () => setActiveNotification(null);
 
   // --- Monitoring Engine Logic (Simulation) ---
   const checkAlertRules = useCallback((currentWorkloads: Workload[]) => {
     const newAlerts: TriggeredAlert[] = [];
-    
+
     alertRules.forEach(rule => {
       if (!rule.enabled) return;
 
@@ -136,8 +156,8 @@ export const MonitoringProvider: React.FC<MonitoringProviderProps> = ({ children
           saturatedValue = (value / workload.metrics.storageLimit) * 100;
         }
 
-        const isBreached = rule.operator === '>' 
-          ? saturatedValue > rule.threshold 
+        const isBreached = rule.operator === '>'
+          ? saturatedValue > rule.threshold
           : saturatedValue < rule.threshold;
 
         if (isBreached) {
@@ -173,13 +193,13 @@ export const MonitoringProvider: React.FC<MonitoringProviderProps> = ({ children
   // Simulate real-time metric updates
   useEffect(() => {
     if (!isAuthenticated) return;
-    
+
     const interval = setInterval(() => {
       setWorkloads(prev => {
         const updated = prev.map(w => {
-          const cpuVar = (Math.random() * 0.2) - 0.1; 
-          const memVar = (Math.random() * 0.05) - 0.025; 
-          
+          const cpuVar = (Math.random() * 0.2) - 0.1;
+          const memVar = (Math.random() * 0.05) - 0.025;
+
           return {
             ...w,
             metrics: {

@@ -3,6 +3,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import { healthRouter } from './routes/health.js';
 import { clusterRouter } from './routes/cluster.js';
+import { workloadRouter } from './routes/workloads.js';
 
 dotenv.config();
 
@@ -14,6 +15,7 @@ app.use(express.json());
 
 // Routes
 app.use('/api/health', healthRouter);
+app.use('/api/cluster/workloads', workloadRouter);
 app.use('/api/cluster', clusterRouter);
 
 app.listen(PORT, () => {

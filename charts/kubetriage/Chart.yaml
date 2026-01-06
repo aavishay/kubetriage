@@ -1,0 +1,6 @@
+apiVersion: v2
+name: kubetriage
+description: A Helm chart for KubeTriage - AI-powered Kubernetes troubleshooting
+type: application
+version: 0.1.0
+appVersion: "0.1.0"
