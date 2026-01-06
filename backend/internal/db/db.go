@@ -33,8 +33,10 @@ func InitDB(dsn string) (*gorm.DB, error) {
 	}
 
 	// Auto-Migrate Schemas
-	// err = DB.AutoMigrate(&models.User{}, &models.Session{})
-	// (Models will be added later)
+	err = DB.AutoMigrate(&User{}, &Session{})
+	if err != nil {
+		log.Printf("Warning: AutoMigrate failed: %v", err)
+	}
 
 	return DB, nil
 }
