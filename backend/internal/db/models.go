@@ -11,7 +11,11 @@ import (
 type User struct {
 	ID          uuid.UUID `gorm:"type:uuid;default:gen_random_uuid();primaryKey"`
 	Email       string    `gorm:"uniqueIndex;not null"`
-	Preferences []byte    `gorm:"type:jsonb"` // Stores JSON data for theme, etc.
+	Provider    string    `gorm:"default:'local'"`
+	ProviderID  string    `gorm:"index"`
+	AvatarURL   string
+	Role        string `gorm:"default:'viewer'"`
+	Preferences []byte `gorm:"type:jsonb"` // Stores JSON data for theme, etc.
 	CreatedAt   time.Time
 	UpdatedAt   time.Time
 	DeletedAt   gorm.DeletedAt `gorm:"index"`

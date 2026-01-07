@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/aavishay/kubetriage/backend/internal/db"
 	"github.com/gin-gonic/gin"
 )
 
@@ -27,26 +28,58 @@ type UserInfo struct {
 // For now, it mocks an Admin user for dev purposes
 func AuthMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		authHeader := c.GetHeader("Authorization")
+		// 1. Check for Cookie (OIDC Flow)
+		cookie, err := c.Cookie("auth_token")
+		if err == nil && cookie != "" {
+			// In a real implementation: Parse JWT
+			// For MVP: Check if simple string format
+			if strings.HasPrefix(cookie, "session-") {
+				userIdStr := strings.TrimPrefix(cookie, "session-")
 
-		// Development Mode: If no header or specific mock header, inject Admin
-		// In production, this would be replaced by real JWT validation
-		if authHeader == "" || strings.HasPrefix(authHeader, "Bearer mock-token") {
-			user := UserInfo{
-				ID:    "dev-admin-id",
-				Email: "admin@kubetriage.com",
-				Role:  RoleAdmin,
+				var dbUser db.User
+				if result := db.DB.First(&dbUser, "id = ?", userIdStr); result.Error == nil {
+					user := UserInfo{
+						ID:    dbUser.ID.String(),
+						Email: dbUser.Email,
+						Role:  dbUser.Role,
+					}
+					c.Set(UserContextKey, user)
+					c.Next()
+					return
+				}
 			}
-			c.Set(UserContextKey, user)
-			c.Next()
-			return
+
+			// Handle Mock Token
+			if cookie == "mock-token-for-dev" {
+				user := UserInfo{
+					ID:    "dev-admin-id",
+					Email: "admin@kubetriage.com",
+					Role:  RoleAdmin,
+				}
+				c.Set(UserContextKey, user)
+				c.Next()
+				return
+			}
 		}
 
-		// If real auth was implemented, we would validate token here
-		// c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+		// 2. Check for Header (Legacy/API Access)
+		authHeader := c.GetHeader("Authorization")
+		if authHeader == "" || strings.HasPrefix(authHeader, "Bearer mock-token") {
+			// Development Mode fallback for API clients not using Browser Cookies
+			if authHeader != "" {
+				user := UserInfo{
+					ID:    "dev-api-id",
+					Email: "api@kubetriage.com",
+					Role:  RoleAdmin,
+				}
+				c.Set(UserContextKey, user)
+				c.Next()
+				return
+			}
+		}
 
-		// Fallback for now to allow dev
-		c.Next()
+		// If we get here, unauthorized
+		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
 	}
 }
 

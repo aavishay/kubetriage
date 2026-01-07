@@ -1,9 +1,9 @@
 # Stage 1: Build the React Application
-FROM node:18-alpine as builder
+FROM node:22-alpine as builder
 WORKDIR /app
 COPY package.json package-lock.json ./
 # Clean install based on lock file
-RUN npm ci
+RUN npm install --legacy-peer-deps
 COPY . .
 # Build for production
 RUN npm run build

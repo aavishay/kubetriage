@@ -3,7 +3,6 @@ package api
 import (
 	"net/http"
 
-	"github.com/aavishay/kubetriage/backend/internal/ai"
 	"github.com/aavishay/kubetriage/backend/internal/k8s"
 	"github.com/gin-gonic/gin"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -23,22 +22,6 @@ type ApplyRequest struct {
 	Namespace    string `json:"namespace"`
 	PatchType    string `json:"patchType"`
 	PatchContent string `json:"patchContent"`
-}
-
-func GenerateRemediationHandler(c *gin.Context) {
-	var req GenerateRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-
-	suggestion, err := ai.GenerateRemediation(req.ResourceKind, req.ResourceName, req.ErrorLog)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate remediation"})
-		return
-	}
-
-	c.JSON(http.StatusOK, suggestion)
 }
 
 func ApplyRemediationHandler(c *gin.Context) {

@@ -6,12 +6,15 @@ services:
       context: ./backend
     container_name: kubetriage-backend
     ports:
-      - "3001:3001"
+      - "3002:3001"
     environment:
       - NODE_ENV=production
       - PORT=3001
       - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger:4317
       - DATABASE_URL=host=postgres user=kubetriage password=kubetriage dbname=kubetriage port=5432 sslmode=disable
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - MOCK_OIDC=true
+      - FRONTEND_URL=http://localhost:8081
       # IMPORTANT: If running in Docker Desktop, host.docker.internal can map to host ~/.kube/config if mounted properly, 
       # but for now we assume KubeConfig is handled or we rely on In-Cluster config if deployed to K8s.
       # For local testing, we might need to mount kubeconfig.
@@ -31,7 +34,7 @@ services:
       POSTGRES_PASSWORD: kubetriage
       POSTGRES_DB: kubetriage
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
     restart: always
@@ -41,7 +44,7 @@ services:
       context: ./frontend
     container_name: kubetriage-frontend
     ports:
-      - "8080:80"
+      - "8081:80"
     depends_on:
       - backend
     restart: always

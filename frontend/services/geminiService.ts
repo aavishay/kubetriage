@@ -2,89 +2,76 @@
 import { GoogleGenAI, Chat, GenerateContentResponse } from "@google/genai";
 import { GEMINI_FAST_MODEL, GEMINI_PRO_MODEL } from "../constants";
 import { Workload, DiagnosticPlaybook, OptimizationProfile } from "../types";
+import { fetchWithAuth } from "../contexts/AuthContext"; // Assuming we have or create a helper, or just use fetch
 
 // Helper to create a fresh client instance every time to pick up the latest API Key
 const createClient = () => {
-  return new GoogleGenAI({ apiKey: process.env.API_KEY });
+    return new GoogleGenAI({ apiKey: process.env.API_KEY || "DEMO_KEY_FOR_BUILD" });
 };
 
 export const analyzeWorkloadLogs = async (workload: Workload, playbook: DiagnosticPlaybook = 'General Health'): Promise<string> => {
-  const ai = createClient();
-  
-  let playbookInstructions = "";
-  switch(playbook) {
-      case 'Network Connectivity':
-          playbookInstructions = "Focus strictly on network patterns: DNS resolution failures, connection timeouts, upstream 502/503/504 errors, and ingress controller logs. Ignore minor application logic errors.";
-          break;
-      case 'Security Audit':
-          playbookInstructions = "Focus strictly on security implications: Unauthorized access attempts (401/403), privilege escalation attempts, unusual binary executions, or capabilities violations.";
-          break;
-      case 'Resource Constraints':
-          playbookInstructions = "Focus strictly on resource usage: OOMKilled events, eviction thresholds due to DiskPressure or MemoryPressure, storage capacity limits, CFS throttling, and high I/O wait times.";
-          break;
-      case 'Data Integrity':
-          playbookInstructions = "Focus on database and storage: SQL connection errors, transaction rollbacks, volume mount failures, or data corruption warnings.";
-          break;
-      case 'Scheduling & Affinity':
-          playbookInstructions = "Focus strictly on scheduling constraints. Analyze 'FailedScheduling' events. Look for issues related to Node Affinity, Pod Anti-Affinity rules, Node Taints that aren't tolerated, or insufficient resources on specific topology zones (e.g. AZ mismatch).";
-          break;
-      default:
-          playbookInstructions = "Perform a holistic root cause analysis covering all aspects of reliability including CPU, RAM, and Disk storage.";
-  }
+    let playbookInstructions = "";
+    switch (playbook) {
+        case 'Network Connectivity':
+            playbookInstructions = "Focus strictly on network patterns: DNS resolution failures, connection timeouts, upstream 502/503/504 errors, and ingress controller logs. Ignore minor application logic errors.";
+            break;
+        case 'Security Audit':
+            playbookInstructions = "Focus strictly on security implications: Unauthorized access attempts (401/403), privilege escalation attempts, unusual binary executions, or capabilities violations.";
+            break;
+        case 'Resource Constraints':
+            playbookInstructions = "Focus strictly on resource usage: OOMKilled events, eviction thresholds due to DiskPressure or MemoryPressure, storage capacity limits, CFS throttling, and high I/O wait times.";
+            break;
+        case 'Data Integrity':
+            playbookInstructions = "Focus on database and storage: SQL connection errors, transaction rollbacks, volume mount failures, or data corruption warnings.";
+            break;
+        case 'Scheduling & Affinity':
+            playbookInstructions = "Focus strictly on scheduling constraints. Analyze 'FailedScheduling' events. Look for issues related to Node Affinity, Pod Anti-Affinity rules, Node Taints that aren't tolerated, or insufficient resources on specific topology zones (e.g. AZ mismatch).";
+            break;
+        default:
+            playbookInstructions = "Perform a holistic root cause analysis covering all aspects of reliability including CPU, RAM, and Disk storage.";
+    }
 
-  const prompt = `
-    You are a Senior Kubernetes SRE performing a targeted diagnosis for the workload "${workload.name}".
-    
-    **Context**:
-    - Status: ${workload.status}
-    - Playbook: ${playbook}
-    - Instruction: ${playbookInstructions}
-    
-    **Telemetry Summary**:
-    - CPU: ${workload.metrics.cpuUsage}c / ${workload.metrics.cpuLimit}c
-    - RAM: ${workload.metrics.memoryUsage}Mi / ${workload.metrics.memoryLimit}Mi
-    - Storage: ${workload.metrics.storageUsage || 0}Gi / ${workload.metrics.storageLimit || 0}Gi
-    - Disk I/O: ${workload.metrics.diskIo}MB/s
+    try {
+        const response = await fetch('/api/ai/analyze', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                // Add Authorization header if needed, managed by AuthContext usually
+            },
+            body: JSON.stringify({
+                workloadName: workload.name,
+                status: workload.status,
+                playbook: playbook,
+                instructions: playbookInstructions,
+                cpuUsage: `${workload.metrics.cpuUsage}`,
+                cpuLimit: `${workload.metrics.cpuLimit}`,
+                memoryUsage: `${workload.metrics.memoryUsage}`,
+                memoryLimit: `${workload.metrics.memoryLimit}`,
+                storageUsage: `${workload.metrics.storageUsage || 0}`,
+                storageLimit: `${workload.metrics.storageLimit || 0}`,
+                diskIo: `${workload.metrics.diskIo}`,
+                logs: workload.recentLogs,
+                events: workload.events.map(e => `${e.type}: ${e.reason} - ${e.message}`)
+            })
+        });
 
-    **Data**:
-    Logs:
-    ${workload.recentLogs.join('\n')}
+        if (!response.ok) {
+            throw new Error(`Backend API Error: ${response.statusText}`);
+        }
 
-    Events:
-    ${workload.events.map(e => `${e.type}: ${e.reason} - ${e.message}`).join('\n')}
-
-    **Output Guidelines**:
-    Provide a professional SRE incident report in Markdown.
-    Pay special attention to DiskPressure if storage usage is near limits.
-    
-    Structure:
-    1. **Executive Summary**: A high-level TL;DR of the critical issue.
-    2. **Root Cause Analysis (RCA)**: Logical deduction of why this is happening.
-    3. **Impact Assessment**: How this affects the end-user.
-    4. **Remediation Steps**: 3-4 numbered items to resolve the issue immediately.
-    5. **Observability Commands**: A markdown code block with 'kubectl' commands to verify storage/disk state.
-  `;
-
-  try {
-    const response = await ai.models.generateContent({
-      model: GEMINI_PRO_MODEL,
-      contents: prompt,
-      config: {
-        thinkingConfig: { thinkingBudget: 32768 }
-      }
-    });
-    return response.text || "Unable to analyze logs.";
-  } catch (error) {
-    console.error("Gemini API Error:", error);
-    return "Error generating analysis. Please check API key configuration.";
-  }
+        const data = await response.json();
+        return data.analysis || "No analysis generated.";
+    } catch (error) {
+        console.error("Gemini API Error (Backend):", error);
+        return "Error generating analysis. Please check backend logs.";
+    }
 };
 
 export const generateRightSizingRecommendation = async (workload: Workload, context: string, profile: OptimizationProfile = 'Balanced'): Promise<string> => {
     const ai = createClient();
-    
+
     let profileContext = "";
-    switch(profile) {
+    switch (profile) {
         case 'Cost-Saver':
             profileContext = "STRATEGY: MAXIMIZE COST SAVINGS. Target high utilization (85%+). Aggressively downsize underutilized CPU/RAM/Storage.";
             break;
@@ -153,8 +140,8 @@ export const generateHPARecommendation = async (workload: Workload, context?: st
 };
 
 export const generateKubectlPatch = async (workload: Workload, recommendationText: string): Promise<string> => {
-     const ai = createClient();
-     const prompt = `
+    const ai = createClient();
+    const prompt = `
        Based on the following recommendation text, generate a single valid 'kubectl patch' command to update resources (CPU, RAM, and Storage limits).
        Workload: ${workload.name}
        Recommendation Text: ${recommendationText}
@@ -162,16 +149,16 @@ export const generateKubectlPatch = async (workload: Workload, recommendationTex
        Return ONLY the command string.
      `;
 
-     try {
-         const response = await ai.models.generateContent({
-             model: GEMINI_PRO_MODEL,
-             contents: prompt,
-         });
-         return response.text?.trim() || "echo 'Error generating patch'";
-     } catch (error) {
-         console.error("Gemini API Error:", error);
-         return "echo 'Failed to patch'";
-     }
+    try {
+        const response = await ai.models.generateContent({
+            model: GEMINI_PRO_MODEL,
+            contents: prompt,
+        });
+        return response.text?.trim() || "echo 'Error generating patch'";
+    } catch (error) {
+        console.error("Gemini API Error:", error);
+        return "echo 'Failed to patch'";
+    }
 };
 
 export const summarizeWorkloadLogs = async (logs: string[]): Promise<string> => {

@@ -28,7 +28,6 @@ export const Layout: React.FC<LayoutProps> = () => {
     isAuthenticated,
     logout,
     selectApiKey,
-    selectApiKey,
     users,
     unreadReports
   } = useMonitoring();

@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 
+	"github.com/aavishay/kubetriage/backend/internal/ai"
 	"github.com/aavishay/kubetriage/backend/internal/api"
 	"github.com/aavishay/kubetriage/backend/internal/db"
 	"github.com/aavishay/kubetriage/backend/internal/k8s"
@@ -53,8 +54,16 @@ func main() {
 		log.Println("Prometheus client initialized")
 	}
 
+	// Init AI Service
+	aiService, err := ai.NewAIService(ctx)
+	if err != nil {
+		log.Printf("Warning: Failed to init AI service: %v", err)
+	} else {
+		defer aiService.Close()
+	}
+
 	// Setup Router
-	r := api.SetupRouter()
+	r := api.SetupRouter(aiService)
 
 	port := os.Getenv("PORT")
 	if port == "" {
