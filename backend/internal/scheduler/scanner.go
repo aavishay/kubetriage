@@ -6,6 +6,7 @@ import (
 	"log"
 
 	"github.com/aavishay/kubetriage/backend/internal/db"
+	"github.com/aavishay/kubetriage/backend/internal/integrations"
 	"github.com/aavishay/kubetriage/backend/internal/k8s"
 
 	// "github.com/aavishay/kubetriage/backend/internal/ai" // Assuming existing AI service package
@@ -73,6 +74,7 @@ func RunWorkloadScanner() {
 				// TODO: Call actual AI service. For now, creating a mock report.
 				// In real impl: analysis, err := ai.AnalyzeLogs(...)
 				analysis := fmt.Sprintf("## Proactive Alert\n\nPod `%s` in namespace `%s` is exhibiting instability.\n\n**Detected Issues:**\n- High Restart Count\n- Potential CrashLoopBackOff\n\n**Recommendation:** Check logs and resources.", pod.Name, pod.Namespace)
+				severity := "High"
 
 				report := db.TriageReport{
 					ClusterID:    cluster.ID,
@@ -80,11 +82,21 @@ func RunWorkloadScanner() {
 					WorkloadName: pod.Name, // Using Pod name as proxy for workload for now
 					Kind:         "Pod",
 					Analysis:     analysis,
-					Severity:     "High",
+					Severity:     severity,
 				}
 
 				if err := db.DB.Create(&report).Error; err != nil {
 					log.Printf("Error saving report: %v", err)
+				}
+
+				// Send Slack Notification
+				if severity == "High" || severity == "Critical" {
+					go integrations.SendSlackAlert(
+						fmt.Sprintf("🚨 AI Alert: %s/%s", pod.Namespace, pod.Name),
+						fmt.Sprintf("Cluster: %s\nDetected instability. Check Dashboard for full analysis.", cluster.Name),
+						severity,
+						nil,
+					)
 				}
 			}
 		}
