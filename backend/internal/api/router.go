@@ -33,19 +33,20 @@ func SetupRouter(aiService *ai.AIService) *gin.Engine {
 	auth.InitOAuth()
 
 	// Init Handlers
+	// Init Handlers
 	aiHandler := NewAIHandler(aiService)
 
 	api := r.Group("/api")
 	{
-		// ... (public routes)
+		// Public Routes
+		api.GET("/health", HealthHandler)
+		api.GET("/status/db", DBHealthHandler)
 
 		// Protected Routes
 		protected := api.Group("/")
 		protected.Use(auth.AuthMiddleware())
 		protected.Use(auth.AuditMiddleware())
 		{
-			protected.GET("/health", HealthHandler)
-			protected.GET("/status/db", DBHealthHandler)
 			protected.GET("/me", MeHandler)
 			protected.GET("/clusters", ClustersHandler)
 			protected.GET("/cluster/workloads", WorkloadsHandler)
