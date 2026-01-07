@@ -52,3 +52,14 @@ type TriageReport struct {
 	Severity     string // Low, Medium, High, Critical
 	IsRead       bool   `gorm:"default:false"`
 }
+
+type AuditLog struct {
+	ID        uuid.UUID  `gorm:"type:uuid;default:gen_random_uuid();primaryKey"`
+	UserID    *uuid.UUID `gorm:"type:uuid"`
+	UserEmail string
+	Action    string
+	Resource  string
+	Details   string `gorm:"type:text"`
+	IPAddress string
+	CreatedAt time.Time
+}

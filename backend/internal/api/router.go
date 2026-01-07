@@ -37,16 +37,12 @@ func SetupRouter(aiService *ai.AIService) *gin.Engine {
 
 	api := r.Group("/api")
 	{
-		// Public Auth Routes
-		authGroup := api.Group("/auth")
-		{
-			authGroup.GET("/login/google", auth.LoginHandler)
-			authGroup.GET("/callback/google", auth.CallbackHandler)
-		}
+		// ... (public routes)
 
 		// Protected Routes
 		protected := api.Group("/")
 		protected.Use(auth.AuthMiddleware())
+		protected.Use(auth.AuditMiddleware())
 		{
 			protected.GET("/health", HealthHandler)
 			protected.GET("/status/db", DBHealthHandler)

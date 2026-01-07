@@ -15,16 +15,15 @@ services:
       - GEMINI_API_KEY=${GEMINI_API_KEY}
       - MOCK_OIDC=true
       - FRONTEND_URL=http://localhost:8081
-      # IMPORTANT: If running in Docker Desktop, host.docker.internal can map to host ~/.kube/config if mounted properly, 
-      # but for now we assume KubeConfig is handled or we rely on In-Cluster config if deployed to K8s.
-      # For local testing, we might need to mount kubeconfig.
-    volumes:
-      # Mount local kubeconfig for development convenience
-      - ~/.kube:/home/appuser/.kube:ro
-    depends_on:
-      - jaeger
-      - postgres
+      - REDIS_ADDR=kubetriage-redis:6379
+
+  kubetriage-redis:
+    image: redis:alpine
+    ports:
+      - "6379:6379"
     restart: always
+    volumes:
+      - redis_data:/data
 
   postgres:
     image: postgres:15-alpine
@@ -66,3 +65,4 @@ networks:
 
 volumes:
   pgdata:
+  redis_data:

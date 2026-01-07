@@ -16,6 +16,10 @@ import (
 func RunWorkloadScanner() {
 	log.Println("RunWorkloadScanner: Starting scan...")
 	manager := k8s.GetClusterManager()
+	if manager == nil {
+		log.Println("RunWorkloadScanner: ClusterManager is nil, skipping scan.")
+		return
+	}
 	clusters := manager.ListClusters()
 
 	for _, cluster := range clusters {

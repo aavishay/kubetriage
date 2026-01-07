@@ -7,6 +7,7 @@ import (
 
 	"github.com/aavishay/kubetriage/backend/internal/ai"
 	"github.com/aavishay/kubetriage/backend/internal/api"
+	"github.com/aavishay/kubetriage/backend/internal/cache"
 	"github.com/aavishay/kubetriage/backend/internal/db"
 	"github.com/aavishay/kubetriage/backend/internal/k8s"
 	"github.com/aavishay/kubetriage/backend/internal/prometheus"
@@ -45,6 +46,9 @@ func main() {
 	if err != nil {
 		log.Printf("Error connecting to DB: %v", err)
 	}
+
+	// Init Redis
+	cache.InitRedis(os.Getenv("REDIS_ADDR"))
 
 	// Init Prometheus Client
 	err = prometheus.InitPrometheusClient()

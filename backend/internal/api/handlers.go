@@ -2,11 +2,13 @@ package api
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"math/rand"
 	"net/http"
 	"time"
 
+	"github.com/aavishay/kubetriage/backend/internal/cache"
 	"github.com/aavishay/kubetriage/backend/internal/db"
 	"github.com/aavishay/kubetriage/backend/internal/k8s"
 	"github.com/gin-gonic/gin"
@@ -105,6 +107,13 @@ type ClusterResponse struct {
 }
 
 func ClustersHandler(c *gin.Context) {
+	// 1. Try Cache
+	if val, err := cache.Get(c.Request.Context(), "clusters_list"); err == nil {
+		c.Header("X-Cache", "HIT")
+		c.Data(http.StatusOK, "application/json", []byte(val))
+		return
+	}
+
 	if k8s.Manager == nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Cluster Manager not initialized"})
 		return
@@ -131,6 +140,13 @@ func ClustersHandler(c *gin.Context) {
 			Status:   "Active", // Mock status for now
 		})
 	}
+
+	// 3. Set Cache (30s)
+	if jsonBytes, err := json.Marshal(response); err == nil {
+		cache.Set(c.Request.Context(), "clusters_list", jsonBytes, 30*time.Second)
+	}
+
+	c.Header("X-Cache", "MISS")
 	c.JSON(http.StatusOK, response)
 }
 

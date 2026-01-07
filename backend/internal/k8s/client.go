@@ -25,6 +25,7 @@ func InitK8sClient() (*kubernetes.Clientset, error) {
 	once.Do(func() {
 		// Initialize Manager
 		mgr := InitManager()
+		GlobalManager = mgr // <-- FIX: Assign to exported variable
 		err = mgr.LoadClustersFromKubeconfig()
 		if err != nil {
 			// Try creating a default config if loading from file failed (e.g. in-cluster)
