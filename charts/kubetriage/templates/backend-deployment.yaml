@@ -49,6 +49,17 @@ spec:
           env:
             - name: PORT
               value: "{{ .Values.backend.env.PORT }}"
+            - name: MOCK_OIDC
+              value: "{{ .Values.backend.env.MOCK_OIDC }}"
+            - name: FRONTEND_URL
+              value: "{{ .Values.backend.env.FRONTEND_URL }}"
+            {{- if .Values.backend.env.REDIS_ADDR }}
+            - name: REDIS_ADDR
+              value: "{{ .Values.backend.env.REDIS_ADDR }}"
+            {{- else }}
+            - name: REDIS_ADDR
+              value: "{{ .Release.Name }}-redis-master:6379"
+            {{- end }}
             {{- if .Values.backend.env.GEMINI_API_KEY }}
             - name: GEMINI_API_KEY
               value: "{{ .Values.backend.env.GEMINI_API_KEY }}"
