@@ -50,10 +50,10 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLogin }) => {
             />
           </div>
           <div className="space-y-1.5">
-             <div className="flex justify-between">
+            <div className="flex justify-between">
               <label className="text-xs font-semibold text-zinc-500 uppercase tracking-wider">Password</label>
               <a href="#" className="text-xs text-blue-600 hover:text-blue-500 dark:text-blue-400">Forgot password?</a>
-             </div>
+            </div>
             <input
               type="password"
               value={password}
@@ -85,6 +85,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLogin }) => {
           <div className="mt-6 grid grid-cols-2 gap-3">
             <button
               type="button"
+              onClick={() => window.location.href = '/api/auth/login'}
               className="flex w-full items-center justify-center gap-2 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 px-4 py-2 text-sm font-medium text-zinc-700 dark:text-zinc-200 hover:bg-zinc-50 dark:hover:bg-zinc-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all"
             >
               <Chrome className="h-4 w-4" />
@@ -100,7 +101,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLogin }) => {
           </div>
         </div>
       </div>
-      
+
       <div className="absolute bottom-6 text-xs text-zinc-400">
         &copy; 2024 KubeOptima Inc. All rights reserved.
       </div>

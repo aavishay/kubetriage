@@ -23,6 +23,7 @@ interface MonitoringContextType {
   isCheckingKey: boolean;
   activeNotification: TriggeredAlert | null;
   unreadReports: number;
+  refreshClusters: () => Promise<void>;
 
   // Actions
   login: () => void;
@@ -59,7 +60,10 @@ interface MonitoringProviderProps {
 
 export const MonitoringProvider: React.FC<MonitoringProviderProps> = ({ children }) => {
   // --- Auth & Config State ---
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(() => {
+    // Check for auth_token cookie on initial load
+    return document.cookie.split(';').some(c => c.trim().startsWith('auth_token='));
+  });
   const [hasApiKey, setHasApiKey] = useState(false);
   const [isCheckingKey, setIsCheckingKey] = useState(true);
 
@@ -82,34 +86,39 @@ export const MonitoringProvider: React.FC<MonitoringProviderProps> = ({ children
 
   // Fetch Workloads
   // Fetch Data
-  useEffect(() => {
-    const fetchClusters = async () => {
-      try {
-        const response = await fetch('/api/clusters');
-        if (response.ok) {
-          const data = await response.json();
-          // Map backend response to frontend Cluster type
-          const mappedClusters = data.map((c: any) => ({
-            id: c.id,
-            name: c.name,
-            provider: c.provider || 'On-Prem',
-            status: c.status || 'Active',
-            region: 'local', // Default for now
-          }));
-
-          if (mappedClusters.length > 0) {
-            setClusters(mappedClusters);
-            // Only set default if we haven't selected one yet (or persisted it)
-            // For now, simple default:
-            setSelectedCluster(prev => mappedClusters.find((c: any) => c.id === prev.id) || mappedClusters[0]);
-          }
+  const refreshClusters = useCallback(async () => {
+    try {
+      const response = await fetch('/api/clusters', {
+        headers: {
+          'Authorization': 'Bearer mock-token'
         }
-      } catch (err) {
-        console.error("Failed to fetch clusters", err);
+      });
+      if (response.ok) {
+        const data = await response.json();
+        // Map backend response to frontend Cluster type
+        const mappedClusters = data.map((c: any) => ({
+          id: c.id,
+          name: c.name,
+          provider: c.provider || 'On-Prem',
+          status: c.status || 'Active',
+          region: 'local', // Default for now
+        }));
+
+        if (mappedClusters.length > 0) {
+          setClusters(mappedClusters);
+          // Only set default if we haven't selected one yet (or persisted it)
+          // For now, simple default:
+          setSelectedCluster(prev => mappedClusters.find((c: any) => c.id === prev.id) || mappedClusters[0]);
+        }
       }
-    };
-    fetchClusters();
+    } catch (err) {
+      console.error("Failed to fetch clusters", err);
+    }
   }, []);
+
+  useEffect(() => {
+    refreshClusters();
+  }, [refreshClusters]);
 
   // Poll for unread reports
   useEffect(() => {
@@ -318,7 +327,8 @@ export const MonitoringProvider: React.FC<MonitoringProviderProps> = ({ children
       dismissNotification,
       isDarkMode,
       toggleTheme,
-      unreadReports
+      unreadReports,
+      refreshClusters
     }}>
       {children}
     </MonitoringContext.Provider>

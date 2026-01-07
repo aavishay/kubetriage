@@ -18,6 +18,8 @@ const ProviderIcon = ({ provider, className }: { provider: Cluster['provider'], 
   }
 };
 
+import { RegisterClusterModal } from './RegisterClusterModal';
+
 export const Layout: React.FC<LayoutProps> = () => {
   const {
     isDarkMode,
@@ -40,6 +42,7 @@ export const Layout: React.FC<LayoutProps> = () => {
   const [apiStatus, setApiStatus] = useState<'Connected' | 'Degraded'>('Connected');
   const [isClusterMenuOpen, setIsClusterMenuOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+  const [isRegisterModalOpen, setIsRegisterModalOpen] = useState(false);
 
   const clusterMenuRef = useRef<HTMLDivElement>(null);
   const userMenuRef = useRef<HTMLDivElement>(null);
@@ -87,6 +90,7 @@ export const Layout: React.FC<LayoutProps> = () => {
 
   return (
     <div className="flex h-screen bg-zinc-50 dark:bg-[#09090b] text-zinc-900 dark:text-zinc-300 overflow-hidden flex-col md:flex-row">
+      <RegisterClusterModal isOpen={isRegisterModalOpen} onClose={() => setIsRegisterModalOpen(false)} />
 
       {/* Mobile Sidebar Overlay */}
       {isMobileMenuOpen && (
@@ -187,7 +191,10 @@ export const Layout: React.FC<LayoutProps> = () => {
                     </button>
                   ))}
                   <div className="h-px bg-zinc-100 dark:border-zinc-800 my-2" />
-                  <button className="w-full flex items-center gap-3 px-4 py-2.5 text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors">
+                  <button
+                    onClick={() => { setIsRegisterModalOpen(true); setIsClusterMenuOpen(false); }}
+                    className="w-full flex items-center gap-3 px-4 py-2.5 text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors"
+                  >
                     <Plus className="w-4 h-4" /> Register New Cluster
                   </button>
                 </div>

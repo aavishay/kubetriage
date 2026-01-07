@@ -14,6 +14,7 @@ import (
 	"github.com/aavishay/kubetriage/backend/internal/k8s"
 	"github.com/aavishay/kubetriage/backend/internal/prometheus"
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
@@ -306,4 +307,67 @@ func WorkloadsHandler(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, workloads)
+}
+
+type RegisterClusterRequest struct {
+	Kubeconfig string `json:"kubeconfig" binding:"required"`
+}
+
+func RegisterClusterHandler(c *gin.Context) {
+	var req RegisterClusterRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid payload: kubeconfig is required"})
+		return
+	}
+
+	if k8s.Manager == nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Cluster Manager not initialized"})
+		return
+	}
+
+	// 1. Add to Manager (In-Memory)
+	cluster, err := k8s.Manager.AddClusterFromKubeconfig([]byte(req.Kubeconfig))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("Failed to register cluster: %v", err)})
+		return
+	}
+
+	// 2. Associate with Project (Multi-Tenancy)
+	// For MVP, we associate with the user's current project (or Default)
+	userInfo := c.MustGet("user").(auth.UserInfo)
+	var projUUID uuid.UUID
+	var errUUID error
+
+	if userInfo.ProjectID != "" {
+		projUUID, errUUID = uuid.Parse(userInfo.ProjectID)
+		if errUUID != nil {
+			fmt.Printf("Warning: Invalid project ID in user token: %v\n", errUUID)
+		}
+	}
+
+	// If user has no project (shouldn't happen) or invalid, try to find/use Default
+	if projUUID == uuid.Nil {
+		var defaultProj db.Project
+		if err := db.DB.Where("name = ?", "Default").First(&defaultProj).Error; err == nil {
+			projUUID = defaultProj.ID
+		}
+	}
+
+	if projUUID != uuid.Nil {
+		// Check if mapping exists
+		var count int64
+		db.DB.Model(&db.ClusterProject{}).Where("cluster_id = ? AND project_id = ?", cluster.ID, projUUID).Count(&count)
+		if count == 0 {
+			db.DB.Create(&db.ClusterProject{
+				ClusterID: cluster.ID, // String
+				ProjectID: projUUID,   // UUID
+			})
+		}
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Cluster registered successfully",
+		"id":      cluster.ID,
+		"name":    cluster.Name,
+	})
 }

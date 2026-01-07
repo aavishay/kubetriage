@@ -140,3 +140,61 @@ func (m *ClusterManager) ListClusters() []*Cluster {
 	}
 	return list
 }
+
+// AddClusterFromKubeconfig parses a raw kubeconfig and adds it to the manager
+func (m *ClusterManager) AddClusterFromKubeconfig(rawConfig []byte) (*Cluster, error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	// 1. Parse Config
+	clientConfig, err := clientcmd.NewClientConfigFromBytes(rawConfig)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse kubeconfig: %v", err)
+	}
+	raw, err := clientConfig.RawConfig()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get raw config: %v", err)
+	}
+
+	// use the current context name, or "default" if missing
+	contextName := raw.CurrentContext
+	if contextName == "" {
+		// fallback: try to pick the first context key
+		for k := range raw.Contexts {
+			contextName = k
+			break
+		}
+	}
+	if contextName == "" {
+		contextName = "imported-cluster-" + fmt.Sprintf("%d", len(m.clusters)+1)
+	}
+
+	restConfig, err := clientConfig.ClientConfig()
+	if err != nil {
+		return nil, fmt.Errorf("failed to create rest config: %v", err)
+	}
+
+	// 2. Create Clients
+	clientset, err := kubernetes.NewForConfig(restConfig)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create clientset: %v", err)
+	}
+
+	dynamicClient, err := dynamic.NewForConfig(restConfig)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create dynamic client: %v", err)
+	}
+
+	// 3. Add to Map
+	cluster := &Cluster{
+		ID:            contextName, // using context name as ID for simplicity
+		Name:          contextName,
+		ClientSet:     clientset,
+		DynamicClient: dynamicClient,
+		Config:        restConfig,
+	}
+
+	m.clusters[cluster.ID] = cluster
+	fmt.Printf(" dynamically registered cluster: %s\n", cluster.Name)
+	return cluster, nil
+}

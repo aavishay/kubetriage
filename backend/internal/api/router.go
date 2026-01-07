@@ -41,6 +41,8 @@ func SetupRouter(aiService *ai.AIService) *gin.Engine {
 		// Public Routes
 		api.GET("/health", HealthHandler)
 		api.GET("/status/db", DBHealthHandler)
+		api.GET("/auth/login", func(c *gin.Context) { auth.LoginHandler(c) })
+		api.GET("/auth/google/callback", func(c *gin.Context) { auth.CallbackHandler(c) })
 
 		// Protected Routes
 		protected := api.Group("/")
@@ -49,6 +51,7 @@ func SetupRouter(aiService *ai.AIService) *gin.Engine {
 		{
 			protected.GET("/me", MeHandler)
 			protected.GET("/clusters", ClustersHandler)
+			protected.POST("/clusters/register", RegisterClusterHandler)
 			protected.GET("/cluster/workloads", WorkloadsHandler)
 			protected.GET("/cluster/metrics", ClusterMetricsHandler)
 			protected.GET("/reports", ListReportsHandler)
