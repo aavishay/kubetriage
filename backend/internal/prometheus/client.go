@@ -79,3 +79,24 @@ func (c *Client) QueryRange(ctx context.Context, query string, start, end time.T
 
 	return points, nil
 }
+
+// QueryVector executes an instant PromQL query
+func (c *Client) QueryVector(ctx context.Context, query string) (float64, error) {
+	result, warnings, err := c.api.Query(ctx, query, time.Now())
+	if err != nil {
+		return 0, fmt.Errorf("prometheus query error: %v", err)
+	}
+	if len(warnings) > 0 {
+		fmt.Printf("Prometheus Warnings: %v\n", warnings)
+	}
+
+	vector, ok := result.(model.Vector)
+	if !ok {
+		return 0, fmt.Errorf("unexpected result format: %T", result)
+	}
+
+	if len(vector) > 0 {
+		return float64(vector[0].Value), nil
+	}
+	return 0, nil // No data
+}

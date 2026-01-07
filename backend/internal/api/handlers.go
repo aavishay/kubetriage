@@ -12,7 +12,9 @@ import (
 	"github.com/aavishay/kubetriage/backend/internal/cache"
 	"github.com/aavishay/kubetriage/backend/internal/db"
 	"github.com/aavishay/kubetriage/backend/internal/k8s"
+	"github.com/aavishay/kubetriage/backend/internal/prometheus"
 	"github.com/gin-gonic/gin"
+	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 )
@@ -83,21 +85,50 @@ func getStatus(available, replicas int32) string {
 	return "Warning"
 }
 
-func getMockMetrics() ResourceMetrics {
-	return ResourceMetrics{
-		CpuRequest:     0.5,
-		CpuLimit:       1.0,
-		CpuUsage:       rand.Float64() * 0.8,
-		MemoryRequest:  512,
-		MemoryLimit:    1024,
-		MemoryUsage:    rand.Float64() * 900,
-		StorageRequest: 10,
-		StorageLimit:   20,
-		StorageUsage:   rand.Float64() * 10,
-		NetworkIn:      rand.Float64() * 10,
-		NetworkOut:     rand.Float64() * 10,
-		DiskIo:         rand.Float64() * 5,
+func getRealMetrics(ctx context.Context, namespace, name, kind string, podSpec v1.PodSpec) ResourceMetrics {
+	metrics := ResourceMetrics{}
+
+	// 1. Calculate Requests/Limits from Pod Spec
+	for _, container := range podSpec.Containers {
+		// CPU
+		if q, ok := container.Resources.Requests[v1.ResourceCPU]; ok {
+			metrics.CpuRequest += float64(q.MilliValue()) / 1000.0 // Cores
+		}
+		if q, ok := container.Resources.Limits[v1.ResourceCPU]; ok {
+			metrics.CpuLimit += float64(q.MilliValue()) / 1000.0 // Cores
+		}
+
+		// Memory
+		if q, ok := container.Resources.Requests[v1.ResourceMemory]; ok {
+			metrics.MemoryRequest += float64(q.Value()) / (1024 * 1024) // MiB
+		}
+		if q, ok := container.Resources.Limits[v1.ResourceMemory]; ok {
+			metrics.MemoryLimit += float64(q.Value()) / (1024 * 1024) // MiB
+		}
 	}
+
+	// 2. Fetch Usage from Prometheus (if avail)
+	// Query: sum(rate(container_cpu_usage_seconds_total{namespace="X", pod=~"Name-.*"}[5m]))
+	// Note: We match pod name prefix. For Deployments/StatefulSets this works well.
+	if prometheus.GlobalClient != nil {
+		// CPU Usage
+		cpuQuery := fmt.Sprintf(`sum(rate(container_cpu_usage_seconds_total{namespace="%s", pod=~"%s-.*", container!=""}[2m]))`, namespace, name)
+		if val, err := prometheus.GlobalClient.QueryVector(ctx, cpuQuery); err == nil {
+			metrics.CpuUsage = val
+		}
+
+		// Memory Usage
+		memQuery := fmt.Sprintf(`sum(container_memory_working_set_bytes{namespace="%s", pod=~"%s-.*", container!=""})`, namespace, name)
+		if val, err := prometheus.GlobalClient.QueryVector(ctx, memQuery); err == nil {
+			metrics.MemoryUsage = val / (1024 * 1024) // MiB
+		}
+	} else {
+		// If no Prometheus, fallback to mock (or 0)
+		// User requested "no mock", but 0 might look broken if they expect data without Prom.
+		// We'll leave usage as 0 if Prom is missing, but show Requests/Limits which ARE real.
+	}
+
+	return metrics
 }
 
 type ClusterResponse struct {
@@ -221,7 +252,7 @@ func WorkloadsHandler(c *gin.Context) {
 				Replicas:          *d.Spec.Replicas,
 				AvailableReplicas: d.Status.AvailableReplicas,
 				Status:            getStatus(d.Status.AvailableReplicas, *d.Spec.Replicas),
-				Metrics:           getMockMetrics(),
+				Metrics:           getRealMetrics(c.Request.Context(), d.Namespace, d.Name, "Deployment", d.Spec.Template.Spec),
 				RecentLogs:        []string{},
 				Events:            []string{},
 				CostPerMonth:      rand.Intn(500) + 50,
@@ -244,7 +275,7 @@ func WorkloadsHandler(c *gin.Context) {
 				Replicas:          *s.Spec.Replicas,
 				AvailableReplicas: s.Status.ReadyReplicas,
 				Status:            getStatus(s.Status.ReadyReplicas, *s.Spec.Replicas),
-				Metrics:           getMockMetrics(),
+				Metrics:           getRealMetrics(c.Request.Context(), s.Namespace, s.Name, "StatefulSet", s.Spec.Template.Spec),
 				RecentLogs:        []string{},
 				Events:            []string{},
 				CostPerMonth:      rand.Intn(500) + 100,
@@ -265,7 +296,7 @@ func WorkloadsHandler(c *gin.Context) {
 				Replicas:          ds.Status.DesiredNumberScheduled,
 				AvailableReplicas: ds.Status.NumberReady,
 				Status:            getStatus(ds.Status.NumberReady, ds.Status.DesiredNumberScheduled),
-				Metrics:           getMockMetrics(),
+				Metrics:           getRealMetrics(c.Request.Context(), ds.Namespace, ds.Name, "DaemonSet", ds.Spec.Template.Spec),
 				RecentLogs:        []string{},
 				Events:            []string{},
 				CostPerMonth:      rand.Intn(200) + 50,
