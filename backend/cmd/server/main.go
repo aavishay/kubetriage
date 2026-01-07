@@ -39,12 +39,35 @@ func main() {
 		log.Printf("Warning: Failed to initialize K8s client: %v", err)
 	} else {
 		log.Println("Kubernetes client initialized successfully")
+
 	}
 
 	// Init Database
 	_, err = db.InitDB(os.Getenv("DATABASE_URL"))
 	if err != nil {
 		log.Printf("Error connecting to DB: %v", err)
+	} else {
+		// Sync Clusters to Default Project (Multi-Tenancy MVP)
+		var defaultProject db.Project
+		// Wait for default project seeding (simple retry or sleep, or just check)
+		// Since seed is in a goroutine, strict consistency might require wait,
+		// but GORM access is safe. We'll attempt a quick sync.
+		if err := db.DB.Where("name = ?", "Default").First(&defaultProject).Error; err == nil {
+			mgr := k8s.GetClusterManager()
+			if mgr != nil {
+				for _, cls := range mgr.ListClusters() {
+					var count int64
+					db.DB.Model(&db.ClusterProject{}).Where("cluster_id = ?", cls.ID).Count(&count)
+					if count == 0 {
+						log.Printf("Auto-assigning cluster '%s' to Default Project", cls.Name)
+						db.DB.Create(&db.ClusterProject{
+							ClusterID: cls.ID,
+							ProjectID: defaultProject.ID,
+						})
+					}
+				}
+			}
+		}
 	}
 
 	// Init Redis

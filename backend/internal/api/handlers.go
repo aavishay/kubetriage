@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/aavishay/kubetriage/backend/internal/auth"
 	"github.com/aavishay/kubetriage/backend/internal/cache"
 	"github.com/aavishay/kubetriage/backend/internal/db"
 	"github.com/aavishay/kubetriage/backend/internal/k8s"
@@ -122,7 +123,41 @@ func ClustersHandler(c *gin.Context) {
 	clusters := k8s.Manager.ListClusters()
 	response := make([]ClusterResponse, 0, len(clusters))
 
+	// Multi-Tenancy Filtering
+	userInfo := c.MustGet("user").(auth.UserInfo) // Use string key "user" matching middleware
+	var allowedClusterIDs []string
+
+	if userInfo.Role == auth.RoleAdmin {
+		// Admin sees all? Or just their project?
+		// For MVP: Admin sees all (e.g. Platform Admin)
+		// Or: allow all for now if ProjectID is empty
+	}
+
+	// Fetch allowed IDs for this project
+	if userInfo.ProjectID != "" {
+		db.DB.Model(&db.ClusterProject{}).Where("project_id = ?", userInfo.ProjectID).Pluck("cluster_id", &allowedClusterIDs)
+	}
+
 	for _, cls := range clusters {
+		// Filter: Only show if in allowed list (unless Admin/NoProject logic)
+		// Strict mode: Must be in list
+		isAllowed := false
+		if userInfo.ProjectID != "" {
+			for _, id := range allowedClusterIDs {
+				if id == cls.ID {
+					isAllowed = true
+					break
+				}
+			}
+		} else {
+			// Backward compatibility for users without project (shouldn't happen with seeding)
+			isAllowed = true
+		}
+
+		if !isAllowed && userInfo.Role != auth.RoleAdmin {
+			continue
+		}
+
 		// Simple heuristic for provider based on name
 		provider := "Unknown"
 		if cls.Name == "minikube" {

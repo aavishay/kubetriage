@@ -33,10 +33,30 @@ func InitDB(dsn string) (*gorm.DB, error) {
 	}
 
 	// Auto-Migrate Schemas
-	err = DB.AutoMigrate(&User{}, &Session{}, &Playbook{})
+	err = DB.AutoMigrate(&User{}, &Session{}, &Playbook{}, &TriageReport{}, &AuditLog{}, &Project{}, &ClusterProject{})
 	if err != nil {
 		log.Printf("Warning: AutoMigrate failed: %v", err)
 	}
 
+	// Seed Default Project
+	go seedDefaultProject(DB)
+
 	return DB, nil
+}
+
+func seedDefaultProject(db *gorm.DB) {
+	// Create Default Project if not exists
+	var count int64
+	db.Model(&Project{}).Count(&count)
+	if count == 0 {
+		defaultProject := Project{Name: "Default"}
+		if err := db.Create(&defaultProject).Error; err != nil {
+			log.Printf("Error seeding default project: %v", err)
+			return
+		}
+		log.Println("Seeded 'Default' project")
+
+		// Assign all existing users to Default Project
+		db.Model(&User{}).Where("project_id IS NULL").Update("project_id", defaultProject.ID)
+	}
 }

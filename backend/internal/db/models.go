@@ -14,8 +14,9 @@ type User struct {
 	Provider    string    `gorm:"default:'local'"`
 	ProviderID  string    `gorm:"index"`
 	AvatarURL   string
-	Role        string `gorm:"default:'viewer'"`
-	Preferences []byte `gorm:"type:jsonb"` // Stores JSON data for theme, etc.
+	Role        string     `gorm:"default:'viewer'"`
+	ProjectID   *uuid.UUID `gorm:"type:uuid"`
+	Preferences []byte     `gorm:"type:jsonb"` // Stores JSON data for theme, etc.
 	CreatedAt   time.Time
 	UpdatedAt   time.Time
 	DeletedAt   gorm.DeletedAt `gorm:"index"`
@@ -48,9 +49,10 @@ type TriageReport struct {
 	Namespace    string
 	WorkloadName string
 	Kind         string
-	Analysis     string // Markdown analysis
-	Severity     string // Low, Medium, High, Critical
-	IsRead       bool   `gorm:"default:false"`
+	Analysis     string     // Markdown analysis
+	Severity     string     // Low, Medium, High, Critical
+	IsRead       bool       `gorm:"default:false"`
+	ProjectID    *uuid.UUID `gorm:"type:uuid"`
 }
 
 type AuditLog struct {
@@ -61,5 +63,22 @@ type AuditLog struct {
 	Resource  string
 	Details   string `gorm:"type:text"`
 	IPAddress string
+	CreatedAt time.Time
+}
+
+// Multi-Tenancy Models
+
+type Project struct {
+	ID        uuid.UUID `gorm:"type:uuid;default:gen_random_uuid();primaryKey"`
+	Name      string    `gorm:"not null"`
+	CreatedAt time.Time
+	UpdatedAt time.Time
+	DeletedAt gorm.DeletedAt `gorm:"index"`
+}
+
+type ClusterProject struct {
+	ID        uuid.UUID `gorm:"type:uuid;default:gen_random_uuid();primaryKey"`
+	ClusterID string    `gorm:"uniqueIndex;not null"`
+	ProjectID uuid.UUID `gorm:"not null"`
 	CreatedAt time.Time
 }

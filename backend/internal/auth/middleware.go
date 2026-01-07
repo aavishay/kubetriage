@@ -19,9 +19,10 @@ const UserContextKey = "user"
 
 // UserInfo struct
 type UserInfo struct {
-	ID    string `json:"id"`
-	Email string `json:"email"`
-	Role  string `json:"role"`
+	ID        string `json:"id"`
+	Email     string `json:"email"`
+	Role      string `json:"role"`
+	ProjectID string `json:"projectID"`
 }
 
 // AuthMiddleware extracts user identity
@@ -38,10 +39,15 @@ func AuthMiddleware() gin.HandlerFunc {
 
 				var dbUser db.User
 				if result := db.DB.First(&dbUser, "id = ?", userIdStr); result.Error == nil {
+					projectID := ""
+					if dbUser.ProjectID != nil {
+						projectID = dbUser.ProjectID.String()
+					}
 					user := UserInfo{
-						ID:    dbUser.ID.String(),
-						Email: dbUser.Email,
-						Role:  dbUser.Role,
+						ID:        dbUser.ID.String(),
+						Email:     dbUser.Email,
+						Role:      dbUser.Role,
+						ProjectID: projectID,
 					}
 					c.Set(UserContextKey, user)
 					c.Next()
