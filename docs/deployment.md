@@ -1,13 +1,15 @@
 # Production Deployment Guide 🚀
 
-This guide details how to deploy KubeTriage to a production Kubernetes cluster (EKS, GKE, or AKS) using Helm.
+This guide details how to deploy KubeTriage to **any** Kubernetes cluster, including:
+- **Cloud Managed**: EKS (AWS), GKE (Google), AKS (Azure), DOKS (DigitalOcean).
+- **On-Premise / Self-Managed**: Kubeadm, RKE2, K3s, OpenShift, VMWare Tanzu.
 
 ## Prerequisites
-- Kubernetes Cluster 1.25+
+- Kubernetes Cluster 1.25+ (Any CNCF certified distribution)
 - Helm 3.x installed
 - kubectl configured
 - Google Cloud API Key (for Gemini AI)
-- Google OAuth Credentials (for OIDC Login)
+- OIDC Provider (Google, Keycloak, Okta, Dex, or similar)
 
 ## 1. Environment Setup
 
@@ -32,21 +34,22 @@ helm dependency update charts/kubetriage
 ```
 
 ### Configure `values.yaml`
-Create a `prod-values.yaml` file:
+Create a `prod-values.yaml` file. This configuration works for both Cloud LoadBalancers and On-Prem Ingress Controllers (like Nginx/Traefik/HAProxy).
 
 ```yaml
 backend:
   env:
-    # Ensure this matches your Ingress/LoadBalancer
-    FRONTEND_URL: "https://triage.your-company.com"
-    # Using real OIDC
+    # URL where users will access the dashboard
+    FRONTEND_URL: "https://triage.corp.example.com"
+    # Enable real OIDC (requires an Identity Provider)
     MOCK_OIDC: "false"
 
 ingress:
   enabled: true
+  # Change this to match your cluster's Ingress Class (e.g., 'nginx', 'traefik', 'alb')
   className: "nginx"
   hosts:
-    - host: triage.your-company.com
+    - host: triage.corp.example.com
       paths:
         - path: /
           pathType: ImplementationSpecific

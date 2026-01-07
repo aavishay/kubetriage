@@ -51,6 +51,7 @@ func SetupRouter(aiService *ai.AIService) *gin.Engine {
 			protected.GET("/cluster/workloads", WorkloadsHandler)
 			protected.GET("/cluster/metrics", ClusterMetricsHandler)
 			protected.GET("/reports", ListReportsHandler)
+			protected.GET("/reports/compliance", GenerateComplianceReportHandler)
 			protected.POST("/reports/:id/read", MarkReportReadHandler)
 
 			// AI / Remediation
