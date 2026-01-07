@@ -1,8 +1,10 @@
 package api
 
 import (
+	"fmt"
 	"net/http"
 
+	"github.com/aavishay/kubetriage/backend/internal/integrations"
 	"github.com/aavishay/kubetriage/backend/internal/k8s"
 	"github.com/gin-gonic/gin"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -56,6 +58,13 @@ func ApplyRemediationHandler(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to apply patch: " + err.Error()})
 		return
 	}
+
+	// Trigger PagerDuty Incident for critical changes
+	go integrations.TriggerPagerDutyIncident(
+		fmt.Sprintf("Remediation Applied: %s/%s", req.Namespace, req.ResourceName),
+		"KubeTriage AI",
+		"critical",
+	)
 
 	c.JSON(http.StatusOK, gin.H{"status": "applied", "message": "Remediation applied successfully"})
 }
