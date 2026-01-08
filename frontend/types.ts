@@ -99,6 +99,7 @@ export interface TriggeredAlert {
   ruleId: string;
   ruleName: string;
   workloadName: string;
+  workloadId: string;
   metric: string;
   value: number;
   threshold: number;

@@ -234,6 +234,7 @@ export const MonitoringProvider: React.FC<MonitoringProviderProps> = ({ children
               ruleId: rule.id,
               ruleName: rule.name,
               workloadName: workload.name,
+              workloadId: workload.id,
               metric: rule.metric,
               value: parseFloat(saturatedValue.toFixed(1)),
               threshold: rule.threshold,

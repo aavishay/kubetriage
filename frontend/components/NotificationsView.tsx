@@ -1,6 +1,6 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useMonitoring } from '../contexts/MonitoringContext';
 import { NotificationChannel, NotificationType, AlertRule, TriggeredAlert } from '../types';
 import { Bell, Plus, Search, MoreHorizontal, Slack, Mail, Webhook, Trash2, Edit2, X, Activity, Loader2, Play, Pause, Settings2, ShieldAlert, Cpu, MemoryStick, Zap, DollarSign, Filter, CheckCircle2, AlertCircle, MessageSquare, History, Clock, ArrowRight, BellRing } from 'lucide-react';
@@ -91,6 +91,12 @@ export const NotificationsView: React.FC<NotificationsViewProps> = ({
       a.ruleName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       a.workloadName.toLowerCase().includes(searchTerm.toLowerCase())
    );
+
+   const navigate = useNavigate();
+
+   const handleAlertClick = (alert: TriggeredAlert) => {
+      navigate('/triage', { state: { workloadId: alert.workloadId } });
+   };
 
    const openChannelModal = (channel?: NotificationChannel) => {
       if (channel) {
@@ -322,15 +328,20 @@ export const NotificationsView: React.FC<NotificationsViewProps> = ({
                      </button>
                   </div>
                   <div className="divide-y divide-zinc-100 dark:divide-zinc-800">
+
                      {filteredHistory.length > 0 ? (
                         filteredHistory.map(alert => (
-                           <div key={alert.id} className="p-8 flex items-center gap-8 group hover:bg-zinc-50 dark:hover:bg-zinc-950/50 transition-colors">
+                           <div
+                              key={alert.id}
+                              onClick={() => handleAlertClick(alert)}
+                              className="p-8 flex items-center gap-8 group hover:bg-zinc-50 dark:hover:bg-zinc-950/50 transition-colors cursor-pointer"
+                           >
                               <div className={`p-4 rounded-2xl shrink-0 ${alert.severity === 'Critical' ? 'bg-red-500/10 text-red-500' : 'bg-amber-500/10 text-amber-500'}`}>
                                  <BellRing className="w-6 h-6" />
                               </div>
                               <div className="flex-1 min-w-0">
                                  <div className="flex items-center gap-3 mb-1">
-                                    <span className="text-sm font-black text-zinc-900 dark:text-white uppercase tracking-tighter">{alert.ruleName}</span>
+                                    <span className="text-sm font-black text-zinc-900 dark:text-white uppercase tracking-tighter group-hover:text-indigo-500 transition-colors">{alert.ruleName}</span>
                                     <span className={`text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-md ${alert.severity === 'Critical' ? 'bg-red-500 text-white' : 'bg-amber-500 text-white'
                                        }`}>
                                        {alert.severity}
@@ -343,7 +354,7 @@ export const NotificationsView: React.FC<NotificationsViewProps> = ({
                               <div className="text-right shrink-0">
                                  <div className="text-[10px] font-black text-zinc-900 dark:text-white uppercase tracking-widest mb-1">{formatTime(alert.timestamp)}</div>
                                  <div className="flex items-center justify-end gap-1 text-[9px] text-zinc-400 font-bold uppercase">
-                                    <ArrowRight className="w-3 h-3" />
+                                    <ArrowRight className="w-3 h-3 group-hover:translate-x-1 transition-transform text-indigo-500" />
                                     {alert.channelsNotified.length} Channels Notified
                                  </div>
                               </div>
