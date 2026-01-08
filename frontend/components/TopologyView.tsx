@@ -223,14 +223,14 @@ export const TopologyView: React.FC<TopologyViewProps> = ({ workloads, isDarkMod
                                             </div>
                                             <div className="flex flex-col items-end gap-1">
                                                 <div className="text-[10px] font-mono text-zinc-500">
-                                                    CPU: {Math.round((w.metrics.cpuUsage / w.metrics.cpuLimit) * 100)}%
+                                                    CPU: {w.metrics.cpuLimit > 0 ? Math.round((w.metrics.cpuUsage / w.metrics.cpuLimit) * 100) : 0}%
                                                 </div>
                                                 <div className="w-16 h-1 bg-zinc-200 dark:bg-zinc-700 rounded-full overflow-hidden">
                                                     <div
-                                                        className={`h-full rounded-full ${(w.metrics.cpuUsage / w.metrics.cpuLimit) > 0.9 ? 'bg-red-500' :
-                                                            (w.metrics.cpuUsage / w.metrics.cpuLimit) > 0.7 ? 'bg-amber-500' : 'bg-emerald-500'
+                                                        className={`h-full rounded-full ${w.metrics.cpuLimit > 0 && (w.metrics.cpuUsage / w.metrics.cpuLimit) > 0.9 ? 'bg-red-500' :
+                                                                w.metrics.cpuLimit > 0 && (w.metrics.cpuUsage / w.metrics.cpuLimit) > 0.7 ? 'bg-amber-500' : 'bg-emerald-500'
                                                             }`}
-                                                        style={{ width: `${Math.min(100, (w.metrics.cpuUsage / w.metrics.cpuLimit) * 100)}%` }}
+                                                        style={{ width: `${w.metrics.cpuLimit > 0 ? Math.min(100, (w.metrics.cpuUsage / w.metrics.cpuLimit) * 100) : 0}%` }}
                                                     ></div>
                                                 </div>
                                             </div>

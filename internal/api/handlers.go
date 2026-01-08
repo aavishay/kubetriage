@@ -287,6 +287,11 @@ func WorkloadsHandler(c *gin.Context) {
 		return
 	}
 
+	// Prevent caching of workload data
+	c.Header("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate")
+	c.Header("Pragma", "no-cache")
+	c.Header("Expires", "0")
+
 	ctx := context.TODO()
 	var workloads []Workload
 

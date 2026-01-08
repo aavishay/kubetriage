@@ -143,7 +143,13 @@ export const MonitoringProvider: React.FC<MonitoringProviderProps> = ({ children
 
   useEffect(() => {
     const fetchWorkloads = async () => {
-      if (!selectedCluster) return;
+      if (!selectedCluster) {
+        setWorkloads([]);
+        return;
+      }
+
+      // Clear previous workloads immediately to avoid stale data
+      setWorkloads([]);
 
       try {
         const response = await fetch(`/api/cluster/workloads?cluster=${selectedCluster.id}`);
