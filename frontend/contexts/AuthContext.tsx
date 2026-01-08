@@ -66,3 +66,8 @@ export const useAuth = () => {
     }
     return context;
 };
+
+export const fetchWithAuth = async (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
+    // Wrapper for fetch that could handle token injection if we moved away from cookies
+    return fetch(input, init);
+};

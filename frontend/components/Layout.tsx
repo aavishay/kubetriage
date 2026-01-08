@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { LayoutDashboard, AlertCircle, Scale, Settings, Box, ChevronLeft, ChevronRight, Sun, Moon, ChevronsUpDown, Check, Server, LogOut, Plus, X, Globe, Cloud, Bell, BookOpen, Menu, Key, Zap, FileText } from 'lucide-react';
-import { NavLink, Outlet, useLocation } from 'react-router-dom';
+import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useMonitoring } from '../contexts/MonitoringContext';
 import { useAuth } from '../contexts/AuthContext';
 import { Cluster } from '../types';
@@ -20,7 +20,7 @@ const ProviderIcon = ({ provider, className }: { provider: Cluster['provider'], 
 
 import { RegisterClusterModal } from './RegisterClusterModal';
 
-export const Layout: React.FC<LayoutProps> = () => {
+export const Layout: React.FC<LayoutProps> = ({ children }) => {
   const {
     isDarkMode,
     toggleTheme,
@@ -35,6 +35,7 @@ export const Layout: React.FC<LayoutProps> = () => {
   } = useMonitoring();
 
   const location = useLocation();
+  const navigate = useNavigate();
 
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -111,7 +112,7 @@ export const Layout: React.FC<LayoutProps> = () => {
           <div className="bg-indigo-600 p-2 rounded-lg shrink-0 shadow-lg shadow-indigo-600/30"><Box className="w-5 h-5 text-white" /></div>
           {(!isCollapsed || isMobileMenuOpen) && (
             <div className="animate-in fade-in slide-in-from-left-2">
-              <h1 className="font-bold text-zinc-900 dark:text-white tracking-tight leading-none text-base">KubeOptima</h1>
+              <h1 className="font-bold text-zinc-900 dark:text-white tracking-tight leading-none text-base">KubeTriage</h1>
               <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest mt-1">Platform Console</p>
             </div>
           )}
@@ -160,14 +161,28 @@ export const Layout: React.FC<LayoutProps> = () => {
                 onClick={() => setIsClusterMenuOpen(!isClusterMenuOpen)}
                 className="flex items-center gap-3 px-3 md:px-4 py-2 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-2xl hover:border-indigo-500/50 transition-all shadow-sm active:scale-[0.98]"
               >
-                <ProviderIcon provider={selectedCluster.provider} className="w-4 h-4" />
-                <div className="hidden sm:block text-left">
-                  <div className="text-[9px] font-black uppercase text-zinc-400 leading-none mb-1">Target Cluster</div>
-                  <div className="text-xs font-black text-zinc-900 dark:text-white leading-none flex items-center gap-2 tracking-tight">
-                    {selectedCluster.name}
-                    <div className={`w-1.5 h-1.5 rounded-full ${getStatusColor(selectedCluster.status)} animate-pulse`} />
-                  </div>
-                </div>
+                {selectedCluster ? (
+                  <>
+                    <ProviderIcon provider={selectedCluster.provider} className="w-4 h-4" />
+                    <div className="hidden sm:block text-left">
+                      <div className="text-[9px] font-black uppercase text-zinc-400 leading-none mb-1">Target Cluster</div>
+                      <div className="text-xs font-black text-zinc-900 dark:text-white leading-none flex items-center gap-2 tracking-tight">
+                        {selectedCluster.name}
+                        <div className={`w-1.5 h-1.5 rounded-full ${getStatusColor(selectedCluster?.status || 'Active')} animate-pulse`} />
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <Cloud className="w-4 h-4 text-zinc-400" />
+                    <div className="hidden sm:block text-left">
+                      <div className="text-[9px] font-black uppercase text-zinc-400 leading-none mb-1">Target Cluster</div>
+                      <div className="text-xs font-black text-zinc-900 dark:text-white leading-none flex items-center gap-2 tracking-tight">
+                        Select Cluster
+                      </div>
+                    </div>
+                  </>
+                )}
                 <ChevronsUpDown className="w-4 h-4 text-zinc-400 ml-1" />
               </button>
 
@@ -180,14 +195,14 @@ export const Layout: React.FC<LayoutProps> = () => {
                     <button
                       key={cluster.id}
                       onClick={() => { setSelectedCluster(cluster); setIsClusterMenuOpen(false); }}
-                      className={`w-full flex items-center gap-3 px-4 py-3 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors text-left ${selectedCluster.id === cluster.id ? 'bg-indigo-50/50 dark:bg-indigo-900/10 border-l-4 border-indigo-600' : 'border-l-4 border-transparent'}`}
+                      className={`w-full flex items-center gap-3 px-4 py-3 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors text-left ${selectedCluster?.id === cluster.id ? 'bg-indigo-50/50 dark:bg-indigo-900/10 border-l-4 border-indigo-600' : 'border-l-4 border-transparent'}`}
                     >
                       <ProviderIcon provider={cluster.provider} className="w-5 h-5 shrink-0" />
                       <div className="flex-1 min-w-0">
-                        <p className={`text-sm font-bold truncate ${selectedCluster.id === cluster.id ? 'text-indigo-600 dark:text-indigo-400' : 'text-zinc-700 dark:text-zinc-300'}`}>{cluster.name}</p>
+                        <p className={`text-sm font-bold truncate ${selectedCluster?.id === cluster.id ? 'text-indigo-600 dark:text-indigo-400' : 'text-zinc-700 dark:text-zinc-300'}`}>{cluster.name}</p>
                         <p className="text-[10px] text-zinc-500 font-medium uppercase">{cluster.region} • {cluster.provider}</p>
                       </div>
-                      {selectedCluster.id === cluster.id && <Check className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />}
+                      {selectedCluster?.id === cluster.id && <Check className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />}
                     </button>
                   ))}
                   <div className="h-px bg-zinc-100 dark:border-zinc-800 my-2" />
@@ -209,7 +224,10 @@ export const Layout: React.FC<LayoutProps> = () => {
                 <span className={`relative inline-flex rounded-full h-2 w-2 ${apiStatus === 'Connected' ? 'bg-emerald-500' : 'bg-amber-500'}`}></span>
               </div>
 
-              <button className="relative p-2.5 rounded-xl bg-zinc-100 dark:bg-zinc-800 text-zinc-500 hover:text-indigo-500 dark:hover:text-indigo-400 transition-all shadow-sm">
+              <button
+                onClick={() => navigate('/notifications')}
+                className="relative p-2.5 rounded-xl bg-zinc-100 dark:bg-zinc-800 text-zinc-500 hover:text-indigo-500 dark:hover:text-indigo-400 transition-all shadow-sm"
+              >
                 <Bell className="w-5 h-5" />
                 {unreadReports > 0 && (
                   <span className="absolute top-1.5 right-1.5 flex h-3 w-3">
@@ -250,7 +268,7 @@ export const Layout: React.FC<LayoutProps> = () => {
         <div className="flex-1 overflow-y-auto p-4 md:p-8">
           <div className="mx-auto max-w-7xl h-full">
             {/* Router Outlet for Page Content */}
-            <Outlet />
+            {children || <Outlet />}
           </div>
         </div>
       </div>

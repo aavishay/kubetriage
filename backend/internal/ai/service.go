@@ -11,7 +11,7 @@ import (
 )
 
 const (
-	GeminiProModel  = "gemini-1.5-pro-latest"
+	GeminiProModel  = "gemini-1.5-pro"
 	GeminiFastModel = "gemini-1.5-flash-latest"
 )
 

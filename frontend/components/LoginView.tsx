@@ -6,7 +6,7 @@ interface LoginViewProps {
 }
 
 export const LoginView: React.FC<LoginViewProps> = ({ onLogin }) => {
-  const [email, setEmail] = useState('admin@kubeoptima.io');
+  const [email, setEmail] = useState('admin@kubetriage.io');
   const [password, setPassword] = useState('password');
   const [isLoading, setIsLoading] = useState(false);
 
@@ -35,7 +35,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLogin }) => {
             <Box className="w-8 h-8 text-white" />
           </div>
           <h1 className="text-2xl font-bold text-zinc-900 dark:text-white tracking-tight">Welcome back</h1>
-          <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-2">Sign in to KubeOptima Platform</p>
+          <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-2">Sign in to KubeTriage Platform</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-5">
@@ -103,7 +103,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLogin }) => {
       </div>
 
       <div className="absolute bottom-6 text-xs text-zinc-400">
-        &copy; 2024 KubeOptima Inc. All rights reserved.
+        &copy; 2026 KubeTriage Inc. All rights reserved.
       </div>
     </div>
   );

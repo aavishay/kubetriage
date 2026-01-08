@@ -14,7 +14,7 @@ import { TemplateLibraryView } from './components/TemplateLibraryView';
 import { LoginView } from './components/LoginView';
 import { AIChatWidget } from './components/AIChatWidget';
 import { NotFound } from './components/NotFound';
-import { BellRing, X, Loader2, Key, ExternalLink } from 'lucide-react';
+import { BellRing, X, Loader2, Key, ExternalLink, Settings2 } from 'lucide-react';
 import { DiagnosticPlaybook } from './types';
 import { ErrorBoundary } from './components/ErrorBoundary';
 
@@ -145,8 +145,10 @@ const AppContent: React.FC = () => {
       {/* Alert Notification Toast */}
       {activeNotification && (
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[100] w-full max-w-md p-4 animate-in slide-in-from-bottom-10 fade-in duration-500">
-          <div className={`p-5 rounded-[2rem] border-2 shadow-2xl flex items-center gap-4 bg-white dark:bg-zinc-900 ${activeNotification.severity === 'Critical' ? 'border-red-500' : 'border-amber-500'
-            }`}>
+          <div
+            onClick={() => navigate('/triage')}
+            className={`cursor-pointer hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-colors p-5 rounded-[2rem] border-2 shadow-2xl flex items-center gap-4 bg-white dark:bg-zinc-900 ${activeNotification.severity === 'Critical' ? 'border-red-500' : 'border-amber-500'}`}
+          >
             <div className={`p-3 rounded-2xl shrink-0 ${activeNotification.severity === 'Critical' ? 'bg-red-500 text-white animate-pulse' : 'bg-amber-500 text-white'}`}>
               <BellRing className="w-6 h-6" />
             </div>
@@ -156,7 +158,22 @@ const AppContent: React.FC = () => {
                 {activeNotification.workloadName}: {activeNotification.metric} at {activeNotification.value}% (Limit {activeNotification.threshold}%)
               </p>
             </div>
-            <button onClick={dismissNotification} className="p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-xl text-zinc-400">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                navigate('/notifications', { state: { editRuleId: activeNotification.ruleId } });
+              }}
+              className="p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-xl text-zinc-400 hover:text-indigo-500 transition-colors"
+            >
+              <Settings2 className="w-5 h-5" />
+            </button>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                dismissNotification();
+              }}
+              className="p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-xl text-zinc-400 hover:text-red-500 transition-colors"
+            >
               <X className="w-5 h-5" />
             </button>
           </div>

@@ -76,7 +76,7 @@ export class ErrorBoundary extends Component<Props, State> {
                     </div>
 
                     <div className="mt-8 text-[10px] font-black uppercase tracking-[0.2em] text-zinc-400">
-                        KubeOptima Reliability Engine
+                        KubeTriage Reliability Engine
                     </div>
                 </div>
             );

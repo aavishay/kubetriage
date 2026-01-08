@@ -1,6 +1,7 @@
 package api
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 
@@ -26,7 +27,7 @@ func (h *AIHandler) AnalyzeWorkload(c *gin.Context) {
 	analysis, err := h.service.AnalyzeWorkload(c.Request.Context(), req)
 	if err != nil {
 		log.Printf("Error analyzing workload: %v", err)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate analysis"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("Failed to generate analysis: %v", err)})
 		return
 	}
 

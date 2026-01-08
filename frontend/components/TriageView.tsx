@@ -190,10 +190,14 @@ export const TriageView: React.FC<TriageViewProps> = ({ workloads, isDarkMode = 
 
   const saturation = useMemo(() => {
     if (!selectedWorkload) return { cpu: 0, mem: 0, storage: 0 };
+    const cpuLimit = selectedWorkload.metrics.cpuLimit || 0;
+    const memLimit = selectedWorkload.metrics.memoryLimit || 0;
+    const storageLimit = selectedWorkload.metrics.storageLimit || 0;
+
     return {
-      cpu: Math.round((selectedWorkload.metrics.cpuUsage / selectedWorkload.metrics.cpuLimit) * 100),
-      mem: Math.round((selectedWorkload.metrics.memoryUsage / selectedWorkload.metrics.memoryLimit) * 100),
-      storage: selectedWorkload.metrics.storageLimit ? Math.round((selectedWorkload.metrics.storageUsage! / selectedWorkload.metrics.storageLimit) * 100) : 0
+      cpu: cpuLimit > 0 ? Math.round((selectedWorkload.metrics.cpuUsage / cpuLimit) * 100) : 0,
+      mem: memLimit > 0 ? Math.round((selectedWorkload.metrics.memoryUsage / memLimit) * 100) : 0,
+      storage: storageLimit > 0 ? Math.round((selectedWorkload.metrics.storageUsage! / storageLimit) * 100) : 0
     };
   }, [selectedWorkload]);
 

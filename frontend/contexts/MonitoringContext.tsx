@@ -12,7 +12,7 @@ import {
 interface MonitoringContextType {
   workloads: Workload[];
   clusters: Cluster[];
-  selectedCluster: Cluster;
+  selectedCluster: Cluster | null;
   organizations: Organization[];
   users: User[];
   notificationChannels: NotificationChannel[];
@@ -24,6 +24,10 @@ interface MonitoringContextType {
   activeNotification: TriggeredAlert | null;
   unreadReports: number;
   refreshClusters: () => Promise<void>;
+
+  // Notification Config
+  notificationSettings: { toastEnabled: boolean; toastFrequency: number };
+  updateNotificationSettings: (settings: { toastEnabled: boolean; toastFrequency: number }) => void;
 
   // Actions
   login: () => void;
@@ -104,7 +108,7 @@ export const MonitoringProvider: React.FC<MonitoringProviderProps> = ({ children
           setClusters(mappedClusters);
           // Only set default if we haven't selected one yet (or persisted it)
           // For now, simple default:
-          setSelectedCluster(prev => mappedClusters.find((c: any) => c.id === prev.id) || mappedClusters[0]);
+          setSelectedCluster(prev => mappedClusters.find((c: any) => c.id === prev?.id) || mappedClusters[0]);
         }
       }
     } catch (err) {
@@ -140,7 +144,7 @@ export const MonitoringProvider: React.FC<MonitoringProviderProps> = ({ children
         const response = await fetch(`/api/cluster/workloads?cluster=${selectedCluster.id}`);
         if (response.ok) {
           const data = await response.json();
-          setWorkloads(data);
+          setWorkloads(Array.isArray(data) ? data : []);
         } else {
           console.error("Failed to fetch workloads");
         }
@@ -156,6 +160,13 @@ export const MonitoringProvider: React.FC<MonitoringProviderProps> = ({ children
   const [alertRules, setAlertRules] = useState<AlertRule[]>(MOCK_ALERT_RULES);
   const [triggeredAlerts, setTriggeredAlerts] = useState<TriggeredAlert[]>([]);
   const [activeNotification, setActiveNotification] = useState<TriggeredAlert | null>(null);
+
+  const [notificationSettings, setNotificationSettings] = useState({ toastEnabled: true, toastFrequency: 5 });
+  const [lastToastTime, setLastToastTime] = useState(0);
+
+  const updateNotificationSettings = (settings: { toastEnabled: boolean; toastFrequency: number }) => {
+    setNotificationSettings(settings);
+  };
 
   // --- Helpers ---
   const login = () => setIsAuthenticated(true);
@@ -200,13 +211,13 @@ export const MonitoringProvider: React.FC<MonitoringProviderProps> = ({ children
 
         if (rule.metric === 'CPU') {
           value = workload.metrics.cpuUsage;
-          saturatedValue = (value / workload.metrics.cpuLimit) * 100;
+          saturatedValue = workload.metrics.cpuLimit > 0 ? (value / workload.metrics.cpuLimit) * 100 : 0;
         } else if (rule.metric === 'Memory') {
           value = workload.metrics.memoryUsage;
-          saturatedValue = (value / workload.metrics.memoryLimit) * 100;
+          saturatedValue = workload.metrics.memoryLimit > 0 ? (value / workload.metrics.memoryLimit) * 100 : 0;
         } else if (rule.metric === 'Storage') {
           value = workload.metrics.storageUsage;
-          saturatedValue = (value / workload.metrics.storageLimit) * 100;
+          saturatedValue = workload.metrics.storageLimit > 0 ? (value / workload.metrics.storageLimit) * 100 : 0;
         }
 
         const isBreached = rule.operator === '>'
@@ -238,10 +249,20 @@ export const MonitoringProvider: React.FC<MonitoringProviderProps> = ({ children
 
     if (newAlerts.length > 0) {
       setTriggeredAlerts(prev => [...newAlerts, ...prev].slice(0, 50));
-      setActiveNotification(newAlerts[0]);
-      setTimeout(() => setActiveNotification(null), 8000);
+
+      // Check Global Notification Settings
+      if (notificationSettings.toastEnabled) {
+        const now = Date.now();
+        const timeSinceLast = (now - lastToastTime) / 1000;
+
+        if (timeSinceLast >= notificationSettings.toastFrequency) {
+          setActiveNotification(newAlerts[newAlerts.length - 1]); // Show latest
+          setLastToastTime(now);
+          setTimeout(() => setActiveNotification(null), 8000);
+        }
+      }
     }
-  }, [alertRules, triggeredAlerts]);
+  }, [alertRules, triggeredAlerts, notificationSettings, lastToastTime]);
 
   // Simulate real-time metric updates
   useEffect(() => {
@@ -256,11 +277,14 @@ export const MonitoringProvider: React.FC<MonitoringProviderProps> = ({ children
           return {
             ...w,
             metrics: {
-              ...w.metrics,
-              cpuUsage: Math.min(w.metrics.cpuLimit, Math.max(0, w.metrics.cpuUsage + cpuVar)),
-              // memoryUsage: Math.min(w.metrics.memoryLimit, Math.max(0, w.metrics.memoryUsage + (w.metrics.memoryLimit * memVar)))
-              // Simplified mock update
-              memoryUsage: Math.max(0, w.metrics.memoryUsage + (Math.random() > 0.5 ? 10 : -10))
+              ...(w.metrics || {
+                cpuUsage: 0, memoryUsage: 0, cpuLimit: 1, memoryLimit: 1,
+                cpuRequest: 0, memoryRequest: 0, storageRequest: 0,
+                storageLimit: 0, storageUsage: 0, networkIn: 0,
+                networkOut: 0, diskIo: 0
+              }),
+              cpuUsage: Math.min(w.metrics?.cpuLimit || 0, Math.max(0, (w.metrics?.cpuUsage || 0) + cpuVar)),
+              memoryUsage: Math.max(0, (w.metrics?.memoryUsage || 0) + (Math.random() > 0.5 ? 10 : -10))
             }
           };
         });
@@ -322,7 +346,9 @@ export const MonitoringProvider: React.FC<MonitoringProviderProps> = ({ children
       isDarkMode,
       toggleTheme,
       unreadReports,
-      refreshClusters
+      refreshClusters,
+      notificationSettings,
+      updateNotificationSettings
     }}>
       {children}
     </MonitoringContext.Provider>

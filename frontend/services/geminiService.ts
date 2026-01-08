@@ -56,7 +56,8 @@ export const analyzeWorkloadLogs = async (workload: Workload, playbook: Diagnost
         });
 
         if (!response.ok) {
-            throw new Error(`Backend API Error: ${response.statusText}`);
+            const errData = await response.json().catch(() => ({}));
+            throw new Error(errData.error || `Backend API Error: ${response.statusText}`);
         }
 
         const data = await response.json();
@@ -226,7 +227,7 @@ export const createChatSession = (): Chat => {
     return ai.chats.create({
         model: GEMINI_PRO_MODEL,
         config: {
-            systemInstruction: "You are KubeOptima Copilot, an expert Kubernetes SRE assistant. Help triage CPU, Memory, and Disk Storage issues."
+            systemInstruction: "You are KubeTriage Copilot, an expert Kubernetes SRE assistant. Help triage CPU, Memory, and Disk Storage issues."
         }
     });
 };

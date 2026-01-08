@@ -12,13 +12,13 @@ interface DashboardProps {
 }
 
 export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = true, onTriageRequest }) => {
-   const totalCost = workloads.reduce((acc, w) => acc + w.costPerMonth, 0);
+   const totalCost = workloads.reduce((acc, w) => acc + (w.costPerMonth || 0), 0);
    const criticalCount = workloads.filter(w => w.status === 'Critical').length;
    const warningCount = workloads.filter(w => w.status === 'Warning').length;
 
    // Fixed syntax error: 'potential savings' -> 'potentialSavings'
    const potentialSavings = workloads
-      .filter(w => w.recommendation?.action === 'Downsize')
+      .filter(w => w.recommendation && w.recommendation.action === 'Downsize')
       .reduce((acc, w) => acc + (w.costPerMonth * 0.4), 0);
 
    const statusData = [
@@ -29,8 +29,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = tr
 
    const resourceData = workloads.map(w => ({
       name: w.name,
-      requested: w.metrics.cpuRequest,
-      used: w.metrics.cpuUsage,
+      requested: w.metrics?.cpuRequest || 0,
+      used: w.metrics?.cpuUsage || 0,
       status: w.status
    }));
 
@@ -72,8 +72,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = tr
    }, [workloads, criticalCount, warningCount]);
 
    const budgetGaugeData = [
-      { name: 'Consumed', value: 100 - reliabilityMetrics.budgetPercentage, color: reliabilityMetrics.severity === 'Critical' ? '#ef4444' : '#6366f1' },
-      { name: 'Remaining', value: reliabilityMetrics.budgetPercentage, color: isDarkMode ? '#27272a' : '#f4f4f5' },
+      { name: 'Consumed', value: Math.max(0, isFinite(reliabilityMetrics.budgetPercentage) ? 100 - reliabilityMetrics.budgetPercentage : 100), color: reliabilityMetrics.severity === 'Critical' ? '#ef4444' : '#6366f1' },
+      { name: 'Remaining', value: Math.max(0, isFinite(reliabilityMetrics.budgetPercentage) ? reliabilityMetrics.budgetPercentage : 0), color: isDarkMode ? '#27272a' : '#f4f4f5' },
    ];
 
    const cardClass = "bg-white dark:bg-zinc-900 p-5 md:p-6 rounded-2xl md:rounded-3xl border border-zinc-200 dark:border-zinc-800 shadow-sm transition-all hover:shadow-md";
@@ -266,7 +266,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = tr
                   <ResponsiveContainer width="100%" height="100%">
                      <BarChart data={resourceData} layout="vertical" margin={{ left: 0, right: 20 }}>
                         <XAxis type="number" hide />
-                        <YAxis dataKey="name" type="category" width={100} axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 900, fill: isDarkMode ? '#a1a1aa' : '#52525b', textTransform: 'uppercase' }} />
+                        <YAxis dataKey="name" type="category" width={100} axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 900, fill: isDarkMode ? '#a1a1aa' : '#52525b' }} />
                         <Tooltip cursor={{ fill: isDarkMode ? '#18181b' : '#f9fafb' }} contentStyle={tooltipStyle} />
                         <Bar dataKey="requested" fill="#4f46e5" radius={[0, 4, 4, 0]} barSize={12} name="Request" />
                         <Bar dataKey="used" radius={[0, 4, 4, 0]} barSize={12} name="Used">
