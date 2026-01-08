@@ -155,7 +155,7 @@ export const TopologyView: React.FC<TopologyViewProps> = ({ workloads, isDarkMod
                                 </div>
                                 <h3 className="text-lg font-bold text-zinc-900 dark:text-white">Generating Architecture Diagram...</h3>
                                 <p className="text-sm text-zinc-500 dark:text-zinc-400 max-w-xs">
-                                    Analyzing workload relationships and rendering high-fidelity topology using Gemini Pro Vision. This may take 10-20 seconds.
+                                    Analyzing workload relationships and rendering high-fidelity topology using Generative AI Vision. This may take 10-20 seconds.
                                 </p>
                             </div>
                         ) : diagramImage ? (
@@ -174,7 +174,7 @@ export const TopologyView: React.FC<TopologyViewProps> = ({ workloads, isDarkMod
                                 </div>
                                 <h3 className="text-xl font-bold text-zinc-900 dark:text-white mb-2">Generate AI Architecture Diagram</h3>
                                 <p className="text-zinc-500 dark:text-zinc-400 mb-6 max-w-md">
-                                    Use Gemini 3.0 Pro to visually reconstruct your cluster&apos;s architecture based on current workload definitions, namespaces, and inferred traffic patterns.
+                                    Use Generative AI to visually reconstruct your cluster&apos;s architecture based on current workload definitions, namespaces, and inferred traffic patterns.
                                 </p>
                                 <button
                                     onClick={handleGenerateDiagram}
@@ -228,7 +228,7 @@ export const TopologyView: React.FC<TopologyViewProps> = ({ workloads, isDarkMod
                                                 <div className="w-16 h-1 bg-zinc-200 dark:bg-zinc-700 rounded-full overflow-hidden">
                                                     <div
                                                         className={`h-full rounded-full ${w.metrics.cpuLimit > 0 && (w.metrics.cpuUsage / w.metrics.cpuLimit) > 0.9 ? 'bg-red-500' :
-                                                                w.metrics.cpuLimit > 0 && (w.metrics.cpuUsage / w.metrics.cpuLimit) > 0.7 ? 'bg-amber-500' : 'bg-emerald-500'
+                                                            w.metrics.cpuLimit > 0 && (w.metrics.cpuUsage / w.metrics.cpuLimit) > 0.7 ? 'bg-amber-500' : 'bg-emerald-500'
                                                             }`}
                                                         style={{ width: `${w.metrics.cpuLimit > 0 ? Math.min(100, (w.metrics.cpuUsage / w.metrics.cpuLimit) * 100) : 0}%` }}
                                                     ></div>

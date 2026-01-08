@@ -134,7 +134,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = tr
                         Diagnose: <span className="text-indigo-400">ingress-nginx-controller</span>
                      </h2>
                      <p className="text-zinc-400 text-sm font-medium max-w-2xl leading-relaxed">
-                        Critical upstream latency detected. Multiple 504 Gateway Timeouts reported in production namespace. Gemini AI suggests a targeted connectivity triage of the NGINX control plane.
+                        Critical upstream latency detected. Multiple 504 Gateway Timeouts reported in production namespace. AI suggests a targeted connectivity triage of the NGINX control plane.
                      </p>
                   </div>
 
@@ -225,7 +225,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = tr
                            >
                               <span className="text-[9px] font-black uppercase tracking-widest flex items-center gap-2">
                                  <Sparkles className="w-3.5 h-3.5 text-indigo-500 group-hover/btn:text-white" />
-                                 Investigate with Gemini
+                                 Investigate with AI
                               </span>
                               <ChevronRight className="w-4 h-4 opacity-0 group-hover/btn:opacity-100 transition-opacity" />
                            </button>
