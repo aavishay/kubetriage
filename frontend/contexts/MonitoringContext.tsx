@@ -77,10 +77,10 @@ export const MonitoringProvider: React.FC<MonitoringProviderProps> = ({ children
   const toggleTheme = () => setIsDarkMode(!isDarkMode);
 
   // --- Core Data State ---
-  const [workloads, setWorkloads] = useState<Workload[]>([]); // Initialize empty, fetch real data
-  const [clusters, setClusters] = useState<Cluster[]>(MOCK_CLUSTERS);
-  const [selectedCluster, setSelectedCluster] = useState<Cluster>(MOCK_CLUSTERS[0]);
-  const [organizations, setOrganizations] = useState<Organization[]>(MOCK_ORGANIZATIONS);
+  const [workloads, setWorkloads] = useState<Workload[]>([]);
+  const [clusters, setClusters] = useState<Cluster[]>([]);
+  const [selectedCluster, setSelectedCluster] = useState<Cluster | null>(null);
+  const [organizations, setOrganizations] = useState<Organization[]>([]);
   const [users, setUsers] = useState<User[]>(MOCK_USERS);
   const [unreadReports, setUnreadReports] = useState<number>(0);
 
@@ -88,11 +88,7 @@ export const MonitoringProvider: React.FC<MonitoringProviderProps> = ({ children
   // Fetch Data
   const refreshClusters = useCallback(async () => {
     try {
-      const response = await fetch('/api/clusters', {
-        headers: {
-          'Authorization': 'Bearer mock-token'
-        }
-      });
+      const response = await fetch('/api/clusters');
       if (response.ok) {
         const data = await response.json();
         // Map backend response to frontend Cluster type
@@ -146,12 +142,10 @@ export const MonitoringProvider: React.FC<MonitoringProviderProps> = ({ children
           const data = await response.json();
           setWorkloads(data);
         } else {
-          console.error("Failed to fetch workloads, falling back to mocks");
-          setWorkloads(MOCK_WORKLOADS);
+          console.error("Failed to fetch workloads");
         }
       } catch (err) {
         console.error("Error fetching workloads", err);
-        setWorkloads(MOCK_WORKLOADS);
       }
     };
     fetchWorkloads();

@@ -143,6 +143,27 @@ export const RightSizingView: React.FC<RightSizingViewProps> = ({ workloads, isD
   const location = useLocation();
   const { workloadId: stateId, template: stateTemplate } = location.state || {}; // Read from router state
 
+  if (!workloads || workloads.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[600px] animate-in fade-in duration-500">
+        <div className="p-6 bg-zinc-100 dark:bg-zinc-800 rounded-full mb-6 relative">
+          <Server className="w-12 h-12 text-zinc-400" />
+          <div className="absolute top-0 right-0 w-4 h-4 bg-amber-500 rounded-full animate-ping" />
+        </div>
+        <h2 className="text-2xl font-black text-zinc-900 dark:text-white uppercase tracking-tighter mb-2">No Optimization Candidates</h2>
+        <p className="text-zinc-500 max-w-md text-center mb-8">
+          We couldn't detect any workloads to analyze. Please ensure your cluster is connected and has active deployments.
+        </p>
+        <button
+          onClick={() => window.location.reload()}
+          className="px-6 py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl shadow-lg hover:scale-105 transition-all flex items-center gap-2"
+        >
+          <Activity className="w-4 h-4" /> Refresh Data
+        </button>
+      </div>
+    );
+  }
+
   const initialWorkloadId = stateId || propId;
 
   const [selectedId, setSelectedId] = useState<string | null>(null);

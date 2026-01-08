@@ -13,9 +13,11 @@ services:
       - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger:4317
       - DATABASE_URL=host=postgres user=kubetriage password=kubetriage dbname=kubetriage port=5432 sslmode=disable
       - GEMINI_API_KEY=${GEMINI_API_KEY}
-      - MOCK_OIDC=true
       - FRONTEND_URL=http://localhost:8081
       - REDIS_ADDR=kubetriage-redis:6379
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
+      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
+      - GOOGLE_REDIRECT_URL=http://localhost:8081/api/auth/google/callback
 
   kubetriage-redis:
     image: redis:alpine
