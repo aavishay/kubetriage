@@ -319,6 +319,15 @@ export const TriageView: React.FC<TriageViewProps> = ({ workloads, isDarkMode = 
     return <span dangerouslySetInnerHTML={{ __html: highlighted }} />;
   };
 
+  const markdownComponents = useMemo(() => ({
+    code({ node, inline, className, children, ...props }: any) {
+      const match = /language-(\w+)/.exec(className || '');
+      return !inline && match
+        ? <CodeBlock language={match[1]}>{children}</CodeBlock>
+        : <code className="bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 px-2 py-0.5 rounded-lg font-mono text-xs font-black" {...props}>{children}</code>;
+    }
+  }), []);
+
   return (
     <div className="flex flex-col lg:flex-row gap-6 h-auto lg:h-[calc(100vh-160px)] relative w-full overflow-hidden font-sans">
       <aside className={`${selectedWorkload && !isSidebarOpen ? 'hidden' : 'flex'} lg:flex transition-all duration-500 flex-col bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-sm rounded-[2.5rem] overflow-hidden shrink-0 ${isDesktopCollapsed ? 'lg:w-24' : 'w-full lg:w-96'}`}>
@@ -437,14 +446,7 @@ export const TriageView: React.FC<TriageViewProps> = ({ workloads, isDarkMode = 
                   <div className="p-10 flex-1 overflow-y-auto">
                     {isAnalyzing ? <div className="h-full flex flex-col items-center justify-center text-center gap-6"><Loader2 className="w-12 h-12 text-indigo-500 animate-spin" /><h4 className="text-lg font-black text-zinc-900 dark:text-white uppercase tracking-tighter">AI SRE Analysis...</h4></div> : analysis ? <div className="animate-in fade-in slide-in-from-bottom-6 duration-700">
                       <div className="prose prose-indigo max-w-none dark:prose-invert">
-                        <ReactMarkdown components={{
-                          code({ node, inline, className, children, ...props }: any) {
-                            const match = /language-(\w+)/.exec(className || '');
-                            return !inline && match
-                              ? <CodeBlock language={match[1]}>{children}</CodeBlock>
-                              : <code className="bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 px-2 py-0.5 rounded-lg font-mono text-xs font-black" {...props}>{children}</code>;
-                          }
-                        }}>
+                        <ReactMarkdown components={markdownComponents}>
                           {analysis}
                         </ReactMarkdown>
                       </div>
