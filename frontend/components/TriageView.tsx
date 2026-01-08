@@ -2,10 +2,11 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { Workload, ViewPropsWithChat, DiagnosticPlaybook } from '../types';
-import { analyzeWorkloadLogs } from '../services/geminiService';
+import { useMonitoring } from '../contexts/MonitoringContext';
+import { analyzeWorkload } from '../services/geminiService';
 import { generateRemediation, applyRemediation } from '../services/remediationService';
 import ReactMarkdown from 'react-markdown';
-import { Terminal, Loader2, Sparkles, Activity, Search, Clock, Globe, ChevronLeft, MessageSquareShare, ArrowRight, PanelLeftClose, PanelLeft, AlertCircle, CheckCircle2, ChevronRight, Layers, ArrowDown, Server, Zap, Globe2, WifiOff, MoreHorizontal, Info, ActivitySquare, Radio, ShieldCheck, HardDrive } from 'lucide-react';
+import { Terminal, Loader2, Sparkles, Activity, Search, Clock, Globe, ChevronLeft, MessageSquareShare, ArrowRight, PanelLeftClose, PanelLeft, AlertCircle, CheckCircle2, ChevronRight, Layers, ArrowDown, Server, Zap, Globe2, WifiOff, MoreHorizontal, Info, ActivitySquare, Radio, ShieldCheck, HardDrive, WrapText, Bot, Copy, Check } from 'lucide-react';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import { MetricsChart } from './MetricsChart';
@@ -14,6 +15,52 @@ interface TriageViewProps extends ViewPropsWithChat {
   initialWorkloadId?: string; // Kept for backward compatibility or direct usage if needed
   defaultTemplate?: string;
 }
+
+const CopyButton = ({ text, className = "" }: { text: string, className?: string }) => {
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    navigator.clipboard.writeText(text);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  return (
+    <button onClick={handleCopy} className={`p-1.5 rounded-lg hover:bg-white/10 text-zinc-400 hover:text-white transition-colors ${className}`} title="Copy to clipboard">
+      {copied ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
+    </button>
+  );
+};
+
+const CodeBlock = ({ language, children }: { language: string, children: React.ReactNode }) => {
+  const [isWrapped, setIsWrapped] = useState(false);
+  const code = String(children).replace(/\n$/, '');
+
+  return (
+    <div className="my-6 rounded-2xl overflow-hidden shadow-2xl relative group bg-[#1e1e1e]">
+      <div className="absolute right-4 top-4 flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+        <button
+          onClick={() => setIsWrapped(!isWrapped)}
+          className={`p-1.5 rounded-lg border border-white/10 ${isWrapped ? 'bg-indigo-500/20 text-indigo-400' : 'bg-zinc-800/80 text-zinc-400 hover:text-white'} backdrop-blur-sm shadow-sm transition-all`}
+          title={isWrapped ? "Disable Wrapping" : "Enable Wrapping"}
+        >
+          <WrapText className="w-3.5 h-3.5" />
+        </button>
+        <CopyButton text={code} className="bg-zinc-800/80 backdrop-blur-sm shadow-sm border border-white/10" />
+      </div>
+      <SyntaxHighlighter
+        style={vscDarkPlus}
+        language={language}
+        PreTag="div"
+        wrapLongLines={isWrapped}
+        customStyle={{ margin: 0, padding: '2rem', fontSize: '13px', lineHeight: '1.5' }}
+      >
+        {code}
+      </SyntaxHighlighter>
+    </div>
+  );
+};
 
 const TrafficPathExplorer = ({ workload }: { workload: Workload }) => {
   return (
@@ -47,20 +94,30 @@ const TrafficPathExplorer = ({ workload }: { workload: Workload }) => {
 
 export const TriageView: React.FC<TriageViewProps> = ({ workloads, isDarkMode = true, onOpenChat, defaultTemplate: propTemplate, initialWorkloadId: propId }) => {
   const location = useLocation();
-  const { workloadId: stateId, playbook: stateTemplate } = location.state || {}; // Read from router state
+  const searchParams = new URL(window.location.href).searchParams;
+  const urlWorkload = searchParams.get('workload');
+  const urlPlaybook = searchParams.get('playbook');
 
-  const targetWorkloadId = stateId || propId;
-  const targetTemplate = stateTemplate || propTemplate;
+  // Priority: URL > Router State > Props
+  const targetWorkloadId = urlWorkload || location.state?.workloadId || propId;
+  const targetTemplate = urlPlaybook || location.state?.playbook || propTemplate;
 
+  // State Initialization
   const [selectedWorkload, setSelectedWorkload] = useState<Workload | null>(null);
   const [analysis, setAnalysis] = useState<string | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [selectedPlaybook, setSelectedPlaybook] = useState<DiagnosticPlaybook>('General Health');
+  const { aiConfig } = useMonitoring();
+  const [selectedPlaybook, setSelectedPlaybook] = useState<DiagnosticPlaybook>(
+    (targetTemplate as DiagnosticPlaybook) || 'General Health'
+  );
+
+  // UI State
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isDesktopCollapsed, setIsDesktopCollapsed] = useState(false);
   const [namespaceFilter, setNamespaceFilter] = useState<string>('all');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [workloadSearchTerm, setWorkloadSearchTerm] = useState<string>('');
+  const [isLogWrapEnabled, setIsLogWrapEnabled] = useState(false);
 
   // Remediation State
   const [patchSuggestion, setPatchSuggestion] = useState<import('../services/remediationService').PatchSuggestion | null>(null);
@@ -68,18 +125,53 @@ export const TriageView: React.FC<TriageViewProps> = ({ workloads, isDarkMode = 
   const [isApplyingFix, setIsApplyingFix] = useState(false);
   const [fixStatus, setFixStatus] = useState<'idle' | 'success' | 'error'>('idle');
 
-  useEffect(() => { if (targetTemplate) setSelectedPlaybook(targetTemplate as DiagnosticPlaybook); }, [targetTemplate]);
+  // URL Sync Effect
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (selectedWorkload) params.set('workload', selectedWorkload.name);
+    if (selectedPlaybook) params.set('playbook', selectedPlaybook);
+    const newUrl = `${window.location.pathname}?${params.toString()}`;
+    window.history.replaceState(null, '', newUrl);
+  }, [selectedWorkload, selectedPlaybook]);
 
+  // Restore Analysis Cache
+  useEffect(() => {
+    if (selectedWorkload && selectedPlaybook && !analysis && !isAnalyzing) {
+      const cacheKey = `analysis_${selectedWorkload.id}_${selectedPlaybook}`;
+      const cached = sessionStorage.getItem(cacheKey);
+      if (cached) setAnalysis(cached);
+    }
+  }, [selectedWorkload, selectedPlaybook]);
+
+  // Selection Logic
   useEffect(() => {
     if (targetWorkloadId) {
       const workload = workloads.find(w => w.id === targetWorkloadId || w.name === targetWorkloadId);
-      if (workload) { setSelectedWorkload(workload); setIsSidebarOpen(false); triggerAutoAnalysis(workload, (targetTemplate as DiagnosticPlaybook) || 'General Health'); }
+      if (workload) {
+        if (selectedWorkload?.id !== workload.id) {
+          setSelectedWorkload(workload);
+          setIsSidebarOpen(false);
+          // Only trigger auto-analysis if NOT cached
+          const cacheKey = `analysis_${workload.id}_${selectedPlaybook}`;
+          if (!sessionStorage.getItem(cacheKey)) {
+            triggerAutoAnalysis(workload, selectedPlaybook);
+          }
+        } else if (selectedWorkload !== workload) {
+          // Live data update
+          setSelectedWorkload(workload);
+        }
+      }
     }
-  }, [targetWorkloadId, workloads, targetTemplate]);
+  }, [targetWorkloadId, workloads, targetTemplate]); // Intentionally removed selectedWorkload from deps to avoid loops, relying on ID check
 
   const triggerAutoAnalysis = async (workload: Workload, playbook: DiagnosticPlaybook) => {
     setIsAnalyzing(true); setAnalysis(null);
-    try { const result = await analyzeWorkloadLogs(workload, playbook); setAnalysis(result); }
+    try {
+      const result = await analyzeWorkload(workload, playbook, aiConfig.provider, aiConfig.model);
+      setAnalysis(result);
+      // Cache Result
+      sessionStorage.setItem(`analysis_${workload.id}_${playbook}`, result);
+    }
     catch (e) { setAnalysis("Diagnostic interrupted. Gemini API error."); }
     finally { setIsAnalyzing(false); }
   };
@@ -143,9 +235,9 @@ export const TriageView: React.FC<TriageViewProps> = ({ workloads, isDarkMode = 
       let result;
       if (selectedCustom) {
         // TODO: In real implementation, pass the prompt template to backend or frontend service
-        result = await analyzeWorkloadLogs(selectedWorkload, 'General Health'); // Fallback for now until analyze supports custom prompts
+        result = await analyzeWorkload(selectedWorkload, 'General Health', aiConfig.provider, aiConfig.model); // Fallback for now until analyze supports custom prompts
       } else {
-        result = await analyzeWorkloadLogs(selectedWorkload, selectedPlaybook);
+        result = await analyzeWorkload(selectedWorkload, selectedPlaybook, aiConfig.provider, aiConfig.model);
       }
       setAnalysis(result);
     }
@@ -162,7 +254,15 @@ export const TriageView: React.FC<TriageViewProps> = ({ workloads, isDarkMode = 
     if (!selectedWorkload) return;
     setIsGeneratingFix(true);
     try {
-      const suggestion = await generateRemediation(selectedWorkload.kind, selectedWorkload.name, selectedWorkload.recentLogs.slice(-10).join('\n'));
+      // Resource Kind/Name extraction would be better if we had specific log metadata, but defaulting to Workload name for now
+      const suggestion = await generateRemediation(
+        selectedWorkload.kind,
+        selectedWorkload.name,
+        selectedWorkload.recentLogs.slice(-10).join('\n'),
+        aiConfig.provider,
+        aiConfig.model,
+        selectedWorkload.namespace
+      );
       setPatchSuggestion(suggestion);
       setFixStatus('idle');
     } catch (e) {
@@ -214,9 +314,22 @@ export const TriageView: React.FC<TriageViewProps> = ({ workloads, isDarkMode = 
   return (
     <div className="flex flex-col lg:flex-row gap-6 h-auto lg:h-[calc(100vh-160px)] relative w-full overflow-hidden font-sans">
       <aside className={`${selectedWorkload && !isSidebarOpen ? 'hidden' : 'flex'} lg:flex transition-all duration-500 flex-col bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-sm rounded-[2.5rem] overflow-hidden shrink-0 ${isDesktopCollapsed ? 'lg:w-24' : 'w-full lg:w-96'}`}>
-        <div className="p-8 border-b border-zinc-100 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-950/50 flex items-center justify-between">
-          <div className="flex items-center gap-3"><div className="p-2.5 bg-indigo-600 rounded-xl shadow-lg shadow-indigo-600/20"><ActivitySquare className="w-5 h-5 text-white" /></div><h3 className="font-black text-zinc-900 dark:text-white uppercase tracking-tighter text-sm hidden sm:block">Fleet Triage</h3></div>
-          <button onClick={() => setIsDesktopCollapsed(!isDesktopCollapsed)} className="hidden lg:flex p-2.5 hover:bg-zinc-200 dark:hover:bg-zinc-800 rounded-2xl text-zinc-500 transition-all active:scale-90">{isDesktopCollapsed ? <PanelLeft className="w-5 h-5" /> : <PanelLeftClose className="w-5 h-5" />}</button>
+        <div className={`border-b border-zinc-100 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-950/50 flex items-center transition-all ${isDesktopCollapsed ? 'p-4 justify-center' : 'p-8 justify-between'}`}>
+          {!isDesktopCollapsed && (
+            <div className="flex items-center gap-3">
+              <div className="p-2.5 bg-indigo-600 rounded-xl shadow-lg shadow-indigo-600/20">
+                <ActivitySquare className="w-5 h-5 text-white" />
+              </div>
+              <h3 className="font-black text-zinc-900 dark:text-white uppercase tracking-tighter text-sm hidden sm:block">Fleet Triage</h3>
+            </div>
+          )}
+          <button
+            onClick={() => setIsDesktopCollapsed(!isDesktopCollapsed)}
+            className={`hidden lg:flex p-2.5 hover:bg-zinc-200 dark:hover:bg-zinc-800 rounded-2xl text-zinc-500 transition-all active:scale-90 ${isDesktopCollapsed ? 'bg-zinc-100 dark:bg-zinc-900' : ''}`}
+            title={isDesktopCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
+          >
+            {isDesktopCollapsed ? <PanelLeft className="w-5 h-5" /> : <PanelLeftClose className="w-5 h-5" />}
+          </button>
         </div>
         <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-zinc-50/30 dark:bg-black/10">
           {filteredWorkloads.map(w => (
@@ -242,6 +355,7 @@ export const TriageView: React.FC<TriageViewProps> = ({ workloads, isDarkMode = 
                   <div className="flex flex-col"><span className="text-[8px] font-black text-zinc-400 uppercase tracking-widest leading-none mb-1">Playbook</span><select value={selectedPlaybook} onChange={(e) => { setSelectedPlaybook(e.target.value as DiagnosticPlaybook); setAnalysis(null); }} className="bg-transparent text-[11px] font-black uppercase text-zinc-900 dark:text-white cursor-pointer pr-6"><option value="General Health">General Health</option><option value="Network Connectivity">Network Connectivity</option><option value="Resource Constraints">Resource Constraints</option>
                     {customPlaybooks.length > 0 && <optgroup label="Custom Playbooks">{customPlaybooks.map(p => <option key={p.id} value={p.name}>{p.name}</option>)}</optgroup>}
                   </select></div>
+
                 </div>
                 <button onClick={handleAnalyzeLogs} disabled={isAnalyzing} className="flex-1 xl:flex-none bg-indigo-600 hover:bg-indigo-700 text-white px-10 py-4 rounded-[1.25rem] text-[10px] font-black uppercase tracking-[0.2em] shadow-2xl shadow-indigo-600/30"> {isAnalyzing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />} Initialize Diagnosis</button>
               </div>
@@ -282,12 +396,27 @@ export const TriageView: React.FC<TriageViewProps> = ({ workloads, isDarkMode = 
 
               <div className="grid grid-cols-1 2xl:grid-cols-2 gap-10 items-stretch">
                 <section className="bg-zinc-950 rounded-[3rem] border border-zinc-800 shadow-2xl overflow-hidden flex flex-col min-h-[500px]">
-                  <div className="px-8 py-6 border-b border-zinc-800/50 bg-black/40 flex items-center gap-3"><Terminal className="w-4 h-4 text-emerald-400" /><h3 className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">Live Logs</h3></div>
+                  <div className="px-8 py-6 border-b border-zinc-800/50 bg-black/40 flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-3">
+                      <Terminal className="w-4 h-4 text-emerald-400" />
+                      <h3 className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">Live Logs</h3>
+                    </div>
+                    <button
+                      onClick={() => setIsLogWrapEnabled(!isLogWrapEnabled)}
+                      className={`p-2 rounded-lg transition-all ${isLogWrapEnabled ? 'bg-indigo-500/20 text-indigo-400' : 'hover:bg-zinc-900 text-zinc-600'}`}
+                      title={isLogWrapEnabled ? "Disable Line Wrap" : "Enable Line Wrap"}
+                    >
+                      <WrapText className="w-4 h-4" />
+                    </button>
+                  </div>
                   <div className="p-8 overflow-y-auto font-mono text-[11px] leading-relaxed space-y-3 flex-1 bg-black">
-                    {selectedWorkload.recentLogs.map((log, i) => (
-                      <div key={i} className="flex gap-6 group hover:bg-white/5 py-1 px-2 rounded-lg">
-                        <span className="text-zinc-700 select-none text-[9px] w-8 font-black">{String(i + 1).padStart(2, '0')}</span>
-                        <div className="text-zinc-400 break-all">{highlightLog(log)}</div>
+                    {(selectedWorkload.recentLogs || []).map((log, i) => (
+                      <div key={i} className="flex gap-6 group hover:bg-white/5 py-1 px-2 rounded-lg items-start">
+                        <span className="text-zinc-700 select-none text-[9px] w-8 font-black flex-shrink-0 pt-0.5">{String(i + 1).padStart(2, '0')}</span>
+                        <div className={`text-zinc-400 min-w-0 flex-1 ${isLogWrapEnabled ? 'whitespace-pre-wrap break-all' : 'whitespace-nowrap overflow-x-auto scrollbar-hide'}`}>
+                          {highlightLog(log)}
+                        </div>
+                        <CopyButton text={log} className="opacity-0 group-hover:opacity-100 flex-shrink-0" />
                       </div>
                     ))}
                   </div>
@@ -299,7 +428,18 @@ export const TriageView: React.FC<TriageViewProps> = ({ workloads, isDarkMode = 
                   </div>
                   <div className="p-10 flex-1 overflow-y-auto">
                     {isAnalyzing ? <div className="h-full flex flex-col items-center justify-center text-center gap-6"><Loader2 className="w-12 h-12 text-indigo-500 animate-spin" /><h4 className="text-lg font-black text-zinc-900 dark:text-white uppercase tracking-tighter">Gemini SRE Analysis...</h4></div> : analysis ? <div className="animate-in fade-in slide-in-from-bottom-6 duration-700">
-                      <div className="prose prose-indigo max-w-none dark:prose-invert"><ReactMarkdown components={{ code({ node, inline, className, children, ...props }: any) { const match = /language-(\w+)/.exec(className || ''); return !inline && match ? <div className="my-6 rounded-2xl overflow-hidden shadow-2xl"><SyntaxHighlighter style={vscDarkPlus} language={match[1]} PreTag="div" customStyle={{ margin: 0, padding: '2rem' }} {...props}>{String(children).replace(/\n$/, '')}</SyntaxHighlighter></div> : <code className="bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 px-2 py-0.5 rounded-lg font-mono text-xs font-black" {...props}>{children}</code>; } }}>{analysis}</ReactMarkdown></div>
+                      <div className="prose prose-indigo max-w-none dark:prose-invert">
+                        <ReactMarkdown components={{
+                          code({ node, inline, className, children, ...props }: any) {
+                            const match = /language-(\w+)/.exec(className || '');
+                            return !inline && match
+                              ? <CodeBlock language={match[1]}>{children}</CodeBlock>
+                              : <code className="bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 px-2 py-0.5 rounded-lg font-mono text-xs font-black" {...props}>{children}</code>;
+                          }
+                        }}>
+                          {analysis}
+                        </ReactMarkdown>
+                      </div>
 
                       {/* Remediation Section */}
                       <div className="mt-10 pt-10 border-t border-zinc-100 dark:border-zinc-800">

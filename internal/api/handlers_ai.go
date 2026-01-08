@@ -41,7 +41,7 @@ func (h *AIHandler) GenerateRemediation(c *gin.Context) {
 		return
 	}
 
-	suggestion, err := h.service.GenerateRemediation(c.Request.Context(), req.ResourceKind, req.ResourceName, req.ErrorLog)
+	suggestion, err := h.service.GenerateRemediation(c.Request.Context(), req.Provider, req.Model, req.ResourceKind, req.ResourceName, req.ErrorLog)
 	if err != nil {
 		log.Printf("Error generating remediation: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate remediation"})
@@ -49,4 +49,20 @@ func (h *AIHandler) GenerateRemediation(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, suggestion)
+}
+
+func (h *AIHandler) GetModels(c *gin.Context) {
+	provider := c.Query("provider")
+	if provider == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "provider query parameter is required"})
+		return
+	}
+
+	models, err := h.service.GetAvailableModels(c.Request.Context(), provider)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"models": models})
 }

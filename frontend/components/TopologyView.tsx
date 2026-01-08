@@ -1,5 +1,6 @@
 
 import React, { useState, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Workload } from '../types';
 import { generateTopologyDiagram } from '../services/geminiService';
 import { Loader2, Image as ImageIcon, Download, Sparkles, AlertCircle, Share2, ZoomIn, Info, LayoutGrid, Box, Server, Layers, Globe, RefreshCw } from 'lucide-react';
@@ -10,6 +11,7 @@ interface TopologyViewProps {
 }
 
 export const TopologyView: React.FC<TopologyViewProps> = ({ workloads, isDarkMode = true }) => {
+    const navigate = useNavigate();
     const [viewMode, setViewMode] = useState<'graph' | 'schematic'>('schematic');
     const [diagramImage, setDiagramImage] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(false);
@@ -201,13 +203,17 @@ export const TopologyView: React.FC<TopologyViewProps> = ({ workloads, isDarkMod
                                 </div>
                                 <div className="p-4 grid grid-cols-1 gap-3">
                                     {items.map(w => (
-                                        <div key={w.id} className="flex items-center justify-between p-3 rounded-lg border border-zinc-100 dark:border-zinc-800 hover:border-indigo-200 dark:hover:border-indigo-800 bg-zinc-50/50 dark:bg-black/20 transition-all">
+                                        <div
+                                            key={w.id}
+                                            onClick={() => navigate(`/triage?workload=${w.name}&playbook=General%20Health`)}
+                                            className="flex items-center justify-between p-3 rounded-lg border border-zinc-100 dark:border-zinc-800 hover:border-indigo-200 dark:hover:border-indigo-800 bg-zinc-50/50 dark:bg-black/20 transition-all cursor-pointer hover:bg-zinc-100 dark:hover:bg-zinc-800/50 group"
+                                        >
                                             <div className="flex items-center gap-3">
-                                                <div className={`w-2 h-8 rounded-full ${w.status === 'Healthy' ? 'bg-emerald-500' :
+                                                <div className={`w-2 h-8 rounded-full transition-all group-hover:scale-110 ${w.status === 'Healthy' ? 'bg-emerald-500' :
                                                     w.status === 'Warning' ? 'bg-amber-500' : 'bg-red-500'
                                                     }`}></div>
                                                 <div>
-                                                    <div className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">{w.name}</div>
+                                                    <div className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">{w.name}</div>
                                                     <div className="text-[10px] text-zinc-500 flex items-center gap-1.5 mt-0.5">
                                                         <Box className="w-3 h-3" /> {w.kind}
                                                         <span className="text-zinc-300 dark:text-zinc-700">|</span>

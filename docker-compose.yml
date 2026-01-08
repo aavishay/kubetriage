@@ -3,17 +3,16 @@ version: '3.8'
 services:
   backend:
     build:
-      context: ./backend
+      context: .
     container_name: kubetriage-backend
     ports:
-      - "3002:3001"
+      - "8081:3001"
     environment:
       - NODE_ENV=production
       - PORT=3001
       - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger:4317
       - DATABASE_URL=host=postgres user=kubetriage password=kubetriage dbname=kubetriage port=5432 sslmode=disable
       - GEMINI_API_KEY=${GEMINI_API_KEY}
-      - FRONTEND_URL=http://localhost:8081
       - REDIS_ADDR=kubetriage-redis:6379
       - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
       - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
@@ -31,23 +30,13 @@ services:
     image: postgres:15-alpine
     container_name: kubetriage-postgres
     environment:
-      POSTGRES_USER: kubetriage
-      POSTGRES_PASSWORD: kubetriage
-      POSTGRES_DB: kubetriage
+      - POSTGRES_USER=kubetriage
+      - POSTGRES_PASSWORD=kubetriage
+      - POSTGRES_DB=kubetriage
     ports:
       - "5433:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
-    restart: always
-
-  frontend:
-    build:
-      context: ./frontend
-    container_name: kubetriage-frontend
-    ports:
-      - "8081:80"
-    depends_on:
-      - backend
     restart: always
 
   jaeger:

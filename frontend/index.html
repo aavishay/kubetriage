@@ -1,51 +1,85 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>KubeTriage</title>
-    <!-- We keep the CDN for Tailwind for simplicity in this setup -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-      tailwind.config = {
-        darkMode: 'class',
-        theme: {
-          extend: {
-             fontFamily: {
-              sans: ['Inter', 'sans-serif'],
-              mono: ['JetBrains Mono', 'monospace'],
-            },
-          }
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>KubeTriage</title>
+  <!-- We keep the CDN for Tailwind for simplicity in this setup -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
         }
       }
-    </script>
-    <style>
-      @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
-      body {
-        font-family: 'Inter', sans-serif;
-        background-color: #fafafa; 
-      }
-      .font-mono {
-        font-family: 'JetBrains Mono', monospace;
-      }
-      ::-webkit-scrollbar {
-        width: 8px;
-        height: 8px;
-      }
-      ::-webkit-scrollbar-track {
-        background: transparent; 
-      }
-      ::-webkit-scrollbar-thumb {
-        background: #a1a1aa; 
-        border-radius: 4px;
-      }
-      ::-webkit-scrollbar-thumb:hover {
-        background: #71717a; 
-      }
-      .dark ::-webkit-scrollbar-thumb {
-        background: #52525b;
-      }
-    </style>
+    }
+  </script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #fafafa;
+      background-image: radial-gradient(#e5e7eb 1px, transparent 1px);
+      background-size: 32px 32px;
+    }
+
+    /* Dark mode background override via JS class usually, but standard media query for now or rely on .dark body if tailwind handles it */
+    .dark body {
+      background-color: #09090b;
+      background-image: radial-gradient(#27272a 1px, transparent 1px);
+    }
+
+    .font-mono {
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    /* Premium Scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: #d4d4d8;
+      border-radius: 3px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: #a1a1aa;
+    }
+
+    .dark ::-webkit-scrollbar-thumb {
+      background: #3f3f46;
+    }
+
+    .dark ::-webkit-scrollbar-thumb:hover {
+      background: #52525b;
+    }
+
+    /* Glassmorphism Utility */
+    .glass {
+      background: rgba(255, 255, 255, 0.7);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.5);
+    }
+
+    .dark .glass {
+      background: rgba(24, 24, 27, 0.6);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+  </style>
   <script type="importmap">
 {
   "imports": {
@@ -62,9 +96,11 @@
 }
 </script>
 </head>
-  <body>
-    <div id="root"></div>
-    <!-- Updated path to point to index.tsx -->
-    <script type="module" src="/index.tsx"></script>
-  </body>
+
+<body>
+  <div id="root"></div>
+  <!-- Updated path to point to index.tsx -->
+  <script type="module" src="/index.tsx"></script>
+</body>
+
 </html>

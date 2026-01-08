@@ -1,9 +1,6 @@
 #!/bin/bash
 
 # Load .env variables if present
-if [ -f ../.env ]; then
-  export $(grep -v '^#' ../.env | xargs)
-fi
 if [ -f .env ]; then
   export $(grep -v '^#' .env | xargs)
 fi
@@ -13,7 +10,7 @@ export DATABASE_URL="host=localhost user=kubetriage password=kubetriage dbname=k
 export REDIS_ADDR="localhost:6379"
 export OTEL_EXPORTER_OTLP_ENDPOINT="http://localhost:4317"
 export PORT=3001
-export FRONTEND_URL="http://localhost:3000"
+export FRONTEND_URL="http://localhost:3001"
 export GOOGLE_REDIRECT_URL="http://localhost:8081/api/auth/google/callback"
 export MOCK_OIDC="true"
 
@@ -21,6 +18,13 @@ export MOCK_OIDC="true"
 if [ -z "$KUBECONFIG" ]; then
   export KUBECONFIG=$HOME/.kube/config
 fi
+
+# Ensure Frontend is built
+echo "📦 Building Frontend..."
+cd frontend
+npm install
+npm run build
+cd ..
 
 echo "🚀 Starting KubeTriage Backend (Local Mode)"
 echo "   - Database: $DATABASE_URL"

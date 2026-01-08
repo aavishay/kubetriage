@@ -1,11 +1,14 @@
 package api
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"math/rand"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/aavishay/kubetriage/backend/internal/auth"
@@ -17,6 +20,7 @@ import (
 	"github.com/google/uuid"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/client-go/kubernetes"
 )
 
@@ -130,6 +134,51 @@ func getRealMetrics(ctx context.Context, namespace, name, kind string, podSpec v
 	}
 
 	return metrics
+}
+
+func fetchRecentLogs(ctx context.Context, client *kubernetes.Clientset, namespace string, matchLabels map[string]string) []string {
+	if len(matchLabels) == 0 {
+		return []string{}
+	}
+
+	listOpts := metav1.ListOptions{
+		LabelSelector: labels.Set(matchLabels).String(),
+		Limit:         1,
+	}
+
+	pods, err := client.CoreV1().Pods(namespace).List(ctx, listOpts)
+	if err != nil || len(pods.Items) == 0 {
+		return []string{}
+	}
+
+	pod := pods.Items[0]
+	// If pod has multiple containers, default to the first one or logic to pick?
+	// For now, first one is fine or let API pick (defaults to first)
+	tailLines := int64(20)
+	req := client.CoreV1().Pods(namespace).GetLogs(pod.Name, &v1.PodLogOptions{
+		TailLines: &tailLines,
+	})
+
+	podLogs, err := req.Stream(ctx)
+	if err != nil {
+		return []string{}
+	}
+	defer podLogs.Close()
+
+	buf := new(bytes.Buffer)
+	_, err = io.Copy(buf, podLogs)
+	if err != nil {
+		return []string{}
+	}
+
+	lines := strings.Split(buf.String(), "\n")
+	var result []string
+	for _, l := range lines {
+		if strings.TrimSpace(l) != "" {
+			result = append(result, l)
+		}
+	}
+	return result
 }
 
 type ClusterResponse struct {
@@ -254,7 +303,7 @@ func WorkloadsHandler(c *gin.Context) {
 				AvailableReplicas: d.Status.AvailableReplicas,
 				Status:            getStatus(d.Status.AvailableReplicas, *d.Spec.Replicas),
 				Metrics:           getRealMetrics(c.Request.Context(), d.Namespace, d.Name, "Deployment", d.Spec.Template.Spec),
-				RecentLogs:        []string{},
+				RecentLogs:        fetchRecentLogs(c.Request.Context(), client, d.Namespace, d.Spec.Selector.MatchLabels),
 				Events:            []string{},
 				CostPerMonth:      rand.Intn(500) + 50,
 			}
@@ -277,7 +326,7 @@ func WorkloadsHandler(c *gin.Context) {
 				AvailableReplicas: s.Status.ReadyReplicas,
 				Status:            getStatus(s.Status.ReadyReplicas, *s.Spec.Replicas),
 				Metrics:           getRealMetrics(c.Request.Context(), s.Namespace, s.Name, "StatefulSet", s.Spec.Template.Spec),
-				RecentLogs:        []string{},
+				RecentLogs:        fetchRecentLogs(c.Request.Context(), client, s.Namespace, s.Spec.Selector.MatchLabels),
 				Events:            []string{},
 				CostPerMonth:      rand.Intn(500) + 100,
 			}
@@ -298,7 +347,7 @@ func WorkloadsHandler(c *gin.Context) {
 				AvailableReplicas: ds.Status.NumberReady,
 				Status:            getStatus(ds.Status.NumberReady, ds.Status.DesiredNumberScheduled),
 				Metrics:           getRealMetrics(c.Request.Context(), ds.Namespace, ds.Name, "DaemonSet", ds.Spec.Template.Spec),
-				RecentLogs:        []string{},
+				RecentLogs:        fetchRecentLogs(c.Request.Context(), client, ds.Namespace, ds.Spec.Selector.MatchLabels),
 				Events:            []string{},
 				CostPerMonth:      rand.Intn(200) + 50,
 			}

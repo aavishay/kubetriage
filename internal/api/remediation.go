@@ -12,6 +12,8 @@ import (
 )
 
 type GenerateRequest struct {
+	Provider     string `json:"provider"`
+	Model        string `json:"model"`
 	ResourceKind string `json:"resourceKind"`
 	ResourceName string `json:"resourceName"`
 	Namespace    string `json:"namespace"`

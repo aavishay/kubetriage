@@ -42,6 +42,8 @@ func SetupRouter(aiService *ai.AIService) *gin.Engine {
 		api.GET("/health", HealthHandler)
 		api.GET("/status/db", DBHealthHandler)
 		api.GET("/auth/login", func(c *gin.Context) { auth.LoginHandler(c) })
+		api.POST("/auth/logout", func(c *gin.Context) { auth.LogoutHandler(c) })
+		api.GET("/auth/logout", func(c *gin.Context) { auth.LogoutHandler(c) }) // Support GET for easier testing/links
 		api.GET("/auth/google/callback", func(c *gin.Context) { auth.CallbackHandler(c) })
 
 		// Protected Routes
@@ -59,6 +61,7 @@ func SetupRouter(aiService *ai.AIService) *gin.Engine {
 			protected.POST("/reports/:id/read", MarkReportReadHandler)
 
 			// AI / Remediation
+			protected.GET("/ai/models", aiHandler.GetModels)
 			protected.POST("/ai/analyze", aiHandler.AnalyzeWorkload)
 			protected.POST("/remediate/generate", aiHandler.GenerateRemediation)
 
@@ -78,5 +81,25 @@ func SetupRouter(aiService *ai.AIService) *gin.Engine {
 			}
 		}
 	}
+	// Serve Frontend Static Files
+	// This block handles serving the built React application from the backend
+	r.Static("/assets", "./frontend/dist/assets")
+	r.StaticFile("/favicon.ico", "./frontend/dist/favicon.ico")
+
+	// SPA Handler: any route not handled by API or static files returns index.html
+	r.NoRoute(func(c *gin.Context) {
+		// Avoid intercepting API 404s - if it starts with /api, return JSON 404
+		path := c.Request.URL.Path
+		if len(path) >= 4 && path[0:4] == "/api" {
+			c.JSON(404, gin.H{"code": 404, "message": "API endpoint not found"})
+			return
+		}
+		// Otherwise serve the index.html
+		c.Header("Cache-Control", "no-cache, no-store, must-revalidate")
+		c.Header("Pragma", "no-cache")
+		c.Header("Expires", "0")
+		c.File("./frontend/dist/index.html")
+	})
+
 	return r
 }

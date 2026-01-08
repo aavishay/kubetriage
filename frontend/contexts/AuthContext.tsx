@@ -12,6 +12,7 @@ interface AuthContextType {
     isLoading: boolean;
     isAuthenticated: boolean;
     login: (email: string, password: string) => Promise<void>;
+    logout: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -26,7 +27,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         // or could be used for a separate "Email/Password" flow if we kept it.
 
         // Redirect to Backend OIDC Start
-        window.location.href = "http://localhost:3001/api/auth/login/google";
+        window.location.href = "http://localhost:3001/api/auth/login";
+    };
+
+    const logout = async () => {
+        try {
+            await fetch('/api/auth/logout', { method: 'POST' });
+        } catch (e) {
+            console.error("Logout failed", e);
+        }
+        setUser(null);
     };
 
     useEffect(() => {
@@ -54,6 +64,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         isLoading,
         isAuthenticated: !!user,
         login,
+        logout,
     };
 
     return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

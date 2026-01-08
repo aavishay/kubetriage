@@ -3,44 +3,50 @@ package ai
 import (
 	"context"
 	"fmt"
-	"os"
+	"log"
 	"strings"
-
-	"github.com/google/generative-ai-go/genai"
-	"google.golang.org/api/option"
-)
-
-const (
-	GeminiProModel  = "gemini-1.5-pro"
-	GeminiFastModel = "gemini-1.5-flash-latest"
 )
 
 type AIService struct {
-	client *genai.Client
+	providers map[string]AIProvider
 }
 
 func NewAIService(ctx context.Context) (*AIService, error) {
-	apiKey := os.Getenv("GEMINI_API_KEY")
-	if apiKey == "" {
-		return nil, fmt.Errorf("GEMINI_API_KEY is not set")
+	providers := make(map[string]AIProvider)
+
+	// Initialize Gemini
+	gemini, err := NewGeminiProvider(ctx)
+	if err == nil {
+		providers["gemini"] = gemini
+	} else {
+		log.Printf("Gemini provider not available: %v", err)
 	}
 
-	client, err := genai.NewClient(ctx, option.WithAPIKey(apiKey))
-	if err != nil {
-		return nil, err
+	// Initialize Ollama
+	ollama := NewOllamaProvider()
+	providers["ollama"] = ollama
+
+	if len(providers) == 0 {
+		return nil, fmt.Errorf("no AI providers available")
 	}
 
-	return &AIService{client: client}, nil
+	return &AIService{providers: providers}, nil
 }
 
 func (s *AIService) Close() {
-	if s.client != nil {
-		s.client.Close()
+	// Close any providers that need closing
+	// Since we don't hold the concrete types here easily without type assertion or adding Close to interface
+	// Let's check the interface.
+	// We didn't add Close to interface, but we can type assert.
+	if gemini, ok := s.providers["gemini"].(*GeminiProvider); ok {
+		gemini.Close()
 	}
 }
 
 // AnalyzeWorkloadRequest mirrors the frontend data structure
 type AnalyzeWorkloadRequest struct {
+	Provider     string   `json:"provider"` // "gemini" or "ollama"
+	Model        string   `json:"model"`    // specific model like "llama3"
 	WorkloadName string   `json:"workloadName"`
 	Status       string   `json:"status"`
 	Playbook     string   `json:"playbook"`
@@ -56,8 +62,38 @@ type AnalyzeWorkloadRequest struct {
 	Events       []string `json:"events"`
 }
 
+func (s *AIService) getProvider(name string) (AIProvider, error) {
+	if name == "" {
+		// Default preference: Gemini -> Ollama
+		if p, ok := s.providers["gemini"]; ok {
+			return p, nil
+		}
+		if p, ok := s.providers["ollama"]; ok {
+			return p, nil
+		}
+		return nil, fmt.Errorf("no default provider available")
+	}
+
+	p, ok := s.providers[strings.ToLower(name)]
+	if !ok {
+		return nil, fmt.Errorf("provider %s not found", name)
+	}
+	return p, nil
+}
+
+func (s *AIService) GetAvailableModels(ctx context.Context, providerName string) ([]string, error) {
+	provider, err := s.getProvider(providerName)
+	if err != nil {
+		return nil, err
+	}
+	return provider.GetAvailableModels(ctx)
+}
+
 func (s *AIService) AnalyzeWorkload(ctx context.Context, req AnalyzeWorkloadRequest) (string, error) {
-	model := s.client.GenerativeModel(GeminiProModel)
+	provider, err := s.getProvider(req.Provider)
+	if err != nil {
+		return "", err
+	}
 
 	prompt := fmt.Sprintf(`
     You are a Senior Kubernetes SRE performing a targeted diagnosis for the workload "%s".
@@ -97,16 +133,15 @@ func (s *AIService) AnalyzeWorkload(ctx context.Context, req AnalyzeWorkloadRequ
 		strings.Join(req.Events, "\n"),
 	)
 
-	resp, err := model.GenerateContent(ctx, genai.Text(prompt))
+	return provider.GenerateContent(ctx, prompt, req.Model)
+}
+
+func (s *AIService) GenerateRemediation(ctx context.Context, providerName, model, resourceKind, resourceName, errorLog string) (string, error) {
+	provider, err := s.getProvider(providerName)
 	if err != nil {
 		return "", err
 	}
 
-	return getResponseText(resp), nil
-}
-
-func (s *AIService) GenerateRemediation(ctx context.Context, resourceKind, resourceName, errorLog string) (string, error) {
-	model := s.client.GenerativeModel(GeminiProModel)
 	prompt := fmt.Sprintf(`
 	You are a Kubernetes Expert.
 	The resource %s/%s has the following error logs:
@@ -117,24 +152,5 @@ func (s *AIService) GenerateRemediation(ctx context.Context, resourceKind, resou
 	Refer to potential root causes.
 	`, resourceKind, resourceName, errorLog)
 
-	resp, err := model.GenerateContent(ctx, genai.Text(prompt))
-	if err != nil {
-		return "", err
-	}
-	return getResponseText(resp), nil
-}
-
-// Helper to extract text from response
-func getResponseText(resp *genai.GenerateContentResponse) string {
-	var sb strings.Builder
-	for _, cand := range resp.Candidates {
-		if cand.Content != nil {
-			for _, part := range cand.Content.Parts {
-				if txt, ok := part.(genai.Text); ok {
-					sb.WriteString(string(txt))
-				}
-			}
-		}
-	}
-	return sb.String()
+	return provider.GenerateContent(ctx, prompt, model)
 }

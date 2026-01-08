@@ -70,7 +70,11 @@ func LoginHandler(c *gin.Context) {
 		})
 
 		// Redirect to Frontend Dashboard
-		c.Redirect(http.StatusTemporaryRedirect, os.Getenv("FRONTEND_URL"))
+		url := os.Getenv("FRONTEND_URL")
+		if url == "" {
+			url = "/"
+		}
+		c.Redirect(http.StatusTemporaryRedirect, url)
 		return
 	}
 
@@ -156,4 +160,16 @@ func getUserInfo(accessToken string) (map[string]interface{}, error) {
 	var result map[string]interface{}
 	json.Unmarshal(data, &result)
 	return result, nil
+}
+
+// LogoutHandler clears the auth cookie
+func LogoutHandler(c *gin.Context) {
+	http.SetCookie(c.Writer, &http.Cookie{
+		Name:     "auth_token",
+		Value:    "",
+		Path:     "/",
+		HttpOnly: true,
+		MaxAge:   -1, // Delete
+	})
+	c.JSON(http.StatusOK, gin.H{"message": "Logged out successfully"})
 }

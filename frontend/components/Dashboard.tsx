@@ -217,7 +217,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = tr
                               </span>
                            </div>
                            <p className="text-[10px] text-zinc-500 dark:text-zinc-400 font-bold mb-4 line-clamp-1">
-                              {w.recentLogs[0] || 'No logs available'}
+                              {w.recentLogs?.[0] || 'No logs available'}
                            </p>
                            <button
                               onClick={() => onTriageRequest?.(w.id, 'Resource Constraints')}
@@ -262,20 +262,52 @@ export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = tr
                <h3 className="text-xs font-black uppercase tracking-widest text-zinc-400 mb-8 flex items-center gap-2">
                   <Zap className="w-4 h-4 text-amber-500" /> Resource Saturation (CPU)
                </h3>
-               <div className="flex-1 w-full min-h-[400px]">
-                  <ResponsiveContainer width="100%" height="100%">
-                     <BarChart data={resourceData} layout="vertical" margin={{ left: 0, right: 20 }}>
-                        <XAxis type="number" hide />
-                        <YAxis dataKey="name" type="category" width={100} axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 900, fill: isDarkMode ? '#a1a1aa' : '#52525b' }} />
-                        <Tooltip cursor={{ fill: isDarkMode ? '#18181b' : '#f9fafb' }} contentStyle={tooltipStyle} />
-                        <Bar dataKey="requested" fill="#4f46e5" radius={[0, 4, 4, 0]} barSize={12} name="Request" />
-                        <Bar dataKey="used" radius={[0, 4, 4, 0]} barSize={12} name="Used">
-                           {resourceData.map((entry, index) => (
-                              <Cell key={`cell-${index}`} fill={entry.status === 'Critical' ? '#ef4444' : entry.status === 'Warning' ? '#f59e0b' : '#10b981'} />
-                           ))}
-                        </Bar>
-                     </BarChart>
-                  </ResponsiveContainer>
+               <div className="flex-1 min-h-0 w-full overflow-y-auto pr-2 custom-scrollbar">
+                  <div className="space-y-4">
+                     {resourceData
+                        .sort((a, b) => (b.used / b.requested) - (a.used / a.requested))
+                        .map((item, idx) => {
+                           const saturation = Math.min(100, Math.round((item.used / item.requested) * 100));
+                           const isCritical = saturation >= 90;
+                           const isWarning = saturation >= 70 && saturation < 90;
+                           const colorClass = isCritical ? 'bg-rose-500' : isWarning ? 'bg-amber-500' : 'bg-emerald-500';
+
+                           return (
+                              <div key={idx} className="group flex items-center gap-4 p-3 rounded-xl hover:bg-zinc-50 dark:hover:bg-zinc-800/50 border border-transparent hover:border-zinc-100 dark:hover:border-zinc-800 transition-all cursor-default">
+                                 {/* Name & Type */}
+                                 <div className="w-48 shrink-0">
+                                    <h4 className="text-xs font-bold text-zinc-700 dark:text-zinc-300 truncate" title={item.name}>{item.name}</h4>
+                                    <div className="flex items-center gap-2 mt-1">
+                                       <div className={`w-1.5 h-1.5 rounded-full ${item.status === 'Critical' ? 'bg-rose-500' : 'bg-emerald-500'}`} />
+                                       <span className="text-[9px] font-medium text-zinc-400 uppercase tracking-wider">{item.status}</span>
+                                    </div>
+                                 </div>
+
+                                 {/* Progress Bar */}
+                                 <div className="flex-1 flex flex-col justify-center">
+                                    <div className="flex justify-between items-end mb-1">
+                                       <span className="text-[9px] font-bold text-zinc-400">CPU Saturation</span>
+                                       <span className={`text-[10px] font-black ${isCritical ? 'text-rose-500' : 'text-zinc-500'}`}>{saturation}%</span>
+                                    </div>
+                                    <div className="h-2 w-full bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden">
+                                       <div
+                                          className={`h-full rounded-full ${colorClass} transition-all duration-500`}
+                                          style={{ width: `${saturation}%` }}
+                                       />
+                                    </div>
+                                 </div>
+
+                                 {/* Metric Values */}
+                                 <div className="w-24 shrink-0 text-right">
+                                    <div className="text-[10px] font-mono text-zinc-500">
+                                       <span className="text-zinc-900 dark:text-white font-bold">{item.used.toFixed(1)}m</span> / {item.requested}m
+                                    </div>
+                                    <span className="text-[9px] text-zinc-400 font-medium">cores</span>
+                                 </div>
+                              </div>
+                           );
+                        })}
+                  </div>
                </div>
             </div>
          </div>

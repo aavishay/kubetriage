@@ -238,41 +238,46 @@ export const NotificationsView: React.FC<NotificationsViewProps> = ({
          </div>
 
          {/* Global Preferences Card */}
-         <div className="bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-zinc-900 dark:to-zinc-800/50 rounded-[2.5rem] p-8 border border-indigo-100 dark:border-zinc-800 shadow-sm">
-            <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-               <div className="flex items-center gap-4">
-                  <div className="bg-white dark:bg-zinc-800 p-3 rounded-2xl shadow-sm">
-                     <Settings2 className="w-6 h-6 text-indigo-600 dark:text-indigo-400" />
+         <div className="relative overflow-hidden bg-white/50 dark:bg-zinc-900/50 backdrop-blur-xl rounded-[2.5rem] p-8 border border-white/20 dark:border-zinc-700/30 shadow-2xl">
+            <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 via-purple-500/5 to-pink-500/5 pointer-events-none" />
+
+            <div className="relative flex flex-col md:flex-row items-center justify-between gap-8">
+               <div className="flex items-center gap-5">
+                  <div className="p-4 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl shadow-lg shadow-indigo-500/30 text-white">
+                     <Settings2 className="w-6 h-6" />
                   </div>
                   <div>
-                     <h3 className="text-zinc-900 dark:text-white font-black tracking-tight text-lg">Alert Frequency Control</h3>
-                     <p className="text-xs text-zinc-500 dark:text-zinc-400 font-bold uppercase tracking-wider mt-1">Manage global toast notification behavior</p>
+                     <h3 className="text-zinc-900 dark:text-white font-black tracking-tighter text-xl">Alert Frequency Control</h3>
+                     <p className="text-xs text-zinc-500 dark:text-zinc-400 font-bold uppercase tracking-wider mt-1.5 flex items-center gap-2">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                        Global Toast Policy
+                     </p>
                   </div>
                </div>
 
-               <div className="flex flex-col sm:flex-row items-center gap-8 bg-white/50 dark:bg-zinc-900/50 p-6 rounded-3xl border border-white/50 dark:border-zinc-700/50 w-full md:w-auto">
+               <div className="flex flex-col sm:flex-row items-center gap-6 bg-white/40 dark:bg-black/20 p-2 rounded-[2rem] border border-white/50 dark:border-zinc-700/30 backdrop-blur-md">
                   {/* Toggle */}
-                  <div className="flex items-center gap-4">
-                     <span className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500">Toast Popups</span>
-                     <label className="relative inline-flex items-center cursor-pointer">
+                  <div className="flex items-center gap-4 px-6 py-2">
+                     <span className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500">Popups</span>
+                     <label className="relative inline-flex items-center cursor-pointer group">
                         <input
                            type="checkbox"
                            checked={notificationSettings.toastEnabled}
                            onChange={(e) => updateNotificationSettings({ ...notificationSettings, toastEnabled: e.target.checked })}
                            className="sr-only peer"
                         />
-                        <div className="w-14 h-7 bg-zinc-200 dark:bg-zinc-950 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-zinc-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-indigo-600 shadow-inner"></div>
+                        <div className="w-12 h-7 bg-zinc-200 dark:bg-zinc-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[4px] after:left-[4px] after:bg-white after:border-zinc-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600 shadow-inner group-hover:scale-105 transition-transform" />
                      </label>
                   </div>
 
-                  <div className="h-8 w-px bg-zinc-200 dark:bg-zinc-700 hidden sm:block"></div>
+                  <div className="h-8 w-px bg-zinc-200 dark:bg-zinc-700/50 hidden sm:block" />
 
                   {/* Slider */}
-                  <div className="flex items-center gap-4 w-full sm:w-64">
-                     <div className="flex-1 space-y-2">
-                        <div className="flex justify-between">
-                           <span className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500">Min Interval</span>
-                           <span className="text-xs font-mono font-black text-indigo-600 dark:text-indigo-400">{notificationSettings.toastFrequency}s</span>
+                  <div className="flex items-center gap-4 px-6 py-2 min-w-[240px]">
+                     <div className="flex-1 space-y-3">
+                        <div className="flex justify-between items-end">
+                           <span className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500">Cooldown</span>
+                           <span className="text-sm font-mono font-black text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-500/10 px-2 py-0.5 rounded-lg border border-indigo-100 dark:border-indigo-500/20">{notificationSettings.toastFrequency}s</span>
                         </div>
                         <input
                            type="range"
@@ -281,7 +286,7 @@ export const NotificationsView: React.FC<NotificationsViewProps> = ({
                            disabled={!notificationSettings.toastEnabled}
                            value={notificationSettings.toastFrequency}
                            onChange={(e) => updateNotificationSettings({ ...notificationSettings, toastFrequency: parseInt(e.target.value) })}
-                           className="w-full h-2 bg-zinc-200 dark:bg-zinc-950 rounded-full appearance-none cursor-pointer accent-indigo-600 disabled:opacity-50"
+                           className="w-full h-1.5 bg-zinc-200 dark:bg-zinc-800 rounded-full appearance-none cursor-pointer accent-indigo-600 disabled:opacity-50"
                         />
                      </div>
                   </div>
@@ -334,28 +339,30 @@ export const NotificationsView: React.FC<NotificationsViewProps> = ({
                            <div
                               key={alert.id}
                               onClick={() => handleAlertClick(alert)}
-                              className="p-8 flex items-center gap-8 group hover:bg-zinc-50 dark:hover:bg-zinc-950/50 transition-colors cursor-pointer"
+                              className="p-8 flex items-center gap-8 group hover:bg-zinc-50 dark:hover:bg-zinc-950/50 transition-all cursor-pointer animate-in fade-in slide-in-from-bottom-2 duration-500 hover:scale-[1.005]"
                            >
-                              <div className={`p-4 rounded-2xl shrink-0 ${alert.severity === 'Critical' ? 'bg-red-500/10 text-red-500' : 'bg-amber-500/10 text-amber-500'}`}>
+                              <div className={`p-4 rounded-2xl shrink-0 transition-transform group-hover:scale-110 shadow-lg ${alert.severity === 'Critical' ? 'bg-red-500 text-white shadow-red-500/20' : 'bg-amber-500 text-white shadow-amber-500/20'}`}>
                                  <BellRing className="w-6 h-6" />
                               </div>
                               <div className="flex-1 min-w-0">
-                                 <div className="flex items-center gap-3 mb-1">
+                                 <div className="flex items-center gap-3 mb-2">
                                     <span className="text-sm font-black text-zinc-900 dark:text-white uppercase tracking-tighter group-hover:text-indigo-500 transition-colors">{alert.ruleName}</span>
-                                    <span className={`text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-md ${alert.severity === 'Critical' ? 'bg-red-500 text-white' : 'bg-amber-500 text-white'
+                                    <span className={`text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-md border ${alert.severity === 'Critical' ? 'bg-red-500/10 border-red-500/20 text-red-500' : 'bg-amber-500/10 border-amber-500/20 text-amber-500'
                                        }`}>
                                        {alert.severity}
                                     </span>
                                  </div>
-                                 <p className="text-xs text-zinc-500 dark:text-zinc-400 font-bold">
-                                    Workload <span className="text-zinc-900 dark:text-white">"{alert.workloadName}"</span> reached {alert.value}% {alert.metric} utilization.
+                                 <p className="text-xs text-zinc-500 dark:text-zinc-400 font-bold flex items-center gap-2">
+                                    Workload <span className="bg-zinc-100 dark:bg-zinc-800 px-2 py-0.5 rounded-md text-zinc-900 dark:text-white border border-zinc-200 dark:border-zinc-700">"{alert.workloadName}"</span>
+                                    reached <span className="font-mono text-indigo-500">{alert.value}%</span> {alert.metric} utilization.
                                  </p>
                               </div>
                               <div className="text-right shrink-0">
-                                 <div className="text-[10px] font-black text-zinc-900 dark:text-white uppercase tracking-widest mb-1">{formatTime(alert.timestamp)}</div>
-                                 <div className="flex items-center justify-end gap-1 text-[9px] text-zinc-400 font-bold uppercase">
-                                    <ArrowRight className="w-3 h-3 group-hover:translate-x-1 transition-transform text-indigo-500" />
+                                 <div className="text-[10px] font-black text-zinc-900 dark:text-white uppercase tracking-widest mb-1.5">{formatTime(alert.timestamp)}</div>
+                                 <div className="flex items-center justify-end gap-1.5 text-[9px] text-zinc-400 font-bold uppercase">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-indigo-500/50" />
                                     {alert.channelsNotified.length} Channels Notified
+                                    <ArrowRight className="w-3 h-3 group-hover:translate-x-1 transition-transform text-indigo-500 ml-1" />
                                  </div>
                               </div>
                            </div>

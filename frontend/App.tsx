@@ -14,6 +14,7 @@ import { TemplateLibraryView } from './components/TemplateLibraryView';
 import { LoginView } from './components/LoginView';
 import { AIChatWidget } from './components/AIChatWidget';
 import { NotFound } from './components/NotFound';
+import { SettingsView } from './components/SettingsView';
 import { BellRing, X, Loader2, Key, ExternalLink, Settings2 } from 'lucide-react';
 import { DiagnosticPlaybook } from './types';
 import { ErrorBoundary } from './components/ErrorBoundary';
@@ -22,6 +23,7 @@ import { ErrorBoundary } from './components/ErrorBoundary';
 const AppContent: React.FC = () => {
   const {
     isAuthenticated,
+    isAuthLoading, // Added
     hasApiKey,
     isCheckingKey,
     isDarkMode,
@@ -61,7 +63,7 @@ const AppContent: React.FC = () => {
     navigate('/triage', { state: { workloadId, playbook } });
   };
 
-  if (isCheckingKey) {
+  if (isCheckingKey || isAuthLoading) {
     return (
       <div className={`min-h-screen w-full flex items-center justify-center bg-zinc-50 dark:bg-[#09090b] ${isDarkMode ? 'dark' : ''}`}>
         <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
@@ -138,6 +140,7 @@ const AppContent: React.FC = () => {
               isDarkMode={isDarkMode}
             />
           } />
+          <Route path="/settings" element={<SettingsView />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </Layout>

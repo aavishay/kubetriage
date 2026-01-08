@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
 import { Workload, Cluster, Organization, User, NotificationChannel, AlertRule, TriggeredAlert } from '../types';
+import { useAuth } from './AuthContext';
 import {
   MOCK_WORKLOADS,
   MOCK_CLUSTERS,
@@ -19,6 +20,7 @@ interface MonitoringContextType {
   alertRules: AlertRule[];
   triggeredAlerts: TriggeredAlert[];
   isAuthenticated: boolean;
+  isAuthLoading: boolean; // Added loading state
   hasApiKey: boolean;
   isCheckingKey: boolean;
   activeNotification: TriggeredAlert | null;
@@ -28,6 +30,10 @@ interface MonitoringContextType {
   // Notification Config
   notificationSettings: { toastEnabled: boolean; toastFrequency: number };
   updateNotificationSettings: (settings: { toastEnabled: boolean; toastFrequency: number }) => void;
+
+  // AI Config
+  aiConfig: { provider: string; model: string };
+  updateAIConfig: (config: { provider: string; model: string }) => void;
 
   // Actions
   login: () => void;
@@ -64,10 +70,9 @@ interface MonitoringProviderProps {
 
 export const MonitoringProvider: React.FC<MonitoringProviderProps> = ({ children }) => {
   // --- Auth & Config State ---
-  const [isAuthenticated, setIsAuthenticated] = useState(() => {
-    // Check for auth_token cookie on initial load
-    return document.cookie.split(';').some(c => c.trim().startsWith('auth_token='));
-  });
+  // Consume AuthContext for source of truth
+  const { isAuthenticated, isLoading: isAuthLoading, login: authLogin, logout: authLogout } = useAuth();
+
   const [hasApiKey, setHasApiKey] = useState(false);
   const [isCheckingKey, setIsCheckingKey] = useState(true);
 
@@ -156,21 +161,74 @@ export const MonitoringProvider: React.FC<MonitoringProviderProps> = ({ children
   }, [selectedCluster]);
 
   // --- Notifications & Alerting State ---
-  const [notificationChannels, setNotificationChannels] = useState<NotificationChannel[]>(MOCK_NOTIFICATION_CHANNELS);
-  const [alertRules, setAlertRules] = useState<AlertRule[]>(MOCK_ALERT_RULES);
-  const [triggeredAlerts, setTriggeredAlerts] = useState<TriggeredAlert[]>([]);
+  // --- Notifications & Alerting State ---
+  const [notificationChannels, setNotificationChannels] = useState<NotificationChannel[]>(() => {
+    const saved = localStorage.getItem('notification_channels');
+    return saved ? JSON.parse(saved) : MOCK_NOTIFICATION_CHANNELS;
+  });
+
+  const [alertRules, setAlertRules] = useState<AlertRule[]>(() => {
+    const saved = localStorage.getItem('alert_rules');
+    return saved ? JSON.parse(saved) : MOCK_ALERT_RULES;
+  });
+
+  const [triggeredAlerts, setTriggeredAlerts] = useState<TriggeredAlert[]>(() => {
+    const saved = localStorage.getItem('triggered_alerts_history');
+    return saved ? JSON.parse(saved) : [];
+  });
+
   const [activeNotification, setActiveNotification] = useState<TriggeredAlert | null>(null);
 
-  const [notificationSettings, setNotificationSettings] = useState({ toastEnabled: true, toastFrequency: 5 });
+  const [notificationSettings, setNotificationSettings] = useState(() => {
+    const saved = localStorage.getItem('notification_settings');
+    return saved ? JSON.parse(saved) : { toastEnabled: true, toastFrequency: 5 };
+  });
+
+  const [aiConfig, setAiConfig] = useState<{ provider: string; model: string }>(() => {
+    const saved = localStorage.getItem('ai_config');
+    return saved ? JSON.parse(saved) : { provider: 'gemini', model: '' };
+  });
+
   const [lastToastTime, setLastToastTime] = useState(0);
+
+  // Persistence Effects
+  useEffect(() => {
+    localStorage.setItem('notification_channels', JSON.stringify(notificationChannels));
+  }, [notificationChannels]);
+
+  useEffect(() => {
+    localStorage.setItem('alert_rules', JSON.stringify(alertRules));
+  }, [alertRules]);
+
+  useEffect(() => {
+    localStorage.setItem('triggered_alerts_history', JSON.stringify(triggeredAlerts.slice(0, 50)));
+  }, [triggeredAlerts]);
+
+  useEffect(() => {
+    localStorage.setItem('notification_settings', JSON.stringify(notificationSettings));
+  }, [notificationSettings]);
+
 
   const updateNotificationSettings = (settings: { toastEnabled: boolean; toastFrequency: number }) => {
     setNotificationSettings(settings);
   };
 
+  useEffect(() => {
+    localStorage.setItem('ai_config', JSON.stringify(aiConfig));
+  }, [aiConfig]);
+
+  const updateAIConfig = (config: { provider: string; model: string }) => {
+    setAiConfig(config);
+  };
+
   // --- Helpers ---
-  const login = () => setIsAuthenticated(true);
-  const logout = () => setIsAuthenticated(false);
+  const login = async () => {
+    await authLogin("user", "pass");
+  };
+
+  const logout = () => {
+    authLogout();
+  };
 
   const selectApiKey = async () => {
     if ((window as any).aistudio) {
@@ -292,7 +350,7 @@ export const MonitoringProvider: React.FC<MonitoringProviderProps> = ({ children
         checkAlertRules(updated);
         return updated;
       });
-    }, 5000);
+    }, 2000);
 
     return () => clearInterval(interval);
   }, [isAuthenticated, checkAlertRules]);
@@ -329,6 +387,7 @@ export const MonitoringProvider: React.FC<MonitoringProviderProps> = ({ children
       alertRules,
       triggeredAlerts,
       isAuthenticated,
+      isAuthLoading, // Added
       hasApiKey,
       isCheckingKey,
       activeNotification,
@@ -349,7 +408,9 @@ export const MonitoringProvider: React.FC<MonitoringProviderProps> = ({ children
       unreadReports,
       refreshClusters,
       notificationSettings,
-      updateNotificationSettings
+      updateNotificationSettings,
+      aiConfig,
+      updateAIConfig
     }}>
       {children}
     </MonitoringContext.Provider>

@@ -253,7 +253,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
                     <p className="font-bold text-sm">{user?.email || "Admin User"}</p>
                     <p className="text-[10px] text-zinc-500 uppercase tracking-widest font-black">{user?.role || "SRE Lead"}</p>
                   </div>
-                  <button className="w-full flex items-center gap-3 px-4 py-2.5 text-sm font-bold text-zinc-600 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors"><Settings className="w-4 h-4" /> Preferences</button>
+                  <button onClick={() => navigate('/settings')} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm font-bold text-zinc-600 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors"><Settings className="w-4 h-4" /> Preferences</button>
                   <button onClick={selectApiKey} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm font-bold text-zinc-600 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors"><Key className="w-4 h-4" /> API Credentials</button>
                   <button onClick={() => window.open('/api/reports/compliance', '_blank')} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm font-bold text-zinc-600 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors"><FileText className="w-4 h-4" /> Download SOC2 Report</button>
                   <div className="h-px bg-zinc-100 dark:border-zinc-800 my-2" />

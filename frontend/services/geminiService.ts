@@ -9,7 +9,12 @@ const createClient = () => {
     return new GoogleGenAI({ apiKey: process.env.API_KEY || "DEMO_KEY_FOR_BUILD" });
 };
 
-export const analyzeWorkloadLogs = async (workload: Workload, playbook: DiagnosticPlaybook = 'General Health'): Promise<string> => {
+export const analyzeWorkload = async (
+    workload: Workload,
+    playbook: DiagnosticPlaybook = 'General Health',
+    provider: string = 'gemini',
+    model: string = ''
+): Promise<string> => {
     let playbookInstructions = "";
     switch (playbook) {
         case 'Network Connectivity':
@@ -39,6 +44,8 @@ export const analyzeWorkloadLogs = async (workload: Workload, playbook: Diagnost
                 // Add Authorization header if needed, managed by AuthContext usually
             },
             body: JSON.stringify({
+                provider, // Added
+                model, // Added
                 workloadName: workload.name,
                 status: workload.status,
                 playbook: playbook,
