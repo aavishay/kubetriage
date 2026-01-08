@@ -2,6 +2,7 @@ package ai
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log"
 	"strings"
@@ -136,10 +137,18 @@ func (s *AIService) AnalyzeWorkload(ctx context.Context, req AnalyzeWorkloadRequ
 	return provider.GenerateContent(ctx, prompt, req.Model)
 }
 
-func (s *AIService) GenerateRemediation(ctx context.Context, providerName, model, resourceKind, resourceName, errorLog string) (string, error) {
+type PatchSuggestion struct {
+	Description  string `json:"description"`
+	PatchType    string `json:"patchType"`    // e.g., "application/merge-patch+json"
+	PatchContent string `json:"patchContent"` // The actual YAML/JSON patch
+	Risk         string `json:"risk"`         // "Low", "Medium", "High"
+	Reasoning    string `json:"reasoning"`
+}
+
+func (s *AIService) GenerateRemediation(ctx context.Context, providerName, model, resourceKind, resourceName, errorLog string) (*PatchSuggestion, error) {
 	provider, err := s.getProvider(providerName)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	prompt := fmt.Sprintf(`
@@ -147,10 +156,43 @@ func (s *AIService) GenerateRemediation(ctx context.Context, providerName, model
 	The resource %s/%s has the following error logs:
 	%s
 
-	Suggest a specific remediation action. 
-	If it involves a YAML change, provide the YAML patch.
-	Refer to potential root causes.
+	Suggest a specific remediation action.
+	Return ONLY a valid JSON object with the following structure, no other text:
+	{
+		"description": "Short title of the fix",
+		"patchType": "application/merge-patch+json",
+		"patchContent": "The YAML patch content as a string",
+		"risk": "Low" | "Medium" | "High",
+		"reasoning": "Brief explanation of why this fix is needed"
+	}
 	`, resourceKind, resourceName, errorLog)
 
-	return provider.GenerateContent(ctx, prompt, model)
+	rawResponse, err := provider.GenerateContent(ctx, prompt, model)
+	if err != nil {
+		return nil, err
+	}
+
+	// Clean up potential markdown code blocks
+	cleanResponse := strings.TrimSpace(rawResponse)
+	cleanResponse = strings.TrimPrefix(cleanResponse, "```json")
+	cleanResponse = strings.TrimPrefix(cleanResponse, "```")
+	cleanResponse = strings.TrimSuffix(cleanResponse, "```")
+	cleanResponse = strings.TrimSpace(cleanResponse)
+
+	var suggestion PatchSuggestion
+	// We need standard json package
+	if err := json.Unmarshal([]byte(cleanResponse), &suggestion); err != nil {
+		// Fallback: If JSON parsing fails, return a generic error or try to wrap the raw text
+		log.Printf("Failed to parse LLM JSON response: %v. Raw: %s", err, rawResponse)
+		// Attempt to return a generic "Manual Review" suggestion if parsing fails
+		return &PatchSuggestion{
+			Description:  "Manual Review Required",
+			Reasoning:    "AI response could not be parsed structurally. See logs for details.",
+			PatchContent: "# Failed to parse patch",
+			Risk:         "High",
+			PatchType:    "text/plain",
+		}, nil
+	}
+
+	return &suggestion, nil
 }
