@@ -493,7 +493,7 @@ export const RightSizingView: React.FC<RightSizingViewProps> = ({ workloads, isD
                   <div className="bg-white dark:bg-zinc-900 border-2 border-indigo-500/30 rounded-[3.5rem] overflow-hidden shadow-2xl relative">
                     <div className="p-8 border-b border-zinc-100 dark:border-zinc-800 bg-zinc-50/80 dark:bg-zinc-950/80 backdrop-blur-md flex justify-between items-center sticky top-0 z-10">
                       <h3 className="text-xl font-black text-zinc-900 dark:text-white flex items-center gap-3 uppercase tracking-tighter">
-                        <Sparkles className="w-6 h-6 text-indigo-500" /> Gemini Capacity Intelligence
+                        <Sparkles className="w-6 h-6 text-indigo-500" /> AI Capacity Intelligence
                       </h3>
                     </div>
                     <div className="p-10 md:p-14 prose prose-indigo max-w-none dark:prose-invert">
