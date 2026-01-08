@@ -91,7 +91,7 @@ export const TemplateLibraryView: React.FC<TemplateLibraryViewProps> = ({ onAppl
          <div className="bg-zinc-900 dark:bg-zinc-950 rounded-[2.5rem] p-10 md:p-14 text-white relative overflow-hidden shadow-2xl border border-zinc-800">
             <div className="relative z-10 max-w-2xl">
                <div className="inline-flex items-center gap-2 bg-indigo-500/10 text-indigo-400 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest mb-6 border border-indigo-500/20">
-                  <Sparkles className="w-3 h-3" /> Gemini LLM Integrated
+                  <Sparkles className="w-3 h-3" /> Generative AI Integrated
                </div>
                <h1 className="text-4xl font-black mb-4 tracking-tighter leading-tight">SRE Playbook &<br />Optimization Templates</h1>
                <p className="text-zinc-400 text-lg mb-10 leading-relaxed font-medium">

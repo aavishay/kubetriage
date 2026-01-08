@@ -104,7 +104,7 @@ export const AIChatWidget: React.FC<AIChatWidgetProps> = ({ isOpen, onClose, ini
             <h3 className="font-bold text-sm text-zinc-900 dark:text-white">KubeTriage Copilot</h3>
             <p className="text-[10px] text-green-600 dark:text-green-400 flex items-center gap-1">
               <span className="w-1.5 h-1.5 rounded-full bg-green-500"></span>
-              Gemini 3.0 Pro Active
+              AI Assistant Active
             </p>
           </div>
         </div>
@@ -128,8 +128,8 @@ export const AIChatWidget: React.FC<AIChatWidgetProps> = ({ isOpen, onClose, ini
               {msg.role === 'user' ? <User className="w-4 h-4 text-white" /> : <Bot className="w-4 h-4 text-white" />}
             </div>
             <div className={`max-w-[85%] p-3 rounded-2xl text-sm shadow-sm ${msg.role === 'user'
-                ? 'bg-blue-600 text-white rounded-tr-sm'
-                : 'bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-800 dark:text-zinc-200 rounded-tl-sm'
+              ? 'bg-blue-600 text-white rounded-tr-sm'
+              : 'bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-800 dark:text-zinc-200 rounded-tl-sm'
               }`}>
               {msg.role === 'model' ? (
                 <div className="prose prose-sm dark:prose-invert max-w-none prose-p:my-1 prose-pre:bg-zinc-900 prose-pre:p-2 prose-pre:rounded">

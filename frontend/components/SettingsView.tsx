@@ -85,7 +85,7 @@ export const SettingsView: React.FC = () => {
                                 onClick={() => { setProvider('gemini'); setModel(''); }}
                                 className={`relative group p-6 rounded-2xl border-2 transition-all duration-300 text-left ${provider === 'gemini' ? 'border-indigo-600 bg-indigo-50/50 dark:bg-indigo-500/10 shadow-lg mb-0 scale-[1.02]' : 'border-zinc-200 dark:border-zinc-800 hover:border-indigo-300 dark:hover:border-zinc-700 hover:bg-white/50 dark:hover:bg-zinc-800/50'}`}
                             >
-                                <div className="font-black text-lg text-zinc-900 dark:text-white mb-2 flex items-center gap-2">Google Gemini <span className="px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-600 text-[10px] uppercase tracking-wider font-bold">Cloud</span></div>
+                                <div className="font-black text-lg text-zinc-900 dark:text-white mb-2 flex items-center gap-2">Google Cloud AI <span className="px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-600 text-[10px] uppercase tracking-wider font-bold">Cloud</span></div>
                                 <div className="text-sm text-zinc-500 leading-relaxed">High-performance cloud inference. Requires valid API Key. Best for complex reasoning.</div>
                                 {provider === 'gemini' && <div className="absolute top-4 right-4 text-indigo-600 bg-indigo-100 rounded-full p-1"><Check className="w-4 h-4" /></div>}
                             </button>
@@ -132,7 +132,7 @@ export const SettingsView: React.FC = () => {
                             </div>
                         )}
                         <p className="text-xs text-zinc-400">
-                            {provider === 'ollama' ? 'Models must be pulled via `ollama pull <model>` to appear here.' : 'Select a Gemini variant.'}
+                            {provider === 'ollama' ? 'Models must be pulled via `ollama pull <model>` to appear here.' : 'Select a model variant.'}
                         </p>
                     </div>
 
