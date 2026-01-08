@@ -162,7 +162,15 @@ export const TriageView: React.FC<TriageViewProps> = ({ workloads, isDarkMode = 
         }
       }
     }
-  }, [targetWorkloadId, workloads, targetTemplate]); // Intentionally removed selectedWorkload from deps to avoid loops, relying on ID check
+  }, [targetWorkloadId, workloads, targetTemplate]);
+
+  // Validation: Reset selectedWorkload if it's not in the current workloads list (e.g. cluster switch)
+  useEffect(() => {
+    if (selectedWorkload && !workloads.some(w => w.id === selectedWorkload.id)) {
+      setSelectedWorkload(null);
+      setAnalysis(null);
+    }
+  }, [workloads, selectedWorkload]);
 
   const triggerAutoAnalysis = async (workload: Workload, playbook: DiagnosticPlaybook) => {
     setIsAnalyzing(true); setAnalysis(null);
@@ -427,7 +435,7 @@ export const TriageView: React.FC<TriageViewProps> = ({ workloads, isDarkMode = 
                     <div className="flex items-center gap-4"><Sparkles className="w-5 h-5 text-indigo-500" /><h3 className="text-[11px] font-black text-zinc-900 dark:text-white uppercase tracking-[0.15em]">SRE Intelligence Report</h3></div>
                   </div>
                   <div className="p-10 flex-1 overflow-y-auto">
-                    {isAnalyzing ? <div className="h-full flex flex-col items-center justify-center text-center gap-6"><Loader2 className="w-12 h-12 text-indigo-500 animate-spin" /><h4 className="text-lg font-black text-zinc-900 dark:text-white uppercase tracking-tighter">Gemini SRE Analysis...</h4></div> : analysis ? <div className="animate-in fade-in slide-in-from-bottom-6 duration-700">
+                    {isAnalyzing ? <div className="h-full flex flex-col items-center justify-center text-center gap-6"><Loader2 className="w-12 h-12 text-indigo-500 animate-spin" /><h4 className="text-lg font-black text-zinc-900 dark:text-white uppercase tracking-tighter">AI SRE Analysis...</h4></div> : analysis ? <div className="animate-in fade-in slide-in-from-bottom-6 duration-700">
                       <div className="prose prose-indigo max-w-none dark:prose-invert">
                         <ReactMarkdown components={{
                           code({ node, inline, className, children, ...props }: any) {
