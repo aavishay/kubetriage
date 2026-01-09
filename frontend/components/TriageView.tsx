@@ -427,15 +427,22 @@ export const TriageView: React.FC<TriageViewProps> = ({ workloads, isDarkMode = 
                     </button>
                   </div>
                   <div className="p-8 overflow-y-auto font-mono text-[11px] leading-relaxed space-y-3 flex-1 bg-black">
-                    {(selectedWorkload.recentLogs || []).map((log, i) => (
-                      <div key={i} className="flex gap-6 group hover:bg-white/5 py-1 px-2 rounded-lg items-start">
-                        <span className="text-zinc-700 select-none text-[9px] w-8 font-black flex-shrink-0 pt-0.5">{String(i + 1).padStart(2, '0')}</span>
-                        <div className={`text-zinc-400 min-w-0 flex-1 ${isLogWrapEnabled ? 'whitespace-pre-wrap break-all' : 'whitespace-nowrap overflow-x-auto scrollbar-hide'}`}>
-                          {highlightLog(log)}
-                        </div>
-                        <CopyButton text={log} className="opacity-0 group-hover:opacity-100 flex-shrink-0" />
+                    {(!selectedWorkload.recentLogs || selectedWorkload.recentLogs.length === 0) ? (
+                      <div className="h-full flex flex-col items-center justify-center text-zinc-700">
+                        <Terminal className="w-8 h-8 mb-4 opacity-20" />
+                        <p className="font-bold uppercase tracking-widest text-[10px] opacity-40">No Live Logs Streamed</p>
                       </div>
-                    ))}
+                    ) : (
+                      selectedWorkload.recentLogs.map((log, i) => (
+                        <div key={i} className="flex gap-6 group hover:bg-white/5 py-1 px-2 rounded-lg items-start">
+                          <span className="text-zinc-700 select-none text-[9px] w-8 font-black flex-shrink-0 pt-0.5">{String(i + 1).padStart(2, '0')}</span>
+                          <div className={`text-zinc-400 min-w-0 flex-1 ${isLogWrapEnabled ? 'whitespace-pre-wrap break-all' : 'whitespace-nowrap overflow-x-auto scrollbar-hide'}`}>
+                            {highlightLog(log)}
+                          </div>
+                          <CopyButton text={log} className="opacity-0 group-hover:opacity-100 flex-shrink-0" />
+                        </div>
+                      ))
+                    )}
                   </div>
                 </section>
 
@@ -445,7 +452,7 @@ export const TriageView: React.FC<TriageViewProps> = ({ workloads, isDarkMode = 
                   </div>
                   <div className="p-10 flex-1 overflow-y-auto">
                     {isAnalyzing ? <div className="h-full flex flex-col items-center justify-center text-center gap-6"><Loader2 className="w-12 h-12 text-indigo-500 animate-spin" /><h4 className="text-lg font-black text-zinc-900 dark:text-white uppercase tracking-tighter">AI SRE Analysis...</h4></div> : analysis ? <div className="animate-in fade-in slide-in-from-bottom-6 duration-700">
-                      <div className="prose prose-indigo max-w-none dark:prose-invert">
+                      <div className="prose prose-sm prose-indigo max-w-none dark:prose-invert prose-headings:font-black prose-headings:tracking-tighter prose-p:leading-loose prose-strong:text-indigo-600 dark:prose-strong:text-indigo-400 prose-li:marker:text-zinc-400">
                         <ReactMarkdown components={markdownComponents}>
                           {analysis}
                         </ReactMarkdown>
