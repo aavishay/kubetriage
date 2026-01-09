@@ -58,7 +58,8 @@ export const analyzeWorkload = async (
                 storageLimit: `${workload.metrics.storageLimit || 0}`,
                 diskIo: `${workload.metrics.diskIo}`,
                 logs: workload.recentLogs,
-                events: workload.events.map(e => `${e.type}: ${e.reason} - ${e.message}`)
+                events: workload.events.map(e => `${e.type}: ${e.reason} - ${e.message}`),
+                schedulerLogs: workload.schedulerLogs || []
             })
         });
 

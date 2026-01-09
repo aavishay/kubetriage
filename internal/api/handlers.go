@@ -64,6 +64,7 @@ type Workload struct {
 	Events            []K8sEvent      `json:"events"`
 	CostPerMonth      int             `json:"costPerMonth"`
 	Scaling           ScalingInfo     `json:"scaling"`
+	SchedulerLogs     []string        `json:"schedulerLogs,omitempty"`
 }
 
 type ScalingInfo struct {
@@ -234,6 +235,79 @@ func fetchRecentEvents(ctx context.Context, client *kubernetes.Clientset, namesp
 		return []K8sEvent{}
 	}
 	return result
+	return result
+	return result
+}
+
+// Global cache for Karpenter Pod Name to avoid listing every time
+var karpenterPodCache string
+var karpenterCacheTime time.Time
+
+func fetchKarpenterLogs(ctx context.Context, client *kubernetes.Clientset, workloadName string) []string {
+	// Only refresh cache every minute
+	if time.Since(karpenterCacheTime) > time.Minute || karpenterPodCache == "" {
+		// Try to find Karpenter
+		nsList := []string{"karpenter", "kube-system"}
+		found := false
+		for _, ns := range nsList {
+			pods, err := client.CoreV1().Pods(ns).List(ctx, metav1.ListOptions{
+				LabelSelector: "app.kubernetes.io/name=karpenter",
+				Limit:         1,
+			})
+			if err == nil && len(pods.Items) > 0 {
+				karpenterPodCache = fmt.Sprintf("%s/%s", ns, pods.Items[0].Name)
+				karpenterCacheTime = time.Now()
+				found = true
+				break
+			}
+		}
+		if !found {
+			karpenterPodCache = "none" // mark as checked
+			karpenterCacheTime = time.Now()
+		}
+	}
+
+	if karpenterPodCache == "none" || karpenterPodCache == "" {
+		return []string{}
+	}
+
+	parts := strings.Split(karpenterPodCache, "/")
+	if len(parts) != 2 {
+		return []string{}
+	}
+	ns, name := parts[0], parts[1]
+
+	// Fetch logs
+	tailLines := int64(50)
+	req := client.CoreV1().Pods(ns).GetLogs(name, &v1.PodLogOptions{
+		TailLines: &tailLines,
+	})
+
+	podLogs, err := req.Stream(ctx)
+	if err != nil {
+		return []string{}
+	}
+	defer podLogs.Close()
+
+	buf := new(bytes.Buffer)
+	_, err = io.Copy(buf, podLogs)
+	if err != nil {
+		return []string{}
+	}
+
+	allLogs := strings.Split(buf.String(), "\n")
+
+	// Filtering: We only want logs relevant to this workload if possible,
+	// OR generic errors. For now, return recent controller logs as "System Context".
+	// Ideally we grep for `workloadName` but Karpenter logs might reference the POD name, not the workload name.
+	// Since we don't easily have the pending pod name here (we are iterating workloads, not pods),
+	// we'll return the raw tail for the AI to parse.
+	var result []string
+	for _, l := range allLogs {
+		if strings.TrimSpace(l) != "" {
+			result = append(result, l)
+		}
+	}
 	return result
 }
 
@@ -471,6 +545,12 @@ func WorkloadsHandler(c *gin.Context) {
 				CostPerMonth:      rand.Intn(500) + 50,
 				Scaling:           fetchKedaScaling(c.Request.Context(), dynClient, d.Namespace, d.Name),
 			}
+
+			// If not healthy, attach Scheduler/Karpenter logs
+			if w.Status != "Healthy" {
+				w.SchedulerLogs = fetchKarpenterLogs(c.Request.Context(), client, d.Name)
+			}
+
 			workloads = append(workloads, w)
 		}
 	} else {
@@ -495,6 +575,11 @@ func WorkloadsHandler(c *gin.Context) {
 				CostPerMonth:      rand.Intn(500) + 100,
 				Scaling:           fetchKedaScaling(c.Request.Context(), dynClient, s.Namespace, s.Name),
 			}
+
+			if w.Status != "Healthy" {
+				w.SchedulerLogs = fetchKarpenterLogs(c.Request.Context(), client, s.Name)
+			}
+
 			workloads = append(workloads, w)
 		}
 	}

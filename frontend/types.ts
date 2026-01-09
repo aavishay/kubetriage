@@ -40,6 +40,7 @@ export interface Workload {
     reason: string;
   };
   scaling?: ScalingInfo;
+  schedulerLogs?: string[];
 }
 
 export interface KedaConfig {

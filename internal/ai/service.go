@@ -46,21 +46,22 @@ func (s *AIService) Close() {
 
 // AnalyzeWorkloadRequest mirrors the frontend data structure
 type AnalyzeWorkloadRequest struct {
-	Provider     string   `json:"provider"` // "gemini" or "ollama"
-	Model        string   `json:"model"`    // specific model like "llama3"
-	WorkloadName string   `json:"workloadName"`
-	Status       string   `json:"status"`
-	Playbook     string   `json:"playbook"`
-	Instructions string   `json:"instructions"`
-	CpuUsage     string   `json:"cpuUsage"`
-	CpuLimit     string   `json:"cpuLimit"`
-	MemoryUsage  string   `json:"memoryUsage"`
-	MemoryLimit  string   `json:"memoryLimit"`
-	StorageUsage string   `json:"storageUsage"`
-	StorageLimit string   `json:"storageLimit"`
-	DiskIo       string   `json:"diskIo"`
-	Logs         []string `json:"logs"`
-	Events       []string `json:"events"`
+	Provider      string   `json:"provider"` // "gemini" or "ollama"
+	Model         string   `json:"model"`    // specific model like "llama3"
+	WorkloadName  string   `json:"workloadName"`
+	Status        string   `json:"status"`
+	Playbook      string   `json:"playbook"`
+	Instructions  string   `json:"instructions"`
+	CpuUsage      string   `json:"cpuUsage"`
+	CpuLimit      string   `json:"cpuLimit"`
+	MemoryUsage   string   `json:"memoryUsage"`
+	MemoryLimit   string   `json:"memoryLimit"`
+	StorageUsage  string   `json:"storageUsage"`
+	StorageLimit  string   `json:"storageLimit"`
+	DiskIo        string   `json:"diskIo"`
+	Logs          []string `json:"logs"`
+	Events        []string `json:"events"`
+	SchedulerLogs []string `json:"schedulerLogs"`
 }
 
 func (s *AIService) getProvider(name string) (AIProvider, error) {
@@ -115,6 +116,10 @@ func (s *AIService) AnalyzeWorkload(ctx context.Context, req AnalyzeWorkloadRequ
     %s
     
     Events:
+    Events:
+    %s
+    
+    **INFRASTRUCTURE LOGS (Karpenter/Scheduler)**:
     %s
     
     **OUTPUT REQUIREMENTS**:
@@ -156,6 +161,7 @@ func (s *AIService) AnalyzeWorkload(ctx context.Context, req AnalyzeWorkloadRequ
 		req.CpuUsage, req.CpuLimit, req.MemoryUsage, req.MemoryLimit, req.StorageUsage, req.StorageLimit, req.DiskIo,
 		strings.Join(req.Logs, "\n"),
 		strings.Join(req.Events, "\n"),
+		strings.Join(req.SchedulerLogs, "\n"),
 	)
 
 	return provider.GenerateContent(ctx, prompt, req.Model)
