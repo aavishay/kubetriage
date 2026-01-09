@@ -2,8 +2,10 @@ package db
 
 import (
 	"log"
+	"strings"
 	"time"
 
+	"github.com/glebarez/sqlite"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
@@ -17,14 +19,39 @@ func InitDB(dsn string) (*gorm.DB, error) {
 		return nil, nil
 	}
 
-	// Retry logic for DB connection (wait for container)
+	var dialector gorm.Dialector
+
+	// Determine Driver
+	if strings.Contains(dsn, "host=") || strings.HasPrefix(dsn, "postgres://") || strings.HasPrefix(dsn, "postgresql://") {
+		log.Println("Initializing Postgres Database...")
+		dialector = postgres.Open(dsn)
+	} else {
+		log.Printf("Initializing SQLite Database at %s...", dsn)
+		// Enable WAL mode via DSN query params for pure Go driver?
+		// Actually, glebarez/sqlite supports pragmas in connection, or we can execute raw SQL after open.
+		// DSN format: file:test.db?cache=shared&_pragma=journal_mode(wal)
+		if !strings.Contains(dsn, "?") {
+			dsn += "?_pragma=journal_mode(wal)&_pragma=busy_timeout(5000)"
+		}
+		dialector = sqlite.Open(dsn)
+	}
+
+	// Retry logic for DB connection (mostly for Postgres containers)
 	for i := 0; i < 10; i++ {
-		DB, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
+		DB, err = gorm.Open(dialector, &gorm.Config{})
 		if err == nil {
 			log.Println("Connected to Database")
 			break
 		}
-		log.Printf("Failed to connect to DB, retrying in 2s... (%d/10)", i+1)
+
+		// If SQLite fails, it's usually permission or path, retrying won't help much but harmless.
+		// For Postgres, it helps wait for container.
+		if strings.Contains(err.Error(), "no such host") || strings.Contains(err.Error(), "connection refused") {
+			log.Printf("Fast-failing DB connection due to permanent error: %v", err)
+			break
+		}
+
+		log.Printf("Failed to connect to DB, retrying in 2s... (%d/10) Error: %v", i+1, err)
 		time.Sleep(2 * time.Second)
 	}
 

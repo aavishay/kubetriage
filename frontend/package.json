@@ -24,6 +24,7 @@
     "@opentelemetry/sdk-trace-web": "^1.30.0",
     "@opentelemetry/semantic-conventions": "^1.38.0",
     "lucide-react": "^0.555.0",
+    "mermaid": "^11.12.2",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "react-is": "^19.2.3",

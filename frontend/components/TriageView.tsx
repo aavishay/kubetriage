@@ -117,6 +117,7 @@ export const TriageView: React.FC<TriageViewProps> = ({ workloads, isDarkMode = 
   const [namespaceFilter, setNamespaceFilter] = useState<string>('all');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [workloadSearchTerm, setWorkloadSearchTerm] = useState<string>('');
+  const [logSearchTerm, setLogSearchTerm] = useState<string>('');
   const [isLogWrapEnabled, setIsLogWrapEnabled] = useState(false);
 
   // Remediation State
@@ -310,8 +311,12 @@ export const TriageView: React.FC<TriageViewProps> = ({ workloads, isDarkMode = 
   }, [selectedWorkload]);
 
   const highlightLog = (log: string) => {
-    const keywords = ['504', 'timeout', 'DiskPressure', 'failed', 'No space left', 'CRITICAL', 'ERROR'];
+    const keywords = ['504', 'timeout', 'DiskPressure', 'failed', 'No space left', 'CRITICAL', 'ERROR', 'Exception', 'Panic'];
     let highlighted = log;
+
+    // Dim Timestamp (ISO or common formats at start)
+    highlighted = highlighted.replace(/^(\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:?\d{2})?)/, '<span class="text-zinc-600 select-none">$1</span>');
+
     keywords.forEach(kw => {
       const regex = new RegExp(`(${kw})`, 'gi');
       highlighted = highlighted.replace(regex, '<span class="text-rose-400 font-black">$1</span>');
@@ -411,41 +416,7 @@ export const TriageView: React.FC<TriageViewProps> = ({ workloads, isDarkMode = 
 
               {selectedPlaybook === 'Network Connectivity' && <TrafficPathExplorer workload={selectedWorkload} />}
 
-              <div className="grid grid-cols-1 2xl:grid-cols-2 gap-10 items-stretch">
-                <section className="bg-zinc-950 rounded-[3rem] border border-zinc-800 shadow-2xl overflow-hidden flex flex-col min-h-[500px]">
-                  <div className="px-8 py-6 border-b border-zinc-800/50 bg-black/40 flex items-center justify-between gap-3">
-                    <div className="flex items-center gap-3">
-                      <Terminal className="w-4 h-4 text-emerald-400" />
-                      <h3 className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">Live Logs</h3>
-                    </div>
-                    <button
-                      onClick={() => setIsLogWrapEnabled(!isLogWrapEnabled)}
-                      className={`p-2 rounded-lg transition-all ${isLogWrapEnabled ? 'bg-indigo-500/20 text-indigo-400' : 'hover:bg-zinc-900 text-zinc-600'}`}
-                      title={isLogWrapEnabled ? "Disable Line Wrap" : "Enable Line Wrap"}
-                    >
-                      <WrapText className="w-4 h-4" />
-                    </button>
-                  </div>
-                  <div className="p-8 overflow-y-auto font-mono text-[11px] leading-relaxed space-y-3 flex-1 bg-black">
-                    {(!selectedWorkload.recentLogs || selectedWorkload.recentLogs.length === 0) ? (
-                      <div className="h-full flex flex-col items-center justify-center text-zinc-700">
-                        <Terminal className="w-8 h-8 mb-4 opacity-20" />
-                        <p className="font-bold uppercase tracking-widest text-[10px] opacity-40">No Live Logs Streamed</p>
-                      </div>
-                    ) : (
-                      selectedWorkload.recentLogs.map((log, i) => (
-                        <div key={i} className="flex gap-6 group hover:bg-white/5 py-1 px-2 rounded-lg items-start">
-                          <span className="text-zinc-700 select-none text-[9px] w-8 font-black flex-shrink-0 pt-0.5">{String(i + 1).padStart(2, '0')}</span>
-                          <div className={`text-zinc-400 min-w-0 flex-1 ${isLogWrapEnabled ? 'whitespace-pre-wrap break-all' : 'whitespace-nowrap overflow-x-auto scrollbar-hide'}`}>
-                            {highlightLog(log)}
-                          </div>
-                          <CopyButton text={log} className="opacity-0 group-hover:opacity-100 flex-shrink-0" />
-                        </div>
-                      ))
-                    )}
-                  </div>
-                </section>
-
+              <div className="flex flex-col gap-10">
                 <section className="bg-white dark:bg-zinc-900 rounded-[3rem] border border-zinc-200 dark:border-zinc-800 shadow-sm flex flex-col">
                   <div className="px-8 py-6 border-b border-zinc-100 dark:border-zinc-800 flex justify-between items-center bg-zinc-50/50 dark:bg-zinc-950/50">
                     <div className="flex items-center gap-4"><Sparkles className="w-5 h-5 text-indigo-500" /><h3 className="text-[11px] font-black text-zinc-900 dark:text-white uppercase tracking-[0.15em]">SRE Intelligence Report</h3></div>
@@ -492,6 +463,54 @@ export const TriageView: React.FC<TriageViewProps> = ({ workloads, isDarkMode = 
                       </div>
 
                     </div> : <div className="h-full flex flex-col items-center justify-center text-center p-12 opacity-30 grayscale"><Info className="w-16 h-16 text-zinc-400 mb-6" /><p className="text-xs font-black uppercase text-zinc-500 tracking-[0.3em]">Awaiting SRE Diagnostic Input</p></div>}
+                  </div>
+                </section>
+
+                <section className="bg-zinc-950 rounded-[3rem] border border-zinc-800 shadow-2xl overflow-hidden flex flex-col min-h-[500px]">
+                  <div className="px-8 py-6 border-b border-zinc-800/50 bg-black/40 flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-3">
+                      <Terminal className="w-4 h-4 text-emerald-400" />
+                      <h3 className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">Live Logs</h3>
+                    </div>
+                    <div className="flex items-center gap-4">
+                      <div className="relative">
+                        <Search className="w-3 h-3 text-zinc-600 absolute left-3 top-1/2 -translate-y-1/2" />
+                        <input
+                          type="text"
+                          placeholder="Filter logs..."
+                          value={logSearchTerm}
+                          onChange={(e) => setLogSearchTerm(e.target.value)}
+                          className="bg-zinc-900 border border-zinc-800 rounded-lg pl-8 pr-3 py-1.5 text-[10px] text-zinc-300 placeholder:text-zinc-600 focus:outline-none focus:border-zinc-700 w-48 font-mono"
+                        />
+                      </div>
+                      <button
+                        onClick={() => setIsLogWrapEnabled(!isLogWrapEnabled)}
+                        className={`p-2 rounded-lg transition-all ${isLogWrapEnabled ? 'bg-indigo-500/20 text-indigo-400' : 'hover:bg-zinc-900 text-zinc-600'}`}
+                        title={isLogWrapEnabled ? "Disable Line Wrap" : "Enable Line Wrap"}
+                      >
+                        <WrapText className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                  <div className="p-8 overflow-y-auto font-mono text-[11px] leading-relaxed flex-1 bg-black">
+                    {(!selectedWorkload.recentLogs || selectedWorkload.recentLogs.length === 0) ? (
+                      <div className="h-full flex flex-col items-center justify-center text-zinc-700">
+                        <Terminal className="w-8 h-8 mb-4 opacity-20" />
+                        <p className="font-bold uppercase tracking-widest text-[10px] opacity-40">No Live Logs Streamed</p>
+                      </div>
+                    ) : (
+                      selectedWorkload.recentLogs
+                        .filter(log => !logSearchTerm || log.toLowerCase().includes(logSearchTerm.toLowerCase()))
+                        .map((log, i) => (
+                          <div key={i} className="flex gap-4 group hover:bg-zinc-900 odd:bg-white/[0.02] px-4 py-0.5 items-start leading-relaxed border-l-2 border-transparent hover:border-indigo-500 transition-all font-mono">
+                            <span className="text-zinc-700 select-none text-[10px] w-8 font-bold flex-shrink-0 text-right opacity-30 mt-[1px]">{i + 1}</span>
+                            <div className={`text-zinc-400 min-w-0 flex-1 text-[11px] ${isLogWrapEnabled ? 'break-all whitespace-pre-wrap' : 'whitespace-nowrap overflow-hidden text-ellipsis'}`}>
+                              {highlightLog(log)}
+                            </div>
+                            <CopyButton text={log} className="opacity-0 group-hover:opacity-100 flex-shrink-0 scale-75" />
+                          </div>
+                        ))
+                    )}
                   </div>
                 </section>
               </div>

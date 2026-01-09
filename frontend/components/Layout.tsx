@@ -75,7 +75,8 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
     { path: '/templates', label: 'Playbook Library', icon: BookOpen },
     { path: '/triage', label: 'Incident Triage', icon: AlertCircle },
     { path: '/rightsizing', label: 'Right Sizing', icon: Scale },
-    { path: '/topology', label: 'Architecture', icon: Cloud }, // Changed icon to match generic infrastructure
+    { path: '/topology', label: 'Architecture', icon: Cloud },
+    { path: '/reports', label: 'Reporting', icon: FileText },
     { path: '/notifications', label: 'Alerting', icon: Bell },
   ];
 
@@ -109,7 +110,9 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
         ${isCollapsed ? 'md:w-20' : 'md:w-64'}
       `}>
         <div className={`flex p-6 items-center ${isCollapsed ? 'md:justify-center' : 'gap-3'} h-20 border-b border-zinc-100 dark:border-zinc-800 overflow-hidden shrink-0`}>
-          <div className="bg-indigo-600 p-2 rounded-lg shrink-0 shadow-lg shadow-indigo-600/30"><Box className="w-5 h-5 text-white" /></div>
+          <div className="bg-indigo-600 p-2 rounded-lg shrink-0 shadow-lg shadow-indigo-600/30">
+            <img src="/favicon.png" alt="Logo" className="w-5 h-5 object-contain" />
+          </div>
           {(!isCollapsed || isMobileMenuOpen) && (
             <div className="animate-in fade-in slide-in-from-left-2">
               <h1 className="font-bold text-zinc-900 dark:text-white tracking-tight leading-none text-base">KubeTriage</h1>

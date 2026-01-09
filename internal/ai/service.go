@@ -65,11 +65,11 @@ type AnalyzeWorkloadRequest struct {
 
 func (s *AIService) getProvider(name string) (AIProvider, error) {
 	if name == "" {
-		// Default preference: Gemini -> Ollama
-		if p, ok := s.providers["gemini"]; ok {
+		// Default preference: Ollama -> Gemini
+		if p, ok := s.providers["ollama"]; ok {
 			return p, nil
 		}
-		if p, ok := s.providers["ollama"]; ok {
+		if p, ok := s.providers["gemini"]; ok {
 			return p, nil
 		}
 		return nil, fmt.Errorf("no default provider available")
@@ -97,36 +97,60 @@ func (s *AIService) AnalyzeWorkload(ctx context.Context, req AnalyzeWorkloadRequ
 	}
 
 	prompt := fmt.Sprintf(`
-    You are a Senior Kubernetes SRE performing a targeted diagnosis for the workload "%s".
+    You are a Senior Site Reliability Engineer (SRE) performing a deep-dive diagnostic analysis of the Kubernetes workload "%s".
     
-    **Context**:
-    - Status: %s
-    - Playbook: %s
-    - Instruction: %s
+    **CONTEXT**:
+    - **Status**: %s
+    - **Playbook**: %s
+    - **Instruction**: %s
     
-    **Telemetry Summary**:
+    **TELEMETRY**:
     - CPU: %s / %s
     - RAM: %s / %s
     - Storage: %s / %s
     - Disk I/O: %s
     
-    **Data**:
+    **LOGS & EVENTS**:
     Logs:
     %s
     
     Events:
     %s
     
-    **Output Guidelines**:
-    Provide a professional SRE incident report in Markdown.
-    Pay special attention to DiskPressure if storage usage is near limits.
+    **OUTPUT REQUIREMENTS**:
+    Produce a Highly Polished, Executive-Grade SRE Incident Report in Markdown.
     
-    Structure:
-    1. **Executive Summary**: A high-level TL;DR of the critical issue.
-    2. **Root Cause Analysis (RCA)**: Logical deduction of why this is happening.
-    3. **Impact Assessment**: How this affects the end-user.
-    4. **Remediation Steps**: 3-4 numbered items to resolve the issue immediately.
-    5. **Observability Commands**: A markdown code block with 'kubectl' commands to verify storage/disk state.
+    **STYLE GUIDELINES**:
+    - Use H2 (##) for main sections.
+    - Use bolding (**text**) for key metrics and findings.
+    - Use bullet points for readability.
+    - Keep paragraphs concise.
+    - NO introductory filler (e.g., "Here is the report"). Start directly with the Executive Summary.
+    
+    **REQUIRED STRUCTURE**:
+    
+    ## 🚨 Executive Summary
+    A concise 2-3 sentence TL;DR of the incident. State the primary failure mode clearly.
+    
+    ## 🔍 Root Cause Analysis
+    Deduce the underlying technical cause based on logs and telemetry. Use critical thinking.
+    - **Primary Cause**: The main reason for failure.
+    - **Contributing Factors**: Any secondary issues (e.g., resource exhaustion, config errors).
+    
+    ## 📉 Impact Assessment
+    - **Service Health**: Current operational state.
+    - **User Experience**: Likely impact on end users (latency, errors, downtime).
+    
+    ## 🛠️ Remediation Plan
+    1. **Immediate Action**: The first step to stabilize the service.
+    2. **Secondary Step**: Follow-up action.
+    3. **Long-term Fix**: Configuration or code change to prevent recurrence.
+    
+    ## 🔎 Verification
+    Provide 1-2 kubectl commands to verify the state in a code block:
+    `+"```bash"+`
+    kubectl get pod ...
+    `+"```"+`
 	`,
 		req.WorkloadName, req.Status, req.Playbook, req.Instructions,
 		req.CpuUsage, req.CpuLimit, req.MemoryUsage, req.MemoryLimit, req.StorageUsage, req.StorageLimit, req.DiskIo,
@@ -195,4 +219,38 @@ func (s *AIService) GenerateRemediation(ctx context.Context, providerName, model
 	}
 
 	return &suggestion, nil
+}
+
+func (s *AIService) GenerateTopology(ctx context.Context, providerName string, workloadSummary string) (string, error) {
+	provider, err := s.getProvider(providerName)
+	if err != nil {
+		return "", err
+	}
+
+	prompt := fmt.Sprintf(`
+	You are a Cloud Architecture Expert.
+	Based on the following list of Kubernetes workloads, generate a Mermaid JS diagram (flowchart TB or graph TB) that visualizes the architecture.
+	
+	Workloads:
+	%s
+	
+	GUIDELINES:
+	- Use 'graph TB' or 'flowchart TB'
+	- Group by Namespace using subgraphs.
+	- Visualize connections if traffic patterns can be inferred (e.g. "web" -> "api" -> "db"), otherwise just show nodes.
+	- Return ONLY the Mermaid code block. Do not include markdown ticks if possible, or I will strip them.
+	`, workloadSummary)
+
+	rawResponse, err := provider.GenerateContent(ctx, prompt, "") // Use default model
+	if err != nil {
+		return "", err
+	}
+
+	// Clean up markdown
+	cleanResponse := strings.TrimSpace(rawResponse)
+	cleanResponse = strings.TrimPrefix(cleanResponse, "```mermaid")
+	cleanResponse = strings.TrimPrefix(cleanResponse, "```")
+	cleanResponse = strings.TrimSuffix(cleanResponse, "```")
+
+	return strings.TrimSpace(cleanResponse), nil
 }

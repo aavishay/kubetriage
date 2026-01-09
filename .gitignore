@@ -3,5 +3,10 @@ dist
 .DS_Store
 .env
 coverage
-server
+
 tmp
+kubetriage
+kubetriage.db*
+server
+request.json
+main_tmp.go

@@ -71,7 +71,7 @@ export const analyzeWorkload = async (
         return data.analysis || "No analysis generated.";
     } catch (error) {
         console.error("Gemini API Error (Backend):", error);
-        return "Error generating analysis. Please check backend logs.";
+        return `Error generating analysis: ${error instanceof Error ? error.message : String(error)}`;
     }
 };
 
@@ -186,43 +186,29 @@ export const summarizeWorkloadLogs = async (logs: string[]): Promise<string> => 
 };
 
 export const generateTopologyDiagram = async (workloads: Workload[], requestedAspectRatio: string): Promise<string | null> => {
-    const ai = createClient();
-
-    let safeAspectRatio = requestedAspectRatio;
-    switch (requestedAspectRatio) {
-        case '2:3': safeAspectRatio = '3:4'; break;
-        case '3:2': safeAspectRatio = '4:3'; break;
-        case '21:9': safeAspectRatio = '16:9'; break;
-        default: safeAspectRatio = requestedAspectRatio;
-    }
-
+    // Generate summary for backend
     const workloadSummary = workloads.map(w =>
         `- ${w.name} (${w.kind}) in namespace '${w.namespace}'. Status: ${w.status}.`
     ).join('\n');
 
-    const prompt = `Generate a modern architecture diagram for: ${workloadSummary}`;
-
     try {
-        const response = await ai.models.generateContent({
-            model: 'gemini-3-pro-image-preview',
-            contents: { parts: [{ text: prompt }] },
-            config: {
-                imageConfig: {
-                    aspectRatio: safeAspectRatio as any,
-                    imageSize: '2K'
-                }
-            }
+        const response = await fetch('/api/ai/topology', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                provider: 'gemini', // or 'ollama' based on config if needed
+                workloadSummary
+            })
         });
 
-        const parts = response.candidates?.[0]?.content?.parts;
-        if (parts) {
-            for (const part of parts) {
-                if (part.inlineData && part.inlineData.mimeType.startsWith('image')) {
-                    return `data:${part.inlineData.mimeType};base64,${part.inlineData.data}`;
-                }
-            }
+        if (!response.ok) {
+            throw new Error(`Backend Error: ${response.statusText}`);
         }
-        return null;
+
+        const data = await response.json();
+        return data.diagram;
     } catch (error) {
         console.error("Topology Generation Error:", error);
         throw error;

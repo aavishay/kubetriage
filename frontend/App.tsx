@@ -15,6 +15,7 @@ import { LoginView } from './components/LoginView';
 import { AIChatWidget } from './components/AIChatWidget';
 import { NotFound } from './components/NotFound';
 import { SettingsView } from './components/SettingsView';
+import { ReportsView } from './components/ReportsView';
 import { BellRing, X, Loader2, Key, ExternalLink, Settings2 } from 'lucide-react';
 import { DiagnosticPlaybook } from './types';
 import { ErrorBoundary } from './components/ErrorBoundary';
@@ -23,7 +24,8 @@ import { ErrorBoundary } from './components/ErrorBoundary';
 const AppContent: React.FC = () => {
   const {
     isAuthenticated,
-    isAuthLoading, // Added
+    isAuthLoading,
+    isWorkloadsLoading, // Added
     hasApiKey,
     isCheckingKey,
     isDarkMode,
@@ -104,7 +106,7 @@ const AppContent: React.FC = () => {
     <div className={isDarkMode ? 'dark' : ''}>
       <Layout>
         <Routes>
-          <Route path="/" element={<Dashboard workloads={workloads} isDarkMode={isDarkMode} onTriageRequest={handleNavigateToTriage} />} />
+          <Route path="/" element={<Dashboard workloads={workloads} isLoading={isWorkloadsLoading} isDarkMode={isDarkMode} onTriageRequest={handleNavigateToTriage} />} />
           <Route path="/dashboard" element={<Navigate to="/" replace />} />
           <Route path="/templates" element={<TemplateLibraryView onApplyTemplate={(view, tmpl) => handleApplyTemplate(tmpl)} isDarkMode={isDarkMode} />} />
           <Route path="/triage" element={
@@ -126,6 +128,7 @@ const AppContent: React.FC = () => {
           <Route path="/topology" element={<TopologyView workloads={workloads} isDarkMode={isDarkMode} />} />
           <Route path="/organizations" element={<OrganizationView organizations={organizations} onAddOrganization={() => { }} isDarkMode={isDarkMode} />} />
           <Route path="/users" element={<UserView users={users} onAddUser={() => { }} onUpdateUser={() => { }} onDeleteUser={() => { }} isDarkMode={isDarkMode} />} />
+          <Route path="/reports" element={<ReportsView isDarkMode={isDarkMode} />} />
           <Route path="/notifications" element={
             <NotificationsView
               channels={notificationChannels}

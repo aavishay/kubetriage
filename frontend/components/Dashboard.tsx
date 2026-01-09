@@ -3,15 +3,17 @@ import React, { useMemo } from 'react';
 import { Workload, DiagnosticPlaybook } from '../types';
 import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip } from 'recharts';
 // Added missing ChevronRight import
-import { Activity, DollarSign, Box, Zap, TrendingDown, ShieldAlert, HeartPulse, Sparkles, AlertCircle, Network, ServerCrash, ZapOff, ArrowRight, Gauge, Target, SearchCode, ShieldCheck, Wifi, ExternalLink, ChevronRight, Server } from 'lucide-react';
+import { Activity, DollarSign, Box, Zap, TrendingDown, ShieldAlert, HeartPulse, Sparkles, AlertCircle, Network, ServerCrash, ZapOff, ArrowRight, Gauge, Target, SearchCode, ShieldCheck, Wifi, ExternalLink, ChevronRight, Server, Loader2 } from 'lucide-react';
+import { parseLogLine } from '../utils/formatters';
 
 interface DashboardProps {
    workloads: Workload[];
    isDarkMode?: boolean;
+   isLoading?: boolean;
    onTriageRequest?: (workloadId: string, playbook: DiagnosticPlaybook) => void;
 }
 
-export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = true, onTriageRequest }) => {
+export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = true, isLoading = false, onTriageRequest }) => {
    const totalCost = workloads.reduce((acc, w) => acc + (w.costPerMonth || 0), 0);
    const criticalCount = workloads.filter(w => w.status === 'Critical').length;
    const warningCount = workloads.filter(w => w.status === 'Warning').length;
@@ -86,6 +88,19 @@ export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = tr
       fontSize: '11px',
       fontWeight: 'bold'
    };
+
+   // Loading State
+   if (isLoading && workloads.length === 0) {
+      return (
+         <div className="flex flex-col items-center justify-center min-h-[400px] animate-in fade-in duration-500">
+            <div className="relative">
+               <div className="absolute inset-0 bg-indigo-500 rounded-full blur-xl opacity-20 animate-pulse"></div>
+               <Loader2 className="w-12 h-12 text-indigo-600 dark:text-indigo-400 animate-spin relative z-10" />
+            </div>
+            <p className="mt-4 text-sm font-bold text-zinc-500 uppercase tracking-widest">Syncing Cluster Telemetry...</p>
+         </div>
+      );
+   }
 
    if (workloads.length === 0) {
       return (
@@ -198,39 +213,53 @@ export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = tr
          </div>
 
          <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 md:gap-8">
-            {/* Active Incidents Feed */}
+
             <div className="lg:col-span-2 flex flex-col gap-6">
                <div className="bg-white dark:bg-zinc-900 rounded-3xl border border-zinc-200 dark:border-zinc-800 p-6 md:p-8 flex flex-col shadow-sm flex-1">
                   <h3 className="text-xs font-black uppercase tracking-widest text-zinc-400 mb-6 flex items-center gap-2">
                      <ShieldAlert className="w-4 h-4 text-rose-500" /> Active Incidents
                   </h3>
-                  <div className="space-y-4 overflow-y-auto max-h-[400px] pr-2 custom-scrollbar">
-                     {incidents.length > 0 ? incidents.map(w => (
-                        <div key={w.id} className="p-4 rounded-2xl border border-zinc-100 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-950/50 group hover:border-indigo-500/30 transition-all">
-                           <div className="flex justify-between items-start mb-3">
-                              <div className="flex items-center gap-3">
-                                 <div className={`w-2 h-2 rounded-full ${w.status === 'Critical' ? 'bg-red-500 animate-pulse' : 'bg-amber-500'}`} />
-                                 <span className="text-sm font-black text-zinc-900 dark:text-white uppercase tracking-tight">{w.name}</span>
+                  <div className="space-y-4 overflow-y-auto flex-1 min-h-0 pr-2 custom-scrollbar">
+                     {incidents.length > 0 ? incidents.map(w => {
+                        const logData = w.recentLogs?.[0] ? parseLogLine(w.recentLogs[0]) : null;
+
+                        return (
+                           <div key={w.id} className="p-5 rounded-2xl border border-zinc-100 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-950/50 group hover:border-indigo-500/30 transition-all shadow-sm">
+                              <div className="flex justify-between items-start mb-3">
+                                 <div className="flex items-center gap-3">
+                                    <div className={`w-2 h-2 rounded-full ${w.status === 'Critical' ? 'bg-rose-500 animate-pulse' : 'bg-amber-500'}`} />
+                                    <div>
+                                       <span className="text-sm font-black text-zinc-900 dark:text-white uppercase tracking-tight block leading-none">{w.name}</span>
+                                       {logData?.time && <span className="text-[9px] font-bold text-zinc-400 uppercase tracking-wide mt-1 block">{logData.time}</span>}
+                                    </div>
+                                 </div>
+                                 <span className={`text-[8px] font-black uppercase px-2 py-0.5 rounded-md border ${w.status === 'Critical' ? 'bg-rose-500/10 text-rose-500 border-rose-500/20' : 'bg-amber-500/10 text-amber-500 border-amber-500/20'}`}>
+                                    {w.status}
+                                 </span>
                               </div>
-                              <span className={`text-[8px] font-black uppercase px-2 py-0.5 rounded-md ${w.status === 'Critical' ? 'bg-red-500 text-white' : 'bg-amber-500 text-white'}`}>
-                                 {w.status}
-                              </span>
+
+                              {logData ? (
+                                 <div className="mb-4 bg-white dark:bg-zinc-900 p-3 rounded-lg border border-zinc-200 dark:border-zinc-800/50 font-mono text-[10px] text-zinc-600 dark:text-zinc-400 overflow-x-auto">
+                                    {logData.level && <span className={`uppercase font-black mr-2 ${logData.level === 'error' ? 'text-rose-500' : 'text-zinc-400'}`}>{logData.level}</span>}
+                                    <span title={logData.full}>{logData.msg}</span>
+                                 </div>
+                              ) : (
+                                 <p className="text-[10px] text-zinc-500 dark:text-zinc-400 font-bold mb-4 italic">No recent logs captured</p>
+                              )}
+
+                              <button
+                                 onClick={() => onTriageRequest?.(w.id, 'Resource Constraints')}
+                                 className="w-full flex items-center justify-between gap-2 bg-white dark:bg-zinc-800 p-2.5 rounded-xl border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-750 transition-all group/btn"
+                              >
+                                 <span className="text-[9px] font-black uppercase tracking-widest flex items-center gap-2 text-zinc-600 dark:text-zinc-300">
+                                    <Sparkles className="w-3.5 h-3.5 text-indigo-500" />
+                                    Investigate with AI
+                                 </span>
+                                 <ChevronRight className="w-4 h-4 text-zinc-400 group-hover/btn:translate-x-1 transition-all" />
+                              </button>
                            </div>
-                           <p className="text-[10px] text-zinc-500 dark:text-zinc-400 font-bold mb-4 line-clamp-1">
-                              {w.recentLogs?.[0] || 'No logs available'}
-                           </p>
-                           <button
-                              onClick={() => onTriageRequest?.(w.id, 'Resource Constraints')}
-                              className="w-full flex items-center justify-between gap-2 bg-white dark:bg-zinc-800 p-2.5 rounded-xl border border-zinc-200 dark:border-zinc-700 hover:bg-indigo-600 hover:text-white transition-all group/btn"
-                           >
-                              <span className="text-[9px] font-black uppercase tracking-widest flex items-center gap-2">
-                                 <Sparkles className="w-3.5 h-3.5 text-indigo-500 group-hover/btn:text-white" />
-                                 Investigate with AI
-                              </span>
-                              <ChevronRight className="w-4 h-4 opacity-0 group-hover/btn:opacity-100 transition-opacity" />
-                           </button>
-                        </div>
-                     )) : (
+                        )
+                     }) : (
                         <div className="p-10 text-center flex flex-col items-center">
                            <HeartPulse className="w-10 h-10 text-emerald-500 mb-3" />
                            <p className="text-xs font-black uppercase text-zinc-400 tracking-widest">All services nominal</p>
@@ -270,7 +299,13 @@ export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = tr
                            const saturation = Math.min(100, Math.round((item.used / item.requested) * 100));
                            const isCritical = saturation >= 90;
                            const isWarning = saturation >= 70 && saturation < 90;
-                           const colorClass = isCritical ? 'bg-rose-500' : isWarning ? 'bg-amber-500' : 'bg-emerald-500';
+
+                           // Gradient classes
+                           const colorClass = isCritical
+                              ? 'bg-gradient-to-r from-rose-500 to-pink-600'
+                              : isWarning
+                                 ? 'bg-gradient-to-r from-amber-400 to-orange-500'
+                                 : 'bg-gradient-to-r from-emerald-400 to-teal-500';
 
                            return (
                               <div key={idx} className="group flex items-center gap-4 p-3 rounded-xl hover:bg-zinc-50 dark:hover:bg-zinc-800/50 border border-transparent hover:border-zinc-100 dark:hover:border-zinc-800 transition-all cursor-default">
@@ -291,7 +326,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = tr
                                     </div>
                                     <div className="h-2 w-full bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden">
                                        <div
-                                          className={`h-full rounded-full ${colorClass} transition-all duration-500`}
+                                          className={`h-full rounded-full shadow-sm ${colorClass} transition-all duration-1000 ease-out`}
                                           style={{ width: `${saturation}%` }}
                                        />
                                     </div>

@@ -3,7 +3,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useMonitoring } from '../contexts/MonitoringContext';
 import { NotificationChannel, NotificationType, AlertRule, TriggeredAlert } from '../types';
-import { Bell, Plus, Search, MoreHorizontal, Slack, Mail, Webhook, Trash2, Edit2, X, Activity, Loader2, Play, Pause, Settings2, ShieldAlert, Cpu, MemoryStick, Zap, DollarSign, Filter, CheckCircle2, AlertCircle, MessageSquare, History, Clock, ArrowRight, BellRing } from 'lucide-react';
+import { Bell, Plus, Search, MoreHorizontal, Slack, Mail, Webhook, Trash2, Edit2, X, Activity, Loader2, Play, Pause, Settings2, ShieldAlert, Cpu, MemoryStick, Zap, DollarSign, Filter, CheckCircle2, AlertCircle, MessageSquare, History, Clock, ArrowRight, BellRing, ChevronDown, ChevronUp } from 'lucide-react';
 
 interface NotificationsViewProps {
    channels: NotificationChannel[];
@@ -29,6 +29,17 @@ export const NotificationsView: React.FC<NotificationsViewProps> = ({
    const [isChannelModalOpen, setIsChannelModalOpen] = useState(false);
    const [isRuleModalOpen, setIsRuleModalOpen] = useState(false);
    const [searchTerm, setSearchTerm] = useState('');
+   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
+
+   const toggleGroup = (groupName: string) => {
+      const newExpanded = new Set(expandedGroups);
+      if (newExpanded.has(groupName)) {
+         newExpanded.delete(groupName);
+      } else {
+         newExpanded.add(groupName);
+      }
+      setExpandedGroups(newExpanded);
+   };
 
    // Freeze Logic
    const [isPaused, setIsPaused] = useState(false);
@@ -335,36 +346,85 @@ export const NotificationsView: React.FC<NotificationsViewProps> = ({
                   <div className="divide-y divide-zinc-100 dark:divide-zinc-800">
 
                      {filteredHistory.length > 0 ? (
-                        filteredHistory.map(alert => (
-                           <div
-                              key={alert.id}
-                              onClick={() => handleAlertClick(alert)}
-                              className="p-8 flex items-center gap-8 group hover:bg-zinc-50 dark:hover:bg-zinc-950/50 transition-all cursor-pointer animate-in fade-in slide-in-from-bottom-2 duration-500 hover:scale-[1.005]"
-                           >
-                              <div className={`p-4 rounded-2xl shrink-0 transition-transform group-hover:scale-110 shadow-lg ${alert.severity === 'Critical' ? 'bg-red-500 text-white shadow-red-500/20' : 'bg-amber-500 text-white shadow-amber-500/20'}`}>
-                                 <BellRing className="w-6 h-6" />
-                              </div>
-                              <div className="flex-1 min-w-0">
-                                 <div className="flex items-center gap-3 mb-2">
-                                    <span className="text-sm font-black text-zinc-900 dark:text-white uppercase tracking-tighter group-hover:text-indigo-500 transition-colors">{alert.ruleName}</span>
-                                    <span className={`text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-md border ${alert.severity === 'Critical' ? 'bg-red-500/10 border-red-500/20 text-red-500' : 'bg-amber-500/10 border-amber-500/20 text-amber-500'
-                                       }`}>
-                                       {alert.severity}
-                                    </span>
+                        Object.entries(
+                           filteredHistory.reduce((acc, alert) => {
+                              if (!acc[alert.workloadName]) acc[alert.workloadName] = [];
+                              acc[alert.workloadName].push(alert);
+                              return acc;
+                           }, {} as Record<string, typeof filteredHistory>)
+                        ).map(([workloadName, alerts]) => (
+                           <div key={workloadName} className="bg-white dark:bg-zinc-900 rounded-[2.5rem] border border-zinc-200 dark:border-zinc-800 overflow-hidden shadow-sm animate-in fade-in slide-in-from-bottom-2 duration-500 mb-6 last:mb-0">
+                              <div
+                                 className="px-8 py-5 border-b border-zinc-100 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-950/50 flex justify-between items-center cursor-pointer hover:bg-zinc-100 dark:hover:bg-zinc-800/50 transition-colors"
+                                 onClick={() => toggleGroup(workloadName)}
+                              >
+                                 <div className="flex items-center gap-3">
+                                    <div className="p-2 bg-indigo-500/10 rounded-xl">
+                                       {expandedGroups.has(workloadName) ? <ChevronUp className="w-4 h-4 text-indigo-500" /> : <ChevronDown className="w-4 h-4 text-indigo-500" />}
+                                    </div>
+                                    <div>
+                                       <h4 className="text-sm font-black text-zinc-900 dark:text-white uppercase tracking-tighter">{workloadName}</h4>
+                                       <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">{alerts.length} Alert{alerts.length > 1 ? 's' : ''}</p>
+                                    </div>
                                  </div>
-                                 <p className="text-xs text-zinc-500 dark:text-zinc-400 font-bold flex items-center gap-2">
-                                    Workload <span className="bg-zinc-100 dark:bg-zinc-800 px-2 py-0.5 rounded-md text-zinc-900 dark:text-white border border-zinc-200 dark:border-zinc-700">"{alert.workloadName}"</span>
-                                    reached <span className="font-mono text-indigo-500">{alert.value}%</span> {alert.metric} utilization.
-                                 </p>
-                              </div>
-                              <div className="text-right shrink-0">
-                                 <div className="text-[10px] font-black text-zinc-900 dark:text-white uppercase tracking-widest mb-1.5">{formatTime(alert.timestamp)}</div>
-                                 <div className="flex items-center justify-end gap-1.5 text-[9px] text-zinc-400 font-bold uppercase">
-                                    <span className="w-1.5 h-1.5 rounded-full bg-indigo-500/50" />
-                                    {alert.channelsNotified.length} Channels Notified
-                                    <ArrowRight className="w-3 h-3 group-hover:translate-x-1 transition-transform text-indigo-500 ml-1" />
+                                 <div className="flex items-center gap-2">
+                                    {!expandedGroups.has(workloadName) && (
+                                       <div className="flex -space-x-2 mr-4">
+                                          {alerts.slice(0, 3).map((a, i) => (
+                                             <div key={i} className={`w-6 h-6 rounded-full border-2 border-white dark:border-zinc-900 flex items-center justify-center text-[8px] font-black text-white ${a.severity === 'Critical' ? 'bg-red-500' : 'bg-amber-500'}`}>
+                                                !
+                                             </div>
+                                          ))}
+                                          {alerts.length > 3 && (
+                                             <div className="w-6 h-6 rounded-full border-2 border-white dark:border-zinc-900 bg-zinc-200 dark:bg-zinc-700 flex items-center justify-center text-[8px] font-black text-zinc-500">
+                                                +{alerts.length - 3}
+                                             </div>
+                                          )}
+                                       </div>
+                                    )}
+                                    <button
+                                       onClick={(e) => { e.stopPropagation(); handleAlertClick(alerts[0]); }}
+                                       className="px-4 py-2 rounded-xl bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-[10px] font-black uppercase tracking-widest hover:border-indigo-500 transition-colors group/btn"
+                                    >
+                                       Triage Workload
+                                       <ArrowRight className="w-3 h-3 inline-block ml-2 group-hover/btn:translate-x-1 transition-transform" />
+                                    </button>
                                  </div>
                               </div>
+                              {expandedGroups.has(workloadName) && (
+                                 <div className="divide-y divide-zinc-100 dark:divide-zinc-800 animate-in slide-in-from-top-2 duration-300">
+                                    {alerts.map(alert => (
+                                       <div
+                                          key={alert.id}
+                                          onClick={() => handleAlertClick(alert)}
+                                          className="p-8 flex items-center gap-8 group hover:bg-zinc-50 dark:hover:bg-zinc-950/50 transition-all cursor-pointer"
+                                       >
+                                          <div className={`p-4 rounded-2xl shrink-0 transition-transform group-hover:scale-110 shadow-lg ${alert.severity === 'Critical' ? 'bg-red-500 text-white shadow-red-500/20' : 'bg-amber-500 text-white shadow-amber-500/20'}`}>
+                                             <BellRing className="w-6 h-6" />
+                                          </div>
+                                          <div className="flex-1 min-w-0">
+                                             <div className="flex items-center gap-3 mb-2">
+                                                <span className="text-sm font-black text-zinc-900 dark:text-white uppercase tracking-tighter group-hover:text-indigo-500 transition-colors">{alert.ruleName}</span>
+                                                <span className={`text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-md border ${alert.severity === 'Critical' ? 'bg-red-500/10 border-red-500/20 text-red-500' : 'bg-amber-500/10 border-amber-500/20 text-amber-500'
+                                                   }`}>
+                                                   {alert.severity}
+                                                </span>
+                                             </div>
+                                             <div className="text-xs text-zinc-500 dark:text-zinc-400 font-bold flex items-center gap-2">
+                                                Metric reached <span className="font-mono text-indigo-500">{alert.value}%</span> {alert.metric} utilization.
+                                             </div>
+                                          </div>
+                                          <div className="text-right shrink-0">
+                                             <div className="text-[10px] font-black text-zinc-900 dark:text-white uppercase tracking-widest mb-1.5">{formatTime(alert.timestamp)}</div>
+                                             <div className="flex items-center justify-end gap-1.5 text-[9px] text-zinc-400 font-bold uppercase">
+                                                <span className="w-1.5 h-1.5 rounded-full bg-indigo-500/50" />
+                                                {alert.channelsNotified.length} Channels Notified
+                                             </div>
+                                          </div>
+                                       </div>
+                                    ))}
+                                 </div>
+                              )}
                            </div>
                         ))
                      ) : (

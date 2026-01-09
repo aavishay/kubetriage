@@ -1,6 +1,7 @@
 package api
 
 import (
+	"net/http"
 	"time"
 
 	"github.com/aavishay/kubetriage/backend/internal/ai"
@@ -10,7 +11,7 @@ import (
 	"go.opentelemetry.io/contrib/instrumentation/github.com/gin-gonic/gin/otelgin"
 )
 
-func SetupRouter(aiService *ai.AIService) *gin.Engine {
+func SetupRouter(aiService *ai.AIService, rootFS http.FileSystem, assetsFS http.FileSystem, indexHTML []byte) *gin.Engine {
 	r := gin.Default()
 
 	// CORS Config
@@ -63,6 +64,7 @@ func SetupRouter(aiService *ai.AIService) *gin.Engine {
 			// AI / Remediation
 			protected.GET("/ai/models", aiHandler.GetModels)
 			protected.POST("/ai/analyze", aiHandler.AnalyzeWorkload)
+			protected.POST("/ai/topology", aiHandler.GenerateTopology)
 			protected.POST("/remediate/generate", aiHandler.GenerateRemediation)
 
 			// Playbooks (Public Read)
@@ -82,23 +84,38 @@ func SetupRouter(aiService *ai.AIService) *gin.Engine {
 		}
 	}
 	// Serve Frontend Static Files
-	// This block handles serving the built React application from the backend
-	r.Static("/assets", "./frontend/dist/assets")
-	r.StaticFile("/favicon.ico", "./frontend/dist/favicon.ico")
+	// Use the embedded filesystem
+	r.StaticFS("/assets", assetsFS) // This will serve from dist/assets -> dist/assets (mapped correctly)
+
+	// Because StaticFS servers /assets/*, we can't easily map /favicon.ico directly unless we check for it in NoRoute or have it in root of FS.
+	// Since we subbed "dist", if favicon.ico is in dist/favicon.ico, we can serve it manually.
+	r.GET("/favicon.ico", func(c *gin.Context) {
+		c.FileFromFS("favicon.ico", rootFS)
+	})
+	r.GET("/favicon.png", func(c *gin.Context) {
+		c.FileFromFS("favicon.png", rootFS)
+	})
 
 	// SPA Handler: any route not handled by API or static files returns index.html
 	r.NoRoute(func(c *gin.Context) {
-		// Avoid intercepting API 404s - if it starts with /api, return JSON 404
+		// Avoid intercepting API 404s
 		path := c.Request.URL.Path
 		if len(path) >= 4 && path[0:4] == "/api" {
 			c.JSON(404, gin.H{"code": 404, "message": "API endpoint not found"})
 			return
 		}
-		// Otherwise serve the index.html
+
+		// Serve index.html from embedded FS
 		c.Header("Cache-Control", "no-cache, no-store, must-revalidate")
 		c.Header("Pragma", "no-cache")
 		c.Header("Expires", "0")
-		c.File("./frontend/dist/index.html")
+
+		if len(indexHTML) > 0 {
+			c.Data(200, "text/html; charset=utf-8", indexHTML)
+		} else {
+			// Fallback if bytes missing (shouldn't happen in prod)
+			c.FileFromFS("index.html", rootFS)
+		}
 	})
 
 	return r

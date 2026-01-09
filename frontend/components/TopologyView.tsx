@@ -1,9 +1,10 @@
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Workload } from '../types';
 import { generateTopologyDiagram } from '../services/geminiService';
 import { Loader2, Image as ImageIcon, Download, Sparkles, AlertCircle, Share2, ZoomIn, Info, LayoutGrid, Box, Server, Layers, Globe, RefreshCw } from 'lucide-react';
+import mermaid from 'mermaid';
 
 interface TopologyViewProps {
     workloads: Workload[];
@@ -13,10 +14,20 @@ interface TopologyViewProps {
 export const TopologyView: React.FC<TopologyViewProps> = ({ workloads, isDarkMode = true }) => {
     const navigate = useNavigate();
     const [viewMode, setViewMode] = useState<'graph' | 'schematic'>('schematic');
-    const [diagramImage, setDiagramImage] = useState<string | null>(null);
+    const [diagramCode, setDiagramCode] = useState<string | null>(null);
+    const [renderedSvg, setRenderedSvg] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(false);
     const [aspectRatio, setAspectRatio] = useState('16:9');
     const [error, setError] = useState<string | null>(null);
+
+    // Initialize mermaid
+    useEffect(() => {
+        mermaid.initialize({
+            startOnLoad: false,
+            theme: isDarkMode ? 'dark' : 'default',
+            securityLevel: 'loose',
+        });
+    }, [isDarkMode]);
 
     // Group workloads by namespace for Schematic View
     const groupedWorkloads = useMemo<Record<string, Workload[]>>(() => {
@@ -31,31 +42,43 @@ export const TopologyView: React.FC<TopologyViewProps> = ({ workloads, isDarkMod
     const handleGenerateDiagram = async () => {
         setIsLoading(true);
         setError(null);
-        setDiagramImage(null);
+        setDiagramCode(null);
+        setRenderedSvg(null);
         try {
-            const imageBase64 = await generateTopologyDiagram(workloads, aspectRatio);
-            if (imageBase64) {
-                setDiagramImage(imageBase64);
+            const code = await generateTopologyDiagram(workloads, aspectRatio);
+            if (code) {
+                setDiagramCode(code);
                 setViewMode('graph'); // Auto switch to graph view on success
+                // Render Mermaid
+                try {
+                    const { svg } = await mermaid.render('mermaid-graph', code);
+                    setRenderedSvg(svg);
+                } catch (renderError) {
+                    console.error("Mermaid Render Error", renderError);
+                    setError("Failed to render diagram. The AI generated invalid syntax.");
+                }
             } else {
                 setError("Failed to generate architecture diagram. Please try again.");
             }
         } catch (e) {
             console.error(e);
-            setError("An error occurred while communicating with the AI service. Ensure you have selected a valid API Key.");
+            setError("An error occurred while communicating with the AI service. If using local AI, ensure backend is running.");
         } finally {
             setIsLoading(false);
         }
     };
 
     const downloadImage = () => {
-        if (diagramImage) {
+        if (renderedSvg) {
+            const blob = new Blob([renderedSvg], { type: 'image/svg+xml' });
+            const url = URL.createObjectURL(blob);
             const link = document.createElement('a');
-            link.href = diagramImage;
-            link.download = `architecture-diagram-${new Date().toISOString()}.png`;
+            link.href = url;
+            link.download = `architecture-topology-${new Date().toISOString()}.svg`;
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
+            URL.revokeObjectURL(url);
         }
     };
 
@@ -115,14 +138,14 @@ export const TopologyView: React.FC<TopologyViewProps> = ({ workloads, isDarkMod
                                 className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-xs font-medium flex items-center gap-2 transition-colors shadow-lg shadow-indigo-500/20 disabled:opacity-50"
                             >
                                 {isLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}
-                                {diagramImage ? 'Regenerate' : 'Generate'}
+                                {renderedSvg ? 'Regenerate' : 'Generate'}
                             </button>
 
-                            {diagramImage && (
+                            {renderedSvg && (
                                 <button
                                     onClick={downloadImage}
                                     className="bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 p-2 rounded-lg border border-zinc-200 dark:border-zinc-700 transition-colors"
-                                    title="Download Image"
+                                    title="Download SVG"
                                 >
                                     <Download className="w-4 h-4" />
                                 </button>
@@ -155,16 +178,14 @@ export const TopologyView: React.FC<TopologyViewProps> = ({ workloads, isDarkMod
                                 </div>
                                 <h3 className="text-lg font-bold text-zinc-900 dark:text-white">Generating Architecture Diagram...</h3>
                                 <p className="text-sm text-zinc-500 dark:text-zinc-400 max-w-xs">
-                                    Analyzing workload relationships and rendering high-fidelity topology using Generative AI Vision. This may take 10-20 seconds.
+                                    Analyzing workload relationships and rendering high-fidelity topology using Generative AI. This may take 5-10 seconds.
                                 </p>
                             </div>
-                        ) : diagramImage ? (
-                            <div className="relative w-full h-full flex items-center justify-center overflow-auto p-4">
-                                <img
-                                    src={diagramImage}
-                                    alt="Cluster Architecture"
-                                    className="max-w-none shadow-2xl rounded-lg border border-zinc-200 dark:border-zinc-800"
-                                    style={{ maxHeight: '95%', maxWidth: '95%', objectFit: 'contain' }}
+                        ) : renderedSvg ? (
+                            <div className="relative w-full h-full flex items-center justify-center overflow-auto p-4 animate-in zoom-in-95 duration-500">
+                                <div
+                                    className="max-w-full max-h-full shadow-2xl rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4"
+                                    dangerouslySetInnerHTML={{ __html: renderedSvg }}
                                 />
                             </div>
                         ) : (

@@ -21,6 +21,7 @@ interface MonitoringContextType {
   triggeredAlerts: TriggeredAlert[];
   isAuthenticated: boolean;
   isAuthLoading: boolean; // Added loading state
+  isWorkloadsLoading: boolean; // Added
   hasApiKey: boolean;
   isCheckingKey: boolean;
   activeNotification: TriggeredAlert | null;
@@ -87,6 +88,7 @@ export const MonitoringProvider: React.FC<MonitoringProviderProps> = ({ children
 
   // --- Core Data State ---
   const [workloads, setWorkloads] = useState<Workload[]>([]);
+  const [isWorkloadsLoading, setIsWorkloadsLoading] = useState(false);
   const [clusters, setClusters] = useState<Cluster[]>([]);
   const [selectedCluster, setSelectedCluster] = useState<Cluster | null>(null);
   const [organizations, setOrganizations] = useState<Organization[]>([]);
@@ -148,8 +150,7 @@ export const MonitoringProvider: React.FC<MonitoringProviderProps> = ({ children
         return;
       }
 
-      // Clear previous workloads immediately to avoid stale data
-      setWorkloads([]);
+      setIsWorkloadsLoading(true);
 
       try {
         const response = await fetch(`/api/cluster/workloads?cluster=${selectedCluster.id}`);
@@ -161,6 +162,8 @@ export const MonitoringProvider: React.FC<MonitoringProviderProps> = ({ children
         }
       } catch (err) {
         console.error("Error fetching workloads", err);
+      } finally {
+        setIsWorkloadsLoading(false);
       }
     };
     fetchWorkloads();
@@ -192,7 +195,7 @@ export const MonitoringProvider: React.FC<MonitoringProviderProps> = ({ children
 
   const [aiConfig, setAiConfig] = useState<{ provider: string; model: string }>(() => {
     const saved = localStorage.getItem('ai_config');
-    return saved ? JSON.parse(saved) : { provider: 'gemini', model: '' };
+    return saved ? JSON.parse(saved) : { provider: 'ollama', model: 'llama3' };
   });
 
   const [lastToastTime, setLastToastTime] = useState(0);
@@ -222,6 +225,13 @@ export const MonitoringProvider: React.FC<MonitoringProviderProps> = ({ children
   useEffect(() => {
     localStorage.setItem('ai_config', JSON.stringify(aiConfig));
   }, [aiConfig]);
+
+  // FIXME: Migration for users with broken Gemini default
+  useEffect(() => {
+    if (aiConfig.provider === 'gemini' && aiConfig.model === '') {
+      setAiConfig({ provider: 'ollama', model: 'llama3' });
+    }
+  }, []);
 
   const updateAIConfig = (config: { provider: string; model: string }) => {
     setAiConfig(config);
@@ -394,6 +404,7 @@ export const MonitoringProvider: React.FC<MonitoringProviderProps> = ({ children
       triggeredAlerts,
       isAuthenticated,
       isAuthLoading, // Added
+      isWorkloadsLoading,
       hasApiKey,
       isCheckingKey,
       activeNotification,
