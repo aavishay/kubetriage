@@ -427,6 +427,42 @@ export const TriageView: React.FC<TriageViewProps> = ({ workloads, isDarkMode = 
                 </div>
               </div>
 
+              {/* Scaling Configuration (KEDA) */}
+              {selectedWorkload.scaling && selectedWorkload.scaling.enabled && (
+                <section className="bg-white dark:bg-zinc-900 rounded-[2.5rem] border border-zinc-200 dark:border-zinc-800 p-8 shadow-sm relative overflow-hidden">
+                  <div className="absolute top-0 right-0 p-8 opacity-5"><Activity className="w-32 h-32 text-indigo-500" /></div>
+                  <div className="flex items-center gap-4 mb-8">
+                    <div className="p-3 bg-indigo-500/10 rounded-2xl"><Activity className="w-6 h-6 text-indigo-500" /></div>
+                    <div>
+                      <h4 className="text-sm font-black text-zinc-900 dark:text-white uppercase tracking-tighter">Autoscaling Configuration</h4>
+                      <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mt-1">Powered by KEDA</p>
+                    </div>
+                    {selectedWorkload.scaling.kedaReady ?
+                      <div className="px-3 py-1 bg-emerald-500/10 text-emerald-500 rounded-full text-[10px] font-black uppercase tracking-widest flex items-center gap-2"><CheckCircle2 className="w-3 h-3" /> Active</div> :
+                      <div className="px-3 py-1 bg-rose-500/10 text-rose-500 rounded-full text-[10px] font-black uppercase tracking-widest flex items-center gap-2"><AlertCircle className="w-3 h-3" /> Not Ready</div>
+                    }
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-8 relative z-10">
+                    <div>
+                      <span className="text-[10px] font-black text-zinc-400 uppercase tracking-widest block mb-2">Replica Range</span>
+                      <span className="text-2xl font-black text-zinc-900 dark:text-white tracking-tighter">{selectedWorkload.scaling.min} <span className="text-zinc-400 mx-2">→</span> {selectedWorkload.scaling.max}</span>
+                    </div>
+                    <div>
+                      <span className="text-[10px] font-black text-zinc-400 uppercase tracking-widest block mb-2">Current Scale</span>
+                      <span className="text-2xl font-black text-zinc-900 dark:text-white tracking-tighter">{selectedWorkload.scaling.current} <span className="text-zinc-400 text-sm font-bold align-middle ml-1">Replicas</span></span>
+                    </div>
+                    <div>
+                      <span className="text-[10px] font-black text-zinc-400 uppercase tracking-widest block mb-2">Triggers</span>
+                      <div className="flex flex-wrap gap-2 mt-1">
+                        {(selectedWorkload.scaling.config?.triggers || []).map((t, i) => (
+                          <span key={i} className="px-2.5 py-1.5 bg-zinc-100 dark:bg-zinc-800 rounded-lg text-[10px] font-bold text-zinc-600 dark:text-zinc-300 uppercase tracking-wider border border-zinc-200 dark:border-zinc-700">{t}</span>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </section>
+              )}
+
               {selectedPlaybook === 'Network Connectivity' && <TrafficPathExplorer workload={selectedWorkload} />}
 
               <div className="flex flex-col gap-10">

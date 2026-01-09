@@ -21,6 +21,8 @@ import (
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/kubernetes"
 )
 
@@ -61,6 +63,21 @@ type Workload struct {
 	RecentLogs        []string        `json:"recentLogs"`
 	Events            []K8sEvent      `json:"events"`
 	CostPerMonth      int             `json:"costPerMonth"`
+	Scaling           ScalingInfo     `json:"scaling"`
+}
+
+type ScalingInfo struct {
+	Enabled   bool        `json:"enabled"`
+	Min       int32       `json:"min"`
+	Max       int32       `json:"max"`
+	Current   int32       `json:"current"`
+	KedaReady bool        `json:"kedaReady"`
+	Config    *KedaConfig `json:"config,omitempty"`
+}
+
+type KedaConfig struct {
+	Name     string   `json:"name"`
+	Triggers []string `json:"triggers"`
 }
 
 func HealthHandler(c *gin.Context) {
@@ -217,6 +234,95 @@ func fetchRecentEvents(ctx context.Context, client *kubernetes.Clientset, namesp
 		return []K8sEvent{}
 	}
 	return result
+	return result
+}
+
+// Helper to fetch KEDA ScaledObject
+func fetchKedaScaling(ctx context.Context, dynClient dynamic.Interface, namespace, workloadName string) ScalingInfo {
+	info := ScalingInfo{
+		Enabled: false,
+		Min:     0,
+		Max:     0,
+		Current: 0,
+	}
+
+	if dynClient == nil {
+		return info
+	}
+
+	gvr := schema.GroupVersionResource{
+		Group:    "keda.sh",
+		Version:  "v1alpha1",
+		Resource: "scaledobjects",
+	}
+
+	// List all SOs in namespace (optimization: could limit fields if supported, or cache)
+	// For MVP, listing is acceptable given namespace scope
+	sos, err := dynClient.Resource(gvr).Namespace(namespace).List(ctx, metav1.ListOptions{})
+	if err != nil {
+		// KEDA might not be installed, ignore error
+		return info
+	}
+
+	for _, item := range sos.Items {
+		// Check scaleTargetRef
+		spec, ok := item.Object["spec"].(map[string]interface{})
+		if !ok {
+			continue
+		}
+		target, ok := spec["scaleTargetRef"].(map[string]interface{})
+		if !ok {
+			continue
+		}
+
+		targetName, _ := target["name"].(string)
+		if targetName == workloadName {
+			// Found it
+			info.Enabled = true
+			if min, ok := spec["minReplicaCount"].(int64); ok {
+				info.Min = int32(min)
+			}
+			if max, ok := spec["maxReplicaCount"].(int64); ok {
+				info.Max = int32(max)
+			}
+
+			// Extract triggers
+			var triggers []string
+			if trigs, ok := spec["triggers"].([]interface{}); ok {
+				for _, t := range trigs {
+					if tMap, ok := t.(map[string]interface{}); ok {
+						if typeStr, ok := tMap["type"].(string); ok {
+							triggers = append(triggers, typeStr)
+						}
+					}
+				}
+			}
+
+			// Check Status for Readiness
+			statusReady := false
+			if status, ok := item.Object["status"].(map[string]interface{}); ok {
+				if conditions, ok := status["conditions"].([]interface{}); ok {
+					for _, c := range conditions {
+						if cMap, ok := c.(map[string]interface{}); ok {
+							if cMap["type"] == "Ready" && cMap["status"] == "True" {
+								statusReady = true
+								break
+							}
+						}
+					}
+				}
+			}
+			info.KedaReady = statusReady
+
+			info.Config = &KedaConfig{
+				Name:     item.GetName(),
+				Triggers: triggers,
+			}
+			break
+		}
+	}
+
+	return info
 }
 
 type ClusterResponse struct {
@@ -320,6 +426,17 @@ func WorkloadsHandler(c *gin.Context) {
 		client = k8s.ClientSet
 	}
 
+	// Get Dynamic Client (safely)
+	var dynClient dynamic.Interface
+	if clusterID != "" && k8s.Manager != nil {
+		if cls, err := k8s.Manager.GetCluster(clusterID); err == nil {
+			dynClient = cls.DynamicClient
+		}
+	} else if k8s.GlobalManager != nil && len(k8s.GlobalManager.ListClusters()) > 0 {
+		// Default fallback
+		dynClient = k8s.GlobalManager.ListClusters()[0].DynamicClient
+	}
+
 	if client == nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "K8s client not initialized"})
 		return
@@ -352,6 +469,7 @@ func WorkloadsHandler(c *gin.Context) {
 				RecentLogs:        fetchRecentLogs(c.Request.Context(), client, d.Namespace, d.Spec.Selector.MatchLabels),
 				Events:            fetchRecentEvents(c.Request.Context(), client, d.Namespace, d.Name, "Deployment"),
 				CostPerMonth:      rand.Intn(500) + 50,
+				Scaling:           fetchKedaScaling(c.Request.Context(), dynClient, d.Namespace, d.Name),
 			}
 			workloads = append(workloads, w)
 		}
@@ -375,6 +493,7 @@ func WorkloadsHandler(c *gin.Context) {
 				RecentLogs:        fetchRecentLogs(c.Request.Context(), client, s.Namespace, s.Spec.Selector.MatchLabels),
 				Events:            fetchRecentEvents(c.Request.Context(), client, s.Namespace, s.Name, "StatefulSet"),
 				CostPerMonth:      rand.Intn(500) + 100,
+				Scaling:           fetchKedaScaling(c.Request.Context(), dynClient, s.Namespace, s.Name),
 			}
 			workloads = append(workloads, w)
 		}

@@ -39,6 +39,21 @@ export interface Workload {
     confidence: number;
     reason: string;
   };
+  scaling?: ScalingInfo;
+}
+
+export interface KedaConfig {
+  name: string;
+  triggers: string[];
+}
+
+export interface ScalingInfo {
+  enabled: boolean;
+  min: number;
+  max: number;
+  current: number;
+  kedaReady: boolean;
+  config?: KedaConfig;
 }
 
 export interface Cluster {
