@@ -51,24 +51,43 @@ export const TopologyView: React.FC<TopologyViewProps> = ({ workloads, isDarkMod
             if (code) {
                 setDiagramCode(code);
                 setViewMode('graph'); // Auto switch to graph view on success
-                // Render Mermaid
+                if (!isMounted.current) return;
+
+                // Render Mermaid if mounted
                 try {
-                    const { svg } = await mermaid.render('mermaid-graph', code);
-                    setRenderedSvg(svg);
+                    // Unique ID to prevent collision if multiple renders happen fast
+                    const id = `mermaid-${Date.now()}`;
+                    const { svg } = await mermaid.render(id, code);
+                    if (isMounted.current) {
+                        setRenderedSvg(svg);
+                    }
                 } catch (renderError) {
                     console.error("Mermaid Render Error", renderError);
-                    setError("Failed to render diagram. The AI generated invalid syntax.");
+                    if (isMounted.current) {
+                        setError("Failed to render diagram. The AI generated invalid syntax.");
+                    }
+                    // Attempt to clean up any stray error divs mermaid might have appended to body
+                    const errorDiv = document.querySelector(`#dmermaid-${Date.now()}`); // Heuristic
+                    if (errorDiv) errorDiv.remove();
                 }
             } else {
-                setError("Failed to generate architecture diagram. Please try again.");
+                if (isMounted.current) setError("Failed to generate architecture diagram. Please try again.");
             }
         } catch (e) {
             console.error(e);
-            setError("An error occurred while communicating with the AI service. If using local AI, ensure backend is running.");
+            if (isMounted.current) setError("An error occurred while communicating with the AI service. If using local AI, ensure backend is running.");
         } finally {
-            setIsLoading(false);
+            if (isMounted.current) setIsLoading(false);
         }
     };
+
+    // Mount tracking
+    const isMounted = React.useRef(true);
+    useEffect(() => {
+        return () => {
+            isMounted.current = false;
+        };
+    }, []);
 
     const downloadImage = () => {
         if (renderedSvg) {

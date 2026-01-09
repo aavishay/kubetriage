@@ -5,7 +5,13 @@ import (
 	"log"
 	"net/http"
 
+	"strings" // Added for severity check
+
+	"github.com/google/uuid"
+
 	"github.com/aavishay/kubetriage/backend/internal/ai"
+	"github.com/aavishay/kubetriage/backend/internal/auth" // Added for user info
+	"github.com/aavishay/kubetriage/backend/internal/db"
 	"github.com/gin-gonic/gin"
 )
 
@@ -31,7 +37,46 @@ func (h *AIHandler) AnalyzeWorkload(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"analysis": analysis})
+	// 1. Detect Severity Heuristically
+	severity := "Info"
+	lowerAnalysis := strings.ToLower(analysis)
+	if strings.Contains(lowerAnalysis, "critical") || strings.Contains(lowerAnalysis, "severe") {
+		severity = "Critical"
+	} else if strings.Contains(lowerAnalysis, "warning") || strings.Contains(lowerAnalysis, "high risk") {
+		severity = "Warning"
+	}
+
+	// 2. Get User Project (if authenticated)
+	var projectID *uuid.UUID
+	if val, exists := c.Get("user"); exists {
+		if userInfo, ok := val.(auth.UserInfo); ok {
+			// Parse ProjectID string to UUID if valid
+			if uid, err := uuid.Parse(userInfo.ProjectID); err == nil {
+				projectID = &uid
+			}
+		}
+	}
+
+	// 3. Save to DB
+	// 3. Save to DB
+	clusterID := "local-cluster" // simplified for MVP
+	report := db.TriageReport{
+		ClusterID:    clusterID,
+		WorkloadName: req.WorkloadName,
+		Namespace:    req.Namespace,
+		Kind:         req.Kind,
+		Analysis:     analysis,
+		Severity:     severity,
+		ProjectID:    projectID,
+		IsRead:       false,
+	}
+
+	if err := db.DB.Create(&report).Error; err != nil {
+		log.Printf("Failed to save report: %v", err)
+		// Proceed anyway, don't fail the request just because save failed (though ideally we should alert)
+	}
+
+	c.JSON(http.StatusOK, gin.H{"analysis": analysis, "reportId": report.ID})
 }
 
 func (h *AIHandler) GenerateRemediation(c *gin.Context) {

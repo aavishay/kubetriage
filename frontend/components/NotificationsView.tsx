@@ -215,7 +215,7 @@ export const NotificationsView: React.FC<NotificationsViewProps> = ({
 
    return (
       <div className="space-y-6">
-         <div className="bg-white dark:bg-zinc-900 rounded-[2.5rem] p-8 border border-zinc-200 dark:border-zinc-800 shadow-sm flex flex-col md:flex-row justify-between items-center gap-6">
+         <div className="bg-white dark:bg-zinc-900 rounded-[2.5rem] p-6 border border-zinc-200 dark:border-zinc-800 shadow-sm flex flex-col md:flex-row justify-between items-center gap-6">
             <div>
                <div className="flex items-center gap-3 mb-2">
                   <div className="p-2.5 bg-indigo-500/10 rounded-2xl">
@@ -249,7 +249,7 @@ export const NotificationsView: React.FC<NotificationsViewProps> = ({
          </div>
 
          {/* Global Preferences Card */}
-         <div className="relative overflow-hidden bg-white/50 dark:bg-zinc-900/50 backdrop-blur-xl rounded-[2.5rem] p-8 border border-white/20 dark:border-zinc-700/30 shadow-2xl">
+         <div className="relative overflow-hidden bg-white/50 dark:bg-zinc-900/50 backdrop-blur-xl rounded-[2.5rem] p-6 border border-white/20 dark:border-zinc-700/30 shadow-2xl">
             <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 via-purple-500/5 to-pink-500/5 pointer-events-none" />
 
             <div className="relative flex flex-col md:flex-row items-center justify-between gap-8">
@@ -307,7 +307,7 @@ export const NotificationsView: React.FC<NotificationsViewProps> = ({
 
          <div className="grid grid-cols-1 gap-6">
             {/* Toolbar */}
-            <div className="flex flex-col sm:flex-row gap-4 justify-between items-center bg-white dark:bg-zinc-900 p-6 rounded-[2rem] border border-zinc-200 dark:border-zinc-800 shadow-sm">
+            <div className="flex flex-col sm:flex-row gap-4 justify-between items-center bg-white dark:bg-zinc-900 p-5 rounded-[2rem] border border-zinc-200 dark:border-zinc-800 shadow-sm">
                <div className="relative w-full sm:w-80">
                   <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
                   <input
@@ -332,7 +332,7 @@ export const NotificationsView: React.FC<NotificationsViewProps> = ({
             {/* Content Area */}
             {activeTab === 'history' ? (
                <div className="bg-white dark:bg-zinc-900 rounded-[2.5rem] border border-zinc-200 dark:border-zinc-800 overflow-hidden shadow-sm">
-                  <div className="p-8 border-b border-zinc-100 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950/30">
+                  <div className="p-6 border-b border-zinc-100 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950/30">
                      <h3 className="text-xs font-black uppercase tracking-widest text-zinc-400 flex items-center gap-2">
                         <History className="w-4 h-4" /> Threshold Breach Timeline
                      </h3>
@@ -397,7 +397,7 @@ export const NotificationsView: React.FC<NotificationsViewProps> = ({
                                        <div
                                           key={alert.id}
                                           onClick={() => handleAlertClick(alert)}
-                                          className="p-8 flex items-center gap-8 group hover:bg-zinc-50 dark:hover:bg-zinc-950/50 transition-all cursor-pointer"
+                                          className="p-6 flex items-center gap-8 group hover:bg-zinc-50 dark:hover:bg-zinc-950/50 transition-all cursor-pointer"
                                        >
                                           <div className={`p-4 rounded-2xl shrink-0 transition-transform group-hover:scale-110 shadow-lg ${alert.severity === 'Critical' ? 'bg-red-500 text-white shadow-red-500/20' : 'bg-amber-500 text-white shadow-amber-500/20'}`}>
                                              <BellRing className="w-6 h-6" />
@@ -439,7 +439,7 @@ export const NotificationsView: React.FC<NotificationsViewProps> = ({
                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
                   {activeTab === 'channels' ? (
                      filteredChannels.map(channel => (
-                        <div key={channel.id} className="bg-white dark:bg-zinc-900 rounded-[2.5rem] p-8 border border-zinc-200 dark:border-zinc-800 shadow-sm group hover:border-indigo-500/50 transition-all flex flex-col h-full">
+                        <div key={channel.id} className="bg-white dark:bg-zinc-900 rounded-[2.5rem] p-6 border border-zinc-200 dark:border-zinc-800 shadow-sm group hover:border-indigo-500/50 transition-all flex flex-col h-full">
                            <div className="flex justify-between items-start mb-8">
                               <div className={`p-4 rounded-2xl shadow-xl ${getTypeColor(channel.type)}`}>
                                  {getTypeIcon(channel.type)}
@@ -479,7 +479,7 @@ export const NotificationsView: React.FC<NotificationsViewProps> = ({
                         const isActive = triggeredAlerts.some(a => a.ruleId === rule.id && Date.now() - a.timestamp < 120000);
 
                         return (
-                           <div key={rule.id} className={`bg-white dark:bg-zinc-900 rounded-[2.5rem] p-8 border shadow-sm group hover:border-indigo-500/50 transition-all flex flex-col h-full relative overflow-hidden ${isActive ? 'border-red-500 dark:border-red-900/50' : 'border-zinc-200 dark:border-zinc-800'
+                           <div key={rule.id} className={`bg-white dark:bg-zinc-900 rounded-[2.5rem] p-6 border shadow-sm group hover:border-indigo-500/50 transition-all flex flex-col h-full relative overflow-hidden ${isActive ? 'border-red-500 dark:border-red-900/50' : 'border-zinc-200 dark:border-zinc-800'
                               }`}>
                               {/* Severity Background Glow */}
                               <div className={`absolute top-0 right-0 w-32 h-32 -mr-16 -mt-16 blur-3xl opacity-10 rounded-full ${rule.severity === 'Critical' ? 'bg-red-500' : rule.severity === 'Warning' ? 'bg-amber-500' : 'bg-indigo-500'}`} />

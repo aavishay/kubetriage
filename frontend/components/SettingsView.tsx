@@ -3,7 +3,7 @@ import { Bot, Cpu, Check, AlertCircle, Loader2 } from 'lucide-react';
 import { useMonitoring } from '../contexts/MonitoringContext';
 
 export const SettingsView: React.FC = () => {
-    const { aiConfig, updateAIConfig, isDarkMode } = useMonitoring();
+    const { aiConfig, updateAIConfig, notificationSettings, updateNotificationSettings } = useMonitoring();
     const [fetchedModels, setFetchedModels] = useState<string[]>([]);
     const [isLoadingModels, setIsLoadingModels] = useState(false);
     const [fetchError, setFetchError] = useState<string | null>(null);
@@ -64,7 +64,7 @@ export const SettingsView: React.FC = () => {
             <div className="glass rounded-3xl shadow-2xl shadow-indigo-500/10 overflow-hidden relative">
                 <div className="absolute top-0 right-0 p-32 bg-indigo-500/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none" />
 
-                <div className="p-8 border-b border-zinc-200/50 dark:border-white/5 flex items-center gap-4 relative z-10">
+                <div className="p-6 border-b border-zinc-200/50 dark:border-white/5 flex items-center gap-4 relative z-10">
                     <div className="bg-gradient-to-br from-indigo-500 to-purple-600 p-3 rounded-2xl shadow-lg shadow-indigo-500/20 text-white">
                         <Bot className="w-6 h-6" />
                     </div>
@@ -74,7 +74,7 @@ export const SettingsView: React.FC = () => {
                     </div>
                 </div>
 
-                <div className="p-8 space-y-8">
+                <div className="p-6 space-y-6">
                     {/* Provider Selection */}
                     <div className="space-y-4">
                         <label className="text-sm font-bold text-zinc-900 dark:text-white uppercase tracking-wider flex items-center gap-2">
@@ -134,6 +134,46 @@ export const SettingsView: React.FC = () => {
                         <p className="text-xs text-zinc-400">
                             {provider === 'ollama' ? 'Models must be pulled via `ollama pull <model>` to appear here.' : 'Select a model variant.'}
                         </p>
+                    </div>
+
+
+                    {/* Notification Settings */}
+                    <div className="space-y-4">
+                        <label className="text-sm font-bold text-zinc-900 dark:text-white uppercase tracking-wider flex items-center gap-2">
+                            <AlertCircle className="w-4 h-4" /> Notifications
+                        </label>
+                        <div className="bg-zinc-50 dark:bg-zinc-950/50 rounded-2xl p-6 border border-zinc-200 dark:border-zinc-800 space-y-6">
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <h3 className="text-sm font-bold text-zinc-900 dark:text-white">Popup Alerts</h3>
+                                    <p className="text-xs text-zinc-500 mt-1">Show toast notifications when alert thresholds are breached.</p>
+                                </div>
+                                <button
+                                    onClick={() => updateNotificationSettings({ ...notificationSettings, toastEnabled: !notificationSettings.toastEnabled })}
+                                    className={`w-12 h-6 rounded-full transition-colors relative ${notificationSettings.toastEnabled ? 'bg-indigo-600' : 'bg-zinc-300 dark:bg-zinc-700'}`}
+                                >
+                                    <div className={`absolute top-1 left-1 w-4 h-4 rounded-full bg-white transition-transform ${notificationSettings.toastEnabled ? 'translate-x-6' : 'translate-x-0'}`} />
+                                </button>
+                            </div>
+
+                            {notificationSettings.toastEnabled && (
+                                <div className="space-y-3 animate-in fade-in slide-in-from-top-2">
+                                    <div className="flex justify-between items-center text-xs">
+                                        <span className="font-medium text-zinc-600 dark:text-zinc-400">Wait time between popups</span>
+                                        <span className="font-mono font-bold text-indigo-600 dark:text-indigo-400">{notificationSettings.toastFrequency}s</span>
+                                    </div>
+                                    <input
+                                        type="range"
+                                        min="2"
+                                        max="60"
+                                        step="1"
+                                        value={notificationSettings.toastFrequency}
+                                        onChange={(e) => updateNotificationSettings({ ...notificationSettings, toastFrequency: parseInt(e.target.value) })}
+                                        className="w-full h-2 bg-zinc-200 dark:bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-indigo-600"
+                                    />
+                                </div>
+                            )}
+                        </div>
                     </div>
 
                     {/* Save Button */}

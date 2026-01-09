@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"math/rand"
 	"net/http"
 	"strings"
@@ -516,6 +517,21 @@ func WorkloadsHandler(c *gin.Context) {
 		return
 	}
 
+	// Determine target namespace
+	targetNamespace := ""
+	if clusterID != "" && k8s.Manager != nil {
+		if cls, err := k8s.Manager.GetCluster(clusterID); err == nil {
+			targetNamespace = cls.Namespace
+		}
+	}
+
+	// If the context defaults to "default" namespace but the user likely wants to see everything
+	// (common in simple kubeconfigs), treating it as "" (all) is safer than showing nothing.
+	// Users can filter by namespace in the frontend if needed.
+	if targetNamespace == "default" {
+		targetNamespace = ""
+	}
+
 	// Step 1: Check Cache
 	cacheKey := fmt.Sprintf("workloads:%s", clusterID)
 	if val, err := cache.Get(c.Request.Context(), cacheKey); err == nil {
@@ -528,7 +544,7 @@ func WorkloadsHandler(c *gin.Context) {
 	var workloads []Workload
 
 	// Deployments
-	deps, err := client.AppsV1().Deployments("").List(ctx, metav1.ListOptions{})
+	deps, err := client.AppsV1().Deployments(targetNamespace).List(ctx, metav1.ListOptions{})
 	if err == nil {
 		for _, d := range deps.Items {
 			w := Workload{
@@ -558,7 +574,7 @@ func WorkloadsHandler(c *gin.Context) {
 	}
 
 	// StatefulSets
-	sts, err := client.AppsV1().StatefulSets("").List(ctx, metav1.ListOptions{})
+	sts, err := client.AppsV1().StatefulSets(targetNamespace).List(ctx, metav1.ListOptions{})
 	if err == nil {
 		for _, s := range sts.Items {
 			w := Workload{
@@ -585,7 +601,7 @@ func WorkloadsHandler(c *gin.Context) {
 	}
 
 	// DaemonSets
-	dss, err := client.AppsV1().DaemonSets("").List(ctx, metav1.ListOptions{})
+	dss, err := client.AppsV1().DaemonSets(targetNamespace).List(ctx, metav1.ListOptions{})
 	if err == nil {
 		for _, ds := range dss.Items {
 			w := Workload{
@@ -602,6 +618,79 @@ func WorkloadsHandler(c *gin.Context) {
 				CostPerMonth:      rand.Intn(200) + 50,
 			}
 			workloads = append(workloads, w)
+		}
+
+	}
+
+	// ScaledJobs (KEDA)
+	if dynClient != nil {
+		gvrSJ := schema.GroupVersionResource{Group: "keda.sh", Version: "v1alpha1", Resource: "scaledjobs"}
+		sjs, err := dynClient.Resource(gvrSJ).Namespace(targetNamespace).List(ctx, metav1.ListOptions{})
+		if err == nil {
+			for _, item := range sjs.Items {
+				name := item.GetName()
+				namespace := item.GetNamespace()
+
+				// Extract ScaledJob spec/status
+				active := int32(0)
+				statusUnready := false
+
+				if status, ok := item.Object["status"].(map[string]interface{}); ok {
+					if act, ok := status["active"].(int64); ok {
+						active = int32(act)
+					}
+					// Check conditions for readiness
+					if conditions, ok := status["conditions"].([]interface{}); ok {
+						for _, c := range conditions {
+							if cMap, ok := c.(map[string]interface{}); ok {
+								if cMap["type"] == "Ready" && cMap["status"] == "False" {
+									statusUnready = true
+								}
+							}
+						}
+					}
+				}
+
+				// Map to Workload
+				w := Workload{
+					ID:                string(item.GetUID()),
+					Name:              name,
+					Namespace:         namespace,
+					Kind:              "ScaledJob",
+					Replicas:          active, // Active jobs as "replicas"
+					AvailableReplicas: active,
+					Status:            "Healthy",
+					Metrics:           getRealMetrics(c.Request.Context(), namespace, name, "Job", v1.PodSpec{}), // No easy pod spec access without parsing deep map, skipping for MVP
+					CostPerMonth:      rand.Intn(100) + 10,
+					Scaling: ScalingInfo{
+						Enabled:   true,
+						Current:   active,
+						KedaReady: !statusUnready,
+						Config:    &KedaConfig{Name: name, Triggers: []string{}}, // Partial config
+					},
+				}
+
+				if statusUnready {
+					w.Status = "Warning"
+				}
+
+				// Extract Triggers if possible
+				if spec, ok := item.Object["spec"].(map[string]interface{}); ok {
+					if trigs, ok := spec["triggers"].([]interface{}); ok {
+						var trigTypes []string
+						for _, t := range trigs {
+							if tMap, ok := t.(map[string]interface{}); ok {
+								if typeStr, ok := tMap["type"].(string); ok {
+									trigTypes = append(trigTypes, typeStr)
+								}
+							}
+						}
+						w.Scaling.Config.Triggers = trigTypes
+					}
+				}
+
+				workloads = append(workloads, w)
+			}
 		}
 	}
 
@@ -674,4 +763,27 @@ func RegisterClusterHandler(c *gin.Context) {
 		"id":      cluster.ID,
 		"name":    cluster.Name,
 	})
+}
+
+func DeleteClusterHandler(c *gin.Context) {
+	id := c.Param("id")
+	if id == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "id parameter required"})
+		return
+	}
+
+	if k8s.Manager == nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Cluster Manager not initialized"})
+		return
+	}
+
+	// 1. Remove from in-memory manager
+	k8s.Manager.RemoveCluster(id)
+
+	// 2. Remove persisted project association
+	if err := db.DB.Where("cluster_id = ?", id).Delete(&db.ClusterProject{}).Error; err != nil {
+		log.Printf("Warning: Failed to delete cluster project mapping: %v", err)
+	}
+
+	c.Status(http.StatusNoContent)
 }

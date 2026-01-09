@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { LayoutDashboard, AlertCircle, Scale, Settings, Box, ChevronLeft, ChevronRight, Sun, Moon, ChevronsUpDown, Check, Server, LogOut, Plus, X, Globe, Cloud, Bell, BookOpen, Menu, Key, Zap, FileText, RefreshCw } from 'lucide-react';
+import { LayoutDashboard, AlertCircle, Scale, Settings, Box, ChevronLeft, ChevronRight, Sun, Moon, ChevronsUpDown, Check, Server, LogOut, Plus, X, Globe, Cloud, Bell, BookOpen, Menu, Key, Zap, FileText, RefreshCw, Trash2 } from 'lucide-react';
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useMonitoring } from '../contexts/MonitoringContext';
 import { useAuth } from '../contexts/AuthContext';
@@ -18,6 +18,7 @@ const ProviderIcon = ({ provider, className }: { provider: Cluster['provider'], 
   }
 };
 
+import { DeleteClusterModal } from './DeleteClusterModal';
 import { RegisterClusterModal } from './RegisterClusterModal';
 
 export const Layout: React.FC<LayoutProps> = ({ children }) => {
@@ -33,7 +34,8 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
     users,
     unreadReports,
     isWorkloadsLoading,
-    refreshWorkloads
+    refreshWorkloads,
+    removeCluster
   } = useMonitoring();
 
   const location = useLocation();
@@ -46,6 +48,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
   const [isClusterMenuOpen, setIsClusterMenuOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [isRegisterModalOpen, setIsRegisterModalOpen] = useState(false);
+  const [clusterToDelete, setClusterToDelete] = useState<Cluster | null>(null);
 
   const clusterMenuRef = useRef<HTMLDivElement>(null);
   const userMenuRef = useRef<HTMLDivElement>(null);
@@ -95,6 +98,18 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
   return (
     <div className="flex h-screen bg-zinc-50 dark:bg-[#09090b] text-zinc-900 dark:text-zinc-300 overflow-hidden flex-col md:flex-row">
       <RegisterClusterModal isOpen={isRegisterModalOpen} onClose={() => setIsRegisterModalOpen(false)} />
+      <DeleteClusterModal
+        isOpen={!!clusterToDelete}
+        onClose={() => setClusterToDelete(null)}
+        onConfirm={async () => {
+          if (clusterToDelete) {
+            await removeCluster(clusterToDelete.id);
+            if (selectedCluster?.id === clusterToDelete.id) setIsClusterMenuOpen(false);
+            setClusterToDelete(null);
+          }
+        }}
+        clusterName={clusterToDelete?.name || ''}
+      />
 
       {/* Mobile Sidebar Overlay */}
       {isMobileMenuOpen && (
@@ -107,7 +122,8 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
       {/* Desktop & Mobile Sidebar */}
       <aside className={`
         fixed md:static inset-y-0 left-0 z-50 md:z-auto
-        flex flex-col bg-white dark:bg-zinc-900 border-r border-zinc-200 dark:border-zinc-800 transition-all duration-300
+        flex flex-col bg-white dark:bg-zinc-900 border-r border-zinc-200 dark:border-zinc-800 
+        transition-transform duration-300 ease-in-out shadow-2xl md:shadow-none
         ${isMobileMenuOpen ? 'translate-x-0 w-64' : '-translate-x-full md:translate-x-0'}
         ${isCollapsed ? 'md:w-20' : 'md:w-64'}
       `}>
@@ -150,7 +166,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
       <div className="flex-1 flex flex-col overflow-hidden relative">
 
         {/* Header */}
-        <header className="h-16 md:h-20 border-b border-zinc-200 dark:border-zinc-800 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-md flex items-center justify-between px-4 md:px-8 z-30 shrink-0">
+        <header className="h-14 md:h-16 border-b border-zinc-200 dark:border-zinc-800 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-md flex items-center justify-between px-4 md:px-6 z-30 shrink-0">
           <div className="flex items-center gap-4">
             {/* Mobile Toggle */}
             <button
@@ -208,6 +224,16 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
                         <p className="text-[10px] text-zinc-500 font-medium uppercase">{cluster.region} • {cluster.provider}</p>
                       </div>
                       {selectedCluster?.id === cluster.id && <Check className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />}
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setClusterToDelete(cluster);
+                        }}
+                        className="p-1 hover:bg-zinc-200 dark:hover:bg-zinc-700 rounded transition-colors"
+                        title="Remove Cluster"
+                      >
+                        <Trash2 className="w-4 h-4 text-zinc-300 dark:text-zinc-600 hover:text-red-500 transition-colors" />
+                      </button>
                     </button>
                   ))}
                   <div className="h-px bg-zinc-100 dark:border-zinc-800 my-2" />
@@ -277,8 +303,15 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
           </div>
         </header>
 
+        {/* Loading Progress Bar */}
+        {isWorkloadsLoading && (
+          <div className="absolute top-14 md:top-16 left-0 right-0 h-1 z-40 overflow-hidden bg-zinc-100 dark:bg-zinc-800">
+            <div className="h-full bg-gradient-to-r from-indigo-500 via-purple-500 to-indigo-500 w-[200%] animate-loading-bar"></div>
+          </div>
+        )}
+
         {/* Content Container */}
-        <div className="flex-1 overflow-y-auto p-4 md:p-8">
+        <div className="flex-1 overflow-y-auto px-4 md:px-6 pt-20 md:pt-24 pb-4 md:pb-6">
           <div className="mx-auto max-w-7xl h-full">
             {/* Router Outlet for Page Content */}
             {children || <Outlet />}

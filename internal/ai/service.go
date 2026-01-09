@@ -49,6 +49,8 @@ type AnalyzeWorkloadRequest struct {
 	Provider      string   `json:"provider"` // "gemini" or "ollama"
 	Model         string   `json:"model"`    // specific model like "llama3"
 	WorkloadName  string   `json:"workloadName"`
+	Namespace     string   `json:"namespace"`
+	Kind          string   `json:"kind"`
 	Status        string   `json:"status"`
 	Playbook      string   `json:"playbook"`
 	Instructions  string   `json:"instructions"`
@@ -241,10 +243,11 @@ func (s *AIService) GenerateTopology(ctx context.Context, providerName, model, w
 	%s
 	
 	GUIDELINES:
-	- Use 'graph TB' or 'flowchart TB'
+	- Start immediately with 'graph TB' or 'flowchart TB'.
+	- DO NOT include ANY introductory or concluding text.
+	- DO NOT wrap in markdown code blocks if possible.
 	- Group by Namespace using subgraphs.
 	- Visualize connections if traffic patterns can be inferred (e.g. "web" -> "api" -> "db"), otherwise just show nodes.
-	- Return ONLY the Mermaid code block. Do not include markdown ticks if possible, or I will strip them.
 	`, workloadSummary)
 
 	rawResponse, err := provider.GenerateContent(ctx, prompt, model)
@@ -253,10 +256,22 @@ func (s *AIService) GenerateTopology(ctx context.Context, providerName, model, w
 	}
 
 	// Clean up markdown
+	// Clean up markdown
 	cleanResponse := strings.TrimSpace(rawResponse)
-	cleanResponse = strings.TrimPrefix(cleanResponse, "```mermaid")
-	cleanResponse = strings.TrimPrefix(cleanResponse, "```")
-	cleanResponse = strings.TrimSuffix(cleanResponse, "```")
+
+	// Robust code block extraction
+	if start := strings.Index(cleanResponse, "```mermaid"); start != -1 {
+		cleanResponse = cleanResponse[start+10:]
+		if end := strings.Index(cleanResponse, "```"); end != -1 {
+			cleanResponse = cleanResponse[:end]
+		}
+	} else if start := strings.Index(cleanResponse, "```"); start != -1 {
+		// Generic code block
+		cleanResponse = cleanResponse[start+3:]
+		if end := strings.Index(cleanResponse, "```"); end != -1 {
+			cleanResponse = cleanResponse[:end]
+		}
+	}
 
 	return strings.TrimSpace(cleanResponse), nil
 }

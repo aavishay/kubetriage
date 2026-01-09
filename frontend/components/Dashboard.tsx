@@ -10,10 +10,11 @@ interface DashboardProps {
    workloads: Workload[];
    isDarkMode?: boolean;
    isLoading?: boolean;
+   onRefresh?: () => void;
    onTriageRequest?: (workloadId: string, playbook: DiagnosticPlaybook) => void;
 }
 
-export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = true, isLoading = false, onTriageRequest }) => {
+export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = true, isLoading = false, onTriageRequest, onRefresh }) => {
    const totalCost = workloads.reduce((acc, w) => acc + (w.costPerMonth || 0), 0);
    const criticalCount = workloads.filter(w => w.status === 'Critical').length;
    const warningCount = workloads.filter(w => w.status === 'Warning').length;
@@ -78,7 +79,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = tr
       { name: 'Remaining', value: Math.max(0, isFinite(reliabilityMetrics.budgetPercentage) ? reliabilityMetrics.budgetPercentage : 0), color: isDarkMode ? '#27272a' : '#f4f4f5' },
    ];
 
-   const cardClass = "bg-white dark:bg-zinc-900 p-5 md:p-6 rounded-2xl md:rounded-3xl border border-zinc-200 dark:border-zinc-800 shadow-sm transition-all hover:shadow-md";
+   const cardClass = "bg-white dark:bg-zinc-900 p-4 md:p-5 rounded-2xl md:rounded-3xl border border-zinc-200 dark:border-zinc-800 shadow-sm transition-all hover:shadow-md";
    const tooltipStyle = {
       backgroundColor: isDarkMode ? '#18181b' : '#ffffff',
       borderColor: isDarkMode ? '#27272a' : '#e4e4e7',
@@ -114,7 +115,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = tr
                We couldn't detect any compatible workloads in this cluster. This might be due to missing RBAC permissions or an empty namespace.
             </p>
             <button
-               onClick={() => window.location.reload()}
+               onClick={() => onRefresh?.()}
                className="px-6 py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl shadow-lg hover:scale-105 transition-all flex items-center gap-2"
             >
                <Activity className="w-4 h-4" /> Refresh Dashboard
@@ -124,32 +125,32 @@ export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = tr
    }
 
    const getIncidentSummary = (w: Workload) => {
-      if (w.availableReplicas === 0 && w.replicas > 0) return `Resource failure: 0/${w.replicas} replicas available. Service is unreachable.`;
-      if (w.availableReplicas < w.replicas) return `Degraded availability: ${w.availableReplicas}/${w.replicas} replicas ready. Potential service disruption.`;
+      if (w.availableReplicas === 0 && w.replicas > 0) return `Resource failure: 0/${w.replicas} available. Unreachable.`;
+      if (w.availableReplicas < w.replicas) return `Degraded: ${w.availableReplicas}/${w.replicas} ready.`;
 
       const cpuSat = w.metrics?.cpuLimit > 0 ? (w.metrics.cpuUsage / w.metrics.cpuLimit) * 100 : 0;
       const memSat = w.metrics?.memoryLimit > 0 ? (w.metrics.memoryUsage / w.metrics.memoryLimit) * 100 : 0;
 
-      if (cpuSat > 90) return `Critical CPU Saturation: ${Math.round(cpuSat)}% limit reached. Throttling highly likely.`;
-      if (memSat > 95) return `Critical Memory Pressure: ${Math.round(memSat)}% usage. OOM termination imminent.`;
-      if (cpuSat > 70) return `High CPU Utilization: ${Math.round(cpuSat)}% of limit. Monitor for latency spikes.`;
-      if (memSat > 80) return `High Memory Usage: ${Math.round(memSat)}% of limit. Scaling may be required.`;
+      if (cpuSat > 90) return `Critical CPU: ${Math.round(cpuSat)}% limit. Throttling likely.`;
+      if (memSat > 95) return `Critical Memory: ${Math.round(memSat)}% usage. OOM imminent.`;
+      if (cpuSat > 70) return `High CPU: ${Math.round(cpuSat)}% of limit. Monitor latency.`;
+      if (memSat > 80) return `High Memory: ${Math.round(memSat)}% of limit. Scaling needed.`;
 
       const events = w.events || [];
       const recentWarning = events.find(e => e.type === 'Warning');
-      if (recentWarning) return `K8s Warning: ${recentWarning.reason} - ${recentWarning.message}`;
+      if (recentWarning) return `K8s Warning: ${recentWarning.reason}`;
 
-      return w.status === 'Critical' ? "Critical workload degradation detected." : "Service reliability warning.";
+      return w.status === 'Critical' ? "Critical degradation." : "Reliability warning.";
    };
 
    return (
-      <div className="space-y-6 md:space-y-8 animate-in fade-in duration-500">
+      <div className="space-y-5 md:space-y-6 animate-in fade-in duration-500">
 
          {/* Priority Investigation Hero - Focused on ingress-nginx network issues */}
          <section className="relative group">
             <div className="absolute inset-0 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-[2.5rem] blur-2xl opacity-20 group-hover:opacity-30 transition-opacity"></div>
-            <div className="relative bg-zinc-900 dark:bg-zinc-950 rounded-[2.5rem] p-8 md:p-10 border border-zinc-800 shadow-2xl overflow-hidden">
-               <div className="flex flex-col lg:flex-row items-center gap-10">
+            <div className="relative bg-zinc-900 dark:bg-zinc-950 rounded-[2.5rem] p-5 md:p-6 border border-zinc-800 shadow-2xl overflow-hidden">
+               <div className="flex flex-col lg:flex-row items-center gap-8">
                   <div className="relative shrink-0">
                      <div className="p-6 bg-indigo-500/10 rounded-[2rem] border border-indigo-500/20">
                         <Network className="w-12 h-12 text-indigo-400 animate-pulse" />
@@ -192,7 +193,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = tr
          </section>
 
          {/* Top Metrics Grid */}
-         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6">
+         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-5">
             <div className={cardClass}>
                <div className="flex justify-between items-start mb-4">
                   <div className="p-2 bg-blue-500/10 rounded-xl text-blue-600 dark:text-blue-400"><DollarSign className="w-5 h-5" /></div>
@@ -231,7 +232,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = tr
             </div>
          </div>
 
-         <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 md:gap-8">
+         <div className="grid grid-cols-1 lg:grid-cols-5 gap-5 md:gap-6">
 
             <div className="lg:col-span-2 flex flex-col gap-6">
                <div className="bg-white dark:bg-zinc-900 rounded-3xl border border-zinc-200 dark:border-zinc-800 p-6 md:p-8 flex flex-col shadow-sm flex-1">

@@ -4,16 +4,18 @@ import { FileText, Download, Clock, Shield, Search, Filter, Loader2, CheckCircle
 import { useAuth } from '../contexts/AuthContext';
 import { useMonitoring } from '../contexts/MonitoringContext';
 
+// Backend uses PascalCase by default for struct fields without json tags
 interface TriageReport {
-    id: string;
-    clusterId: string;
-    workloadId: string;
-    workloadName: string; // Enriched in frontend if needed, or expected from API if modified
-    summary: string;
-    severity: string;
-    isRead: boolean;
-    createdAt: string;
+    ID: number;
+    ClusterID: string;
+    WorkloadName: string;
+    Analysis: string; // The full markdown content
+    Severity: string;
+    IsRead: boolean;
+    CreatedAt: string;
 }
+
+import ReactMarkdown from 'react-markdown';
 
 interface ReportsViewProps {
     isDarkMode?: boolean;
@@ -24,6 +26,7 @@ export const ReportsView: React.FC<ReportsViewProps> = ({ isDarkMode = true }) =
     const { selectedCluster } = useMonitoring();
     const [reports, setReports] = useState<TriageReport[]>([]);
     const [isLoading, setIsLoading] = useState(true);
+    const [selectedReport, setSelectedReport] = useState<TriageReport | null>(null); // For Modal
     const [isDeleting, setIsDeleting] = useState(false);
     const [showConfirm, setShowConfirm] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
@@ -79,14 +82,14 @@ export const ReportsView: React.FC<ReportsViewProps> = ({ isDarkMode = true }) =
     };
 
     const filteredReports = reports.filter(r =>
-        (r.summary || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (r.workloadName || 'Unknown').toLowerCase().includes(searchTerm.toLowerCase())
+        (r.Analysis || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (r.WorkloadName || 'Unknown').toLowerCase().includes(searchTerm.toLowerCase())
     );
 
     return (
         <div className="space-y-12 pb-20">
             {/* Hero Header */}
-            <div className="bg-zinc-900 dark:bg-zinc-950 rounded-[2.5rem] p-10 md:p-14 text-white relative overflow-hidden shadow-2xl border border-zinc-800">
+            <div className="bg-zinc-900 dark:bg-zinc-950 rounded-[2.5rem] p-8 md:p-10 text-white relative overflow-hidden shadow-2xl border border-zinc-800">
                 <div className="relative z-10 max-w-2xl">
                     <div className="inline-flex items-center gap-2 bg-indigo-500/10 text-indigo-400 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest mb-6 border border-indigo-500/20">
                         <Shield className="w-3 h-3" /> Compliance & Audit
@@ -123,7 +126,7 @@ export const ReportsView: React.FC<ReportsViewProps> = ({ isDarkMode = true }) =
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {/* SOC2 Card */}
-                    <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-[2rem] p-8 flex flex-col hover:shadow-xl transition-all group cursor-pointer" onClick={handleDownloadCompliance}>
+                    <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-[2rem] p-6 flex flex-col hover:shadow-xl transition-all group cursor-pointer" onClick={handleDownloadCompliance}>
                         <div className="p-4 rounded-2xl w-fit mb-6 bg-blue-500/10 text-blue-500">
                             <Shield className="w-7 h-7" />
                         </div>
@@ -214,48 +217,80 @@ export const ReportsView: React.FC<ReportsViewProps> = ({ isDarkMode = true }) =
                             </div>
                         </div>
                     </div>
-                )}
 
-                {isLoading ? (
-                    <div className="flex justify-center py-20">
-                        <Loader2 className="w-8 h-8 animate-spin text-zinc-300" />
-                    </div>
-                ) : filteredReports.length > 0 ? (
-                    <div className="grid grid-cols-1 gap-4">
-                        {filteredReports.map((report) => (
-                            <div key={report.id} className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-[1.5rem] p-6 flex items-start sm:items-center gap-6 hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-colors shadow-sm hover:shadow-md">
-                                <div className={`p-3 rounded-xl shrink-0 ${report.severity === 'Critical' ? 'bg-red-500/10 text-red-500' : 'bg-amber-500/10 text-amber-500'}`}>
-                                    <AlertCircle className="w-5 h-5" />
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                    <div className="flex items-center gap-2 mb-1">
-                                        <h4 className="text-sm font-black text-zinc-900 dark:text-white uppercase tracking-tighter">
-                                            {report.workloadName || 'Cluster Issue'}
-                                        </h4>
-                                        <span className="text-[9px] px-2 py-1 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-zinc-100 dark:bg-zinc-800 text-zinc-500 font-black uppercase tracking-wider">
-                                            {formatDate(report.createdAt)}
-                                        </span>
+                )
+                }
+
+                {/* Detail View Modal */}
+                {
+                    selectedReport && (
+                        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-in fade-in duration-200" onClick={() => setSelectedReport(null)}>
+                            <div className="bg-white dark:bg-zinc-950 rounded-[2.5rem] w-full max-w-4xl h-[85vh] flex flex-col shadow-2xl border border-zinc-200 dark:border-zinc-800 animate-in zoom-in-95 duration-200 overflow-hidden" onClick={e => e.stopPropagation()}>
+                                <div className="flex items-center justify-between p-8 border-b border-zinc-100 dark:border-zinc-800 bg-zinc-50/50 dark:bg-black/20">
+                                    <div>
+                                        <h3 className="text-2xl font-black text-zinc-900 dark:text-white tracking-tighter uppercase mb-2">{selectedReport.WorkloadName} Analysis</h3>
+                                        <div className="flex items-center gap-3">
+                                            <span className={`px-2 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider ${selectedReport.Severity === 'Critical' ? 'bg-rose-500/10 text-rose-500' : 'bg-indigo-500/10 text-indigo-500'}`}>{selectedReport.Severity} Severity</span>
+                                            <span className="text-xs text-zinc-400 font-bold">{formatDate(selectedReport.CreatedAt)}</span>
+                                        </div>
                                     </div>
-                                    <p className="text-xs text-zinc-500 dark:text-zinc-400 font-medium line-clamp-1">
-                                        {report.summary}
-                                    </p>
+                                    <button onClick={() => setSelectedReport(null)} className="p-2 hover:bg-zinc-200 dark:hover:bg-zinc-800 rounded-full transition-colors">
+                                        <CheckCircle2 className="w-6 h-6 text-zinc-400" />
+                                    </button>
                                 </div>
-                                <div className="hidden sm:block text-right shrink-0">
-                                    <span className={`text-[9px] font-black uppercase tracking-widest px-3 py-1.5 rounded-xl ${report.severity === 'Critical' ? 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400' : 'bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400'}`}>
-                                        {report.severity}
-                                    </span>
+                                <div className="flex-1 overflow-y-auto p-10 prose prose-zinc dark:prose-invert max-w-none prose-headings:font-black prose-headings:uppercase prose-headings:tracking-tighter">
+                                    <ReactMarkdown>{selectedReport.Analysis}</ReactMarkdown>
+                                </div>
+                                <div className="p-6 border-t border-zinc-100 dark:border-zinc-800 bg-zinc-50/50 dark:bg-black/20 flex justify-end">
+                                    <button onClick={() => setSelectedReport(null)} className="bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 px-8 py-3 rounded-xl font-black text-xs uppercase tracking-widest hover:scale-105 transition-transform">Close Report</button>
                                 </div>
                             </div>
-                        ))}
-                    </div>
-                ) : (
-                    <div className="text-center py-20 border-2 border-dashed border-zinc-200 dark:border-zinc-800 rounded-[2.5rem] bg-zinc-50/50 dark:bg-zinc-950/20">
-                        <FileText className="w-12 h-12 text-zinc-300 mx-auto mb-4" />
-                        <h3 className="text-zinc-900 dark:text-white font-black uppercase tracking-widest mb-1">No Reports Found</h3>
-                        <p className="text-xs text-zinc-400 font-bold">No historical analysis records available.</p>
-                    </div>
-                )}
-            </section>
-        </div>
+                        </div>
+                    )
+                }
+
+                {
+                    isLoading ? (
+                        <div className="flex justify-center py-20">
+                            <Loader2 className="w-8 h-8 animate-spin text-zinc-300" />
+                        </div>
+                    ) : filteredReports.length > 0 ? (
+                        <div className="grid grid-cols-1 gap-4">
+                            {filteredReports.map((report) => (
+                                <div key={report.ID} onClick={() => setSelectedReport(report)} className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-[1.5rem] p-6 flex items-start sm:items-center gap-6 hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-colors shadow-sm hover:shadow-md cursor-pointer group">
+                                    <div className={`p-3 rounded-xl shrink-0 ${report.Severity === 'Critical' ? 'bg-red-500/10 text-red-500' : 'bg-amber-500/10 text-amber-500'}`}>
+                                        <AlertCircle className="w-5 h-5" />
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <div className="flex items-center gap-2 mb-1">
+                                            <h4 className="text-sm font-black text-zinc-900 dark:text-white uppercase tracking-tighter group-hover:text-indigo-500 transition-colors">
+                                                {report.WorkloadName || 'Cluster Issue'}
+                                            </h4>
+                                            <span className="text-[9px] px-2 py-1 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-zinc-100 dark:bg-zinc-800 text-zinc-500 font-black uppercase tracking-wider">
+                                                {formatDate(report.CreatedAt)}
+                                            </span>
+                                        </div>
+                                        <p className="text-xs text-zinc-500 dark:text-zinc-400 font-medium line-clamp-1">
+                                            {report.Analysis ? report.Analysis.substring(0, 150) + "..." : 'No content'}
+                                        </p>
+                                    </div>
+                                    <div className="hidden sm:block text-right shrink-0">
+                                        <span className={`text-[9px] font-black uppercase tracking-widest px-3 py-1.5 rounded-xl ${report.Severity === 'Critical' ? 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400' : 'bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400'}`}>
+                                            {report.Severity}
+                                        </span>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    ) : (
+                        <div className="text-center py-20 border-2 border-dashed border-zinc-200 dark:border-zinc-800 rounded-[2.5rem] bg-zinc-50/50 dark:bg-zinc-950/20">
+                            <FileText className="w-12 h-12 text-zinc-300 mx-auto mb-4" />
+                            <h3 className="text-zinc-900 dark:text-white font-black uppercase tracking-widest mb-1">No Reports Found</h3>
+                            <p className="text-xs text-zinc-400 font-bold">No historical analysis records available.</p>
+                        </div>
+                    )
+                }
+            </section >
+        </div >
     );
 };

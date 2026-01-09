@@ -26,7 +26,7 @@ export interface Workload {
   id: string;
   name: string;
   namespace: string;
-  kind: 'Deployment' | 'StatefulSet' | 'DaemonSet';
+  kind: 'Deployment' | 'StatefulSet' | 'DaemonSet' | 'ScaledJob';
   replicas: number;
   availableReplicas: number;
   status: 'Healthy' | 'Warning' | 'Critical';

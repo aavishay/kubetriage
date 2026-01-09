@@ -12,8 +12,8 @@ var RDB *redis.Client
 
 func InitRedis(addr string) {
 	if addr == "" {
-		log.Println("⚠️ Redis Warning: REDIS_ADDR not set. Caching disabled.")
-		return
+		addr = "localhost:6379" // Default to local for dev
+		log.Println("ℹ️ Redis: No REDIS_ADDR set, using default: localhost:6379")
 	}
 
 	RDB = redis.NewClient(&redis.Options{

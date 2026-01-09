@@ -50,6 +50,7 @@ interface MonitoringContextType {
   updateAlertRule: (rule: AlertRule) => void;
   deleteAlertRule: (id: string) => void;
   dismissNotification: () => void;
+  removeCluster: (id: string) => Promise<void>;
 
   // Theme
   isDarkMode: boolean;
@@ -160,7 +161,14 @@ export const MonitoringProvider: React.FC<MonitoringProviderProps> = ({ children
   useEffect(() => {
     const fetchWorkloads = async () => {
       // Clear current workloads when switching clusters to prevent stale data visibility
-      setWorkloads([]);
+      // SWR: Load from cache first
+      const cacheKey = `cache_workloads_${selectedCluster.id}`;
+      const cached = localStorage.getItem(cacheKey);
+      if (cached) {
+        setWorkloads(JSON.parse(cached));
+      } else {
+        setWorkloads([]);
+      }
 
       if (!selectedCluster) {
         return;
@@ -177,6 +185,8 @@ export const MonitoringProvider: React.FC<MonitoringProviderProps> = ({ children
             events: w.events || []
           })) : [];
           setWorkloads(workloadsWithEvents);
+          // Cache successful response
+          localStorage.setItem(cacheKey, JSON.stringify(workloadsWithEvents));
         } else {
           console.error("Failed to fetch workloads");
         }
@@ -201,6 +211,7 @@ export const MonitoringProvider: React.FC<MonitoringProviderProps> = ({ children
           events: w.events || []
         })) : [];
         setWorkloads(workloadsWithEvents);
+        localStorage.setItem(`cache_workloads_${selectedCluster.id}`, JSON.stringify(workloadsWithEvents));
       }
     } catch (err) {
       console.error("Error refreshing workloads", err);
@@ -230,7 +241,8 @@ export const MonitoringProvider: React.FC<MonitoringProviderProps> = ({ children
 
   const [notificationSettings, setNotificationSettings] = useState(() => {
     const saved = localStorage.getItem('notification_settings');
-    return saved ? JSON.parse(saved) : { toastEnabled: true, toastFrequency: 5 };
+    // Default to false as requested by user
+    return saved ? JSON.parse(saved) : { toastEnabled: false, toastFrequency: 5 };
   });
 
   const [aiConfig, setAiConfig] = useState<{ provider: string; model: string }>(() => {
@@ -311,6 +323,26 @@ export const MonitoringProvider: React.FC<MonitoringProviderProps> = ({ children
   const deleteAlertRule = (id: string) => setAlertRules(prev => prev.filter(r => r.id !== id));
 
   const dismissNotification = () => setActiveNotification(null);
+
+  const removeCluster = async (id: string) => {
+    try {
+      const res = await fetch(`/api/clusters/${id}`, { method: 'DELETE' });
+      if (res.ok) {
+        setClusters(prev => prev.filter(c => c.id !== id));
+        if (selectedCluster?.id === id) {
+          // Switch to another cluster or clear selection
+          const remaining = clusters.filter(c => c.id !== id);
+          if (remaining.length > 0) {
+            setSelectedCluster(remaining[0]);
+          } else {
+            setSelectedCluster(null as any); // Force clear or handle empty state
+          }
+        }
+      }
+    } catch (e) {
+      console.error("Failed to delete cluster", e);
+    }
+  };
 
   // --- Monitoring Engine Logic (Simulation) ---
   const checkAlertRules = useCallback((currentWorkloads: Workload[]) => {
@@ -468,7 +500,8 @@ export const MonitoringProvider: React.FC<MonitoringProviderProps> = ({ children
       notificationSettings,
       updateNotificationSettings,
       aiConfig,
-      updateAIConfig
+      updateAIConfig,
+      removeCluster, // Exported
     }}>
       {children}
     </MonitoringContext.Provider>

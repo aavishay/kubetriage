@@ -20,6 +20,7 @@ type Cluster struct {
 	ClientSet     *kubernetes.Clientset
 	DynamicClient *dynamic.DynamicClient
 	Config        *rest.Config
+	Namespace     string
 }
 
 type ClusterManager struct {
@@ -94,12 +95,15 @@ func (m *ClusterManager) LoadClustersFromKubeconfig() error {
 			continue
 		}
 
+		namespace, _, _ := clientConfig.Namespace()
+
 		m.clusters[contextName] = &Cluster{
 			ID:            contextName,
 			Name:          contextName,
 			ClientSet:     clientset,
 			DynamicClient: dynamicClient,
 			Config:        restConfig,
+			Namespace:     namespace,
 		}
 		fmt.Printf("Loaded cluster: %s\n", contextName)
 	}
@@ -185,6 +189,8 @@ func (m *ClusterManager) AddClusterFromKubeconfig(rawConfig []byte) (*Cluster, e
 		return nil, fmt.Errorf("failed to create dynamic client: %v", err)
 	}
 
+	namespace, _, _ := clientConfig.Namespace()
+
 	// 3. Add to Map
 	cluster := &Cluster{
 		ID:            contextName, // using context name as ID for simplicity
@@ -192,9 +198,17 @@ func (m *ClusterManager) AddClusterFromKubeconfig(rawConfig []byte) (*Cluster, e
 		ClientSet:     clientset,
 		DynamicClient: dynamicClient,
 		Config:        restConfig,
+		Namespace:     namespace,
 	}
 
 	m.clusters[cluster.ID] = cluster
 	fmt.Printf(" dynamically registered cluster: %s\n", cluster.Name)
 	return cluster, nil
+}
+
+// RemoveCluster removes a cluster by ID
+func (m *ClusterManager) RemoveCluster(id string) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	delete(m.clusters, id)
 }

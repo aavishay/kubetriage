@@ -135,11 +135,12 @@ const CustomTooltip = ({ active, payload, isDarkMode, type }: any) => {
 
 interface RightSizingViewProps extends ViewPropsWithChat {
   onTriageRequest?: (workloadId: string, playbook: DiagnosticPlaybook) => void;
+  onRefresh?: () => void;
   initialWorkloadId?: string;
   defaultTemplate?: string;
 }
 
-export const RightSizingView: React.FC<RightSizingViewProps> = ({ workloads, isDarkMode = true, onOpenChat, defaultTemplate: propTemplate, onTriageRequest, initialWorkloadId: propId }) => {
+export const RightSizingView: React.FC<RightSizingViewProps> = ({ workloads, isDarkMode = true, onOpenChat, defaultTemplate: propTemplate, onTriageRequest, initialWorkloadId: propId, onRefresh }) => {
   const location = useLocation();
   const { workloadId: stateId, template: stateTemplate } = location.state || {}; // Read from router state
 
@@ -155,7 +156,7 @@ export const RightSizingView: React.FC<RightSizingViewProps> = ({ workloads, isD
           We couldn't detect any workloads to analyze. Please ensure your cluster is connected and has active deployments.
         </p>
         <button
-          onClick={() => window.location.reload()}
+          onClick={() => onRefresh?.()}
           className="px-6 py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl shadow-lg hover:scale-105 transition-all flex items-center gap-2"
         >
           <Activity className="w-4 h-4" /> Refresh Data
@@ -296,7 +297,7 @@ export const RightSizingView: React.FC<RightSizingViewProps> = ({ workloads, isD
         ${selectedId && !isSidebarOpen ? 'hidden' : 'flex'}
         lg:flex w-full lg:w-80 h-auto lg:h-full shrink-0 bg-white dark:bg-zinc-900 rounded-[2rem] overflow-hidden flex flex-col border border-zinc-200 dark:border-zinc-800 shadow-sm
       `}>
-        <div className="p-6 md:p-8 border-b border-zinc-100 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950/50">
+        <div className="p-5 md:p-6 border-b border-zinc-100 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950/50">
           <h3 className="font-black text-zinc-900 dark:text-white flex items-center gap-2 uppercase tracking-tighter text-base">
             <Scale className="w-5 h-5 text-indigo-500" /> Infrastructure Fleet
           </h3>
@@ -336,7 +337,7 @@ export const RightSizingView: React.FC<RightSizingViewProps> = ({ workloads, isD
       `}>
         {selectedWorkload ? (
           <div className="flex flex-col h-full min-h-0">
-            <header className="p-6 md:p-8 border-b border-zinc-100 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950/50 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 shrink-0 relative z-20">
+            <header className="p-5 md:p-6 border-b border-zinc-100 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-950/50 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 shrink-0 relative z-20">
               <div className="flex items-center gap-4">
                 <button onClick={() => setIsSidebarOpen(true)} className="lg:hidden p-2.5 rounded-2xl bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700">
                   <ChevronLeft className="w-5 h-5 text-indigo-500" />
@@ -360,7 +361,7 @@ export const RightSizingView: React.FC<RightSizingViewProps> = ({ workloads, isD
               </div>
             </header>
 
-            <div className="flex-1 overflow-y-auto p-6 md:p-8 space-y-10 bg-zinc-50/20 dark:bg-black/20 pb-20">
+            <div className="flex-1 overflow-y-auto p-5 md:p-6 space-y-10 bg-zinc-50/20 dark:bg-black/20 pb-20">
               {/* Simulation Cockpit */}
               <section className="bg-white dark:bg-zinc-900 rounded-[3rem] border-2 border-zinc-100 dark:border-zinc-800 shadow-xl overflow-hidden">
                 <div className="p-6 md:p-8 border-b border-zinc-100 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-950/50 flex items-center justify-between">

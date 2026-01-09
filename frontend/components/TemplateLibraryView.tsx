@@ -88,7 +88,7 @@ export const TemplateLibraryView: React.FC<TemplateLibraryViewProps> = ({ onAppl
    return (
       <div className="space-y-12 pb-20">
          {/* Hero Header */}
-         <div className="bg-zinc-900 dark:bg-zinc-950 rounded-[2.5rem] p-10 md:p-14 text-white relative overflow-hidden shadow-2xl border border-zinc-800">
+         <div className="bg-zinc-900 dark:bg-zinc-950 rounded-[2.5rem] p-8 md:p-10 text-white relative overflow-hidden shadow-2xl border border-zinc-800">
             <div className="relative z-10 max-w-2xl">
                <div className="inline-flex items-center gap-2 bg-indigo-500/10 text-indigo-400 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest mb-6 border border-indigo-500/20">
                   <Sparkles className="w-3 h-3" /> Generative AI Integrated
@@ -131,7 +131,7 @@ export const TemplateLibraryView: React.FC<TemplateLibraryViewProps> = ({ onAppl
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
                {triageTemplates.map(pb => (
-                  <div key={pb.id} className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-[2rem] p-8 flex flex-col hover:shadow-2xl hover:border-indigo-500/50 transition-all group">
+                  <div key={pb.id} className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-[2rem] p-6 flex flex-col hover:shadow-2xl hover:border-indigo-500/50 transition-all group">
                      <div className={`p-4 rounded-2xl w-fit mb-6 ${pb.bgColor} ${pb.color}`}>
                         <pb.icon className="w-7 h-7" />
                      </div>
@@ -172,7 +172,7 @@ export const TemplateLibraryView: React.FC<TemplateLibraryViewProps> = ({ onAppl
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                {sizingTemplates.map(pr => (
-                  <div key={pr.id} className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-[2rem] p-8 flex flex-col hover:shadow-2xl hover:border-emerald-500/50 transition-all group">
+                  <div key={pr.id} className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-[2rem] p-6 flex flex-col hover:shadow-2xl hover:border-emerald-500/50 transition-all group">
                      <div className={`p-4 rounded-2xl w-fit mb-6 ${pr.bgColor} ${pr.color}`}>
                         <pr.icon className="w-7 h-7" />
                      </div>
