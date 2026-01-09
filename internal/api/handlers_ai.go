@@ -69,6 +69,7 @@ func (h *AIHandler) GetModels(c *gin.Context) {
 
 type GenerateTopologyRequest struct {
 	Provider        string `json:"provider"`
+	Model           string `json:"model"`
 	WorkloadSummary string `json:"workloadSummary"`
 }
 
@@ -79,7 +80,7 @@ func (h *AIHandler) GenerateTopology(c *gin.Context) {
 		return
 	}
 
-	diagram, err := h.service.GenerateTopology(c.Request.Context(), req.Provider, req.WorkloadSummary)
+	diagram, err := h.service.GenerateTopology(c.Request.Context(), req.Provider, req.Model, req.WorkloadSummary)
 	if err != nil {
 		log.Printf("Error generating topology: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate topology"})

@@ -3,6 +3,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Workload } from '../types';
 import { generateTopologyDiagram } from '../services/geminiService';
+import { useMonitoring } from '../contexts/MonitoringContext';
 import { Loader2, Image as ImageIcon, Download, Sparkles, AlertCircle, Share2, ZoomIn, Info, LayoutGrid, Box, Server, Layers, Globe, RefreshCw } from 'lucide-react';
 import mermaid from 'mermaid';
 
@@ -13,6 +14,7 @@ interface TopologyViewProps {
 
 export const TopologyView: React.FC<TopologyViewProps> = ({ workloads, isDarkMode = true }) => {
     const navigate = useNavigate();
+    const { aiConfig } = useMonitoring();
     const [viewMode, setViewMode] = useState<'graph' | 'schematic'>('schematic');
     const [diagramCode, setDiagramCode] = useState<string | null>(null);
     const [renderedSvg, setRenderedSvg] = useState<string | null>(null);
@@ -45,7 +47,7 @@ export const TopologyView: React.FC<TopologyViewProps> = ({ workloads, isDarkMod
         setDiagramCode(null);
         setRenderedSvg(null);
         try {
-            const code = await generateTopologyDiagram(workloads, aspectRatio);
+            const code = await generateTopologyDiagram(workloads, aspectRatio, aiConfig.provider, aiConfig.model);
             if (code) {
                 setDiagramCode(code);
                 setViewMode('graph'); // Auto switch to graph view on success

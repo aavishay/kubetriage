@@ -221,7 +221,7 @@ func (s *AIService) GenerateRemediation(ctx context.Context, providerName, model
 	return &suggestion, nil
 }
 
-func (s *AIService) GenerateTopology(ctx context.Context, providerName string, workloadSummary string) (string, error) {
+func (s *AIService) GenerateTopology(ctx context.Context, providerName, model, workloadSummary string) (string, error) {
 	provider, err := s.getProvider(providerName)
 	if err != nil {
 		return "", err
@@ -241,7 +241,7 @@ func (s *AIService) GenerateTopology(ctx context.Context, providerName string, w
 	- Return ONLY the Mermaid code block. Do not include markdown ticks if possible, or I will strip them.
 	`, workloadSummary)
 
-	rawResponse, err := provider.GenerateContent(ctx, prompt, "") // Use default model
+	rawResponse, err := provider.GenerateContent(ctx, prompt, model)
 	if err != nil {
 		return "", err
 	}

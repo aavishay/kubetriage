@@ -185,7 +185,7 @@ export const summarizeWorkloadLogs = async (logs: string[]): Promise<string> => 
     }
 };
 
-export const generateTopologyDiagram = async (workloads: Workload[], requestedAspectRatio: string): Promise<string | null> => {
+export const generateTopologyDiagram = async (workloads: Workload[], requestedAspectRatio: string, provider: string = 'gemini', model: string = ''): Promise<string | null> => {
     // Generate summary for backend
     const workloadSummary = workloads.map(w =>
         `- ${w.name} (${w.kind}) in namespace '${w.namespace}'. Status: ${w.status}.`
@@ -198,7 +198,8 @@ export const generateTopologyDiagram = async (workloads: Workload[], requestedAs
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-                provider: 'gemini', // or 'ollama' based on config if needed
+                provider,
+                model,
                 workloadSummary
             })
         });
