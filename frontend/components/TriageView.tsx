@@ -1,5 +1,5 @@
 
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 import { Workload, ViewPropsWithChat, DiagnosticPlaybook } from '../types';
 import { useMonitoring } from '../contexts/MonitoringContext';
@@ -134,6 +134,14 @@ export const TriageView: React.FC<TriageViewProps> = ({ workloads, isDarkMode = 
     const newUrl = `${window.location.pathname}?${params.toString()}`;
     window.history.replaceState(null, '', newUrl);
   }, [selectedWorkload, selectedPlaybook]);
+
+  const selectedRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (selectedWorkload && selectedRef.current) {
+      selectedRef.current.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+  }, [selectedWorkload]);
 
   // Restore Analysis Cache
   useEffect(() => {
@@ -355,7 +363,12 @@ export const TriageView: React.FC<TriageViewProps> = ({ workloads, isDarkMode = 
         </div>
         <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-zinc-50/30 dark:bg-black/10">
           {filteredWorkloads.map(w => (
-            <div key={w.id} onClick={() => { setSelectedWorkload(w); setAnalysis(null); setIsSidebarOpen(false); }} className={`group relative p-6 rounded-[2.25rem] cursor-pointer transition-all border-2 ${selectedWorkload?.id === w.id ? 'bg-indigo-600 border-indigo-500 text-white' : 'bg-white dark:bg-zinc-900 border-transparent shadow-sm'}`}>
+            <div
+              key={w.id}
+              ref={selectedWorkload?.id === w.id ? selectedRef : null}
+              onClick={() => { setSelectedWorkload(w); setAnalysis(null); setIsSidebarOpen(false); }}
+              className={`group relative p-6 rounded-[2.25rem] cursor-pointer transition-all border-2 ${selectedWorkload?.id === w.id ? 'bg-indigo-600 border-indigo-500 text-white shadow-xl translate-x-1' : 'bg-white dark:bg-zinc-900 border-transparent shadow-sm hover:translate-x-1'}`}
+            >
               <span className="text-sm font-black truncate leading-none uppercase tracking-tighter block mb-1.5">{w.name}</span>
               <div className="flex items-center justify-between mt-1"><span className={`text-[9px] font-black uppercase tracking-[0.25em] flex items-center gap-1.5 ${selectedWorkload?.id === w.id ? 'text-white/70' : 'text-indigo-500 dark:text-indigo-400'}`}><Layers className="w-3.5 h-3.5" /> {w.kind}</span><div className={`w-2.5 h-2.5 rounded-full ${w.status === 'Healthy' ? 'bg-emerald-500' : w.status === 'Warning' ? 'bg-amber-500' : 'bg-rose-500'}`} /></div>
             </div>
@@ -492,7 +505,7 @@ export const TriageView: React.FC<TriageViewProps> = ({ workloads, isDarkMode = 
                       </button>
                     </div>
                   </div>
-                  <div className="p-8 overflow-y-auto font-mono text-[11px] leading-relaxed flex-1 bg-black">
+                  <div className="p-8 overflow-auto font-mono text-[11px] leading-relaxed flex-1 bg-black">
                     {(!selectedWorkload.recentLogs || selectedWorkload.recentLogs.length === 0) ? (
                       <div className="h-full flex flex-col items-center justify-center text-zinc-700">
                         <Terminal className="w-8 h-8 mb-4 opacity-20" />
@@ -502,9 +515,9 @@ export const TriageView: React.FC<TriageViewProps> = ({ workloads, isDarkMode = 
                       selectedWorkload.recentLogs
                         .filter(log => !logSearchTerm || log.toLowerCase().includes(logSearchTerm.toLowerCase()))
                         .map((log, i) => (
-                          <div key={i} className="flex gap-4 group hover:bg-zinc-900 odd:bg-white/[0.02] px-4 py-0.5 items-start leading-relaxed border-l-2 border-transparent hover:border-indigo-500 transition-all font-mono">
+                          <div key={i} className="flex gap-4 group hover:bg-zinc-900 odd:bg-white/[0.02] px-4 py-0.5 items-start leading-relaxed border-l-2 border-transparent hover:border-indigo-500 transition-all font-mono min-w-fit">
                             <span className="text-zinc-700 select-none text-[10px] w-8 font-bold flex-shrink-0 text-right opacity-30 mt-[1px]">{i + 1}</span>
-                            <div className={`text-zinc-400 min-w-0 flex-1 text-[11px] ${isLogWrapEnabled ? 'break-all whitespace-pre-wrap' : 'whitespace-nowrap overflow-hidden text-ellipsis'}`}>
+                            <div className={`text-zinc-400 min-w-0 flex-1 text-[11px] ${isLogWrapEnabled ? 'break-all whitespace-pre-wrap' : 'whitespace-nowrap'}`}>
                               {highlightLog(log)}
                             </div>
                             <CopyButton text={log} className="opacity-0 group-hover:opacity-100 flex-shrink-0 scale-75" />
@@ -519,7 +532,7 @@ export const TriageView: React.FC<TriageViewProps> = ({ workloads, isDarkMode = 
               <section className="bg-white dark:bg-zinc-900 rounded-[3rem] border border-zinc-200 dark:border-zinc-800 shadow-sm overflow-hidden">
                 <div className="px-8 py-6 border-b border-zinc-100 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-950/50 flex items-center gap-3"><AlertCircle className="w-5 h-5 text-amber-500" /><h3 className="text-[11px] font-black text-zinc-900 dark:text-white uppercase tracking-[0.15em]">Control Plane Events</h3></div>
                 <div className="divide-y divide-zinc-100 dark:divide-zinc-800">
-                  {selectedWorkload.events.map(event => (
+                  {(selectedWorkload.events || []).map(event => (
                     <div key={event.id} className="p-7 flex items-center gap-8 group hover:bg-zinc-50 dark:hover:bg-zinc-950/50 transition-colors">
                       <div className={`p-3 rounded-2xl shrink-0 ${event.type === 'Warning' ? 'bg-rose-500/10 text-rose-500' : 'bg-emerald-500/10 text-emerald-500'}`}>{event.type === 'Warning' ? <AlertCircle className="w-5 h-5" /> : <ShieldCheck className="w-5 h-5" />}</div>
                       <div className="flex-1 min-w-0"><div className="flex items-center gap-4 mb-1.5"><span className="text-sm font-black text-zinc-900 dark:text-white uppercase tracking-tighter">{event.reason}</span><span className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">{event.lastSeen}</span></div><p className="text-sm text-zinc-500 dark:text-zinc-400 font-bold leading-relaxed truncate">{event.message}</p></div>

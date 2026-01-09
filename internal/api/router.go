@@ -58,6 +58,7 @@ func SetupRouter(aiService *ai.AIService, rootFS http.FileSystem, assetsFS http.
 			protected.GET("/cluster/workloads", WorkloadsHandler)
 			protected.GET("/cluster/metrics", ClusterMetricsHandler)
 			protected.GET("/reports", ListReportsHandler)
+			protected.DELETE("/reports", auth.RequireRole(auth.RoleAdmin), DeleteAllReportsHandler)
 			protected.GET("/reports/compliance", GenerateComplianceReportHandler)
 			protected.POST("/reports/:id/read", MarkReportReadHandler)
 

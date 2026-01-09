@@ -27,6 +27,7 @@ interface MonitoringContextType {
   activeNotification: TriggeredAlert | null;
   unreadReports: number;
   refreshClusters: () => Promise<void>;
+  refreshWorkloads: () => Promise<void>;
 
   // Notification Config
   notificationSettings: { toastEnabled: boolean; toastFrequency: number };
@@ -90,7 +91,17 @@ export const MonitoringProvider: React.FC<MonitoringProviderProps> = ({ children
   const [workloads, setWorkloads] = useState<Workload[]>([]);
   const [isWorkloadsLoading, setIsWorkloadsLoading] = useState(false);
   const [clusters, setClusters] = useState<Cluster[]>([]);
-  const [selectedCluster, setSelectedCluster] = useState<Cluster | null>(null);
+  const [selectedCluster, setSelectedCluster] = useState<Cluster | null>(() => {
+    const saved = localStorage.getItem('selected_cluster');
+    return saved ? JSON.parse(saved) : null;
+  });
+
+  // Persist selected cluster
+  useEffect(() => {
+    if (selectedCluster) {
+      localStorage.setItem('selected_cluster', JSON.stringify(selectedCluster));
+    }
+  }, [selectedCluster]);
   const [organizations, setOrganizations] = useState<Organization[]>([]);
   const [users, setUsers] = useState<User[]>(MOCK_USERS);
   const [unreadReports, setUnreadReports] = useState<number>(0);
@@ -113,9 +124,12 @@ export const MonitoringProvider: React.FC<MonitoringProviderProps> = ({ children
 
         if (mappedClusters.length > 0) {
           setClusters(mappedClusters);
-          // Only set default if we haven't selected one yet (or persisted it)
-          // For now, simple default:
-          setSelectedCluster(prev => mappedClusters.find((c: any) => c.id === prev?.id) || mappedClusters[0]);
+          // If we had a saved cluster, ensure it's still in the list, otherwise fallback to first
+          setSelectedCluster(prev => {
+            const stillExists = mappedClusters.find((c: any) => c.id === prev?.id);
+            if (stillExists) return stillExists;
+            return mappedClusters[0];
+          });
         }
       }
     } catch (err) {
@@ -145,8 +159,10 @@ export const MonitoringProvider: React.FC<MonitoringProviderProps> = ({ children
 
   useEffect(() => {
     const fetchWorkloads = async () => {
+      // Clear current workloads when switching clusters to prevent stale data visibility
+      setWorkloads([]);
+
       if (!selectedCluster) {
-        setWorkloads([]);
         return;
       }
 
@@ -156,7 +172,11 @@ export const MonitoringProvider: React.FC<MonitoringProviderProps> = ({ children
         const response = await fetch(`/api/cluster/workloads?cluster=${selectedCluster.id}`);
         if (response.ok) {
           const data = await response.json();
-          setWorkloads(Array.isArray(data) ? data : []);
+          const workloadsWithEvents = Array.isArray(data) ? data.map((w: any) => ({
+            ...w,
+            events: w.events || []
+          })) : [];
+          setWorkloads(workloadsWithEvents);
         } else {
           console.error("Failed to fetch workloads");
         }
@@ -167,6 +187,26 @@ export const MonitoringProvider: React.FC<MonitoringProviderProps> = ({ children
       }
     };
     fetchWorkloads();
+  }, [selectedCluster]);
+
+  const refreshWorkloads = useCallback(async () => {
+    if (!selectedCluster) return;
+    setIsWorkloadsLoading(true);
+    try {
+      const response = await fetch(`/api/cluster/workloads?cluster=${selectedCluster.id}`);
+      if (response.ok) {
+        const data = await response.json();
+        const workloadsWithEvents = Array.isArray(data) ? data.map((w: any) => ({
+          ...w,
+          events: w.events || []
+        })) : [];
+        setWorkloads(workloadsWithEvents);
+      }
+    } catch (err) {
+      console.error("Error refreshing workloads", err);
+    } finally {
+      setIsWorkloadsLoading(false);
+    }
   }, [selectedCluster]);
 
   // --- Notifications & Alerting State ---
@@ -424,6 +464,7 @@ export const MonitoringProvider: React.FC<MonitoringProviderProps> = ({ children
       toggleTheme,
       unreadReports,
       refreshClusters,
+      refreshWorkloads,
       notificationSettings,
       updateNotificationSettings,
       aiConfig,

@@ -1,10 +1,12 @@
 package api
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"time"
 
+	"github.com/aavishay/kubetriage/backend/internal/cache"
 	"github.com/aavishay/kubetriage/backend/internal/prometheus"
 	"github.com/gin-gonic/gin"
 )
@@ -54,10 +56,25 @@ func ClusterMetricsHandler(c *gin.Context) {
 		step = 10 * time.Second
 	}
 
+	// Step 1: Check Cache
+	cacheKey := fmt.Sprintf("metrics:%s:%s:%s:%s", namespace, workload, metric, durationStr)
+	if cached, err := cache.Get(c.Request.Context(), cacheKey); err == nil {
+		var points []prometheus.MetricPoint
+		if err := json.Unmarshal([]byte(cached), &points); err == nil {
+			c.JSON(http.StatusOK, points)
+			return
+		}
+	}
+
 	result, err := prometheus.GlobalClient.QueryRange(c.Request.Context(), query, start, end, step)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
+	}
+
+	// Step 2: Store in Cache (1 minute TTL for metrics)
+	if jsonData, err := json.Marshal(result); err == nil {
+		cache.Set(c.Request.Context(), cacheKey, jsonData, 1*time.Minute)
 	}
 
 	c.JSON(http.StatusOK, result)

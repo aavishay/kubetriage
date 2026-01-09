@@ -40,6 +40,14 @@ type ResourceMetrics struct {
 	DiskIo         float64 `json:"diskIo"`
 }
 
+type K8sEvent struct {
+	ID       string `json:"id"`
+	Type     string `json:"type"`
+	Reason   string `json:"reason"`
+	Message  string `json:"message"`
+	LastSeen string `json:"lastSeen"`
+}
+
 // Workload struct mapping to frontend
 type Workload struct {
 	ID                string          `json:"id"`
@@ -51,7 +59,7 @@ type Workload struct {
 	Status            string          `json:"status"`
 	Metrics           ResourceMetrics `json:"metrics"`
 	RecentLogs        []string        `json:"recentLogs"`
-	Events            []string        `json:"events"`
+	Events            []K8sEvent      `json:"events"`
 	CostPerMonth      int             `json:"costPerMonth"`
 }
 
@@ -181,6 +189,36 @@ func fetchRecentLogs(ctx context.Context, client *kubernetes.Clientset, namespac
 	return result
 }
 
+func fetchRecentEvents(ctx context.Context, client *kubernetes.Clientset, namespace, name, kind string) []K8sEvent {
+	// Query events involving this object
+	// We use field selectors to match involvedObject.name and involvedObject.kind
+	selector := fmt.Sprintf("involvedObject.name=%s,involvedObject.kind=%s", name, kind)
+
+	events, err := client.CoreV1().Events(namespace).List(ctx, metav1.ListOptions{
+		FieldSelector: selector,
+		Limit:         10,
+	})
+	if err != nil {
+		return []K8sEvent{}
+	}
+
+	var result []K8sEvent
+	for _, e := range events.Items {
+		result = append(result, K8sEvent{
+			ID:       string(e.UID),
+			Type:     e.Type,
+			Reason:   e.Reason,
+			Message:  e.Message,
+			LastSeen: e.LastTimestamp.Format("15:04:05"),
+		})
+	}
+	// Ensure we never return nil
+	if result == nil {
+		return []K8sEvent{}
+	}
+	return result
+}
+
 type ClusterResponse struct {
 	ID       string `json:"id"`
 	Name     string `json:"name"`
@@ -287,10 +325,13 @@ func WorkloadsHandler(c *gin.Context) {
 		return
 	}
 
-	// Prevent caching of workload data
-	c.Header("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate")
-	c.Header("Pragma", "no-cache")
-	c.Header("Expires", "0")
+	// Step 1: Check Cache
+	cacheKey := fmt.Sprintf("workloads:%s", clusterID)
+	if val, err := cache.Get(c.Request.Context(), cacheKey); err == nil {
+		c.Header("X-Cache", "HIT")
+		c.Data(http.StatusOK, "application/json", []byte(val))
+		return
+	}
 
 	ctx := context.TODO()
 	var workloads []Workload
@@ -309,7 +350,7 @@ func WorkloadsHandler(c *gin.Context) {
 				Status:            getStatus(d.Status.AvailableReplicas, *d.Spec.Replicas),
 				Metrics:           getRealMetrics(c.Request.Context(), d.Namespace, d.Name, "Deployment", d.Spec.Template.Spec),
 				RecentLogs:        fetchRecentLogs(c.Request.Context(), client, d.Namespace, d.Spec.Selector.MatchLabels),
-				Events:            []string{},
+				Events:            fetchRecentEvents(c.Request.Context(), client, d.Namespace, d.Name, "Deployment"),
 				CostPerMonth:      rand.Intn(500) + 50,
 			}
 			workloads = append(workloads, w)
@@ -332,7 +373,7 @@ func WorkloadsHandler(c *gin.Context) {
 				Status:            getStatus(s.Status.ReadyReplicas, *s.Spec.Replicas),
 				Metrics:           getRealMetrics(c.Request.Context(), s.Namespace, s.Name, "StatefulSet", s.Spec.Template.Spec),
 				RecentLogs:        fetchRecentLogs(c.Request.Context(), client, s.Namespace, s.Spec.Selector.MatchLabels),
-				Events:            []string{},
+				Events:            fetchRecentEvents(c.Request.Context(), client, s.Namespace, s.Name, "StatefulSet"),
 				CostPerMonth:      rand.Intn(500) + 100,
 			}
 			workloads = append(workloads, w)
@@ -353,11 +394,16 @@ func WorkloadsHandler(c *gin.Context) {
 				Status:            getStatus(ds.Status.NumberReady, ds.Status.DesiredNumberScheduled),
 				Metrics:           getRealMetrics(c.Request.Context(), ds.Namespace, ds.Name, "DaemonSet", ds.Spec.Template.Spec),
 				RecentLogs:        fetchRecentLogs(c.Request.Context(), client, ds.Namespace, ds.Spec.Selector.MatchLabels),
-				Events:            []string{},
+				Events:            fetchRecentEvents(c.Request.Context(), client, ds.Namespace, ds.Name, "DaemonSet"),
 				CostPerMonth:      rand.Intn(200) + 50,
 			}
 			workloads = append(workloads, w)
 		}
+	}
+
+	// Step 2: Store in Cache (10s TTL for real-time feel)
+	if jsonBytes, err := json.Marshal(workloads); err == nil {
+		cache.Set(c.Request.Context(), cacheKey, jsonBytes, 10*time.Second)
 	}
 
 	c.JSON(http.StatusOK, workloads)

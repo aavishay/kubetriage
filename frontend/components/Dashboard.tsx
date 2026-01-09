@@ -89,7 +89,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = tr
       fontWeight: 'bold'
    };
 
-   // Loading State
+   // Loading State - Only show full page spinner on initial fetch (no data yet)
    if (isLoading && workloads.length === 0) {
       return (
          <div className="flex flex-col items-center justify-center min-h-[400px] animate-in fade-in duration-500">
@@ -122,6 +122,25 @@ export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = tr
          </div>
       );
    }
+
+   const getIncidentSummary = (w: Workload) => {
+      if (w.availableReplicas === 0 && w.replicas > 0) return `Resource failure: 0/${w.replicas} replicas available. Service is unreachable.`;
+      if (w.availableReplicas < w.replicas) return `Degraded availability: ${w.availableReplicas}/${w.replicas} replicas ready. Potential service disruption.`;
+
+      const cpuSat = w.metrics?.cpuLimit > 0 ? (w.metrics.cpuUsage / w.metrics.cpuLimit) * 100 : 0;
+      const memSat = w.metrics?.memoryLimit > 0 ? (w.metrics.memoryUsage / w.metrics.memoryLimit) * 100 : 0;
+
+      if (cpuSat > 90) return `Critical CPU Saturation: ${Math.round(cpuSat)}% limit reached. Throttling highly likely.`;
+      if (memSat > 95) return `Critical Memory Pressure: ${Math.round(memSat)}% usage. OOM termination imminent.`;
+      if (cpuSat > 70) return `High CPU Utilization: ${Math.round(cpuSat)}% of limit. Monitor for latency spikes.`;
+      if (memSat > 80) return `High Memory Usage: ${Math.round(memSat)}% of limit. Scaling may be required.`;
+
+      const events = w.events || [];
+      const recentWarning = events.find(e => e.type === 'Warning');
+      if (recentWarning) return `K8s Warning: ${recentWarning.reason} - ${recentWarning.message}`;
+
+      return w.status === 'Critical' ? "Critical workload degradation detected." : "Service reliability warning.";
+   };
 
    return (
       <div className="space-y-6 md:space-y-8 animate-in fade-in duration-500">
@@ -220,17 +239,15 @@ export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = tr
                      <ShieldAlert className="w-4 h-4 text-rose-500" /> Active Incidents
                   </h3>
                   <div className="space-y-4 overflow-y-auto flex-1 min-h-0 pr-2 custom-scrollbar">
-                     {incidents.length > 0 ? incidents.map(w => {
-                        const logData = w.recentLogs?.[0] ? parseLogLine(w.recentLogs[0]) : null;
-
-                        return (
+                     {incidents.length > 0 ? (
+                        incidents.map(w => (
                            <div key={w.id} className="p-5 rounded-2xl border border-zinc-100 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-950/50 group hover:border-indigo-500/30 transition-all shadow-sm">
                               <div className="flex justify-between items-start mb-3">
                                  <div className="flex items-center gap-3">
                                     <div className={`w-2 h-2 rounded-full ${w.status === 'Critical' ? 'bg-rose-500 animate-pulse' : 'bg-amber-500'}`} />
                                     <div>
                                        <span className="text-sm font-black text-zinc-900 dark:text-white uppercase tracking-tight block leading-none">{w.name}</span>
-                                       {logData?.time && <span className="text-[9px] font-bold text-zinc-400 uppercase tracking-wide mt-1 block">{logData.time}</span>}
+                                       <span className="text-[9px] font-bold text-zinc-400 uppercase tracking-wide mt-1 block">Active Incident</span>
                                     </div>
                                  </div>
                                  <span className={`text-[8px] font-black uppercase px-2 py-0.5 rounded-md border ${w.status === 'Critical' ? 'bg-rose-500/10 text-rose-500 border-rose-500/20' : 'bg-amber-500/10 text-amber-500 border-amber-500/20'}`}>
@@ -238,14 +255,9 @@ export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = tr
                                  </span>
                               </div>
 
-                              {logData ? (
-                                 <div className="mb-4 bg-white dark:bg-zinc-900 p-3 rounded-lg border border-zinc-200 dark:border-zinc-800/50 font-mono text-[10px] text-zinc-600 dark:text-zinc-400 overflow-x-auto">
-                                    {logData.level && <span className={`uppercase font-black mr-2 ${logData.level === 'error' ? 'text-rose-500' : 'text-zinc-400'}`}>{logData.level}</span>}
-                                    <span title={logData.full}>{logData.msg}</span>
-                                 </div>
-                              ) : (
-                                 <p className="text-[10px] text-zinc-500 dark:text-zinc-400 font-bold mb-4 italic">No recent logs captured</p>
-                              )}
+                              <p className="text-[11px] font-bold text-zinc-600 dark:text-zinc-400 mb-4 leading-relaxed">
+                                 {getIncidentSummary(w)}
+                              </p>
 
                               <button
                                  onClick={() => onTriageRequest?.(w.id, 'Resource Constraints')}
@@ -258,8 +270,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = tr
                                  <ChevronRight className="w-4 h-4 text-zinc-400 group-hover/btn:translate-x-1 transition-all" />
                               </button>
                            </div>
-                        )
-                     }) : (
+                        ))
+                     ) : (
                         <div className="p-10 text-center flex flex-col items-center">
                            <HeartPulse className="w-10 h-10 text-emerald-500 mb-3" />
                            <p className="text-xs font-black uppercase text-zinc-400 tracking-widest">All services nominal</p>
@@ -308,7 +320,11 @@ export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = tr
                                  : 'bg-gradient-to-r from-emerald-400 to-teal-500';
 
                            return (
-                              <div key={idx} className="group flex items-center gap-4 p-3 rounded-xl hover:bg-zinc-50 dark:hover:bg-zinc-800/50 border border-transparent hover:border-zinc-100 dark:hover:border-zinc-800 transition-all cursor-default">
+                              <div
+                                 key={idx}
+                                 onClick={() => onTriageRequest?.(item.name, 'General Health')}
+                                 className="group flex items-center gap-4 p-3 rounded-xl hover:bg-zinc-50 dark:hover:bg-zinc-800/50 border border-transparent hover:border-zinc-100 dark:hover:border-zinc-800 transition-all cursor-pointer hover:scale-[1.01] active:scale-[0.99]"
+                              >
                                  {/* Name & Type */}
                                  <div className="w-48 shrink-0">
                                     <h4 className="text-xs font-bold text-zinc-700 dark:text-zinc-300 truncate" title={item.name}>{item.name}</h4>
@@ -335,7 +351,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = tr
                                  {/* Metric Values */}
                                  <div className="w-24 shrink-0 text-right">
                                     <div className="text-[10px] font-mono text-zinc-500">
-                                       <span className="text-zinc-900 dark:text-white font-bold">{item.used.toFixed(1)}m</span> / {item.requested}m
+                                       <span className="text-zinc-900 dark:text-white font-bold">{item.used.toFixed(3).replace(/\.?0+$/, '')}m</span> / {item.requested.toFixed(3).replace(/\.?0+$/, '')}m
                                     </div>
                                     <span className="text-[9px] text-zinc-400 font-medium">cores</span>
                                  </div>

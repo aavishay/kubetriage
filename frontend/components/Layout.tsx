@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { LayoutDashboard, AlertCircle, Scale, Settings, Box, ChevronLeft, ChevronRight, Sun, Moon, ChevronsUpDown, Check, Server, LogOut, Plus, X, Globe, Cloud, Bell, BookOpen, Menu, Key, Zap, FileText } from 'lucide-react';
+import { LayoutDashboard, AlertCircle, Scale, Settings, Box, ChevronLeft, ChevronRight, Sun, Moon, ChevronsUpDown, Check, Server, LogOut, Plus, X, Globe, Cloud, Bell, BookOpen, Menu, Key, Zap, FileText, RefreshCw } from 'lucide-react';
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useMonitoring } from '../contexts/MonitoringContext';
 import { useAuth } from '../contexts/AuthContext';
@@ -31,7 +31,9 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
     logout,
     selectApiKey,
     users,
-    unreadReports
+    unreadReports,
+    isWorkloadsLoading,
+    refreshWorkloads
   } = useMonitoring();
 
   const location = useLocation();
@@ -238,6 +240,14 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
                     <span className="relative inline-flex rounded-full h-3 w-3 bg-rose-500 text-[8px] font-bold text-white items-center justify-center">{unreadReports}</span>
                   </span>
                 )}
+              </button>
+              <button
+                onClick={refreshWorkloads}
+                disabled={isWorkloadsLoading}
+                className={`p-2.5 rounded-xl bg-zinc-100 dark:bg-zinc-800 text-zinc-500 hover:text-indigo-500 dark:hover:text-indigo-400 transition-all shadow-sm ${isWorkloadsLoading ? 'opacity-50' : 'active:scale-95'}`}
+                title="Refresh Telemetry"
+              >
+                <RefreshCw className={`w-5 h-5 ${isWorkloadsLoading ? 'animate-spin text-indigo-500' : ''}`} />
               </button>
               <span className="text-[10px] font-black uppercase text-zinc-500">{apiLatency}ms <span className="opacity-40">IO</span></span>
             </div>

@@ -9,6 +9,7 @@ import (
 	"github.com/aavishay/kubetriage/backend/internal/db"
 	"github.com/gin-gonic/gin"
 	"github.com/jung-kurt/gofpdf"
+	"gorm.io/gorm"
 )
 
 func ListReportsHandler(c *gin.Context) {
@@ -34,6 +35,16 @@ func MarkReportReadHandler(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"status": "ok"})
+}
+
+func DeleteAllReportsHandler(c *gin.Context) {
+	// Unscoped() allows hard-deleting records if gorm.Model is used (which includes DeletedAt)
+	// If the user wants to "clean" the archive, they likely want them gone from the list entirely.
+	if err := db.DB.Session(&gorm.Session{AllowGlobalUpdate: true}).Unscoped().Delete(&db.TriageReport{}).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete reports archive"})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"status": "ok", "message": "Archive cleaned successfully"})
 }
 
 func GenerateComplianceReportHandler(c *gin.Context) {
