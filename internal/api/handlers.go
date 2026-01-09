@@ -19,6 +19,8 @@ import (
 	"github.com/aavishay/kubetriage/backend/internal/prometheus"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+	batchv1 "k8s.io/api/batch/v1"
+	corev1 "k8s.io/api/core/v1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
@@ -626,10 +628,16 @@ func WorkloadsHandler(c *gin.Context) {
 	if dynClient != nil {
 		gvrSJ := schema.GroupVersionResource{Group: "keda.sh", Version: "v1alpha1", Resource: "scaledjobs"}
 		sjs, err := dynClient.Resource(gvrSJ).Namespace(targetNamespace).List(ctx, metav1.ListOptions{})
+
+		// Fetch Jobs and Pods for correlation
+		jobs, errJobs := client.BatchV1().Jobs(targetNamespace).List(ctx, metav1.ListOptions{})
+		pods, errPods := client.CoreV1().Pods(targetNamespace).List(ctx, metav1.ListOptions{})
+
 		if err == nil {
 			for _, item := range sjs.Items {
 				name := item.GetName()
 				namespace := item.GetNamespace()
+				uid := item.GetUID()
 
 				// Extract ScaledJob spec/status
 				active := int32(0)
@@ -651,27 +659,93 @@ func WorkloadsHandler(c *gin.Context) {
 					}
 				}
 
+				// Find child Jobs
+				var childJobs []batchv1.Job
+				if errJobs == nil {
+					for _, job := range jobs.Items {
+						for _, owner := range job.OwnerReferences {
+							if owner.UID == uid {
+								childJobs = append(childJobs, job)
+								break
+							}
+						}
+					}
+				}
+
+				// Find child Pods (grandchildren of ScaledJob)
+				var childPods []corev1.Pod
+				if errPods == nil {
+					for _, pod := range pods.Items {
+						for _, owner := range pod.OwnerReferences {
+							for _, job := range childJobs {
+								if owner.UID == job.UID {
+									childPods = append(childPods, pod)
+									break
+								}
+							}
+						}
+					}
+				}
+
+				// Aggregate stats from pods
+				runningPods := 0
+				pendingPods := 0
+				failedPods := 0
+
+				for _, p := range childPods {
+					switch p.Status.Phase {
+					case corev1.PodRunning:
+						runningPods++
+					case corev1.PodPending:
+						pendingPods++
+					case corev1.PodFailed:
+						failedPods++
+					}
+				}
+
+				// Determine Status based on pods if ScaledJob itself is "Ready"
+				status := "Healthy"
+				if statusUnready {
+					status = "Warning"
+				} else if failedPods > 0 {
+					status = "Critical"
+				} else if pendingPods > 0 {
+					status = "Warning"
+				}
+
+				// Fetch logs/events from the most recent pod if available
+				var recentLogs []string
+				var recentEvents []K8sEvent
+				if len(childPods) > 0 {
+					// Simply take the first one or sort by creation timestamp if needed.
+					// For now, picking the last one (likely most recent)
+					latestPod := childPods[len(childPods)-1]
+					recentLogs = fetchRecentLogs(c.Request.Context(), client, namespace, map[string]string{"job-name": latestPod.Labels["job-name"]}) // Best effort selector
+					recentEvents = fetchRecentEvents(c.Request.Context(), client, namespace, name, "ScaledJob")                                       // Events on the SJ itself
+					// Append events from jobs? Maybe too noisy.
+				} else {
+					recentEvents = fetchRecentEvents(c.Request.Context(), client, namespace, name, "ScaledJob")
+				}
+
 				// Map to Workload
 				w := Workload{
 					ID:                string(item.GetUID()),
 					Name:              name,
 					Namespace:         namespace,
 					Kind:              "ScaledJob",
-					Replicas:          active, // Active jobs as "replicas"
-					AvailableReplicas: active,
-					Status:            "Healthy",
+					Replicas:          int32(len(childPods)), // Total pods related to this SJ
+					AvailableReplicas: int32(runningPods),
+					Status:            status,
 					Metrics:           getRealMetrics(c.Request.Context(), namespace, name, "Job", v1.PodSpec{}), // No easy pod spec access without parsing deep map, skipping for MVP
 					CostPerMonth:      rand.Intn(100) + 10,
+					RecentLogs:        recentLogs,
+					Events:            recentEvents,
 					Scaling: ScalingInfo{
 						Enabled:   true,
 						Current:   active,
 						KedaReady: !statusUnready,
 						Config:    &KedaConfig{Name: name, Triggers: []string{}}, // Partial config
 					},
-				}
-
-				if statusUnready {
-					w.Status = "Warning"
 				}
 
 				// Extract Triggers if possible
