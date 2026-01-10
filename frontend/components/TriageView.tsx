@@ -282,7 +282,7 @@ export const TriageView: React.FC<TriageViewProps> = ({ workloads, isDarkMode = 
       const suggestion = await generateRemediation(
         selectedWorkload.kind,
         selectedWorkload.name,
-        selectedWorkload.recentLogs.slice(-10).join('\n'),
+        (selectedWorkload.recentLogs || []).slice(-10).join('\n'),
         aiConfig.provider,
         aiConfig.model,
         selectedWorkload.namespace
