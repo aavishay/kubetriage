@@ -277,6 +277,7 @@ export const TriageView: React.FC<TriageViewProps> = ({ workloads, isDarkMode = 
   const handleGenerateFix = async () => {
     if (!selectedWorkload) return;
     setIsGeneratingFix(true);
+    const currentId = selectedWorkload.id;
     try {
       // Resource Kind/Name extraction would be better if we had specific log metadata, but defaulting to Workload name for now
       const suggestion = await generateRemediation(
@@ -287,8 +288,10 @@ export const TriageView: React.FC<TriageViewProps> = ({ workloads, isDarkMode = 
         aiConfig.model,
         selectedWorkload.namespace
       );
-      setPatchSuggestion(suggestion);
-      setFixStatus('idle');
+      if (selectedWorkload.id === currentId) {
+        setPatchSuggestion(suggestion);
+        setFixStatus('idle');
+      }
     } catch (e) {
       console.error(e);
     } finally {
@@ -373,7 +376,7 @@ export const TriageView: React.FC<TriageViewProps> = ({ workloads, isDarkMode = 
             <div
               key={w.id}
               ref={selectedWorkload?.id === w.id ? selectedRef : null}
-              onClick={() => { setSelectedWorkload(w); setAnalysis(null); setIsSidebarOpen(false); }}
+              onClick={() => { setSelectedWorkload(w); setAnalysis(null); setPatchSuggestion(null); setIsSidebarOpen(false); }}
               className={`group relative p-6 rounded-[2.25rem] cursor-pointer transition-all border-2 ${selectedWorkload?.id === w.id ? 'bg-indigo-600 border-indigo-500 text-white shadow-xl translate-x-1' : 'bg-white dark:bg-zinc-900 border-transparent shadow-sm hover:translate-x-1'}`}
             >
               <span className="text-sm font-black truncate leading-none uppercase tracking-tighter block mb-1.5">{w.name}</span>
@@ -386,7 +389,7 @@ export const TriageView: React.FC<TriageViewProps> = ({ workloads, isDarkMode = 
       <main className={`${!selectedWorkload || isSidebarOpen ? 'hidden' : 'flex'} lg:flex flex-1 min-w-0 bg-white dark:bg-zinc-900 rounded-[2.5rem] overflow-hidden flex flex-col border border-zinc-200 dark:border-zinc-800 shadow-sm`}>
         {selectedWorkload ? (
           <div className="flex flex-col h-full overflow-hidden">
-            <header className="p-6 border-b border-zinc-100 dark:border-zinc-800 flex flex-col xl:flex-row justify-between items-start xl:items-center gap-6 bg-zinc-50/80 dark:bg-zinc-950/80 backdrop-blur-md sticky top-0 z-10">
+            <header className="p-4 px-6 border-b border-zinc-100 dark:border-zinc-800 flex flex-col xl:flex-row justify-between items-start xl:items-center gap-4 bg-zinc-50/80 dark:bg-zinc-950/80 backdrop-blur-md sticky top-0 z-10">
               <div className="flex items-center gap-6">
                 <div className="p-5 bg-zinc-900 dark:bg-zinc-800 rounded-[1.75rem] shadow-2xl border border-zinc-700/50 flex items-center justify-center"><Terminal className="w-7 h-7 text-indigo-400" /></div>
                 <div className="min-w-0"><h2 className="text-2xl md:text-3xl font-black text-zinc-900 dark:text-white tracking-tighter uppercase leading-none">{selectedWorkload.name}</h2><p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest mt-2">{selectedWorkload.namespace} • {selectedWorkload.kind}</p></div>
@@ -403,11 +406,11 @@ export const TriageView: React.FC<TriageViewProps> = ({ workloads, isDarkMode = 
               </div>
             </header>
 
-            <div className="flex-1 overflow-y-auto p-8 space-y-10 bg-zinc-50/20 dark:bg-black/20 pb-32">
+            <div className="flex-1 overflow-y-auto p-6 space-y-6 bg-zinc-50/20 dark:bg-black/20 pb-32">
               {/* Metrics Ribbon */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-                <div className="bg-white dark:bg-zinc-900 p-7 rounded-[2.5rem] border border-zinc-100 dark:border-zinc-800 shadow-sm text-center">
-                  <p className="text-[10px] font-black text-zinc-400 uppercase mb-4 tracking-widest">Availability</p>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="bg-white dark:bg-zinc-900 p-5 rounded-[2.5rem] border border-zinc-100 dark:border-zinc-800 shadow-sm text-center">
+                  <p className="text-[10px] font-black text-zinc-400 uppercase mb-2 tracking-widest">Availability</p>
                   <span className="text-4xl font-black text-zinc-900 dark:text-white tracking-tighter">{selectedWorkload.availableReplicas}<span className="text-lg opacity-40 ml-1">/{selectedWorkload.replicas}</span></span>
                 </div>
                 <div className="bg-white dark:bg-zinc-900 p-5 rounded-[2.5rem] border border-zinc-100 dark:border-zinc-800 shadow-sm text-center flex flex-col justify-between overflow-hidden">
@@ -428,8 +431,8 @@ export const TriageView: React.FC<TriageViewProps> = ({ workloads, isDarkMode = 
                     <MetricsChart data={memMetrics} color="#10b981" height={80} unit="MiB" />
                   </div>
                 </div>
-                <div className="bg-white dark:bg-zinc-900 p-7 rounded-[2.5rem] border border-zinc-100 dark:border-zinc-800 shadow-sm text-center">
-                  <p className="text-[10px] font-black text-zinc-400 uppercase mb-4 tracking-widest">Storage Load</p>
+                <div className="bg-white dark:bg-zinc-900 p-5 rounded-[2.5rem] border border-zinc-100 dark:border-zinc-800 shadow-sm text-center">
+                  <p className="text-[10px] font-black text-zinc-400 uppercase mb-2 tracking-widest">Storage Load</p>
                   <span className={`text-4xl font-black tracking-tighter ${saturation.storage > 85 ? 'text-rose-500 animate-pulse' : 'text-amber-500'}`}>{saturation.storage}%</span>
                 </div>
               </div>
@@ -518,8 +521,10 @@ export const TriageView: React.FC<TriageViewProps> = ({ workloads, isDarkMode = 
                               <div className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${patchSuggestion.risk === 'High' ? 'bg-rose-500/10 text-rose-500' : 'bg-emerald-500/10 text-emerald-500'}`}>Risk: {patchSuggestion.risk}</div>
                             </div>
                             <p className="text-sm text-zinc-600 dark:text-zinc-300 mb-4">{patchSuggestion.reasoning}</p>
-                            <div className="bg-black/80 rounded-xl p-4 mb-4 font-mono text-xs text-emerald-400 overflow-x-auto border border-zinc-800">
-                              {patchSuggestion.patchContent}
+                            <div className="mb-4 rounded-xl overflow-hidden border border-zinc-800">
+                              <SyntaxHighlighter language="yaml" style={vscDarkPlus} customStyle={{ margin: 0, borderRadius: 0, fontSize: '11px' }}>
+                                {patchSuggestion.patchContent}
+                              </SyntaxHighlighter>
                             </div>
                             <div className="flex justify-end gap-3">
                               <button onClick={() => setPatchSuggestion(null)} className="px-6 py-3 rounded-xl text-xs font-bold text-zinc-500 hover:text-zinc-900 dark:hover:text-white">Cancel</button>

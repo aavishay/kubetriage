@@ -124,6 +124,7 @@ func (h *AIHandler) GenerateTopology(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
 		return
 	}
+	log.Printf("DEBUG: Received Topology Request. Provider: '%s', Model: '%s'", req.Provider, req.Model)
 
 	diagram, err := h.service.GenerateTopology(c.Request.Context(), req.Provider, req.Model, req.WorkloadSummary)
 	if err != nil {

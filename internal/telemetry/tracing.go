@@ -26,6 +26,13 @@ func InitTracer(ctx context.Context, serviceName string, otelEndpoint string) (f
 		return nil, fmt.Errorf("failed to create resource: %w", err)
 	}
 
+	// Strip scheme if present (gRPC dialer expects host:port)
+	if len(otelEndpoint) > 7 && otelEndpoint[:7] == "http://" {
+		otelEndpoint = otelEndpoint[7:]
+	} else if len(otelEndpoint) > 8 && otelEndpoint[:8] == "https://" {
+		otelEndpoint = otelEndpoint[8:]
+	}
+
 	// insecure for local dev/jaeger
 	exporter, err := otlptracegrpc.New(ctx,
 		otlptracegrpc.WithInsecure(),

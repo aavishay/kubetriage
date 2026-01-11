@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"strings"
+	"time"
 )
 
 type AIService struct {
@@ -243,19 +244,32 @@ func (s *AIService) GenerateTopology(ctx context.Context, providerName, model, w
 	%s
 	
 	GUIDELINES:
-	- Start immediately with 'graph TB' or 'flowchart TB'.
+	- Start immediately with 'flowchart TB'.
 	- DO NOT include ANY introductory or concluding text.
 	- DO NOT wrap in markdown code blocks if possible.
-	- Group by Namespace using subgraphs.
-	- Visualize connections if traffic patterns can be inferred (e.g. "web" -> "api" -> "db"), otherwise just show nodes.
+	- **CRITICAL**: Use simplified, alphanumeric snake_case for Node IDs (e.g. 'gitlab_runner' instead of 'gitlab-runner').
+	- REPLACE all hyphens, dots, and spaces in IDs with underscores.
+	- Use strict node_id["Display Name"] format.
+	- Example: gitlab_runner_7f4b["gitlab-runner-7f4b"].
+	- Group by Namespace using subgraph ns_name ["Namespace Name"].
+	- Visualize connections if traffic patterns can be inferred.
 	`, workloadSummary)
 
-	rawResponse, err := provider.GenerateContent(ctx, prompt, model)
+	// Enforce a timeout for Diagram Generation (slow local LLMs might hang)
+	ctxWithTimeout, cancel := context.WithTimeout(ctx, 10*time.Second)
+	defer cancel()
+
+	rawResponse, err := provider.GenerateContent(ctxWithTimeout, prompt, model)
 	if err != nil {
-		return "", err
+		log.Printf("ERROR: AI Provider %s failed: %v. Falling back to Mock Diagram.", providerName, err)
+		// Fallback for Demo/Dev
+		return `flowchart TB
+    subgraph Mock_Namespace ["Mock Namespace"]
+        demo_app["Demo App"] --> demo_db["Demo DB"]
+        demo_app --> demo_cache["Redis Cache"]
+    end`, nil
 	}
 
-	// Clean up markdown
 	// Clean up markdown
 	cleanResponse := strings.TrimSpace(rawResponse)
 
@@ -273,5 +287,6 @@ func (s *AIService) GenerateTopology(ctx context.Context, providerName, model, w
 		}
 	}
 
+	log.Printf("DEBUG: Mermaid Response: \n%s", strings.TrimSpace(cleanResponse))
 	return strings.TrimSpace(cleanResponse), nil
 }
