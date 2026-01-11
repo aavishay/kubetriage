@@ -194,11 +194,11 @@ func (s *AIService) GenerateRemediation(ctx context.Context, providerName, model
 	{
 		"description": "Short title of the fix",
 	"patchType": "application/strategic-merge-patch+yaml",
-		"patchContent": "The complete YAML patch content (e.g. spec:\n  replicas: 3)",
+		"patchContent": "The complete YAML patch content (e.g., \nspec:\n  replicas: 3)",
 		"risk": "Low" | "Medium" | "High",
 		"reasoning": "Brief explanation of why this fix is needed"
 	}
-	IMPORTANT: 'patchContent' MUST be valid, multi-line YAML string, NOT JSON.
+	IMPORTANT: 'patchContent' MUST be a valid multi-line YAML string. DO NOT use JSON format for the patch content.
 	`, resourceKind, resourceName, errorLog)
 
 	rawResponse, err := provider.GenerateContent(ctx, prompt, model)
