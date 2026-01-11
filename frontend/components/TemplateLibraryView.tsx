@@ -93,7 +93,7 @@ export const TemplateLibraryView: React.FC<TemplateLibraryViewProps> = ({ onAppl
                <div className="inline-flex items-center gap-2 bg-indigo-500/10 text-indigo-400 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest mb-6 border border-indigo-500/20">
                   <Sparkles className="w-3 h-3" /> Generative AI Integrated
                </div>
-               <h1 className="text-4xl font-black mb-4 tracking-tighter leading-tight">SRE Playbook &<br />Optimization Templates</h1>
+               <h1 className="text-4xl font-black mb-4 tracking-tighter leading-tight">SRE Runbooks &<br />Optimization Templates</h1>
                <p className="text-zinc-400 text-lg mb-10 leading-relaxed font-medium">
                   Deploy specialized AI diagnostic models and resource strategies with a single click. Every template is tuned for Kubernetes-native signals.
                </p>
@@ -126,7 +126,7 @@ export const TemplateLibraryView: React.FC<TemplateLibraryViewProps> = ({ onAppl
                   <h2 className="text-2xl font-black text-zinc-900 dark:text-white flex items-center gap-3 tracking-tighter uppercase">
                      <AlertCircle className="w-6 h-6 text-indigo-500" /> Diagnostic Triage
                   </h2>
-                  <p className="text-sm text-zinc-500 font-semibold mt-1">AI-driven root cause identification playbooks</p>
+                  <p className="text-sm text-zinc-500 font-semibold mt-1">AI-driven root cause identification runbooks</p>
                </div>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">

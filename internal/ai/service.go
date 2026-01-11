@@ -247,7 +247,7 @@ func (s *AIService) GenerateTopology(ctx context.Context, providerName, model, w
 	GUIDELINES:
 	- Start immediately with 'flowchart TB'.
 	- DO NOT include ANY introductory or concluding text.
-	- DO NOT wrap in markdown code blocks if possible.
+	- WRAP the output in a markdown code block (using triple backticks and 'mermaid').
 	- **CRITICAL**: Use simplified, alphanumeric snake_case for Node IDs (e.g. 'gitlab_runner' instead of 'gitlab-runner').
 	- REPLACE all hyphens, dots, and spaces in IDs with underscores.
 	- Use strict node_id["Display Name"] format.
@@ -277,15 +277,12 @@ func (s *AIService) GenerateTopology(ctx context.Context, providerName, model, w
 	// Robust code block extraction
 	if start := strings.Index(cleanResponse, "```mermaid"); start != -1 {
 		cleanResponse = cleanResponse[start+10:]
-		if end := strings.Index(cleanResponse, "```"); end != -1 {
-			cleanResponse = cleanResponse[:end]
-		}
 	} else if start := strings.Index(cleanResponse, "```"); start != -1 {
-		// Generic code block
 		cleanResponse = cleanResponse[start+3:]
-		if end := strings.Index(cleanResponse, "```"); end != -1 {
-			cleanResponse = cleanResponse[:end]
-		}
+	}
+
+	if end := strings.LastIndex(cleanResponse, "```"); end != -1 {
+		cleanResponse = cleanResponse[:end]
 	}
 
 	log.Printf("DEBUG: Mermaid Response: \n%s", strings.TrimSpace(cleanResponse))

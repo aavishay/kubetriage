@@ -426,8 +426,8 @@ export const TriageView: React.FC<TriageViewProps> = ({ workloads, isDarkMode = 
               <div className="flex flex-wrap items-center gap-5 w-full xl:w-auto">
                 <div className="flex items-center gap-3 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 px-5 py-3 rounded-2xl shadow-sm">
                   <div className="p-2 bg-indigo-500/10 rounded-xl"><ActivitySquare className="w-4.5 h-4.5 text-indigo-500" /></div>
-                  <div className="flex flex-col"><span className="text-[8px] font-black text-zinc-400 uppercase tracking-widest leading-none mb-1">Playbook</span><select value={selectedPlaybook} onChange={(e) => { setSelectedPlaybook(e.target.value as DiagnosticPlaybook); setAnalysis(null); }} className="bg-transparent text-[11px] font-black uppercase text-zinc-900 dark:text-white cursor-pointer pr-6"><option value="General Health">General Health</option><option value="Network Connectivity">Network Connectivity</option><option value="Resource Constraints">Resource Constraints</option>
-                    {customPlaybooks.length > 0 && <optgroup label="Custom Playbooks">{customPlaybooks.map(p => <option key={p.id} value={p.name}>{p.name}</option>)}</optgroup>}
+                  <div className="flex flex-col"><span className="text-[8px] font-black text-zinc-400 uppercase tracking-widest leading-none mb-1">Runbook</span><select value={selectedPlaybook} onChange={(e) => { setSelectedPlaybook(e.target.value as DiagnosticPlaybook); setAnalysis(null); }} className="bg-transparent text-[11px] font-black uppercase text-zinc-900 dark:text-white cursor-pointer pr-6"><option value="General Health">General Health</option><option value="Network Connectivity">Network Connectivity</option><option value="Resource Constraints">Resource Constraints</option>
+                    {customPlaybooks.length > 0 && <optgroup label="Custom Runbooks">{customPlaybooks.map(p => <option key={p.id} value={p.name}>{p.name}</option>)}</optgroup>}
                   </select></div>
 
                 </div>

@@ -77,7 +77,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
 
   const navItems = [
     { path: '/', label: 'Overview', icon: LayoutDashboard },
-    { path: '/templates', label: 'Playbook Library', icon: BookOpen },
+    { path: '/templates', label: 'Runbooks', icon: BookOpen },
     { path: '/triage', label: 'Incident Triage', icon: AlertCircle },
     { path: '/rightsizing', label: 'Right Sizing', icon: Scale },
     { path: '/topology', label: 'Architecture', icon: Cloud },
