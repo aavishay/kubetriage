@@ -128,8 +128,8 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
         ${isCollapsed ? 'md:w-20' : 'md:w-64'}
       `}>
         <div className={`flex p-6 items-center ${isCollapsed ? 'md:justify-center' : 'gap-3'} h-20 border-b border-zinc-100 dark:border-zinc-800 overflow-hidden shrink-0`}>
-          <div className="bg-indigo-600 p-2 rounded-lg shrink-0 shadow-lg shadow-indigo-600/30">
-            <img src="/favicon.png" alt="Logo" className="w-5 h-5 object-contain" />
+          <div className="shrink-0">
+            <img src="/favicon.png" alt="Logo" className="w-8 h-8 object-contain" />
           </div>
           {(!isCollapsed || isMobileMenuOpen) && (
             <div className="animate-in fade-in slide-in-from-left-2">
@@ -241,7 +241,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
                     onClick={() => { setIsRegisterModalOpen(true); setIsClusterMenuOpen(false); }}
                     className="w-full flex items-center gap-3 px-4 py-2.5 text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors"
                   >
-                    <Plus className="w-4 h-4" /> Register New Cluster
+                    <Plus className="w-4 h-4" /> Add Cluster
                   </button>
                 </div>
               )}
@@ -311,7 +311,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
         )}
 
         {/* Content Container */}
-        <div className="flex-1 overflow-y-auto px-4 md:px-6 pt-20 md:pt-24 pb-4 md:pb-6">
+        <div className="flex-1 overflow-y-auto px-4 md:px-6 pt-0 pb-4 md:pb-6">
           <div className="mx-auto max-w-7xl h-full">
             {/* Router Outlet for Page Content */}
             {children || <Outlet />}

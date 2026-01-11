@@ -10,7 +10,10 @@ import (
 	"math/rand"
 	"net/http"
 	"strings"
+	"sync"
 	"time"
+
+	"golang.org/x/sync/errgroup"
 
 	"github.com/aavishay/kubetriage/backend/internal/auth"
 	"github.com/aavishay/kubetriage/backend/internal/cache"
@@ -19,7 +22,6 @@ import (
 	"github.com/aavishay/kubetriage/backend/internal/prometheus"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
-	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -237,8 +239,6 @@ func fetchRecentEvents(ctx context.Context, client *kubernetes.Clientset, namesp
 	if result == nil {
 		return []K8sEvent{}
 	}
-	return result
-	return result
 	return result
 }
 
@@ -542,230 +542,232 @@ func WorkloadsHandler(c *gin.Context) {
 		return
 	}
 
-	ctx := context.TODO()
+	// Use errgroup for concurrency
+	g, ctx := errgroup.WithContext(c.Request.Context())
+	g.SetLimit(20) // Concurrent enrichment limit
+
+	var mu sync.Mutex
 	var workloads []Workload
 
+	// Helper to safely append
+	addWorkload := func(w Workload) {
+		mu.Lock()
+		workloads = append(workloads, w)
+		mu.Unlock()
+	}
+
 	// Deployments
-	deps, err := client.AppsV1().Deployments(targetNamespace).List(ctx, metav1.ListOptions{})
-	if err == nil {
+	if deps, err := client.AppsV1().Deployments(targetNamespace).List(ctx, metav1.ListOptions{}); err == nil {
 		for _, d := range deps.Items {
-			w := Workload{
-				ID:                string(d.UID),
-				Name:              d.Name,
-				Namespace:         d.Namespace,
-				Kind:              "Deployment",
-				Replicas:          *d.Spec.Replicas,
-				AvailableReplicas: d.Status.AvailableReplicas,
-				Status:            getStatus(d.Status.AvailableReplicas, *d.Spec.Replicas),
-				Metrics:           getRealMetrics(c.Request.Context(), d.Namespace, d.Name, "Deployment", d.Spec.Template.Spec),
-				RecentLogs:        fetchRecentLogs(c.Request.Context(), client, d.Namespace, d.Spec.Selector.MatchLabels),
-				Events:            fetchRecentEvents(c.Request.Context(), client, d.Namespace, d.Name, "Deployment"),
-				CostPerMonth:      rand.Intn(500) + 50,
-				Scaling:           fetchKedaScaling(c.Request.Context(), dynClient, d.Namespace, d.Name),
-			}
-
-			// If not healthy, attach Scheduler/Karpenter logs
-			if w.Status != "Healthy" {
-				w.SchedulerLogs = fetchKarpenterLogs(c.Request.Context(), client, d.Name)
-			}
-
-			workloads = append(workloads, w)
+			d := d // capture loop var
+			g.Go(func() error {
+				enrichCtx, cancel := context.WithTimeout(ctx, 3*time.Second)
+				defer cancel()
+				w := Workload{
+					ID:                string(d.UID),
+					Name:              d.Name,
+					Namespace:         d.Namespace,
+					Kind:              "Deployment",
+					Replicas:          *d.Spec.Replicas,
+					AvailableReplicas: d.Status.AvailableReplicas,
+					Status:            getStatus(d.Status.AvailableReplicas, *d.Spec.Replicas),
+					CostPerMonth:      rand.Intn(500) + 50,
+					Metrics:           getRealMetrics(enrichCtx, d.Namespace, d.Name, "Deployment", d.Spec.Template.Spec),
+					RecentLogs:        fetchRecentLogs(enrichCtx, client, d.Namespace, d.Spec.Selector.MatchLabels),
+					Events:            fetchRecentEvents(enrichCtx, client, d.Namespace, d.Name, "Deployment"),
+					Scaling:           fetchKedaScaling(enrichCtx, dynClient, d.Namespace, d.Name),
+				}
+				if w.Status != "Healthy" {
+					w.SchedulerLogs = fetchKarpenterLogs(enrichCtx, client, d.Name)
+				}
+				addWorkload(w)
+				return nil
+			})
 		}
-	} else {
-		fmt.Printf("Error fetching deployments: %v\n", err)
 	}
 
 	// StatefulSets
-	sts, err := client.AppsV1().StatefulSets(targetNamespace).List(ctx, metav1.ListOptions{})
-	if err == nil {
+	if sts, err := client.AppsV1().StatefulSets(targetNamespace).List(ctx, metav1.ListOptions{}); err == nil {
 		for _, s := range sts.Items {
-			w := Workload{
-				ID:                string(s.UID),
-				Name:              s.Name,
-				Namespace:         s.Namespace,
-				Kind:              "StatefulSet",
-				Replicas:          *s.Spec.Replicas,
-				AvailableReplicas: s.Status.ReadyReplicas,
-				Status:            getStatus(s.Status.ReadyReplicas, *s.Spec.Replicas),
-				Metrics:           getRealMetrics(c.Request.Context(), s.Namespace, s.Name, "StatefulSet", s.Spec.Template.Spec),
-				RecentLogs:        fetchRecentLogs(c.Request.Context(), client, s.Namespace, s.Spec.Selector.MatchLabels),
-				Events:            fetchRecentEvents(c.Request.Context(), client, s.Namespace, s.Name, "StatefulSet"),
-				CostPerMonth:      rand.Intn(500) + 100,
-				Scaling:           fetchKedaScaling(c.Request.Context(), dynClient, s.Namespace, s.Name),
-			}
-
-			if w.Status != "Healthy" {
-				w.SchedulerLogs = fetchKarpenterLogs(c.Request.Context(), client, s.Name)
-			}
-
-			workloads = append(workloads, w)
+			s := s // capture loop var
+			g.Go(func() error {
+				enrichCtx, cancel := context.WithTimeout(ctx, 3*time.Second)
+				defer cancel()
+				w := Workload{
+					ID:                string(s.UID),
+					Name:              s.Name,
+					Namespace:         s.Namespace,
+					Kind:              "StatefulSet",
+					Replicas:          *s.Spec.Replicas,
+					AvailableReplicas: s.Status.ReadyReplicas,
+					Status:            getStatus(s.Status.ReadyReplicas, *s.Spec.Replicas),
+					CostPerMonth:      rand.Intn(500) + 100,
+					Metrics:           getRealMetrics(enrichCtx, s.Namespace, s.Name, "StatefulSet", s.Spec.Template.Spec),
+					RecentLogs:        fetchRecentLogs(enrichCtx, client, s.Namespace, s.Spec.Selector.MatchLabels),
+					Events:            fetchRecentEvents(enrichCtx, client, s.Namespace, s.Name, "StatefulSet"),
+					Scaling:           fetchKedaScaling(enrichCtx, dynClient, s.Namespace, s.Name),
+				}
+				if w.Status != "Healthy" {
+					w.SchedulerLogs = fetchKarpenterLogs(enrichCtx, client, s.Name)
+				}
+				addWorkload(w)
+				return nil
+			})
 		}
 	}
 
 	// DaemonSets
-	dss, err := client.AppsV1().DaemonSets(targetNamespace).List(ctx, metav1.ListOptions{})
-	if err == nil {
+	if dss, err := client.AppsV1().DaemonSets(targetNamespace).List(ctx, metav1.ListOptions{}); err == nil {
 		for _, ds := range dss.Items {
-			w := Workload{
-				ID:                string(ds.UID),
-				Name:              ds.Name,
-				Namespace:         ds.Namespace,
-				Kind:              "DaemonSet",
-				Replicas:          ds.Status.DesiredNumberScheduled,
-				AvailableReplicas: ds.Status.NumberReady,
-				Status:            getStatus(ds.Status.NumberReady, ds.Status.DesiredNumberScheduled),
-				Metrics:           getRealMetrics(c.Request.Context(), ds.Namespace, ds.Name, "DaemonSet", ds.Spec.Template.Spec),
-				RecentLogs:        fetchRecentLogs(c.Request.Context(), client, ds.Namespace, ds.Spec.Selector.MatchLabels),
-				Events:            fetchRecentEvents(c.Request.Context(), client, ds.Namespace, ds.Name, "DaemonSet"),
-				CostPerMonth:      rand.Intn(200) + 50,
-			}
-			workloads = append(workloads, w)
+			ds := ds // capture loop var
+			g.Go(func() error {
+				enrichCtx, cancel := context.WithTimeout(ctx, 3*time.Second)
+				defer cancel()
+				w := Workload{
+					ID:                string(ds.UID),
+					Name:              ds.Name,
+					Namespace:         ds.Namespace,
+					Kind:              "DaemonSet",
+					Replicas:          ds.Status.DesiredNumberScheduled,
+					AvailableReplicas: ds.Status.NumberReady,
+					Status:            getStatus(ds.Status.NumberReady, ds.Status.DesiredNumberScheduled),
+					CostPerMonth:      rand.Intn(200) + 50,
+					Metrics:           getRealMetrics(enrichCtx, ds.Namespace, ds.Name, "DaemonSet", ds.Spec.Template.Spec),
+					RecentLogs:        fetchRecentLogs(enrichCtx, client, ds.Namespace, ds.Spec.Selector.MatchLabels),
+					Events:            fetchRecentEvents(enrichCtx, client, ds.Namespace, ds.Name, "DaemonSet"),
+				}
+				addWorkload(w)
+				return nil
+			})
 		}
-
 	}
 
 	// ScaledJobs (KEDA)
 	if dynClient != nil {
 		gvrSJ := schema.GroupVersionResource{Group: "keda.sh", Version: "v1alpha1", Resource: "scaledjobs"}
-		sjs, err := dynClient.Resource(gvrSJ).Namespace(targetNamespace).List(ctx, metav1.ListOptions{})
+		sjs, _ := dynClient.Resource(gvrSJ).Namespace(targetNamespace).List(ctx, metav1.ListOptions{})
 
-		// Fetch Jobs and Pods for correlation
-		jobs, errJobs := client.BatchV1().Jobs(targetNamespace).List(ctx, metav1.ListOptions{})
-		pods, errPods := client.CoreV1().Pods(targetNamespace).List(ctx, metav1.ListOptions{})
+		if sjs != nil && len(sjs.Items) > 0 {
+			// Pre-fetch lists once
+			jobsList, _ := client.BatchV1().Jobs(targetNamespace).List(ctx, metav1.ListOptions{})
+			podsList, _ := client.CoreV1().Pods(targetNamespace).List(ctx, metav1.ListOptions{})
 
-		if err == nil {
+			jobsItems := jobsList.Items
+			podsItems := podsList.Items
+
 			for _, item := range sjs.Items {
-				name := item.GetName()
-				namespace := item.GetNamespace()
-				uid := item.GetUID()
+				item := item
+				g.Go(func() error {
+					name := item.GetName()
+					namespace := item.GetNamespace()
+					uid := item.GetUID()
 
-				// Extract ScaledJob spec/status
-				active := int32(0)
-				statusUnready := false
-
-				if status, ok := item.Object["status"].(map[string]interface{}); ok {
-					if act, ok := status["active"].(int64); ok {
-						active = int32(act)
-					}
-					// Check conditions for readiness
-					if conditions, ok := status["conditions"].([]interface{}); ok {
-						for _, c := range conditions {
-							if cMap, ok := c.(map[string]interface{}); ok {
-								if cMap["type"] == "Ready" && cMap["status"] == "False" {
-									statusUnready = true
+					active := int32(0)
+					statusUnready := false
+					if status, ok := item.Object["status"].(map[string]interface{}); ok {
+						if act, ok := status["active"].(int64); ok {
+							active = int32(act)
+						}
+						if conditions, ok := status["conditions"].([]interface{}); ok {
+							for _, c := range conditions {
+								if cMap, ok := c.(map[string]interface{}); ok {
+									if cMap["type"] == "Ready" && cMap["status"] == "False" {
+										statusUnready = true
+									}
 								}
 							}
 						}
 					}
-				}
 
-				// Find child Jobs
-				var childJobs []batchv1.Job
-				if errJobs == nil {
-					for _, job := range jobs.Items {
-						for _, owner := range job.OwnerReferences {
-							if owner.UID == uid {
-								childJobs = append(childJobs, job)
+					childCount := 0
+					running := 0
+					pending := 0
+					failed := 0
+					var relevantPods []corev1.Pod
+
+					var myJobUIDs []string
+					for _, j := range jobsItems {
+						for _, o := range j.OwnerReferences {
+							if o.UID == uid {
+								myJobUIDs = append(myJobUIDs, string(j.UID))
 								break
 							}
 						}
 					}
-				}
 
-				// Find child Pods (grandchildren of ScaledJob)
-				var childPods []corev1.Pod
-				if errPods == nil {
-					for _, pod := range pods.Items {
-						for _, owner := range pod.OwnerReferences {
-							for _, job := range childJobs {
-								if owner.UID == job.UID {
-									childPods = append(childPods, pod)
+					for _, p := range podsItems {
+						for _, o := range p.OwnerReferences {
+							for _, juid := range myJobUIDs {
+								if string(o.UID) == juid {
+									relevantPods = append(relevantPods, p)
+									childCount++
+									switch p.Status.Phase {
+									case v1.PodRunning:
+										running++
+									case v1.PodPending:
+										pending++
+									case v1.PodFailed:
+										failed++
+									}
 									break
 								}
 							}
 						}
 					}
-				}
 
-				// Aggregate stats from pods
-				runningPods := 0
-				pendingPods := 0
-				failedPods := 0
-
-				for _, p := range childPods {
-					switch p.Status.Phase {
-					case corev1.PodRunning:
-						runningPods++
-					case corev1.PodPending:
-						pendingPods++
-					case corev1.PodFailed:
-						failedPods++
+					status := "Healthy"
+					if statusUnready {
+						status = "Warning"
+					} else if failed > 0 {
+						status = "Critical"
+					} else if pending > 0 {
+						status = "Warning"
 					}
-				}
 
-				// Determine Status based on pods if ScaledJob itself is "Ready"
-				status := "Healthy"
-				if statusUnready {
-					status = "Warning"
-				} else if failedPods > 0 {
-					status = "Critical"
-				} else if pendingPods > 0 {
-					status = "Warning"
-				}
+					enrichCtx, cancel := context.WithTimeout(ctx, 3*time.Second)
+					defer cancel()
 
-				// Fetch logs/events from the most recent pod if available
-				var recentLogs []string
-				var recentEvents []K8sEvent
-				if len(childPods) > 0 {
-					// Simply take the first one or sort by creation timestamp if needed.
-					// For now, picking the last one (likely most recent)
-					latestPod := childPods[len(childPods)-1]
-					recentLogs = fetchRecentLogs(c.Request.Context(), client, namespace, map[string]string{"job-name": latestPod.Labels["job-name"]}) // Best effort selector
-					recentEvents = fetchRecentEvents(c.Request.Context(), client, namespace, name, "ScaledJob")                                       // Events on the SJ itself
-					// Append events from jobs? Maybe too noisy.
-				} else {
-					recentEvents = fetchRecentEvents(c.Request.Context(), client, namespace, name, "ScaledJob")
-				}
+					var recentLogs []string
+					var recentEvents []K8sEvent
+					if len(relevantPods) > 0 {
+						latestPod := relevantPods[len(relevantPods)-1]
+						recentLogs = fetchRecentLogs(enrichCtx, client, namespace, map[string]string{"job-name": latestPod.Labels["job-name"]})
+						recentEvents = fetchRecentEvents(enrichCtx, client, namespace, name, "ScaledJob")
+					} else {
+						recentEvents = fetchRecentEvents(enrichCtx, client, namespace, name, "ScaledJob")
+					}
 
-				// Map to Workload
-				w := Workload{
-					ID:                string(item.GetUID()),
-					Name:              name,
-					Namespace:         namespace,
-					Kind:              "ScaledJob",
-					Replicas:          int32(len(childPods)), // Total pods related to this SJ
-					AvailableReplicas: int32(runningPods),
-					Status:            status,
-					Metrics:           getRealMetrics(c.Request.Context(), namespace, name, "Job", v1.PodSpec{}), // No easy pod spec access without parsing deep map, skipping for MVP
-					CostPerMonth:      rand.Intn(100) + 10,
-					RecentLogs:        recentLogs,
-					Events:            recentEvents,
-					Scaling: ScalingInfo{
-						Enabled:   true,
-						Current:   active,
-						KedaReady: !statusUnready,
-						Config:    &KedaConfig{Name: name, Triggers: []string{}}, // Partial config
-					},
-				}
+					w := Workload{
+						ID: string(uid), Name: name, Namespace: namespace, Kind: "ScaledJob",
+						Replicas: int32(childCount), AvailableReplicas: int32(running), Status: status,
+						Metrics:      getRealMetrics(enrichCtx, namespace, name, "Job", v1.PodSpec{}),
+						CostPerMonth: rand.Intn(100) + 10,
+						RecentLogs:   recentLogs, Events: recentEvents,
+						Scaling: ScalingInfo{Enabled: true, Current: active, KedaReady: !statusUnready, Config: &KedaConfig{Name: name}},
+					}
 
-				// Extract Triggers if possible
-				if spec, ok := item.Object["spec"].(map[string]interface{}); ok {
-					if trigs, ok := spec["triggers"].([]interface{}); ok {
-						var trigTypes []string
-						for _, t := range trigs {
-							if tMap, ok := t.(map[string]interface{}); ok {
-								if typeStr, ok := tMap["type"].(string); ok {
-									trigTypes = append(trigTypes, typeStr)
+					if spec, ok := item.Object["spec"].(map[string]interface{}); ok {
+						if trigs, ok := spec["triggers"].([]interface{}); ok {
+							var trigTypes []string
+							for _, t := range trigs {
+								if tMap, ok := t.(map[string]interface{}); ok {
+									if typeStr, ok := tMap["type"].(string); ok {
+										trigTypes = append(trigTypes, typeStr)
+									}
 								}
 							}
+							w.Scaling.Config.Triggers = trigTypes
 						}
-						w.Scaling.Config.Triggers = trigTypes
 					}
-				}
-
-				workloads = append(workloads, w)
+					addWorkload(w)
+					return nil
+				})
 			}
 		}
+	}
+
+	if err := g.Wait(); err != nil {
+		fmt.Printf("Error in concurrent enrichment: %v\n", err)
 	}
 
 	// Step 2: Store in Cache (10s TTL for real-time feel)

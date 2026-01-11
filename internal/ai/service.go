@@ -193,11 +193,12 @@ func (s *AIService) GenerateRemediation(ctx context.Context, providerName, model
 	Return ONLY a valid JSON object with the following structure, no other text:
 	{
 		"description": "Short title of the fix",
-		"patchType": "application/merge-patch+json",
-		"patchContent": "The YAML patch content as a string",
+	"patchType": "application/strategic-merge-patch+yaml",
+		"patchContent": "The complete YAML patch content (e.g. spec:\n  replicas: 3)",
 		"risk": "Low" | "Medium" | "High",
 		"reasoning": "Brief explanation of why this fix is needed"
 	}
+	IMPORTANT: 'patchContent' MUST be valid, multi-line YAML string, NOT JSON.
 	`, resourceKind, resourceName, errorLog)
 
 	rawResponse, err := provider.GenerateContent(ctx, prompt, model)

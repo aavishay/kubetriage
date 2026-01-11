@@ -31,8 +31,8 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLogin }) => {
 
       <div className="w-full max-w-md bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl shadow-xl p-8 relative z-10 animate-fadeIn">
         <div className="flex flex-col items-center mb-8">
-          <div className="bg-blue-600 p-3 rounded-xl mb-4 shadow-lg shadow-blue-600/20">
-            <Box className="w-8 h-8 text-white" />
+          <div className="mb-4">
+            <img src="/favicon.png" alt="Logo" className="w-12 h-12 object-contain" />
           </div>
           <h1 className="text-2xl font-bold text-zinc-900 dark:text-white tracking-tight">Welcome back</h1>
           <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-2">Sign in to KubeTriage Platform</p>

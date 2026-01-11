@@ -6,7 +6,7 @@ import { useMonitoring } from '../contexts/MonitoringContext';
 import { analyzeWorkload } from '../services/geminiService';
 import { generateRemediation, applyRemediation } from '../services/remediationService';
 import ReactMarkdown from 'react-markdown';
-import { Terminal, Loader2, Sparkles, Activity, Search, Clock, Globe, ChevronLeft, MessageSquareShare, ArrowRight, PanelLeftClose, PanelLeft, AlertCircle, CheckCircle2, ChevronRight, Layers, ArrowDown, Server, Zap, Globe2, WifiOff, MoreHorizontal, Info, ActivitySquare, Radio, ShieldCheck, HardDrive, WrapText, Bot, Copy, Check, FileCheck, Scroll } from 'lucide-react';
+import { Terminal, Loader2, Sparkles, Activity, Search, Clock, Globe, ChevronLeft, MessageSquareShare, ArrowRight, PanelLeftClose, PanelLeft, AlertCircle, CheckCircle2, ChevronRight, Layers, ArrowDown, Server, Zap, Globe2, WifiOff, MoreHorizontal, Info, ActivitySquare, Radio, ShieldCheck, HardDrive, WrapText, Bot, Copy, Check, FileCheck, Scroll, Hash, HeartPulse } from 'lucide-react';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import { MetricsChart } from './MetricsChart';
@@ -348,11 +348,40 @@ export const TriageView: React.FC<TriageViewProps> = ({ workloads, isDarkMode = 
       return !inline && match
         ? <CodeBlock language={match[1]}>{children}</CodeBlock>
         : <code className="bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 px-2 py-0.5 rounded-lg font-mono text-xs font-black" {...props}>{children}</code>;
+    },
+    h2({ children, ...props }: any) {
+      const text = String(children).toLowerCase();
+      let icon = <Hash className="w-4 h-4 text-zinc-400" />;
+      if (text.includes('executive summary')) icon = <AlertCircle className="w-5 h-5 text-rose-500" />;
+      if (text.includes('root cause')) icon = <Search className="w-5 h-5 text-blue-500" />;
+      if (text.includes('impact')) icon = <Activity className="w-5 h-5 text-amber-500" />;
+      if (text.includes('health')) icon = <HeartPulse className="w-5 h-5 text-emerald-500" />;
+
+      return (
+        <h2 className="text-base font-black uppercase tracking-widest flex items-center gap-3 mb-6 mt-10 pb-4 border-b border-zinc-100 dark:border-zinc-800 text-zinc-900 dark:text-white" {...props}>
+          {icon}
+          {children}
+        </h2>
+      );
+    },
+    ul({ children, ...props }: any) {
+      return <ul className="space-y-3 mt-4 mb-6 list-none pl-0" {...props}>{children}</ul>;
+    },
+    li({ children, ...props }: any) {
+      return (
+        <li className="flex gap-3 items-start text-zinc-600 dark:text-zinc-300 text-sm leading-relaxed" {...props}>
+          <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-zinc-300 dark:bg-zinc-700 shrink-0" />
+          <span className="flex-1">{children}</span>
+        </li>
+      );
+    },
+    strong({ children, ...props }: any) {
+      return <strong className="font-black text-zinc-900 dark:text-white" {...props}>{children}</strong>;
     }
   }), []);
 
   return (
-    <div className="flex flex-col lg:flex-row gap-6 h-auto lg:h-[calc(100vh-160px)] relative w-full overflow-hidden font-sans">
+    <div className="flex flex-col lg:flex-row gap-6 h-auto lg:h-full relative w-full overflow-hidden font-sans">
       <aside className={`${selectedWorkload && !isSidebarOpen ? 'hidden' : 'flex'} lg:flex transition-all duration-500 flex-col bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-sm rounded-[2.5rem] overflow-hidden shrink-0 ${isDesktopCollapsed ? 'lg:w-24' : 'w-full lg:w-96'}`}>
         <div className={`border-b border-zinc-100 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-950/50 flex items-center transition-all ${isDesktopCollapsed ? 'p-4 justify-center' : 'p-8 justify-between'}`}>
           {!isDesktopCollapsed && (
@@ -377,7 +406,7 @@ export const TriageView: React.FC<TriageViewProps> = ({ workloads, isDarkMode = 
               key={w.id}
               ref={selectedWorkload?.id === w.id ? selectedRef : null}
               onClick={() => { setSelectedWorkload(w); setAnalysis(null); setPatchSuggestion(null); setIsSidebarOpen(false); }}
-              className={`group relative p-6 rounded-[2.25rem] cursor-pointer transition-all border-2 ${selectedWorkload?.id === w.id ? 'bg-indigo-600 border-indigo-500 text-white shadow-xl translate-x-1' : 'bg-white dark:bg-zinc-900 border-transparent shadow-sm hover:translate-x-1'}`}
+              className={`group relative p-6 rounded-[2.25rem] cursor-pointer transition-all border-2 ${selectedWorkload?.id === w.id ? 'bg-indigo-600 border-indigo-500 text-white shadow-xl translate-x-1' : 'bg-white dark:bg-zinc-900 border-transparent shadow-sm hover:translate-x-1 hover:shadow-lg hover:shadow-indigo-500/10 hover:border-indigo-500/30'}`}
             >
               <span className="text-sm font-black truncate leading-none uppercase tracking-tighter block mb-1.5">{w.name}</span>
               <div className="flex items-center justify-between mt-1"><span className={`text-[9px] font-black uppercase tracking-[0.25em] flex items-center gap-1.5 ${selectedWorkload?.id === w.id ? 'text-white/70' : 'text-indigo-500 dark:text-indigo-400'}`}>{w.kind === 'ScaledJob' ? <Scroll className="w-3.5 h-3.5" /> : <Layers className="w-3.5 h-3.5" />} {w.kind}</span><div className={`w-2.5 h-2.5 rounded-full ${w.status === 'Healthy' ? 'bg-emerald-500' : w.status === 'Warning' ? 'bg-amber-500' : 'bg-rose-500'}`} /></div>
@@ -402,18 +431,18 @@ export const TriageView: React.FC<TriageViewProps> = ({ workloads, isDarkMode = 
                   </select></div>
 
                 </div>
-                <button onClick={handleAnalyzeLogs} disabled={isAnalyzing} className="flex-1 xl:flex-none bg-indigo-600 hover:bg-indigo-700 text-white px-10 py-4 rounded-[1.25rem] text-[10px] font-black uppercase tracking-[0.2em] shadow-2xl shadow-indigo-600/30"> {isAnalyzing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />} Initialize Diagnosis</button>
+                <button onClick={handleAnalyzeLogs} disabled={isAnalyzing} className="flex-1 xl:flex-none bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white px-10 py-4 rounded-[1.25rem] text-[10px] font-black uppercase tracking-[0.2em] shadow-2xl shadow-indigo-600/30 transition-all active:scale-95 disabled:opacity-70 disabled:cursor-not-allowed"> {isAnalyzing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />} Initialize Diagnosis</button>
               </div>
             </header>
 
             <div className="flex-1 overflow-y-auto p-6 space-y-6 bg-zinc-50/20 dark:bg-black/20 pb-32">
               {/* Metrics Ribbon */}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="bg-white dark:bg-zinc-900 p-5 rounded-[2.5rem] border border-zinc-100 dark:border-zinc-800 shadow-sm text-center">
+                <div className="bg-white dark:bg-zinc-900 p-5 rounded-[2.5rem] border border-zinc-100 dark:border-zinc-800 shadow-sm text-center animate-in fade-in slide-in-from-bottom-4 duration-700 delay-75 fill-mode-forwards">
                   <p className="text-[10px] font-black text-zinc-400 uppercase mb-2 tracking-widest">Availability</p>
                   <span className="text-4xl font-black text-zinc-900 dark:text-white tracking-tighter">{selectedWorkload.availableReplicas}<span className="text-lg opacity-40 ml-1">/{selectedWorkload.replicas}</span></span>
                 </div>
-                <div className="bg-white dark:bg-zinc-900 p-5 rounded-[2.5rem] border border-zinc-100 dark:border-zinc-800 shadow-sm text-center flex flex-col justify-between overflow-hidden">
+                <div className="bg-white dark:bg-zinc-900 p-5 rounded-[2.5rem] border border-zinc-100 dark:border-zinc-800 shadow-sm text-center flex flex-col justify-between overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-700 delay-150 fill-mode-forwards">
                   <div>
                     <p className="text-[10px] font-black text-zinc-400 uppercase mb-2 tracking-widest">CPU Pressure</p>
                     <span className={`text-4xl font-black tracking-tighter ${saturation.cpu > 90 ? 'text-rose-500' : 'text-zinc-900 dark:text-white'}`}>{saturation.cpu}%</span>
@@ -422,7 +451,7 @@ export const TriageView: React.FC<TriageViewProps> = ({ workloads, isDarkMode = 
                     <MetricsChart data={cpuMetrics} color="#6366f1" height={80} unit="%" />
                   </div>
                 </div>
-                <div className="bg-white dark:bg-zinc-900 p-5 rounded-[2.5rem] border border-zinc-100 dark:border-zinc-800 shadow-sm text-center flex flex-col justify-between overflow-hidden">
+                <div className="bg-white dark:bg-zinc-900 p-5 rounded-[2.5rem] border border-zinc-100 dark:border-zinc-800 shadow-sm text-center flex flex-col justify-between overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-700 delay-200 fill-mode-forwards">
                   <div>
                     <p className="text-[10px] font-black text-zinc-400 uppercase mb-2 tracking-widest">RAM Pressure</p>
                     <span className={`text-4xl font-black tracking-tighter ${saturation.mem > 90 ? 'text-rose-500' : 'text-zinc-900 dark:text-white'}`}>{saturation.mem}%</span>
@@ -431,7 +460,7 @@ export const TriageView: React.FC<TriageViewProps> = ({ workloads, isDarkMode = 
                     <MetricsChart data={memMetrics} color="#10b981" height={80} unit="MiB" />
                   </div>
                 </div>
-                <div className="bg-white dark:bg-zinc-900 p-5 rounded-[2.5rem] border border-zinc-100 dark:border-zinc-800 shadow-sm text-center">
+                <div className="bg-white dark:bg-zinc-900 p-5 rounded-[2.5rem] border border-zinc-100 dark:border-zinc-800 shadow-sm text-center animate-in fade-in slide-in-from-bottom-4 duration-700 delay-300 fill-mode-forwards">
                   <p className="text-[10px] font-black text-zinc-400 uppercase mb-2 tracking-widest">Storage Load</p>
                   <span className={`text-4xl font-black tracking-tighter ${saturation.storage > 85 ? 'text-rose-500 animate-pulse' : 'text-amber-500'}`}>{saturation.storage}%</span>
                 </div>
@@ -483,8 +512,9 @@ export const TriageView: React.FC<TriageViewProps> = ({ workloads, isDarkMode = 
                   <div className="p-8 flex-1 overflow-y-auto">
                     {isAnalyzing ? <div className="h-full flex flex-col items-center justify-center text-center gap-6"><Loader2 className="w-12 h-12 text-indigo-500 animate-spin" /><h4 className="text-lg font-black text-zinc-900 dark:text-white uppercase tracking-tighter">AI SRE Analysis...</h4></div> : analysis ? <div className="animate-in fade-in slide-in-from-bottom-6 duration-700">
 
-                      <div className="bg-indigo-500/10 border border-indigo-500/20 rounded-2xl p-5 flex flex-col md:flex-row items-center justify-between gap-6">
-                        <div className="flex items-center gap-4">
+                      <div className="bg-gradient-to-r from-indigo-500/10 to-purple-500/10 border border-indigo-500/30 backdrop-blur-xl rounded-2xl p-6 flex flex-col md:flex-row items-center justify-between gap-6 shadow-2xl relative overflow-hidden">
+                        <div className="absolute inset-0 bg-indigo-500/5 blur-3xl" />
+                        <div className="flex items-center gap-4 relative z-10">
                           <div className="p-3 bg-indigo-500 text-white rounded-xl shadow-lg shadow-indigo-500/30">
                             <FileCheck className="w-6 h-6" />
                           </div>
