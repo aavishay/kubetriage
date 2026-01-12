@@ -207,11 +207,16 @@ func (s *AIService) GenerateRemediation(ctx context.Context, providerName, model
 	}
 
 	// Clean up potential markdown code blocks
+	// Clean up potentially messy AI response (e.g. Markdown, conversational filler)
 	cleanResponse := strings.TrimSpace(rawResponse)
-	cleanResponse = strings.TrimPrefix(cleanResponse, "```json")
-	cleanResponse = strings.TrimPrefix(cleanResponse, "```")
-	cleanResponse = strings.TrimSuffix(cleanResponse, "```")
-	cleanResponse = strings.TrimSpace(cleanResponse)
+
+	// Robustly extract JSON object
+	if start := strings.Index(cleanResponse, "{"); start != -1 {
+		cleanResponse = cleanResponse[start:]
+	}
+	if end := strings.LastIndex(cleanResponse, "}"); end != -1 {
+		cleanResponse = cleanResponse[:end+1]
+	}
 
 	var suggestion PatchSuggestion
 	// We need standard json package

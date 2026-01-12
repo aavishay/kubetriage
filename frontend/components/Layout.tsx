@@ -78,7 +78,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
   const navItems = [
     { path: '/', label: 'Overview', icon: LayoutDashboard },
     { path: '/templates', label: 'Runbooks', icon: BookOpen },
-    { path: '/triage', label: 'Incident Triage', icon: AlertCircle },
+    { path: '/triage', label: 'Triage', icon: AlertCircle },
     { path: '/rightsizing', label: 'Right Sizing', icon: Scale },
     { path: '/topology', label: 'Architecture', icon: Cloud },
     { path: '/reports', label: 'Reporting', icon: FileText },
@@ -311,7 +311,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
         )}
 
         {/* Content Container */}
-        <div className="flex-1 overflow-y-auto px-4 md:px-6 pt-0 pb-4 md:pb-6">
+        <div className="flex-1 overflow-y-auto px-4 md:px-6 pt-6 pb-4 md:pb-6">
           <div className="mx-auto max-w-7xl h-full">
             {/* Router Outlet for Page Content */}
             {children || <Outlet />}

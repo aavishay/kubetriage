@@ -74,7 +74,7 @@ func ClusterMetricsHandler(c *gin.Context) {
 
 	// Step 2: Store in Cache (1 minute TTL for metrics)
 	if jsonData, err := json.Marshal(result); err == nil {
-		cache.Set(c.Request.Context(), cacheKey, jsonData, 1*time.Minute)
+		cache.Set(c.Request.Context(), cacheKey, jsonData, cache.TTLMetrics)
 	}
 
 	c.JSON(http.StatusOK, result)

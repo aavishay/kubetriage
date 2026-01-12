@@ -8,6 +8,12 @@ import (
 	"github.com/redis/go-redis/v9"
 )
 
+const (
+	TTLWorkloads = 10 * time.Second
+	TTLMetrics   = 60 * time.Second
+	TTLAnalysis  = 24 * time.Hour
+)
+
 var RDB *redis.Client
 
 func InitRedis(addr string) {

@@ -772,7 +772,7 @@ func WorkloadsHandler(c *gin.Context) {
 
 	// Step 2: Store in Cache (10s TTL for real-time feel)
 	if jsonBytes, err := json.Marshal(workloads); err == nil {
-		cache.Set(c.Request.Context(), cacheKey, jsonBytes, 10*time.Second)
+		cache.Set(c.Request.Context(), cacheKey, jsonBytes, cache.TTLWorkloads)
 	}
 
 	c.JSON(http.StatusOK, workloads)

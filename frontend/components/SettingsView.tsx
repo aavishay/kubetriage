@@ -25,7 +25,12 @@ export const SettingsView: React.FC = () => {
             setIsLoadingModels(true);
             setFetchError(null);
             try {
-                const res = await fetch(`/api/ai/models?provider=${provider}`);
+                const token = localStorage.getItem('mock_token') || 'mock-token';
+                const res = await fetch(`/api/ai/models?provider=${provider}`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
                 if (!res.ok) throw new Error('Failed to fetch models');
                 const data = await res.json();
                 setFetchedModels(data.models || []);
