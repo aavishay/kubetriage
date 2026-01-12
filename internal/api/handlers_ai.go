@@ -86,7 +86,7 @@ func (h *AIHandler) GenerateRemediation(c *gin.Context) {
 		return
 	}
 
-	suggestion, err := h.service.GenerateRemediation(c.Request.Context(), req.Provider, req.Model, req.ResourceKind, req.ResourceName, req.ErrorLog)
+	suggestion, err := h.service.GenerateRemediation(c.Request.Context(), req.Provider, req.Model, req.ResourceKind, req.ResourceName, req.ErrorLog, req.Analysis)
 	if err != nil {
 		log.Printf("Error generating remediation: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate remediation"})

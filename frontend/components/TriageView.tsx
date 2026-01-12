@@ -286,7 +286,8 @@ export const TriageView: React.FC<TriageViewProps> = ({ workloads, isDarkMode = 
         (selectedWorkload.recentLogs || []).slice(-10).join('\n'),
         aiConfig.provider,
         aiConfig.model,
-        selectedWorkload.namespace
+        selectedWorkload.namespace,
+        analysis || undefined
       );
       if (selectedWorkload.id === currentId) {
         setPatchSuggestion(suggestion);

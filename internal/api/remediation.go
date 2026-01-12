@@ -18,6 +18,7 @@ type GenerateRequest struct {
 	ResourceName string `json:"resourceName"`
 	Namespace    string `json:"namespace"`
 	ErrorLog     string `json:"errorLog"`
+	Analysis     string `json:"analysis"` // Optional RCA context
 }
 
 type ApplyRequest struct {

@@ -7,7 +7,7 @@ export interface PatchSuggestion {
     reasoning: string;
 }
 
-export const generateRemediation = async (resourceKind: string, resourceName: string, errorLog: string, provider: string = 'gemini', model: string, namespace: string = 'default'): Promise<PatchSuggestion> => {
+export const generateRemediation = async (resourceKind: string, resourceName: string, errorLog: string, provider: string = 'gemini', model: string, namespace: string = 'default', analysis?: string): Promise<PatchSuggestion> => {
     const response = await fetch('/api/remediate/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -17,7 +17,8 @@ export const generateRemediation = async (resourceKind: string, resourceName: st
             resourceKind,
             resourceName,
             namespace, // Namespace mocked for now or passed in
-            errorLog
+            errorLog,
+            analysis
         }),
     });
 

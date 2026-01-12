@@ -178,18 +178,23 @@ type PatchSuggestion struct {
 	Reasoning    string `json:"reasoning"`
 }
 
-func (s *AIService) GenerateRemediation(ctx context.Context, providerName, model, resourceKind, resourceName, errorLog string) (*PatchSuggestion, error) {
+func (s *AIService) GenerateRemediation(ctx context.Context, providerName, model, resourceKind, resourceName, errorLog, analysis string) (*PatchSuggestion, error) {
 	provider, err := s.getProvider(providerName)
 	if err != nil {
 		return nil, err
+	}
+
+	analysisContext := ""
+	if analysis != "" {
+		analysisContext = fmt.Sprintf("\n\tDiagnostic Analysis (RCA) from SRE:\n\t%s\n", analysis)
 	}
 
 	prompt := fmt.Sprintf(`
 	You are a Kubernetes Expert.
 	The resource %s/%s has the following error logs:
 	%s
-
-	Suggest a specific remediation action.
+	%s
+	Based on the logs and the provided analysis (if any), suggest a specific remediation action.
 	Return ONLY a valid JSON object with the following structure, no other text:
 	{
 		"description": "Short title of the fix",
@@ -199,7 +204,7 @@ func (s *AIService) GenerateRemediation(ctx context.Context, providerName, model
 		"reasoning": "Brief explanation of why this fix is needed"
 	}
 	IMPORTANT: 'patchContent' MUST be a valid multi-line YAML string. DO NOT use JSON format for the patch content.
-	`, resourceKind, resourceName, errorLog)
+	`, resourceKind, resourceName, errorLog, analysisContext)
 
 	rawResponse, err := provider.GenerateContent(ctx, prompt, model)
 	if err != nil {
