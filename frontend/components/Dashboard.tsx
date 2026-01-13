@@ -1,10 +1,9 @@
 
 import React, { useMemo } from 'react';
 import { Workload, DiagnosticPlaybook } from '../types';
-import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip } from 'recharts';
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 // Added missing ChevronRight import
-import { Activity, DollarSign, Box, Zap, TrendingDown, ShieldAlert, HeartPulse, Sparkles, AlertCircle, Network, ServerCrash, ZapOff, ArrowRight, Gauge, Target, SearchCode, ShieldCheck, Wifi, ExternalLink, ChevronRight, Server, Loader2 } from 'lucide-react';
-import { parseLogLine } from '../utils/formatters';
+import { Activity, DollarSign, Box, Zap, TrendingDown, ShieldAlert, HeartPulse, Sparkles, Network, ArrowRight, Target, SearchCode, ShieldCheck, Wifi, ExternalLink, ChevronRight, Server, Loader2 } from 'lucide-react';
 
 interface DashboardProps {
    workloads: Workload[];
@@ -32,8 +31,9 @@ export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = tr
 
    const resourceData = workloads.map(w => ({
       name: w.name,
-      requested: w.metrics?.cpuRequest || 0,
-      used: w.metrics?.cpuUsage || 0,
+      // Ensure requested and used are numbers and handle potential NaN
+      requested: Number(w.metrics?.cpuRequest) || 0,
+      used: Number(w.metrics?.cpuUsage) || 0,
       status: w.status
    }));
 
@@ -63,12 +63,13 @@ export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = tr
       const budgetPercentage = (remainingBudget / totalPossibleBudget) * 100;
       const idealDailyBurn = totalPossibleBudget / 30;
       const burnRate = dailyConsumption / idealDailyBurn;
+      // Handle division by zero for hoursRemaining if burnRate is 0
       const hoursRemaining = burnRate > 0 ? (remainingBudget / (dailyConsumption / 24)) : 720;
       const days = Math.floor(hoursRemaining / 24);
       const hours = Math.floor(hoursRemaining % 24);
 
       return {
-         slo, remainingBudget, budgetPercentage, burnRate,
+         slo, remainingBudget, budgetPercentage: isFinite(budgetPercentage) ? budgetPercentage : 0, burnRate: isFinite(burnRate) ? burnRate : 0,
          uptimeForecast: `${days}d ${hours}h`,
          severity: burnRate > 2.0 ? 'Critical' : burnRate > 1.2 ? 'Warning' : 'Healthy'
       };
@@ -112,7 +113,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = tr
             </div>
             <h2 className="text-2xl font-black text-zinc-900 dark:text-white uppercase tracking-tighter mb-2">No Workloads Found</h2>
             <p className="text-zinc-500 max-w-md text-center mb-8">
-               We couldn't detect any compatible workloads in this cluster. This might be due to missing RBAC permissions or an empty namespace.
+               We couldn&apos;t detect any compatible workloads in this cluster. This might be due to missing RBAC permissions or an empty namespace.
             </p>
             <button
                onClick={() => onRefresh?.()}
@@ -128,8 +129,14 @@ export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = tr
       if (w.availableReplicas === 0 && w.replicas > 0) return `Resource failure: 0/${w.replicas} available. Unreachable.`;
       if (w.availableReplicas < w.replicas) return `Degraded: ${w.availableReplicas}/${w.replicas} ready.`;
 
-      const cpuSat = w.metrics?.cpuLimit > 0 ? (w.metrics.cpuUsage / w.metrics.cpuLimit) * 100 : 0;
-      const memSat = w.metrics?.memoryLimit > 0 ? (w.metrics.memoryUsage / w.metrics.memoryLimit) * 100 : 0;
+      // Ensure metrics are numbers and handle division by zero
+      const cpuLimit = Number(w.metrics?.cpuLimit) || 0;
+      const cpuUsage = Number(w.metrics?.cpuUsage) || 0;
+      const memLimit = Number(w.metrics?.memoryLimit) || 0;
+      const memUsage = Number(w.metrics?.memoryUsage) || 0;
+
+      const cpuSat = cpuLimit > 0 ? (cpuUsage / cpuLimit) * 100 : 0;
+      const memSat = memLimit > 0 ? (memUsage / memLimit) * 100 : 0;
 
       if (cpuSat > 90) return `Critical CPU: ${Math.round(cpuSat)}% limit. Throttling likely.`;
       if (memSat > 95) return `Critical Memory: ${Math.round(memSat)}% usage. OOM imminent.`;
@@ -307,9 +314,15 @@ export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = tr
                <div className="flex-1 min-h-0 w-full overflow-y-auto pr-2 custom-scrollbar">
                   <div className="space-y-4">
                      {resourceData
-                        .sort((a, b) => (b.used / b.requested) - (a.used / a.requested))
+                        .sort((a, b) => {
+                           // Handle potential division by zero or NaN in sorting
+                           const aSat = (a.requested > 0) ? (a.used / a.requested) : 0;
+                           const bSat = (b.requested > 0) ? (b.used / b.requested) : 0;
+                           return bSat - aSat;
+                        })
                         .map((item, idx) => {
-                           const saturation = Math.min(100, Math.round((item.used / item.requested) * 100));
+                           // Ensure requested is not zero to avoid NaN
+                           const saturation = item.requested > 0 ? Math.min(100, Math.round((item.used / item.requested) * 100)) : 0;
                            const isCritical = saturation >= 90;
                            const isWarning = saturation >= 70 && saturation < 90;
 
@@ -453,7 +466,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = tr
                   <div>
                      <h4 className="text-xs font-black uppercase tracking-widest text-zinc-900 dark:text-white mb-2">Policy Compliance</h4>
                      <p className="text-[10px] text-zinc-500 font-bold leading-relaxed mb-6">
-                        Current resource distribution is within 15% of the "Balanced Production" template. No immediate re-balancing required.
+                        Current resource distribution is within 15% of the &quot;Balanced Production&quot; template. No immediate re-balancing required.
                      </p>
                   </div>
                   <button
