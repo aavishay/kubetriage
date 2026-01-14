@@ -109,6 +109,7 @@ const AppContent: React.FC = () => {
         <Routes>
           <Route path="/" element={<Dashboard workloads={workloads} isLoading={isWorkloadsLoading} isDarkMode={isDarkMode} onTriageRequest={handleNavigateToTriage} onRefresh={refreshWorkloads} />} />
           <Route path="/dashboard" element={<Navigate to="/" replace />} />
+          <Route path="/login" element={<Navigate to="/" replace />} />
           <Route path="/templates" element={<TemplateLibraryView onApplyTemplate={(view, tmpl) => handleApplyTemplate(tmpl)} isDarkMode={isDarkMode} />} />
           <Route path="/triage" element={
             <TriageView
