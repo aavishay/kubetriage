@@ -4,6 +4,7 @@ import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useMonitoring } from '../contexts/MonitoringContext';
 import { useAuth } from '../contexts/AuthContext';
 import { Cluster } from '../types';
+import logo from '../src/assets/kubetriage_logo.png';
 
 interface LayoutProps {
   children?: React.ReactNode;
@@ -129,7 +130,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
       `}>
         <div className={`flex p-6 items-center ${isCollapsed ? 'md:justify-center' : 'gap-3'} h-20 border-b border-gray-100 dark:border-white/5 overflow-hidden shrink-0`}>
           <div className="shrink-0">
-            <img src="/kubetriage_logo.png" alt="Logo" className="w-8 h-8 object-contain" />
+            <img src={logo} alt="Logo" className="w-8 h-8 object-contain" />
           </div>
           {(!isCollapsed || isMobileMenuOpen) && (
             <div className="animate-in fade-in slide-in-from-left-2">
