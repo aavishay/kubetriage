@@ -357,13 +357,16 @@ export const MonitoringProvider: React.FC<MonitoringProviderProps> = ({ children
 
         if (rule.metric === 'CPU') {
           value = workload.metrics.cpuUsage;
-          saturatedValue = workload.metrics.cpuLimit > 0 ? (value / workload.metrics.cpuLimit) * 100 : 0;
+          const base = (workload.metrics.cpuLimit > 0) ? workload.metrics.cpuLimit : workload.metrics.cpuRequest;
+          saturatedValue = base > 0 ? (value / base) * 100 : 0;
         } else if (rule.metric === 'Memory') {
           value = workload.metrics.memoryUsage;
-          saturatedValue = workload.metrics.memoryLimit > 0 ? (value / workload.metrics.memoryLimit) * 100 : 0;
+          const base = (workload.metrics.memoryLimit > 0) ? workload.metrics.memoryLimit : workload.metrics.memoryRequest;
+          saturatedValue = base > 0 ? (value / base) * 100 : 0;
         } else if (rule.metric === 'Storage') {
           value = workload.metrics.storageUsage;
-          saturatedValue = workload.metrics.storageLimit > 0 ? (value / workload.metrics.storageLimit) * 100 : 0;
+          const base = (workload.metrics.storageLimit > 0) ? workload.metrics.storageLimit : workload.metrics.storageRequest;
+          saturatedValue = base > 0 ? (value / base) * 100 : 0;
         }
 
         const isBreached = rule.operator === '>'

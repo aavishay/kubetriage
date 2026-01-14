@@ -336,34 +336,35 @@ export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = tr
                   <div className="space-y-6">
                      {workloads
                         .map(w => {
-                           let requested = 0, used = 0, unit = 'm', label = 'Saturation';
+                           let base = 0, used = 0, unit = 'm', label = 'Saturation';
                            if (saturationTab === 'CPU') {
-                              requested = Number(w.metrics?.cpuRequest) || 0;
+                              // Use limit for saturation, fallback to request if limit is empty
+                              base = (Number(w.metrics?.cpuLimit) || Number(w.metrics?.cpuRequest)) || 0;
                               used = Number(w.metrics?.cpuUsage) || 0;
                               unit = 'm'; label = 'CPU Saturation';
                            } else if (saturationTab === 'Memory') {
-                              requested = Number(w.metrics?.memoryRequest) || 0;
+                              base = (Number(w.metrics?.memoryLimit) || Number(w.metrics?.memoryRequest)) || 0;
                               used = Number(w.metrics?.memoryUsage) || 0;
                               unit = 'MiB'; label = 'Memory Saturation';
                            } else if (saturationTab === 'Storage') {
-                              requested = Number(w.metrics?.storageRequest) || 0;
+                              base = (Number(w.metrics?.storageLimit) || Number(w.metrics?.storageRequest)) || 0;
                               used = Number(w.metrics?.storageUsage) || 0;
                               unit = 'GiB'; label = 'Disk Saturation';
                            } else if (saturationTab === 'Network') {
-                              requested = 100; // Mock 100MB/s cap for visualization
+                              base = 100; // Mock 100MB/s cap for visualization
                               used = (Number(w.metrics?.networkIn) || 0) + (Number(w.metrics?.networkOut) || 0);
                               unit = 'MB/s'; label = 'Net Throughput';
                            }
 
-                           return { name: w.name, requested, used, unit, label, status: w.status };
+                           return { name: w.name, base, used, unit, label, status: w.status };
                         })
                         .sort((a, b) => {
-                           const aSat = (a.requested > 0) ? (a.used / a.requested) : 0;
-                           const bSat = (b.requested > 0) ? (b.used / b.requested) : 0;
+                           const aSat = (a.base > 0) ? (a.used / a.base) : 0;
+                           const bSat = (b.base > 0) ? (b.used / b.base) : 0;
                            return bSat - aSat;
                         })
                         .map((item, idx) => {
-                           const saturation = item.requested > 0 ? Math.min(100, Math.round((item.used / item.requested) * 100)) : 0;
+                           const saturation = item.base > 0 ? Math.min(100, Math.round((item.used / item.base) * 100)) : 0;
                            const isCritical = saturationTab === 'Memory' ? saturation >= 95 : saturation >= 90;
                            const isWarning = saturation >= 70 && !isCritical;
 
@@ -404,12 +405,12 @@ export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = tr
                                  <div className="w-32 shrink-0 text-right">
                                     <div className="text-[11px] font-mono text-gray-500 dark:text-gray-400">
                                        <span className="text-gray-900 dark:text-white font-black">{item.used.toFixed(saturationTab === 'Network' ? 1 : 2)}{item.unit}</span>
-                                       {item.requested > 0 && saturationTab !== 'Network' && (
-                                          <> <span className="opacity-40">/</span> {item.requested.toFixed(0)}{item.unit}</>
+                                       {item.base > 0 && saturationTab !== 'Network' && (
+                                          <> <span className="opacity-40">/</span> {item.base.toFixed(0)}{item.unit}</>
                                        )}
                                     </div>
                                     <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-0.5 block">
-                                       {saturationTab === 'CPU' ? 'cores' : saturationTab === 'Memory' ? 'ram' : saturationTab === 'Storage' ? 'disk' : 'bandwidth'}
+                                       {saturationTab === 'CPU' ? 'cores limit' : saturationTab === 'Memory' ? 'ram limit' : saturationTab === 'Storage' ? 'disk limit' : 'bandwidth'}
                                     </span>
                                  </div>
                               </div>
