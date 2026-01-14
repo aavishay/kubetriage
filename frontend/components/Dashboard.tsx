@@ -357,45 +357,50 @@ export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = tr
                      {workloads
                         .map(w => {
                            let base = 0, used = 0, unit = 'm', label = 'Saturation';
-                           let avg = 0, p95 = 0, p99 = 0;
+
+                           // Extract all potential metrics first
+                           const metrics = w.metrics || {};
+                           let live = 0, avg = 0, p95 = 0, p99 = 0;
+
                            if (saturationTab === 'CPU') {
-                              // Use limit for saturation, fallback to request if limit is empty
-                              base = (Number(w.metrics?.cpuLimit) || Number(w.metrics?.cpuRequest)) || 0;
-                              used = Number(w.metrics?.cpuUsage) || 0;
-                              avg = Number(w.metrics?.cpuAvg) || 0;
-                              p95 = Number(w.metrics?.cpuP95) || 0;
-                              p99 = Number(w.metrics?.cpuP99) || 0;
-                              unit = 'm'; label = 'CPU Saturation';
+                              base = (Number(metrics.cpuLimit) || Number(metrics.cpuRequest)) || 0;
+                              live = Number(metrics.cpuUsage) || 0;
+                              avg = Number(metrics.cpuAvg) || 0;
+                              p95 = Number(metrics.cpuP95) || 0;
+                              p99 = Number(metrics.cpuP99) || 0;
+                              unit = 'm';
+                              label = `CPU ${saturationSort === 'Live' ? 'Saturation' : saturationSort}`;
                            } else if (saturationTab === 'Memory') {
-                              base = (Number(w.metrics?.memoryLimit) || Number(w.metrics?.memoryRequest)) || 0;
-                              used = Number(w.metrics?.memoryUsage) || 0;
-                              avg = Number(w.metrics?.memoryAvg) || 0;
-                              p95 = Number(w.metrics?.memoryP95) || 0;
-                              p99 = Number(w.metrics?.memoryP99) || 0;
-                              unit = 'MiB'; label = 'Memory Saturation';
+                              base = (Number(metrics.memoryLimit) || Number(metrics.memoryRequest)) || 0;
+                              live = Number(metrics.memoryUsage) || 0;
+                              avg = Number(metrics.memoryAvg) || 0;
+                              p95 = Number(metrics.memoryP95) || 0;
+                              p99 = Number(metrics.memoryP99) || 0;
+                              unit = 'MiB';
+                              label = `Memory ${saturationSort === 'Live' ? 'Saturation' : saturationSort}`;
                            } else if (saturationTab === 'Storage') {
-                              base = (Number(w.metrics?.storageLimit) || Number(w.metrics?.storageRequest)) || 0;
-                              used = Number(w.metrics?.storageUsage) || 0;
-                              unit = 'GiB'; label = 'Disk Saturation';
+                              base = (Number(metrics.storageLimit) || Number(metrics.storageRequest)) || 0;
+                              live = Number(metrics.storageUsage) || 0;
+                              unit = 'GiB';
+                              label = 'Disk Saturation';
+                              // Storage doesn't have advanced metrics yet, fallback to live
                            } else if (saturationTab === 'Network') {
-                              base = 100; // Mock 100MB/s cap for visualization
-                              used = (Number(w.metrics?.networkIn) || 0) + (Number(w.metrics?.networkOut) || 0);
-                              unit = 'MB/s'; label = 'Net Throughput';
+                              base = 100;
+                              live = (Number(metrics.networkIn) || 0) + (Number(metrics.networkOut) || 0);
+                              unit = 'MB/s';
+                              label = 'Net Throughput';
                            }
+
+                           // Select 'used' value based on sort mode
+                           if (saturationSort === 'Avg' && avg > 0) used = avg;
+                           else if (saturationSort === 'P95' && p95 > 0) used = p95;
+                           else if (saturationSort === 'P99' && p99 > 0) used = p99;
+                           else used = live;
 
                            return { name: w.name, base, used, unit, label, status: w.status, avg, p95, p99 };
                         })
                         .sort((a, b) => {
-                           if (saturationSort === 'Avg' && a.avg && b.avg) {
-                              return (b.avg / b.base) - (a.avg / a.base);
-                           }
-                           if (saturationSort === 'P95' && a.p95 && b.p95) {
-                              return (b.p95 / b.base) - (a.p95 / a.base);
-                           }
-                           if (saturationSort === 'P99' && a.p99 && b.p99) {
-                              return (b.p99 / b.base) - (a.p99 / a.base);
-                           }
-                           // Default Live
+                           // Sort based on the selected 'used' value calculated above
                            const aSat = (a.base > 0) ? (a.used / a.base) : 0;
                            const bSat = (b.base > 0) ? (b.used / b.base) : 0;
                            return bSat - aSat;
