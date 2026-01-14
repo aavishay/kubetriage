@@ -4,7 +4,7 @@ import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useMonitoring } from '../contexts/MonitoringContext';
 import { useAuth } from '../contexts/AuthContext';
 import { Cluster } from '../types';
-import logo from '../src/assets/kubetriage_logo.png';
+import logo from '../src/assets/kubetriage_logo.svg';
 
 interface LayoutProps {
   children?: React.ReactNode;
