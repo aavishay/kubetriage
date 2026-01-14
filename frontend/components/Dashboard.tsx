@@ -15,6 +15,7 @@ interface DashboardProps {
 
 export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = true, isLoading = false, onTriageRequest, onRefresh }) => {
    const [saturationTab, setSaturationTab] = React.useState<'CPU' | 'Memory' | 'Storage' | 'Network'>('CPU');
+   const [saturationSort, setSaturationSort] = React.useState<'Live' | 'Avg' | 'P95' | 'P99'>('Live');
    const totalCost = workloads.reduce((acc, w) => acc + (w.costPerMonth || 0), 0);
    const criticalCount = workloads.filter(w => w.status === 'Critical').length;
    const warningCount = workloads.filter(w => w.status === 'Warning').length;
@@ -317,19 +318,38 @@ export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = tr
                   <h3 className="text-[11px] font-black uppercase tracking-[0.2em] text-gray-500 dark:text-gray-400 flex items-center gap-2.5">
                      <Zap className="w-4 h-4 text-primary-500 shadow-[0_0_8px_rgba(14,165,233,0.4)]" /> Resource Saturation
                   </h3>
-                  <div className="flex p-1 bg-gray-100 dark:bg-white/5 rounded-xl border border-gray-200 dark:border-white/5">
-                     {(['CPU', 'Memory', 'Storage', 'Network'] as const).map((type) => (
-                        <button
-                           key={type}
-                           onClick={() => setSaturationTab(type)}
-                           className={`px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${saturationTab === type
-                              ? 'bg-white dark:bg-[#1A1D23] text-primary-500 shadow-sm border border-gray-200 dark:border-white/10'
-                              : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-200'
-                              }`}
-                        >
-                           {type}
-                        </button>
-                     ))}
+                  <div className="flex items-center gap-4">
+                     {/* Sort Selector */}
+                     <div className="flex p-1 bg-gray-100/50 dark:bg-white/5 rounded-xl border border-gray-200 dark:border-white/5">
+                        {(['Live', 'Avg', 'P95', 'P99'] as const).map((sort) => (
+                           <button
+                              key={sort}
+                              onClick={() => setSaturationSort(sort)}
+                              className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${saturationSort === sort
+                                 ? 'bg-white dark:bg-[#1A1D23] text-indigo-500 shadow-sm border border-gray-200 dark:border-white/10'
+                                 : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-200'
+                                 }`}
+                           >
+                              {sort}
+                           </button>
+                        ))}
+                     </div>
+
+                     {/* Resource Tab Selector */}
+                     <div className="flex p-1 bg-gray-100 dark:bg-white/5 rounded-xl border border-gray-200 dark:border-white/5">
+                        {(['CPU', 'Memory', 'Storage', 'Network'] as const).map((type) => (
+                           <button
+                              key={type}
+                              onClick={() => setSaturationTab(type)}
+                              className={`px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${saturationTab === type
+                                 ? 'bg-white dark:bg-[#1A1D23] text-primary-500 shadow-sm border border-gray-200 dark:border-white/10'
+                                 : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-200'
+                                 }`}
+                           >
+                              {type}
+                           </button>
+                        ))}
+                     </div>
                   </div>
                </div>
                <div className="flex-1 min-h-0 w-full overflow-y-auto pr-2 custom-scrollbar">
@@ -366,6 +386,16 @@ export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = tr
                            return { name: w.name, base, used, unit, label, status: w.status, avg, p95, p99 };
                         })
                         .sort((a, b) => {
+                           if (saturationSort === 'Avg' && a.avg && b.avg) {
+                              return (b.avg / b.base) - (a.avg / a.base);
+                           }
+                           if (saturationSort === 'P95' && a.p95 && b.p95) {
+                              return (b.p95 / b.base) - (a.p95 / a.base);
+                           }
+                           if (saturationSort === 'P99' && a.p99 && b.p99) {
+                              return (b.p99 / b.base) - (a.p99 / a.base);
+                           }
+                           // Default Live
                            const aSat = (a.base > 0) ? (a.used / a.base) : 0;
                            const bSat = (b.base > 0) ? (b.used / b.base) : 0;
                            return bSat - aSat;
