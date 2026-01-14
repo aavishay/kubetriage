@@ -46,6 +46,12 @@ type ResourceMetrics struct {
 	NetworkIn      float64 `json:"networkIn"`
 	NetworkOut     float64 `json:"networkOut"`
 	DiskIo         float64 `json:"diskIo"`
+	CpuAvg         float64 `json:"cpuAvg"`
+	CpuP95         float64 `json:"cpuP95"`
+	CpuP99         float64 `json:"cpuP99"`
+	MemoryAvg      float64 `json:"memoryAvg"`
+	MemoryP95      float64 `json:"memoryP95"`
+	MemoryP99      float64 `json:"memoryP99"`
 }
 
 type K8sEvent struct {
@@ -196,6 +202,35 @@ func getRealMetrics(ctx context.Context, namespace, name, kind string, podSpec v
 		netOutQuery := fmt.Sprintf(`sum(rate(container_network_transmit_bytes_total{namespace="%s", pod=~"%s-.*"}[2m]))`, namespace, name)
 		if val, err := prometheus.GlobalClient.QueryVector(ctx, netOutQuery); err == nil {
 			metrics.NetworkOut = val / (1024 * 1024) // MB/s
+		}
+
+		// 3. Advanced Metrics (1h Window)
+		// CPU Advanced
+		cpuAvgQuery := fmt.Sprintf(`avg_over_time(sum(rate(container_cpu_usage_seconds_total{namespace="%s", pod=~"%s-.*", container!=""}[2m]))[1h:5m])`, namespace, name)
+		if val, err := prometheus.GlobalClient.QueryVector(ctx, cpuAvgQuery); err == nil {
+			metrics.CpuAvg = val
+		}
+		cpuP95Query := fmt.Sprintf(`quantile_over_time(0.95, sum(rate(container_cpu_usage_seconds_total{namespace="%s", pod=~"%s-.*", container!=""}[2m]))[1h:5m])`, namespace, name)
+		if val, err := prometheus.GlobalClient.QueryVector(ctx, cpuP95Query); err == nil {
+			metrics.CpuP95 = val
+		}
+		cpuP99Query := fmt.Sprintf(`quantile_over_time(0.99, sum(rate(container_cpu_usage_seconds_total{namespace="%s", pod=~"%s-.*", container!=""}[2m]))[1h:5m])`, namespace, name)
+		if val, err := prometheus.GlobalClient.QueryVector(ctx, cpuP99Query); err == nil {
+			metrics.CpuP99 = val
+		}
+
+		// Memory Advanced
+		memAvgQuery := fmt.Sprintf(`avg_over_time(sum(container_memory_working_set_bytes{namespace="%s", pod=~"%s-.*", container!=""})[1h:5m])`, namespace, name)
+		if val, err := prometheus.GlobalClient.QueryVector(ctx, memAvgQuery); err == nil {
+			metrics.MemoryAvg = val / (1024 * 1024)
+		}
+		memP95Query := fmt.Sprintf(`quantile_over_time(0.95, sum(container_memory_working_set_bytes{namespace="%s", pod=~"%s-.*", container!=""})[1h:5m])`, namespace, name)
+		if val, err := prometheus.GlobalClient.QueryVector(ctx, memP95Query); err == nil {
+			metrics.MemoryP95 = val / (1024 * 1024)
+		}
+		memP99Query := fmt.Sprintf(`quantile_over_time(0.99, sum(container_memory_working_set_bytes{namespace="%s", pod=~"%s-.*", container!=""})[1h:5m])`, namespace, name)
+		if val, err := prometheus.GlobalClient.QueryVector(ctx, memP99Query); err == nil {
+			metrics.MemoryP99 = val / (1024 * 1024)
 		}
 	} else {
 		// If no Prometheus, fallback to mock (or 0)

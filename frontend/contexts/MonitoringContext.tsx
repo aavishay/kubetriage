@@ -431,10 +431,18 @@ export const MonitoringProvider: React.FC<MonitoringProviderProps> = ({ children
                 cpuUsage: 0, memoryUsage: 0, cpuLimit: 1, memoryLimit: 1,
                 cpuRequest: 0, memoryRequest: 0, storageRequest: 0,
                 storageLimit: 0, storageUsage: 0, networkIn: 0,
-                networkOut: 0, diskIo: 0
+                networkOut: 0, diskIo: 0,
+                cpuAvg: 0, cpuP95: 0, cpuP99: 0,
+                memoryAvg: 0, memoryP95: 0, memoryP99: 0
               }),
               cpuUsage: Math.min(w.metrics?.cpuLimit || 0, Math.max(0, (w.metrics?.cpuUsage || 0) + cpuVar)),
-              memoryUsage: Math.max(0, (w.metrics?.memoryUsage || 0) + (Math.random() > 0.5 ? 10 : -10))
+              memoryUsage: Math.max(0, (w.metrics?.memoryUsage || 0) + (Math.random() > 0.5 ? 10 : -10)),
+              cpuAvg: (w.metrics?.cpuUsage || 0) * 0.8,
+              cpuP95: (w.metrics?.cpuUsage || 0) * 1.2,
+              cpuP99: (w.metrics?.cpuUsage || 0) * 1.5,
+              memoryAvg: (w.metrics?.memoryUsage || 0) * 0.9,
+              memoryP95: (w.metrics?.memoryUsage || 0) * 1.1,
+              memoryP99: (w.metrics?.memoryUsage || 0) * 1.3
             }
           };
         });

@@ -12,6 +12,12 @@ export interface ResourceMetrics {
   networkIn: number; // MB/s
   networkOut: number; // MB/s
   diskIo: number; // MB/s
+  cpuAvg?: number;
+  cpuP95?: number;
+  cpuP99?: number;
+  memoryAvg?: number;
+  memoryP95?: number;
+  memoryP99?: number;
 }
 
 export interface K8sEvent {

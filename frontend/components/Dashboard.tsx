@@ -337,14 +337,21 @@ export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = tr
                      {workloads
                         .map(w => {
                            let base = 0, used = 0, unit = 'm', label = 'Saturation';
+                           let avg = 0, p95 = 0, p99 = 0;
                            if (saturationTab === 'CPU') {
                               // Use limit for saturation, fallback to request if limit is empty
                               base = (Number(w.metrics?.cpuLimit) || Number(w.metrics?.cpuRequest)) || 0;
                               used = Number(w.metrics?.cpuUsage) || 0;
+                              avg = Number(w.metrics?.cpuAvg) || 0;
+                              p95 = Number(w.metrics?.cpuP95) || 0;
+                              p99 = Number(w.metrics?.cpuP99) || 0;
                               unit = 'm'; label = 'CPU Saturation';
                            } else if (saturationTab === 'Memory') {
                               base = (Number(w.metrics?.memoryLimit) || Number(w.metrics?.memoryRequest)) || 0;
                               used = Number(w.metrics?.memoryUsage) || 0;
+                              avg = Number(w.metrics?.memoryAvg) || 0;
+                              p95 = Number(w.metrics?.memoryP95) || 0;
+                              p99 = Number(w.metrics?.memoryP99) || 0;
                               unit = 'MiB'; label = 'Memory Saturation';
                            } else if (saturationTab === 'Storage') {
                               base = (Number(w.metrics?.storageLimit) || Number(w.metrics?.storageRequest)) || 0;
@@ -356,7 +363,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = tr
                               unit = 'MB/s'; label = 'Net Throughput';
                            }
 
-                           return { name: w.name, base, used, unit, label, status: w.status };
+                           return { name: w.name, base, used, unit, label, status: w.status, avg, p95, p99 };
                         })
                         .sort((a, b) => {
                            const aSat = (a.base > 0) ? (a.used / a.base) : 0;
@@ -399,6 +406,26 @@ export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = tr
                                           className={`h-full rounded-full transition-all duration-1000 ease-out ${colorClass}`}
                                           style={{ width: `${saturation}%` }}
                                        />
+                                    </div>
+                                    <div className="flex gap-4 mt-2">
+                                       {item.avg > 0 && (
+                                          <div className="flex items-center gap-1.5 grayscale opacity-70 group-hover:grayscale-0 group-hover:opacity-100 transition-all">
+                                             <div className="w-1.5 h-1.5 rounded-full bg-blue-400" />
+                                             <span className="text-[9px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-wider">Avg: {item.avg.toFixed(1)}{item.unit}</span>
+                                          </div>
+                                       )}
+                                       {item.p95 > 0 && (
+                                          <div className="flex items-center gap-1.5 grayscale opacity-70 group-hover:grayscale-0 group-hover:opacity-100 transition-all">
+                                             <div className="w-1.5 h-1.5 rounded-full bg-amber-400" />
+                                             <span className="text-[9px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-wider">P95: {item.p95.toFixed(1)}{item.unit}</span>
+                                          </div>
+                                       )}
+                                       {item.p99 > 0 && (
+                                          <div className="flex items-center gap-1.5 grayscale opacity-70 group-hover:grayscale-0 group-hover:opacity-100 transition-all">
+                                             <div className="w-1.5 h-1.5 rounded-full bg-rose-400" />
+                                             <span className="text-[9px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-wider">P99: {item.p99.toFixed(1)}{item.unit}</span>
+                                          </div>
+                                       )}
                                     </div>
                                  </div>
 
