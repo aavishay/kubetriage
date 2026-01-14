@@ -2,7 +2,6 @@
 import { GoogleGenAI, Chat, GenerateContentResponse } from "@google/genai";
 import { GEMINI_FAST_MODEL, GEMINI_PRO_MODEL } from "../constants";
 import { Workload, DiagnosticPlaybook, OptimizationProfile } from "../types";
-import { fetchWithAuth } from "../contexts/AuthContext"; // Assuming we have or create a helper, or just use fetch
 
 // Helper to create a fresh client instance every time to pick up the latest API Key
 const createClient = () => {
@@ -61,7 +60,12 @@ export const analyzeWorkload = async (
                 diskIo: `${workload.metrics.diskIo}`,
                 logs: workload.recentLogs,
                 events: workload.events.map(e => `${e.type}: ${e.reason} - ${e.message}`),
-                schedulerLogs: workload.schedulerLogs || []
+                schedulerLogs: workload.schedulerLogs || [],
+                scaling: workload.scaling ? {
+                    ...workload.scaling,
+                    triggers: workload.scaling.config?.triggers || []
+                } : undefined,
+                provisioning: workload.provisioning
             })
         });
 
@@ -131,7 +135,7 @@ export const generateRightSizingRecommendation = async (workload: Workload, cont
     }
 };
 
-export const generateHPARecommendation = async (workload: Workload, context?: string): Promise<string> => {
+export const generateHPARecommendation = async (workload: Workload, _context?: string): Promise<string> => {
     const ai = createClient();
     const prompt = `
       Act as a Kubernetes Autoscaling Expert.

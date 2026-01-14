@@ -485,7 +485,12 @@ export const TriageView: React.FC<TriageViewProps> = ({ workloads, isDarkMode = 
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-8 relative z-10">
                     <div>
                       <span className="text-[10px] font-black text-zinc-400 uppercase tracking-widest block mb-2">Replica Range</span>
-                      <span className="text-2xl font-black text-zinc-900 dark:text-white tracking-tighter">{selectedWorkload.scaling.min} <span className="text-zinc-400 mx-2">→</span> {selectedWorkload.scaling.max}</span>
+                      <div className="flex items-center gap-3">
+                        <span className="text-2xl font-black text-zinc-900 dark:text-white tracking-tighter">{selectedWorkload.scaling.min} <span className="text-zinc-400 mx-2">→</span> {selectedWorkload.scaling.max}</span>
+                        {selectedWorkload.scaling.min === 0 && (
+                          <span className="px-2 py-0.5 bg-emerald-500/10 text-emerald-500 rounded-md text-[8px] font-black uppercase tracking-widest border border-emerald-500/20">Scale-to-Zero Enabled</span>
+                        )}
+                      </div>
                     </div>
                     <div>
                       <span className="text-[10px] font-black text-zinc-400 uppercase tracking-widest block mb-2">Current Scale</span>
@@ -497,6 +502,61 @@ export const TriageView: React.FC<TriageViewProps> = ({ workloads, isDarkMode = 
                         {(selectedWorkload.scaling.config?.triggers || []).map((t, i) => (
                           <span key={i} className="px-2.5 py-1.5 bg-zinc-100 dark:bg-zinc-800 rounded-lg text-[10px] font-bold text-zinc-600 dark:text-zinc-300 uppercase tracking-wider border border-zinc-200 dark:border-zinc-700">{t}</span>
                         ))}
+                      </div>
+                    </div>
+                  </div>
+                </section>
+              )}
+
+              {/* Node Provisioning (Karpenter) */}
+              {selectedWorkload.provisioning && selectedWorkload.provisioning.enabled && (
+                <section className="bg-white dark:bg-zinc-900 rounded-[2.5rem] border border-zinc-200 dark:border-zinc-800 p-8 shadow-sm relative overflow-hidden">
+                  <div className="absolute top-0 right-0 p-8 opacity-5"><Server className="w-32 h-32 text-blue-500" /></div>
+                  <div className="flex items-center gap-4 mb-8">
+                    <div className="p-3 bg-blue-500/10 rounded-2xl"><Server className="w-6 h-6 text-blue-500" /></div>
+                    <div>
+                      <h4 className="text-sm font-black text-zinc-900 dark:text-white uppercase tracking-tighter">Node Provisioning Status</h4>
+                      <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mt-1">Managed by Karpenter</p>
+                    </div>
+                    <div className="px-3 py-1 bg-blue-500/10 text-blue-500 rounded-full text-[10px] font-black uppercase tracking-widest flex items-center gap-2"><CheckCircle2 className="w-3 h-3" /> Enabled</div>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-8 relative z-10">
+                    <div>
+                      <span className="text-[10px] font-black text-zinc-400 uppercase tracking-widest block mb-2">Active NodePools</span>
+                      <div className="flex flex-wrap gap-2 mt-1">
+                        {(selectedWorkload.provisioning.nodePools || []).map((np, i) => (
+                          <span key={i} className="px-2.5 py-1.5 bg-zinc-100 dark:bg-zinc-800 rounded-lg text-[10px] font-bold text-zinc-600 dark:text-zinc-300 uppercase tracking-wider border border-zinc-200 dark:border-zinc-700">{np}</span>
+                        ))}
+                      </div>
+                    </div>
+                    <div>
+                      <span className="text-[10px] font-black text-zinc-400 uppercase tracking-widest block mb-2">Pending NodeClaims</span>
+                      <div className="flex flex-wrap gap-2 mt-1">
+                        {(selectedWorkload.provisioning.nodeClaims || []).length > 0 ? (
+                          selectedWorkload.provisioning.nodeClaims.map((nc, i) => (
+                            <span key={i} className="px-2.5 py-1.5 bg-amber-500/10 border border-amber-500/30 rounded-lg text-[10px] font-bold text-amber-500 uppercase tracking-wider">{nc}</span>
+                          ))
+                        ) : (
+                          <span className="text-zinc-500 text-xs font-bold">None</span>
+                        )}
+                      </div>
+                    </div>
+                    <div>
+                      <span className="text-[10px] font-black text-zinc-400 uppercase tracking-widest block mb-2">System Health</span>
+                      <div className="flex flex-col gap-2">
+                        {(selectedWorkload.provisioning.misconfigurations || []).length > 0 ? (
+                          selectedWorkload.provisioning.misconfigurations.map((m, i) => (
+                            <div key={i} className="flex items-start gap-2 text-rose-500">
+                              <AlertCircle className="w-3 h-3 mt-0.5 shrink-0" />
+                              <span className="text-[10px] font-bold uppercase tracking-tight">{m}</span>
+                            </div>
+                          ))
+                        ) : (
+                          <div className="flex items-center gap-2 text-emerald-500">
+                            <CheckCircle2 className="w-3 h-3" />
+                            <span className="text-[10px] font-bold uppercase tracking-tight">Optimized</span>
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>

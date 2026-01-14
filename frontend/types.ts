@@ -22,6 +22,13 @@ export interface K8sEvent {
   lastSeen: string;
 }
 
+export interface ProvisioningInfo {
+  enabled: boolean;
+  nodePools: string[];
+  nodeClaims: string[];
+  misconfigurations?: string[];
+}
+
 export interface Workload {
   id: string;
   name: string;
@@ -41,6 +48,7 @@ export interface Workload {
   };
   scaling?: ScalingInfo;
   schedulerLogs?: string[];
+  provisioning?: ProvisioningInfo;
 }
 
 export interface KedaConfig {
@@ -54,7 +62,11 @@ export interface ScalingInfo {
   max: number;
   current: number;
   kedaReady: boolean;
+  active?: boolean;
+  paused?: boolean;
+  fallback?: boolean;
   config?: KedaConfig;
+  misconfigurations?: string[];
 }
 
 export interface Cluster {

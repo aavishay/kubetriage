@@ -45,26 +45,48 @@ func (s *AIService) Close() {
 	}
 }
 
+type ScalingInfo struct {
+	Enabled           bool     `json:"enabled"`
+	Min               int32    `json:"min"`
+	Max               int32    `json:"max"`
+	Current           int32    `json:"current"`
+	KedaReady         bool     `json:"kedaReady"`
+	Active            bool     `json:"active"`
+	Fallback          bool     `json:"fallback"`
+	Paused            bool     `json:"paused"`
+	Triggers          []string `json:"triggers"`
+	Misconfigurations []string `json:"misconfigurations,omitempty"`
+}
+
+type ProvisioningInfo struct {
+	Enabled           bool     `json:"enabled"`
+	NodePools         []string `json:"nodePools"`
+	NodeClaims        []string `json:"nodeClaims"`
+	Misconfigurations []string `json:"misconfigurations,omitempty"`
+}
+
 // AnalyzeWorkloadRequest mirrors the frontend data structure
 type AnalyzeWorkloadRequest struct {
-	Provider      string   `json:"provider"` // "gemini" or "ollama"
-	Model         string   `json:"model"`    // specific model like "llama3"
-	WorkloadName  string   `json:"workloadName"`
-	Namespace     string   `json:"namespace"`
-	Kind          string   `json:"kind"`
-	Status        string   `json:"status"`
-	Playbook      string   `json:"playbook"`
-	Instructions  string   `json:"instructions"`
-	CpuUsage      string   `json:"cpuUsage"`
-	CpuLimit      string   `json:"cpuLimit"`
-	MemoryUsage   string   `json:"memoryUsage"`
-	MemoryLimit   string   `json:"memoryLimit"`
-	StorageUsage  string   `json:"storageUsage"`
-	StorageLimit  string   `json:"storageLimit"`
-	DiskIo        string   `json:"diskIo"`
-	Logs          []string `json:"logs"`
-	Events        []string `json:"events"`
-	SchedulerLogs []string `json:"schedulerLogs"`
+	Provider      string            `json:"provider"` // "gemini" or "ollama"
+	Model         string            `json:"model"`    // specific model like "llama3"
+	WorkloadName  string            `json:"workloadName"`
+	Namespace     string            `json:"namespace"`
+	Kind          string            `json:"kind"`
+	Status        string            `json:"status"`
+	Playbook      string            `json:"playbook"`
+	Instructions  string            `json:"instructions"`
+	CpuUsage      string            `json:"cpuUsage"`
+	CpuLimit      string            `json:"cpuLimit"`
+	MemoryUsage   string            `json:"memoryUsage"`
+	MemoryLimit   string            `json:"memoryLimit"`
+	StorageUsage  string            `json:"storageUsage"`
+	StorageLimit  string            `json:"storageLimit"`
+	DiskIo        string            `json:"diskIo"`
+	Logs          []string          `json:"logs"`
+	Events        []string          `json:"events"`
+	SchedulerLogs []string          `json:"schedulerLogs"`
+	Scaling       *ScalingInfo      `json:"scaling,omitempty"`
+	Provisioning  *ProvisioningInfo `json:"provisioning,omitempty"`
 }
 
 func (s *AIService) getProvider(name string) (AIProvider, error) {
@@ -100,6 +122,52 @@ func (s *AIService) AnalyzeWorkload(ctx context.Context, req AnalyzeWorkloadRequ
 		return "", err
 	}
 
+	scalingEnabled := false
+	scalingMin := int32(0)
+	scalingMax := int32(0)
+	scalingCurrent := int32(0)
+	scalingReady := false
+	scalingActive := false
+	scalingFallback := false
+	scalingPaused := false
+	scalingTriggers := "None"
+	scalingMisconfigs := "None detected"
+
+	if req.Scaling != nil {
+		scalingEnabled = req.Scaling.Enabled
+		scalingMin = req.Scaling.Min
+		scalingMax = req.Scaling.Max
+		scalingCurrent = req.Scaling.Current
+		scalingReady = req.Scaling.KedaReady
+		scalingActive = req.Scaling.Active
+		scalingFallback = req.Scaling.Fallback
+		scalingPaused = req.Scaling.Paused
+		if len(req.Scaling.Triggers) > 0 {
+			scalingTriggers = strings.Join(req.Scaling.Triggers, ", ")
+		}
+		if len(req.Scaling.Misconfigurations) > 0 {
+			scalingMisconfigs = strings.Join(req.Scaling.Misconfigurations, " | ")
+		}
+	}
+
+	provEnabled := false
+	provNodePools := "None"
+	provNodeClaims := "None"
+	provMisconfigs := "None detected"
+
+	if req.Provisioning != nil {
+		provEnabled = req.Provisioning.Enabled
+		if len(req.Provisioning.NodePools) > 0 {
+			provNodePools = strings.Join(req.Provisioning.NodePools, ", ")
+		}
+		if len(req.Provisioning.NodeClaims) > 0 {
+			provNodeClaims = strings.Join(req.Provisioning.NodeClaims, ", ")
+		}
+		if len(req.Provisioning.Misconfigurations) > 0 {
+			provMisconfigs = strings.Join(req.Provisioning.Misconfigurations, " | ")
+		}
+	}
+
 	prompt := fmt.Sprintf(`
     You are a Senior Site Reliability Engineer (SRE) performing a deep-dive diagnostic analysis of the Kubernetes workload "%s".
     
@@ -114,6 +182,22 @@ func (s *AIService) AnalyzeWorkload(ctx context.Context, req AnalyzeWorkloadRequ
     - Storage: %s / %s
     - Disk I/O: %s
     
+    **SCALING (HPA/KEDA)**:
+    - Enabled: %v
+    - Replicas: %d Min / %d Max / %d Current
+    - Scaling Ready: %v
+    - Active: %v
+    - Fallback: %v
+    - Paused: %v
+    - Triggers: %s
+    - Known Misconfigurations: %s
+    
+    **PROVISIONING (Karpenter)**:
+    - Enabled: %v
+    - NodePools: %s
+    - Pending NodeClaims: %s
+    - Known Misconfigurations: %s
+    
     **LOGS & EVENTS**:
     Logs:
     %s
@@ -124,6 +208,9 @@ func (s *AIService) AnalyzeWorkload(ctx context.Context, req AnalyzeWorkloadRequ
     
     **INFRASTRUCTURE LOGS (Karpenter/Scheduler)**:
     %s
+    
+    **SRE INTERPRETATION NOTES**:
+    - If Min Replicas is **0**, this workload is likely configured for **Scale to Zero (Cost Optimization)**. If current replicas are 0, this is expected behavior and not a failure unless logs indicate a trigger failed to fire.
     
     **OUTPUT REQUIREMENTS**:
     Produce a Highly Polished, Executive-Grade SRE Incident Report in Markdown.
@@ -141,8 +228,8 @@ func (s *AIService) AnalyzeWorkload(ctx context.Context, req AnalyzeWorkloadRequ
     A concise 2-3 sentence TL;DR of the incident. State the primary failure mode clearly.
     
     ## 🔍 Root Cause Analysis
-    Deduce the underlying technical cause based on logs and telemetry. Use critical thinking.
-    - **Primary Cause**: The main reason for failure.
+    Deduce the underlying technical cause based on logs, telemetry, and scaling status. Use critical thinking.
+    - **Primary Cause**: The main reason for failure (e.g., trigger misconfiguration, resource exhaustion).
     - **Contributing Factors**: Any secondary issues (e.g., resource exhaustion, config errors).
     
     ## 📉 Impact Assessment
@@ -162,6 +249,9 @@ func (s *AIService) AnalyzeWorkload(ctx context.Context, req AnalyzeWorkloadRequ
 	`,
 		req.WorkloadName, req.Status, req.Playbook, req.Instructions,
 		req.CpuUsage, req.CpuLimit, req.MemoryUsage, req.MemoryLimit, req.StorageUsage, req.StorageLimit, req.DiskIo,
+		scalingEnabled, scalingMin, scalingMax, scalingCurrent, scalingReady,
+		scalingActive, scalingFallback, scalingPaused, scalingTriggers, scalingMisconfigs,
+		provEnabled, provNodePools, provNodeClaims, provMisconfigs,
 		strings.Join(req.Logs, "\n"),
 		strings.Join(req.Events, "\n"),
 		strings.Join(req.SchedulerLogs, "\n"),

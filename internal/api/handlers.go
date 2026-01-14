@@ -22,6 +22,7 @@ import (
 	"github.com/aavishay/kubetriage/backend/internal/prometheus"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+	autoscalingv2 "k8s.io/api/autoscaling/v2"
 	corev1 "k8s.io/api/core/v1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -57,28 +58,40 @@ type K8sEvent struct {
 
 // Workload struct mapping to frontend
 type Workload struct {
-	ID                string          `json:"id"`
-	Name              string          `json:"name"`
-	Namespace         string          `json:"namespace"`
-	Kind              string          `json:"kind"`
-	Replicas          int32           `json:"replicas"`
-	AvailableReplicas int32           `json:"availableReplicas"`
-	Status            string          `json:"status"`
-	Metrics           ResourceMetrics `json:"metrics"`
-	RecentLogs        []string        `json:"recentLogs"`
-	Events            []K8sEvent      `json:"events"`
-	CostPerMonth      int             `json:"costPerMonth"`
-	Scaling           ScalingInfo     `json:"scaling"`
-	SchedulerLogs     []string        `json:"schedulerLogs,omitempty"`
+	ID                string            `json:"id"`
+	Name              string            `json:"name"`
+	Namespace         string            `json:"namespace"`
+	Kind              string            `json:"kind"`
+	Replicas          int32             `json:"replicas"`
+	AvailableReplicas int32             `json:"availableReplicas"`
+	Status            string            `json:"status"`
+	Metrics           ResourceMetrics   `json:"metrics"`
+	RecentLogs        []string          `json:"recentLogs"`
+	Events            []K8sEvent        `json:"events"`
+	CostPerMonth      int               `json:"costPerMonth"`
+	Scaling           ScalingInfo       `json:"scaling"`
+	SchedulerLogs     []string          `json:"schedulerLogs,omitempty"`
+	Provisioning      *ProvisioningInfo `json:"provisioning,omitempty"`
+}
+
+type ProvisioningInfo struct {
+	Enabled           bool     `json:"enabled"`
+	NodePools         []string `json:"nodePools"`
+	NodeClaims        []string `json:"nodeClaims"`
+	Misconfigurations []string `json:"misconfigurations,omitempty"`
 }
 
 type ScalingInfo struct {
-	Enabled   bool        `json:"enabled"`
-	Min       int32       `json:"min"`
-	Max       int32       `json:"max"`
-	Current   int32       `json:"current"`
-	KedaReady bool        `json:"kedaReady"`
-	Config    *KedaConfig `json:"config,omitempty"`
+	Enabled           bool        `json:"enabled"`
+	Min               int32       `json:"min"`
+	Max               int32       `json:"max"`
+	Current           int32       `json:"current"`
+	KedaReady         bool        `json:"kedaReady"`
+	Active            bool        `json:"active"`
+	Paused            bool        `json:"paused"`
+	Fallback          bool        `json:"fallback"`
+	Config            *KedaConfig `json:"config,omitempty"`
+	Misconfigurations []string    `json:"misconfigurations,omitempty"`
 }
 
 type KedaConfig struct {
@@ -112,7 +125,7 @@ func DBHealthHandler(c *gin.Context) {
 }
 
 func getStatus(available, replicas int32) string {
-	if available == replicas && replicas > 0 {
+	if available >= replicas {
 		return "Healthy"
 	}
 	if available == 0 && replicas > 0 {
@@ -314,6 +327,79 @@ func fetchKarpenterLogs(ctx context.Context, client *kubernetes.Clientset, workl
 	return result
 }
 
+func fetchKarpenterProvisioning(ctx context.Context, dynClient dynamic.Interface, workloadName string) *ProvisioningInfo {
+	info := &ProvisioningInfo{
+		Enabled: false,
+	}
+
+	if dynClient == nil {
+		return info
+	}
+
+	// 1. Check for Karpenter NodePools
+	gvrNP := schema.GroupVersionResource{Group: "karpenter.sh", Version: "v1beta1", Resource: "nodepools"}
+	nps, err := dynClient.Resource(gvrNP).List(ctx, metav1.ListOptions{})
+	if err != nil {
+		// Fallback to older Provisioner
+		gvrProv := schema.GroupVersionResource{Group: "karpenter.sh", Version: "v1alpha5", Resource: "provisioners"}
+		nps, err = dynClient.Resource(gvrProv).List(ctx, metav1.ListOptions{})
+	}
+
+	if err == nil && len(nps.Items) > 0 {
+		info.Enabled = true
+		for _, np := range nps.Items {
+			info.NodePools = append(info.NodePools, np.GetName())
+
+			// Basic Misconfiguration Check for NodePools
+			spec, _ := np.Object["spec"].(map[string]interface{})
+			if spec != nil {
+				template, _ := spec["template"].(map[string]interface{})
+				if template != nil {
+					tSpec, _ := template["spec"].(map[string]interface{})
+					if tSpec != nil {
+						requirements, _ := tSpec["requirements"].([]interface{})
+						if len(requirements) == 0 {
+							info.Misconfigurations = append(info.Misconfigurations, fmt.Sprintf("NodePool %s has no requirements defined (may scale too broadly)", np.GetName()))
+						}
+					}
+				}
+			}
+		}
+	}
+
+	// 2. Check for NodeClaims (Pending or Drifted)
+	gvrNC := schema.GroupVersionResource{Group: "karpenter.sh", Version: "v1beta1", Resource: "nodeclaims"}
+	ncs, err := dynClient.Resource(gvrNC).List(ctx, metav1.ListOptions{})
+	if err == nil {
+		for _, nc := range ncs.Items {
+			status, _ := nc.Object["status"].(map[string]interface{})
+			if status != nil {
+				conditions, _ := status["conditions"].([]interface{})
+				isReady := false
+				isDrifted := false
+				for _, c := range conditions {
+					if cMap, ok := c.(map[string]interface{}); ok {
+						if cMap["type"] == "Ready" && cMap["status"] == "True" {
+							isReady = true
+						}
+						if cMap["type"] == "Drifted" && cMap["status"] == "True" {
+							isDrifted = true
+						}
+					}
+				}
+				if !isReady {
+					info.NodeClaims = append(info.NodeClaims, nc.GetName()+" (Pending)")
+				}
+				if isDrifted {
+					info.Misconfigurations = append(info.Misconfigurations, fmt.Sprintf("NodeClaim %s is drifted and needs replacement", nc.GetName()))
+				}
+			}
+		}
+	}
+
+	return info
+}
+
 // Helper to fetch KEDA ScaledObject
 func fetchKedaScaling(ctx context.Context, dynClient dynamic.Interface, namespace, workloadName string) ScalingInfo {
 	info := ScalingInfo{
@@ -333,16 +419,12 @@ func fetchKedaScaling(ctx context.Context, dynClient dynamic.Interface, namespac
 		Resource: "scaledobjects",
 	}
 
-	// List all SOs in namespace (optimization: could limit fields if supported, or cache)
-	// For MVP, listing is acceptable given namespace scope
 	sos, err := dynClient.Resource(gvr).Namespace(namespace).List(ctx, metav1.ListOptions{})
 	if err != nil {
-		// KEDA might not be installed, ignore error
 		return info
 	}
 
 	for _, item := range sos.Items {
-		// Check scaleTargetRef
 		spec, ok := item.Object["spec"].(map[string]interface{})
 		if !ok {
 			continue
@@ -354,7 +436,6 @@ func fetchKedaScaling(ctx context.Context, dynClient dynamic.Interface, namespac
 
 		targetName, _ := target["name"].(string)
 		if targetName == workloadName {
-			// Found it
 			info.Enabled = true
 			if min, ok := spec["minReplicaCount"].(int64); ok {
 				info.Min = int32(min)
@@ -375,24 +456,114 @@ func fetchKedaScaling(ctx context.Context, dynClient dynamic.Interface, namespac
 				}
 			}
 
-			// Check Status for Readiness
-			statusReady := false
+			// Check Status & Conditions
 			if status, ok := item.Object["status"].(map[string]interface{}); ok {
+
 				if conditions, ok := status["conditions"].([]interface{}); ok {
 					for _, c := range conditions {
 						if cMap, ok := c.(map[string]interface{}); ok {
-							if cMap["type"] == "Ready" && cMap["status"] == "True" {
-								statusReady = true
-								break
+							cType := cMap["type"]
+							cStatus := cMap["status"]
+							cReason, _ := cMap["reason"].(string)
+							cMsg, _ := cMap["message"].(string)
+
+							switch cType {
+							case "Ready":
+								if cStatus == "True" {
+									info.KedaReady = true
+								} else {
+									info.Misconfigurations = append(info.Misconfigurations, fmt.Sprintf("KEDA Not Ready: %s (%s)", cReason, cMsg))
+								}
+							case "Active":
+								info.Active = (cStatus == "True")
+							case "Fallback":
+								info.Fallback = (cStatus == "True")
+								if info.Fallback {
+									info.Misconfigurations = append(info.Misconfigurations, "KEDA is in Fallback mode (triggers failing)")
+								}
+							case "Paused":
+								info.Paused = (cStatus == "True")
+								if info.Paused {
+									info.Misconfigurations = append(info.Misconfigurations, "KEDA Scaling is Paused")
+								}
 							}
 						}
 					}
 				}
 			}
-			info.KedaReady = statusReady
 
 			info.Config = &KedaConfig{
 				Name:     item.GetName(),
+				Triggers: triggers,
+			}
+			break
+		}
+	}
+
+	return info
+}
+
+// Helper to fetch standard HorizontalPodAutoscaler
+func fetchHPAScaling(ctx context.Context, client *kubernetes.Clientset, namespace, workloadName string) ScalingInfo {
+	info := ScalingInfo{
+		Enabled: false,
+		Min:     0,
+		Max:     0,
+		Current: 0,
+	}
+
+	if client == nil {
+		return info
+	}
+
+	hpas, err := client.AutoscalingV2().HorizontalPodAutoscalers(namespace).List(ctx, metav1.ListOptions{})
+	if err != nil {
+		return info
+	}
+
+	for _, hpa := range hpas.Items {
+		if hpa.Spec.ScaleTargetRef.Name == workloadName {
+			info.Enabled = true
+			if hpa.Spec.MinReplicas != nil {
+				info.Min = *hpa.Spec.MinReplicas
+			}
+			info.Max = hpa.Spec.MaxReplicas
+			info.Current = hpa.Status.CurrentReplicas
+
+			// Extract triggers (metrics)
+			var triggers []string
+			for _, m := range hpa.Spec.Metrics {
+				triggers = append(triggers, string(m.Type))
+			}
+
+			// Check Conditions
+			for _, cond := range hpa.Status.Conditions {
+				switch cond.Type {
+				case autoscalingv2.ScalingActive:
+					if cond.Status == corev1.ConditionTrue {
+						info.KedaReady = true
+						info.Active = true
+					} else {
+						info.Misconfigurations = append(info.Misconfigurations, fmt.Sprintf("HPA Scaling Not Active: %s (%s)", cond.Reason, cond.Message))
+					}
+				case autoscalingv2.AbleToScale:
+					if cond.Status != corev1.ConditionTrue {
+						info.Misconfigurations = append(info.Misconfigurations, fmt.Sprintf("HPA Unable to Scale: %s (%s)", cond.Reason, cond.Message))
+					}
+				case autoscalingv2.ScalingLimited:
+					if cond.Status == corev1.ConditionTrue {
+						info.Misconfigurations = append(info.Misconfigurations, fmt.Sprintf("HPA Scaling Limited: %s (%s)", cond.Reason, cond.Message))
+					}
+				}
+			}
+
+			// Check for being stuck at max
+			if info.Current >= info.Max && info.Max > 0 {
+				info.Misconfigurations = append(info.Misconfigurations, "HPA is at Max Replicas (Saturation Risk)")
+			}
+
+			info.Config = &KedaConfig{
+				Name:     hpa.Name,
 				Triggers: triggers,
 			}
 			break
@@ -407,6 +578,43 @@ type ClusterResponse struct {
 	Name     string `json:"name"`
 	Provider string `json:"provider"`
 	Status   string `json:"status"`
+}
+
+func getScalingInfo(ctx context.Context, client *kubernetes.Clientset, dynClient dynamic.Interface, namespace, name string) ScalingInfo {
+	keda := fetchKedaScaling(ctx, dynClient, namespace, name)
+	hpa := fetchHPAScaling(ctx, client, namespace, name)
+
+	if !keda.Enabled && !hpa.Enabled {
+		return ScalingInfo{Enabled: false}
+	}
+
+	// Merge logic: KEDA usually wins if enabled, but HPA might have more real-time status
+	// from the HPA controller itself.
+	res := hpa
+	if keda.Enabled {
+		res.Enabled = true
+		res.KedaReady = keda.KedaReady
+		res.Fallback = keda.Fallback
+		res.Paused = keda.Paused
+		if res.Config == nil {
+			res.Config = keda.Config
+		} else if keda.Config != nil {
+			// Merge triggers, avoid duplicates
+			triggerMap := make(map[string]bool)
+			for _, t := range res.Config.Triggers {
+				triggerMap[t] = true
+			}
+			for _, t := range keda.Config.Triggers {
+				if !triggerMap[t] {
+					res.Config.Triggers = append(res.Config.Triggers, t)
+				}
+			}
+		}
+		// Merge misconfigurations
+		res.Misconfigurations = append(res.Misconfigurations, keda.Misconfigurations...)
+	}
+
+	return res
 }
 
 func ClustersHandler(c *gin.Context) {
@@ -575,10 +783,11 @@ func WorkloadsHandler(c *gin.Context) {
 					Metrics:           getRealMetrics(enrichCtx, d.Namespace, d.Name, "Deployment", d.Spec.Template.Spec),
 					RecentLogs:        fetchRecentLogs(enrichCtx, client, d.Namespace, d.Spec.Selector.MatchLabels),
 					Events:            fetchRecentEvents(enrichCtx, client, d.Namespace, d.Name, "Deployment"),
-					Scaling:           fetchKedaScaling(enrichCtx, dynClient, d.Namespace, d.Name),
+					Scaling:           getScalingInfo(enrichCtx, client, dynClient, d.Namespace, d.Name),
 				}
 				if w.Status != "Healthy" {
 					w.SchedulerLogs = fetchKarpenterLogs(enrichCtx, client, d.Name)
+					w.Provisioning = fetchKarpenterProvisioning(enrichCtx, dynClient, d.Name)
 				}
 				addWorkload(w)
 				return nil
@@ -605,10 +814,11 @@ func WorkloadsHandler(c *gin.Context) {
 					Metrics:           getRealMetrics(enrichCtx, s.Namespace, s.Name, "StatefulSet", s.Spec.Template.Spec),
 					RecentLogs:        fetchRecentLogs(enrichCtx, client, s.Namespace, s.Spec.Selector.MatchLabels),
 					Events:            fetchRecentEvents(enrichCtx, client, s.Namespace, s.Name, "StatefulSet"),
-					Scaling:           fetchKedaScaling(enrichCtx, dynClient, s.Namespace, s.Name),
+					Scaling:           getScalingInfo(enrichCtx, client, dynClient, s.Namespace, s.Name),
 				}
 				if w.Status != "Healthy" {
 					w.SchedulerLogs = fetchKarpenterLogs(enrichCtx, client, s.Name)
+					w.Provisioning = fetchKarpenterProvisioning(enrichCtx, dynClient, s.Name)
 				}
 				addWorkload(w)
 				return nil
@@ -743,7 +953,40 @@ func WorkloadsHandler(c *gin.Context) {
 						Metrics:      getRealMetrics(enrichCtx, namespace, name, "Job", v1.PodSpec{}),
 						CostPerMonth: rand.Intn(100) + 10,
 						RecentLogs:   recentLogs, Events: recentEvents,
-						Scaling: ScalingInfo{Enabled: true, Current: active, KedaReady: !statusUnready, Config: &KedaConfig{Name: name}},
+						Scaling: ScalingInfo{
+							Enabled:   true,
+							Current:   active,
+							KedaReady: !statusUnready,
+							Config:    &KedaConfig{Name: name},
+						},
+					}
+
+					// Fetch more status details for ScaledJob
+					if status, ok := item.Object["status"].(map[string]interface{}); ok {
+						if conditions, ok := status["conditions"].([]interface{}); ok {
+							for _, c := range conditions {
+								if cMap, ok := c.(map[string]interface{}); ok {
+									cType := cMap["type"]
+									cStatus := cMap["status"]
+									cReason, _ := cMap["reason"].(string)
+									cMsg, _ := cMap["message"].(string)
+
+									switch cType {
+									case "Ready":
+										if cStatus != "True" {
+											w.Scaling.Misconfigurations = append(w.Scaling.Misconfigurations, fmt.Sprintf("ScaledJob Not Ready: %s (%s)", cReason, cMsg))
+										}
+									case "Active":
+										w.Scaling.Active = (cStatus == "True")
+									case "Fallback":
+										w.Scaling.Fallback = (cStatus == "True")
+										if w.Scaling.Fallback {
+											w.Scaling.Misconfigurations = append(w.Scaling.Misconfigurations, "ScaledJob in Fallback mode")
+										}
+									}
+								}
+							}
+						}
 					}
 
 					if spec, ok := item.Object["spec"].(map[string]interface{}); ok {
@@ -758,6 +1001,10 @@ func WorkloadsHandler(c *gin.Context) {
 							}
 							w.Scaling.Config.Triggers = trigTypes
 						}
+					}
+					if w.Status != "Healthy" {
+						w.SchedulerLogs = fetchKarpenterLogs(enrichCtx, client, name)
+						w.Provisioning = fetchKarpenterProvisioning(enrichCtx, dynClient, name)
 					}
 					addWorkload(w)
 					return nil
