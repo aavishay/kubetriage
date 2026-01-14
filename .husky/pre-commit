@@ -11,7 +11,6 @@ fi
 
 # 2. Backend Tests (Go)
 echo "🐹 Running Backend Tests (with Coverage)..."
-cd backend
 go vet ./...
 if [ $? -ne 0 ]; then
  echo "❌ Go Vet failed!"
@@ -23,7 +22,6 @@ if [ $? -ne 0 ]; then
  echo "❌ Backend Tests failed!"
  exit 1
 fi
-cd ..
 
 # 3. Frontend Tests (Vitest)
 echo "⚛️  Running Frontend Tests (with Coverage)..."

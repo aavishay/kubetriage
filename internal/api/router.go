@@ -97,6 +97,9 @@ func SetupRouter(aiService *ai.AIService, rootFS http.FileSystem, assetsFS http.
 	r.GET("/favicon.png", func(c *gin.Context) {
 		c.FileFromFS("favicon.png", rootFS)
 	})
+	r.GET("/favicon.svg", func(c *gin.Context) {
+		c.FileFromFS("favicon.svg", rootFS)
+	})
 
 	// SPA Handler: any route not handled by API or static files returns index.html
 	r.NoRoute(func(c *gin.Context) {

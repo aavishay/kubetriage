@@ -10,6 +10,6 @@ describe('App', () => {
         // Based on App.tsx, initial state !hasApiKey -> "API Key Required"
 
         // We can just check that the wrapper exists or some text
-        expect(screen.getByText(/Sign in to KubeOptima Platform/i)).toBeInTheDocument();
+        expect(screen.getByText(/Sign in to KubeTriage Platform/i)).toBeInTheDocument();
     });
 });
