@@ -154,6 +154,14 @@ func getRealMetrics(ctx context.Context, namespace, name, kind string, podSpec v
 		if q, ok := container.Resources.Limits[v1.ResourceMemory]; ok {
 			metrics.MemoryLimit += float64(q.Value()) / (1024 * 1024) // MiB
 		}
+
+		// Storage (Ephemeral)
+		if q, ok := container.Resources.Requests[v1.ResourceEphemeralStorage]; ok {
+			metrics.StorageRequest += float64(q.Value()) / (1024 * 1024 * 1024) // GiB
+		}
+		if q, ok := container.Resources.Limits[v1.ResourceEphemeralStorage]; ok {
+			metrics.StorageLimit += float64(q.Value()) / (1024 * 1024 * 1024) // GiB
+		}
 	}
 
 	// 2. Fetch Usage from Prometheus (if avail)
@@ -170,6 +178,24 @@ func getRealMetrics(ctx context.Context, namespace, name, kind string, podSpec v
 		memQuery := fmt.Sprintf(`sum(container_memory_working_set_bytes{namespace="%s", pod=~"%s-.*", container!=""})`, namespace, name)
 		if val, err := prometheus.GlobalClient.QueryVector(ctx, memQuery); err == nil {
 			metrics.MemoryUsage = val / (1024 * 1024) // MiB
+		}
+
+		// Storage Usage (Ephemeral)
+		storageQuery := fmt.Sprintf(`sum(container_fs_usage_bytes{namespace="%s", pod=~"%s-.*", container!=""})`, namespace, name)
+		if val, err := prometheus.GlobalClient.QueryVector(ctx, storageQuery); err == nil {
+			metrics.StorageUsage = val / (1024 * 1024 * 1024) // GiB
+		}
+
+		// Network In
+		netInQuery := fmt.Sprintf(`sum(rate(container_network_receive_bytes_total{namespace="%s", pod=~"%s-.*"}[2m]))`, namespace, name)
+		if val, err := prometheus.GlobalClient.QueryVector(ctx, netInQuery); err == nil {
+			metrics.NetworkIn = val / (1024 * 1024) // MB/s
+		}
+
+		// Network Out
+		netOutQuery := fmt.Sprintf(`sum(rate(container_network_transmit_bytes_total{namespace="%s", pod=~"%s-.*"}[2m]))`, namespace, name)
+		if val, err := prometheus.GlobalClient.QueryVector(ctx, netOutQuery); err == nil {
+			metrics.NetworkOut = val / (1024 * 1024) // MB/s
 		}
 	} else {
 		// If no Prometheus, fallback to mock (or 0)

@@ -14,6 +14,7 @@ interface DashboardProps {
 }
 
 export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = true, isLoading = false, onTriageRequest, onRefresh }) => {
+   const [saturationTab, setSaturationTab] = React.useState<'CPU' | 'Memory' | 'Storage' | 'Network'>('CPU');
    const totalCost = workloads.reduce((acc, w) => acc + (w.costPerMonth || 0), 0);
    const criticalCount = workloads.filter(w => w.status === 'Critical').length;
    const warningCount = workloads.filter(w => w.status === 'Warning').length;
@@ -312,12 +313,50 @@ export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = tr
             </div>
 
             <div className="lg:col-span-3 bg-white dark:bg-[#16191E] rounded-[2rem] border border-gray-100 dark:border-white/5 p-6 md:p-8 flex flex-col shadow-sm h-full animate-in fade-in slide-in-from-right-4 duration-700 delay-200">
-               <h3 className="text-[11px] font-black uppercase tracking-[0.2em] text-gray-500 dark:text-gray-400 mb-10 flex items-center gap-2.5">
-                  <Zap className="w-4 h-4 text-primary-500 shadow-[0_0_8px_rgba(14,165,233,0.4)]" /> Resource Saturation (CPU)
-               </h3>
+               <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-10">
+                  <h3 className="text-[11px] font-black uppercase tracking-[0.2em] text-gray-500 dark:text-gray-400 flex items-center gap-2.5">
+                     <Zap className="w-4 h-4 text-primary-500 shadow-[0_0_8px_rgba(14,165,233,0.4)]" /> Resource Saturation
+                  </h3>
+                  <div className="flex p-1 bg-gray-100 dark:bg-white/5 rounded-xl border border-gray-200 dark:border-white/5">
+                     {(['CPU', 'Memory', 'Storage', 'Network'] as const).map((type) => (
+                        <button
+                           key={type}
+                           onClick={() => setSaturationTab(type)}
+                           className={`px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${saturationTab === type
+                              ? 'bg-white dark:bg-[#1A1D23] text-primary-500 shadow-sm border border-gray-200 dark:border-white/10'
+                              : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-200'
+                              }`}
+                        >
+                           {type}
+                        </button>
+                     ))}
+                  </div>
+               </div>
                <div className="flex-1 min-h-0 w-full overflow-y-auto pr-2 custom-scrollbar">
                   <div className="space-y-6">
-                     {resourceData
+                     {workloads
+                        .map(w => {
+                           let requested = 0, used = 0, unit = 'm', label = 'Saturation';
+                           if (saturationTab === 'CPU') {
+                              requested = Number(w.metrics?.cpuRequest) || 0;
+                              used = Number(w.metrics?.cpuUsage) || 0;
+                              unit = 'm'; label = 'CPU Saturation';
+                           } else if (saturationTab === 'Memory') {
+                              requested = Number(w.metrics?.memoryRequest) || 0;
+                              used = Number(w.metrics?.memoryUsage) || 0;
+                              unit = 'MiB'; label = 'Memory Saturation';
+                           } else if (saturationTab === 'Storage') {
+                              requested = Number(w.metrics?.storageRequest) || 0;
+                              used = Number(w.metrics?.storageUsage) || 0;
+                              unit = 'GiB'; label = 'Disk Saturation';
+                           } else if (saturationTab === 'Network') {
+                              requested = 100; // Mock 100MB/s cap for visualization
+                              used = (Number(w.metrics?.networkIn) || 0) + (Number(w.metrics?.networkOut) || 0);
+                              unit = 'MB/s'; label = 'Net Throughput';
+                           }
+
+                           return { name: w.name, requested, used, unit, label, status: w.status };
+                        })
                         .sort((a, b) => {
                            const aSat = (a.requested > 0) ? (a.used / a.requested) : 0;
                            const bSat = (b.requested > 0) ? (b.used / b.requested) : 0;
@@ -325,8 +364,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = tr
                         })
                         .map((item, idx) => {
                            const saturation = item.requested > 0 ? Math.min(100, Math.round((item.used / item.requested) * 100)) : 0;
-                           const isCritical = saturation >= 90;
-                           const isWarning = saturation >= 70 && saturation < 90;
+                           const isCritical = saturationTab === 'Memory' ? saturation >= 95 : saturation >= 90;
+                           const isWarning = saturation >= 70 && !isCritical;
 
                            const colorClass = isCritical
                               ? 'bg-gradient-to-r from-rose-500 to-pink-600 shadow-[0_0_12px_rgba(244,63,94,0.3)]'
@@ -341,7 +380,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = tr
                                  className="group flex items-center gap-6 p-4 rounded-2xl hover:bg-gray-50 dark:hover:bg-dark-bg transition-all duration-300 cursor-pointer border border-transparent hover:border-gray-100 dark:hover:border-white/5 animate-in fade-in slide-in-from-right-2"
                                  style={{ animationDelay: `${idx * 50}ms` }}
                               >
-                                 <div className="w-56 shrink-0">
+                                 <div className="w-48 shrink-0">
                                     <h4 className="text-[14px] font-bold text-gray-800 dark:text-white truncate" title={item.name}>{item.name}</h4>
                                     <div className="flex items-center gap-2.5 mt-1.5 font-bold">
                                        <div className={`w-2 h-2 rounded-full ${item.status === 'Critical' ? 'bg-rose-500' : 'bg-emerald-500'}`} />
@@ -351,7 +390,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = tr
 
                                  <div className="flex-1 flex flex-col justify-center">
                                     <div className="flex justify-between items-end mb-2">
-                                       <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none">CPU Saturation</span>
+                                       <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none">{item.label}</span>
                                        <span className={`text-[12px] font-black ${isCritical ? 'text-rose-500' : 'text-gray-700 dark:text-gray-200'}`}>{saturation}%</span>
                                     </div>
                                     <div className="h-2.5 w-full bg-gray-100 dark:bg-dark-bg/80 rounded-full overflow-hidden shadow-inner">
@@ -362,11 +401,16 @@ export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = tr
                                     </div>
                                  </div>
 
-                                 <div className="w-28 shrink-0 text-right">
+                                 <div className="w-32 shrink-0 text-right">
                                     <div className="text-[11px] font-mono text-gray-500 dark:text-gray-400">
-                                       <span className="text-gray-900 dark:text-white font-black">{item.used.toFixed(2)}m</span> <span className="opacity-40">/</span> {item.requested.toFixed(0)}m
+                                       <span className="text-gray-900 dark:text-white font-black">{item.used.toFixed(saturationTab === 'Network' ? 1 : 2)}{item.unit}</span>
+                                       {item.requested > 0 && saturationTab !== 'Network' && (
+                                          <> <span className="opacity-40">/</span> {item.requested.toFixed(0)}{item.unit}</>
+                                       )}
                                     </div>
-                                    <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-0.5 block">cores</span>
+                                    <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-0.5 block">
+                                       {saturationTab === 'CPU' ? 'cores' : saturationTab === 'Memory' ? 'ram' : saturationTab === 'Storage' ? 'disk' : 'bandwidth'}
+                                    </span>
                                  </div>
                               </div>
                            );
