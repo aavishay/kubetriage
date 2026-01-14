@@ -383,7 +383,7 @@ export const TriageView: React.FC<TriageViewProps> = ({ workloads, isDarkMode = 
 
   return (
     <div className="flex flex-col lg:flex-row gap-6 h-auto lg:h-full relative w-full overflow-hidden font-sans">
-      <aside className={`${selectedWorkload && !isSidebarOpen ? 'hidden' : 'flex'} lg:flex transition-all duration-500 flex-col bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-sm rounded-[2.5rem] overflow-hidden shrink-0 ${isDesktopCollapsed ? 'lg:w-24' : 'w-full lg:w-96'}`}>
+      <aside className={`${selectedWorkload && !isSidebarOpen ? 'hidden' : 'flex'} lg:flex transition-all duration-500 flex-col bg-white dark:bg-dark-card border border-gray-100 dark:border-white/5 shadow-sm rounded-[2.5rem] overflow-hidden shrink-0 ${isDesktopCollapsed ? 'lg:w-24' : 'w-full lg:w-96'}`}>
         <div className={`border-b border-zinc-100 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-950/50 flex items-center transition-all ${isDesktopCollapsed ? 'p-4 justify-center' : 'p-8 justify-between'}`}>
           {!isDesktopCollapsed && (
             <div className="flex items-center gap-3">
@@ -407,16 +407,16 @@ export const TriageView: React.FC<TriageViewProps> = ({ workloads, isDarkMode = 
               key={w.id}
               ref={selectedWorkload?.id === w.id ? selectedRef : null}
               onClick={() => { setSelectedWorkload(w); setAnalysis(null); setPatchSuggestion(null); setIsSidebarOpen(false); }}
-              className={`group relative p-6 rounded-[2.25rem] cursor-pointer transition-all border-2 ${selectedWorkload?.id === w.id ? 'bg-indigo-600 border-indigo-500 text-white shadow-xl translate-x-1' : 'bg-white dark:bg-zinc-900 border-transparent shadow-sm hover:translate-x-1 hover:shadow-lg hover:shadow-indigo-500/10 hover:border-indigo-500/30'}`}
+              className={`group relative p-6 rounded-[2.25rem] cursor-pointer transition-all border-2 ${selectedWorkload?.id === w.id ? 'bg-primary-600 border-primary-500 text-white shadow-xl translate-x-1' : 'bg-white dark:bg-dark-card border-transparent shadow-sm hover:translate-x-1 hover:shadow-lg hover:shadow-primary-500/10 hover:border-primary-500/30'}`}
             >
               <span className="text-sm font-black truncate leading-none uppercase tracking-tighter block mb-1.5">{w.name}</span>
-              <div className="flex items-center justify-between mt-1"><span className={`text-[9px] font-black uppercase tracking-[0.25em] flex items-center gap-1.5 ${selectedWorkload?.id === w.id ? 'text-white/70' : 'text-indigo-500 dark:text-indigo-400'}`}>{w.kind === 'ScaledJob' ? <Scroll className="w-3.5 h-3.5" /> : <Layers className="w-3.5 h-3.5" />} {w.kind}</span><div className={`w-2.5 h-2.5 rounded-full ${w.status === 'Healthy' ? 'bg-emerald-500' : w.status === 'Warning' ? 'bg-amber-500' : 'bg-rose-500'}`} /></div>
+              <div className="flex items-center justify-between mt-1"><span className={`text-[9px] font-black uppercase tracking-[0.25em] flex items-center gap-1.5 ${selectedWorkload?.id === w.id ? 'text-white/70' : 'text-primary-500 dark:text-primary-400'}`}>{w.kind === 'ScaledJob' ? <Scroll className="w-3.5 h-3.5" /> : <Layers className="w-3.5 h-3.5" />} {w.kind}</span><div className={`w-2.5 h-2.5 rounded-full ${w.status === 'Healthy' ? 'bg-emerald-500' : w.status === 'Warning' ? 'bg-amber-500' : 'bg-rose-500'}`} /></div>
             </div>
           ))}
         </div>
       </aside>
 
-      <main className={`${!selectedWorkload || isSidebarOpen ? 'hidden' : 'flex'} lg:flex flex-1 min-w-0 bg-white dark:bg-zinc-900 rounded-[2.5rem] overflow-hidden flex flex-col border border-zinc-200 dark:border-zinc-800 shadow-sm`}>
+      <main className={`${!selectedWorkload || isSidebarOpen ? 'hidden' : 'flex'} lg:flex flex-1 min-w-0 bg-white dark:bg-dark-card rounded-[2.5rem] overflow-hidden flex flex-col border border-gray-100 dark:border-white/5 shadow-sm`}>
         {selectedWorkload ? (
           <div className="flex flex-col h-full overflow-hidden">
             <header className="p-4 px-6 border-b border-zinc-100 dark:border-zinc-800 flex flex-col xl:flex-row justify-between items-start xl:items-center gap-4 bg-zinc-50/80 dark:bg-zinc-950/80 backdrop-blur-md sticky top-0 z-10">
@@ -432,16 +432,16 @@ export const TriageView: React.FC<TriageViewProps> = ({ workloads, isDarkMode = 
                   </select></div>
 
                 </div>
-                <button onClick={handleAnalyzeLogs} disabled={isAnalyzing} className="flex-1 xl:flex-none bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white px-10 py-4 rounded-[1.25rem] text-[10px] font-black uppercase tracking-[0.2em] shadow-2xl shadow-indigo-600/30 transition-all active:scale-95 disabled:opacity-70 disabled:cursor-not-allowed"> {isAnalyzing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />} Initialize Diagnosis</button>
+                <button onClick={handleAnalyzeLogs} disabled={isAnalyzing} className="flex-1 xl:flex-none bg-gradient-to-r from-primary-600 to-purple-600 hover:from-primary-500 hover:to-purple-500 text-white px-10 py-4 rounded-[1.25rem] text-[10px] font-black uppercase tracking-[0.2em] shadow-2xl shadow-primary-600/30 transition-all active:scale-95 disabled:opacity-70 disabled:cursor-not-allowed"> {isAnalyzing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />} Initialize Diagnosis</button>
               </div>
             </header>
 
             <div className="flex-1 overflow-y-auto p-6 space-y-6 bg-zinc-50/20 dark:bg-black/20 pb-32">
               {/* Metrics Ribbon */}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="bg-white dark:bg-zinc-900 p-5 rounded-[2.5rem] border border-zinc-100 dark:border-zinc-800 shadow-sm text-center animate-in fade-in slide-in-from-bottom-4 duration-700 delay-75 fill-mode-forwards">
-                  <p className="text-[10px] font-black text-zinc-400 uppercase mb-2 tracking-widest">Availability</p>
-                  <span className="text-4xl font-black text-zinc-900 dark:text-white tracking-tighter">{selectedWorkload.availableReplicas}<span className="text-lg opacity-40 ml-1">/{selectedWorkload.replicas}</span></span>
+                <div className="bg-white dark:bg-dark-bg p-5 rounded-[2.5rem] border border-gray-100 dark:border-white/5 shadow-sm text-center animate-in fade-in slide-in-from-bottom-4 duration-700 delay-75 fill-mode-forwards">
+                  <p className="text-[10px] font-black text-gray-400 uppercase mb-2 tracking-widest">Availability</p>
+                  <span className="text-4xl font-black text-gray-900 dark:text-white tracking-tighter">{selectedWorkload.availableReplicas}<span className="text-lg opacity-40 ml-1">/{selectedWorkload.replicas}</span></span>
                 </div>
                 <div className="bg-white dark:bg-zinc-900 p-5 rounded-[2.5rem] border border-zinc-100 dark:border-zinc-800 shadow-sm text-center flex flex-col justify-between overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-700 delay-150 fill-mode-forwards">
                   <div>
@@ -507,8 +507,8 @@ export const TriageView: React.FC<TriageViewProps> = ({ workloads, isDarkMode = 
 
               <div className="flex flex-col gap-10">
                 <section className="bg-white dark:bg-zinc-900 rounded-[3rem] border border-zinc-200 dark:border-zinc-800 shadow-sm flex flex-col">
-                  <div className="px-6 py-5 border-b border-zinc-100 dark:border-zinc-800 flex justify-between items-center bg-zinc-50/50 dark:bg-zinc-950/50">
-                    <div className="flex items-center gap-4"><Sparkles className="w-5 h-5 text-indigo-500" /><h3 className="text-[11px] font-black text-zinc-900 dark:text-white uppercase tracking-[0.15em]">SRE Intelligence Report</h3></div>
+                  <div className="px-6 py-5 border-b border-gray-50 dark:border-white/5 flex justify-between items-center bg-gray-50/50 dark:bg-dark-bg/50">
+                    <div className="flex items-center gap-4"><Sparkles className="w-5 h-5 text-primary-500" /><h3 className="text-[11px] font-black text-gray-900 dark:text-white uppercase tracking-[0.15em]">SRE Intelligence Report</h3></div>
                   </div>
                   <div className="p-8 flex-1 overflow-y-auto">
                     {isAnalyzing ? <div className="h-full flex flex-col items-center justify-center text-center gap-6"><Loader2 className="w-12 h-12 text-indigo-500 animate-spin" /><h4 className="text-lg font-black text-zinc-900 dark:text-white uppercase tracking-tighter">AI SRE Analysis...</h4></div> : analysis ? <div className="animate-in fade-in slide-in-from-bottom-6 duration-700">

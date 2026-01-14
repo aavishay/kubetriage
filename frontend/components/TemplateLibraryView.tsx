@@ -86,27 +86,27 @@ export const TemplateLibraryView: React.FC<TemplateLibraryViewProps> = ({ onAppl
    ];
 
    return (
-      <div className="space-y-12 pb-20">
+      <div className="space-y-12 pb-20 font-sans">
          {/* Hero Header */}
-         <div className="bg-zinc-900 dark:bg-zinc-950 rounded-[2.5rem] p-8 md:p-10 text-white relative overflow-hidden shadow-2xl border border-zinc-800">
+         <div className="bg-white dark:bg-dark-card rounded-[3.5rem] p-10 md:p-14 text-gray-900 dark:text-white relative overflow-hidden shadow-2xl border border-gray-100 dark:border-white/5">
             <div className="relative z-10 max-w-2xl">
-               <div className="inline-flex items-center gap-2 bg-indigo-500/10 text-indigo-400 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest mb-6 border border-indigo-500/20">
-                  <Sparkles className="w-3 h-3" /> Generative AI Integrated
+               <div className="inline-flex items-center gap-2 bg-primary-500/10 text-primary-500 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest mb-6 border border-primary-500/20">
+                  <Sparkles className="w-4 h-4" /> Generative AI Integrated
                </div>
-               <h1 className="text-4xl font-black mb-4 tracking-tighter leading-tight">SRE Runbooks &<br />Optimization Templates</h1>
-               <p className="text-zinc-400 text-lg mb-10 leading-relaxed font-medium">
-                  Deploy specialized AI diagnostic models and resource strategies with a single click. Every template is tuned for Kubernetes-native signals.
+               <h1 className="text-5xl font-black mb-4 tracking-tighter leading-none uppercase">SRE Runbooks &<br />Optimization Templates</h1>
+               <p className="text-gray-500 dark:text-gray-400 text-lg mb-10 leading-relaxed font-bold uppercase tracking-tight opacity-80">
+                  Deploy specialized AI diagnostic models and resource strategies with a single click. Tuning for Kubernetes-native signals.
                </p>
                <div className="flex flex-wrap gap-4">
-                  <div className="flex items-center gap-3 bg-zinc-800/50 p-3 rounded-2xl border border-zinc-700/50">
-                     <Activity className="w-5 h-5 text-indigo-500" />
+                  <div className="flex items-center gap-3 bg-gray-50 dark:bg-dark-bg p-4 rounded-2xl border border-gray-100 dark:border-white/5 shadow-sm">
+                     <Activity className="w-6 h-6 text-primary-500" />
                      <div className="text-left">
-                        <p className="text-[9px] font-black uppercase text-zinc-500 leading-none mb-1">Triage Models</p>
-                        <p className="text-xs font-bold">13 Active</p>
+                        <p className="text-[9px] font-black uppercase text-gray-400 leading-none mb-1">Triage Models</p>
+                        <p className="text-sm font-black uppercase tracking-tighter">13 Active</p>
                      </div>
                   </div>
-                  <div className="flex items-center gap-3 bg-zinc-800/50 p-3 rounded-2xl border border-zinc-700/50">
-                     <Scale className="w-5 h-5 text-emerald-500" />
+                  <div className="flex items-center gap-3 bg-gray-50 dark:bg-dark-bg p-4 rounded-2xl border border-gray-100 dark:border-white/5 shadow-sm">
+                     <Scale className="w-6 h-6 text-emerald-500" />
                      <div className="text-left">
                         <p className="text-[9px] font-black uppercase text-zinc-500 leading-none mb-1">Sizing Profiles</p>
                         <p className="text-xs font-bold">8 Active</p>
@@ -123,16 +123,17 @@ export const TemplateLibraryView: React.FC<TemplateLibraryViewProps> = ({ onAppl
          <section>
             <div className="flex items-center justify-between mb-8">
                <div>
-                  <h2 className="text-2xl font-black text-zinc-900 dark:text-white flex items-center gap-3 tracking-tighter uppercase">
-                     <AlertCircle className="w-6 h-6 text-indigo-500" /> Diagnostic Triage
+                  <h2 className="text-3xl font-black text-gray-900 dark:text-white flex items-center gap-4 tracking-tighter uppercase leading-none">
+                     <AlertCircle className="w-8 h-8 text-primary-500" /> Diagnostic Triage
                   </h2>
-                  <p className="text-sm text-zinc-500 font-semibold mt-1">AI-driven root cause identification runbooks</p>
+                  <p className="text-[11px] text-gray-400 font-bold uppercase tracking-[0.2em] mt-2 ml-12 opacity-80">AI-driven root cause identification runbooks</p>
                </div>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
                {triageTemplates.map(pb => (
-                  <div key={pb.id} className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-[2rem] p-6 flex flex-col hover:shadow-2xl hover:border-indigo-500/50 transition-all group">
-                     <div className={`p-4 rounded-2xl w-fit mb-6 ${pb.bgColor} ${pb.color}`}>
+                  <div key={pb.id} className="bg-white dark:bg-dark-card border border-gray-100 dark:border-white/5 rounded-[2.5rem] p-8 flex flex-col hover:shadow-2xl transition-all group relative overflow-hidden">
+                     <div className={`absolute top-0 right-0 w-32 h-32 -mr-16 -mt-16 blur-3xl opacity-5 rounded-full ${pb.bgColor}`} />
+                     <div className={`p-4 rounded-2xl w-fit mb-8 shadow-xl ${pb.bgColor} ${pb.color} group-hover:scale-110 transition-transform`}>
                         <pb.icon className="w-7 h-7" />
                      </div>
                      <h3 className="text-lg font-black text-zinc-900 dark:text-white mb-3 tracking-tight">{pb.title}</h3>
@@ -151,9 +152,9 @@ export const TemplateLibraryView: React.FC<TemplateLibraryViewProps> = ({ onAppl
                      </div>
                      <button
                         onClick={() => onApplyTemplate(pb.view, pb.id)}
-                        className="w-full flex items-center justify-center gap-3 py-4 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 text-[10px] font-black uppercase tracking-[0.2em] rounded-2xl transition-all shadow-xl hover:scale-[1.03] active:scale-95"
+                        className="w-full flex items-center justify-center gap-3 py-5 bg-primary-600 text-white text-[10px] font-black uppercase tracking-[0.2em] rounded-2xl transition-all shadow-xl shadow-primary-500/30 hover:bg-primary-700 active:scale-95"
                      >
-                        Apply Model <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                        Apply Model <ArrowRight className="w-4 h-4 group-hover:translate-x-2 transition-transform" />
                      </button>
                   </div>
                ))}

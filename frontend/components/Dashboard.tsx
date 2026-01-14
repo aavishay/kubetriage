@@ -80,15 +80,16 @@ export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = tr
       { name: 'Remaining', value: Math.max(0, isFinite(reliabilityMetrics.budgetPercentage) ? reliabilityMetrics.budgetPercentage : 0), color: isDarkMode ? '#27272a' : '#f4f4f5' },
    ];
 
-   const cardClass = "bg-white dark:bg-zinc-900 p-4 md:p-5 rounded-2xl md:rounded-3xl border border-zinc-200 dark:border-zinc-800 shadow-sm transition-all hover:shadow-md";
+   const cardClass = "bg-white dark:bg-[#16191E] p-4 md:p-6 rounded-[2rem] border border-gray-100 dark:border-white/5 shadow-sm transition-all duration-300 hover:shadow-xl hover:shadow-primary-500/5 hover:-translate-y-0.5";
    const tooltipStyle = {
-      backgroundColor: isDarkMode ? '#18181b' : '#ffffff',
-      borderColor: isDarkMode ? '#27272a' : '#e4e4e7',
-      color: isDarkMode ? '#fff' : '#18181b',
-      borderRadius: '12px',
-      border: '1px solid ' + (isDarkMode ? '#27272a' : '#e4e4e7'),
-      fontSize: '11px',
-      fontWeight: 'bold'
+      backgroundColor: isDarkMode ? '#16191E' : '#ffffff',
+      borderColor: isDarkMode ? 'rgba(255,255,255,0.1)' : '#f3f4f6',
+      color: isDarkMode ? '#fff' : '#111827',
+      borderRadius: '16px',
+      border: '1px solid ' + (isDarkMode ? 'rgba(255,255,255,0.1)' : '#f3f4f6'),
+      fontSize: '12px',
+      fontWeight: '600',
+      padding: '8px 12px'
    };
 
    // Loading State - Only show full page spinner on initial fetch (no data yet)
@@ -154,148 +155,151 @@ export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = tr
       <div className="space-y-5 md:space-y-6 animate-in fade-in duration-500">
 
          {/* Priority Investigation Hero - Focused on ingress-nginx network issues */}
-         <section className="relative group">
-            <div className="absolute inset-0 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-[2.5rem] blur-2xl opacity-20 group-hover:opacity-30 transition-opacity"></div>
-            <div className="relative bg-zinc-900 dark:bg-zinc-950 rounded-[2.5rem] p-5 md:p-6 border border-zinc-800 shadow-2xl overflow-hidden">
-               <div className="flex flex-col lg:flex-row items-center gap-8">
+         <section className="relative group animate-in slide-in-from-top-4 duration-700">
+            <div className="absolute inset-0 bg-gradient-to-r from-primary-600/20 to-purple-600/20 rounded-[3rem] blur-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+            <div className="relative bg-[#16191E] dark:bg-[#0A0C0E] rounded-[3rem] p-6 md:p-10 border border-white/5 shadow-2xl overflow-hidden">
+               <div className="flex flex-col lg:flex-row items-center gap-10">
                   <div className="relative shrink-0">
-                     <div className="p-6 bg-indigo-500/10 rounded-[2rem] border border-indigo-500/20">
-                        <Network className="w-12 h-12 text-indigo-400 animate-pulse" />
+                     <div className="p-8 bg-primary-500/10 rounded-[2.5rem] border border-primary-500/20 shadow-inner">
+                        <Network className="w-14 h-14 text-primary-400 animate-pulse" />
                      </div>
-                     <div className="absolute -top-2 -right-2 w-6 h-6 bg-rose-500 rounded-full flex items-center justify-center text-[10px] font-black text-white shadow-lg animate-bounce border-2 border-zinc-900">1</div>
+                     <div className="absolute -top-3 -right-3 w-8 h-8 bg-rose-500 rounded-full flex items-center justify-center text-xs font-black text-white shadow-lg animate-bounce border-4 border-[#16191E]">1</div>
                   </div>
 
                   <div className="flex-1 text-center lg:text-left">
-                     <div className="flex flex-wrap justify-center lg:justify-start items-center gap-3 mb-4">
-                        <span className="px-3 py-1 rounded-full bg-rose-500/10 text-rose-500 border border-rose-500/20 text-[10px] font-black uppercase tracking-widest">Priority investigation</span>
-                        <span className="px-3 py-1 rounded-full bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 text-[10px] font-black uppercase tracking-widest flex items-center gap-2">
-                           <Wifi className="w-3 h-3" /> Network connectivity
+                     <div className="flex flex-wrap justify-center lg:justify-start items-center gap-3 mb-6">
+                        <span className="px-4 py-1.5 rounded-full bg-rose-500/10 text-rose-500 border border-rose-500/20 text-[11px] font-black uppercase tracking-widest shadow-sm">Priority investigation</span>
+                        <span className="px-4 py-1.5 rounded-full bg-primary-500/10 text-primary-400 border border-primary-500/20 text-[11px] font-black uppercase tracking-widest flex items-center gap-2 shadow-sm">
+                           <Wifi className="w-4 h-4" /> Network connectivity
                         </span>
                      </div>
-                     <h2 className="text-2xl md:text-3xl font-black text-white uppercase tracking-tighter mb-3 leading-none">
-                        Diagnose: <span className="text-indigo-400">ingress-nginx-controller</span>
+                     <h2 className="text-3xl md:text-5xl font-black text-white uppercase tracking-tighter mb-4 leading-none">
+                        Diagnose: <span className="text-primary-400">ingress-nginx</span>
                      </h2>
-                     <p className="text-zinc-400 text-sm font-medium max-w-2xl leading-relaxed">
-                        Critical upstream latency detected. Multiple 504 Gateway Timeouts reported in production namespace. AI suggests a targeted connectivity triage of the NGINX control plane.
+                     <p className="text-gray-400 text-base font-medium max-w-2xl leading-relaxed">
+                        Critical upstream latency detected. Multiple 504 Gateway Timeouts reported in production. AI suggests a targeted connectivity triage of the NGINX control plane.
                      </p>
                   </div>
 
-                  <div className="shrink-0 flex flex-col gap-3 w-full lg:w-auto">
+                  <div className="shrink-0 flex flex-col gap-4 w-full lg:w-auto">
                      <button
                         onClick={() => onTriageRequest?.('w-6', 'Network Connectivity')}
-                        className="bg-white text-zinc-900 px-8 py-4 rounded-2xl text-xs font-black uppercase tracking-[0.2em] shadow-xl hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-3 group/btn"
+                        className="bg-white text-[#0A0C0E] px-10 py-5 rounded-2xl text-[11px] font-black uppercase tracking-[0.2em] shadow-2xl hover:bg-primary-50 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-3 group/btn"
                      >
-                        <Sparkles className="w-4 h-4 text-indigo-600" />
+                        <Sparkles className="w-5 h-5 text-primary-600" />
                         Initialize Diagnostic
-                        <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                        <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                      </button>
-                     <div className="flex items-center justify-center gap-2 text-[10px] font-black text-zinc-500 uppercase tracking-widest">
-                        <SearchCode className="w-3.5 h-3.5" /> Analyzing logs & topology
+                     <div className="flex items-center justify-center gap-2.5 text-[11px] font-black text-gray-500 uppercase tracking-[0.1em]">
+                        <SearchCode className="w-4 h-4" /> Analyzing logs & topology
                      </div>
                   </div>
                </div>
                {/* Design detail */}
-               <div className="absolute -bottom-12 -right-12 w-48 h-48 bg-indigo-500/5 rounded-full blur-[60px]"></div>
+               <div className="absolute -bottom-24 -right-24 w-64 h-64 bg-primary-500/10 rounded-full blur-[100px] pointer-events-none"></div>
+               <div className="absolute -top-24 -left-24 w-64 h-64 bg-purple-500/10 rounded-full blur-[100px] pointer-events-none"></div>
             </div>
          </section>
 
          {/* Top Metrics Grid */}
-         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-5">
-            <div className={cardClass}>
-               <div className="flex justify-between items-start mb-4">
-                  <div className="p-2 bg-blue-500/10 rounded-xl text-blue-600 dark:text-blue-400"><DollarSign className="w-5 h-5" /></div>
-                  <span className="text-[10px] font-black text-blue-500 uppercase tracking-widest">+4.2%</span>
+         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+            <div className={`${cardClass} animate-in fade-in slide-in-from-bottom-2 duration-500 delay-[100ms]`}>
+               <div className="flex justify-between items-start mb-6">
+                  <div className="p-2.5 bg-primary-500/10 rounded-2xl text-primary-600 dark:text-primary-400 shadow-sm"><DollarSign className="w-6 h-6" /></div>
+                  <span className="text-[11px] font-black text-primary-500 bg-primary-500/5 px-2 py-0.5 rounded-full uppercase tracking-widest border border-primary-500/10">+4.2%</span>
                </div>
-               <p className="text-zinc-500 text-[10px] font-black uppercase tracking-widest leading-none mb-2">OpEx Monthly</p>
-               <h3 className="text-xl md:text-2xl font-black text-zinc-900 dark:text-white tracking-tighter leading-none">${totalCost.toLocaleString()}</h3>
+               <p className="text-gray-500 dark:text-gray-400 text-[11px] font-black uppercase tracking-[0.15em] leading-none mb-3">OpEx Monthly</p>
+               <h3 className="text-2xl md:text-3xl font-black text-gray-900 dark:text-white tracking-tighter leading-none">${totalCost.toLocaleString()}</h3>
             </div>
 
-            <div className={cardClass}>
-               <div className="flex justify-between items-start mb-4">
-                  <div className="p-2 bg-emerald-500/10 rounded-xl text-emerald-600 dark:text-emerald-400"><Activity className="w-5 h-5" /></div>
-                  <span className="text-[10px] font-black text-emerald-500 uppercase tracking-widest">Healthy</span>
+            <div className={`${cardClass} animate-in fade-in slide-in-from-bottom-2 duration-500 delay-[200ms]`}>
+               <div className="flex justify-between items-start mb-6">
+                  <div className="p-2.5 bg-emerald-500/10 rounded-2xl text-emerald-600 dark:text-emerald-400 shadow-sm"><Activity className="w-6 h-6" /></div>
+                  <span className="text-[11px] font-black text-emerald-500 bg-emerald-500/5 px-2 py-0.5 rounded-full uppercase tracking-widest border border-emerald-500/10">Healthy</span>
                </div>
-               <p className="text-zinc-500 text-[10px] font-black uppercase tracking-widest leading-none mb-2">Fleet Integrity</p>
-               <h3 className="text-xl md:text-2xl font-black text-zinc-900 dark:text-white tracking-tighter leading-none">{Math.round((1 - (criticalCount / workloads.length)) * 100)}%</h3>
+               <p className="text-gray-500 dark:text-gray-400 text-[11px] font-black uppercase tracking-[0.15em] leading-none mb-3">Fleet Integrity</p>
+               <h3 className="text-2xl md:text-3xl font-black text-gray-900 dark:text-white tracking-tighter leading-none">{Math.round((1 - (criticalCount / workloads.length)) * 100)}%</h3>
             </div>
 
-            <div className={cardClass}>
-               <div className="flex justify-between items-start mb-4">
-                  <div className="p-2 bg-purple-500/10 rounded-xl text-purple-600 dark:text-purple-400"><TrendingDown className="w-5 h-5" /></div>
-                  <span className="text-[10px] font-black text-purple-500 uppercase tracking-widest">Optimizable</span>
+            <div className={`${cardClass} animate-in fade-in slide-in-from-bottom-2 duration-500 delay-[300ms]`}>
+               <div className="flex justify-between items-start mb-6">
+                  <div className="p-2.5 bg-purple-500/10 rounded-2xl text-purple-600 dark:text-purple-400 shadow-sm"><TrendingDown className="w-6 h-6" /></div>
+                  <span className="text-[11px] font-black text-purple-500 bg-purple-500/5 px-2 py-0.5 rounded-full uppercase tracking-widest border border-purple-500/10">Optimizable</span>
                </div>
-               <p className="text-zinc-500 text-[10px] font-black uppercase tracking-widest leading-none mb-2">Waste Forecast</p>
-               {/* Fixed syntax error: 'potential savings' -> 'potentialSavings' */}
-               <h3 className="text-xl md:text-2xl font-black text-zinc-900 dark:text-white tracking-tighter leading-none">${Math.round(potentialSavings).toLocaleString()}</h3>
+               <p className="text-gray-500 dark:text-gray-400 text-[11px] font-black uppercase tracking-[0.15em] leading-none mb-3">Waste Forecast</p>
+               <h3 className="text-2xl md:text-3xl font-black text-gray-900 dark:text-white tracking-tighter leading-none">${Math.round(potentialSavings).toLocaleString()}</h3>
             </div>
 
-            <div className={cardClass}>
-               <div className="flex justify-between items-start mb-4">
-                  <div className="p-2 bg-orange-500/10 rounded-xl text-orange-600 dark:text-orange-400"><Box className="w-5 h-5" /></div>
-                  <span className="text-[10px] font-black text-orange-500 uppercase tracking-widest">{workloads.length} Units</span>
+            <div className={`${cardClass} animate-in fade-in slide-in-from-bottom-2 duration-500 delay-[400ms]`}>
+               <div className="flex justify-between items-start mb-6">
+                  <div className="p-2.5 bg-orange-500/10 rounded-2xl text-orange-600 dark:text-orange-400 shadow-sm"><Box className="w-6 h-6" /></div>
+                  <span className="text-[11px] font-black text-orange-500 bg-orange-500/5 px-2 py-0.5 rounded-full uppercase tracking-widest border border-orange-500/10">{workloads.length} Units</span>
                </div>
-               <p className="text-zinc-500 text-[10px] font-black uppercase tracking-widest leading-none mb-2">Active Services</p>
-               <h3 className="text-xl md:text-2xl font-black text-zinc-900 dark:text-white tracking-tighter leading-none">Ready</h3>
+               <p className="text-gray-500 dark:text-gray-400 text-[11px] font-black uppercase tracking-[0.15em] leading-none mb-3">Active Services</p>
+               <h3 className="text-2xl md:text-3xl font-black text-gray-900 dark:text-white tracking-tighter leading-none">Ready</h3>
             </div>
          </div>
 
          <div className="grid grid-cols-1 lg:grid-cols-5 gap-5 md:gap-6">
 
             <div className="lg:col-span-2 flex flex-col gap-6">
-               <div className="bg-white dark:bg-zinc-900 rounded-3xl border border-zinc-200 dark:border-zinc-800 p-6 md:p-8 flex flex-col shadow-sm flex-1">
-                  <h3 className="text-xs font-black uppercase tracking-widest text-zinc-400 mb-6 flex items-center gap-2">
-                     <ShieldAlert className="w-4 h-4 text-rose-500" /> Active Incidents
+               <div className="bg-white dark:bg-[#16191E] rounded-[2rem] border border-gray-100 dark:border-white/5 p-6 md:p-8 flex flex-col shadow-sm flex-1 animate-in fade-in slide-in-from-left-4 duration-700 delay-200">
+                  <h3 className="text-[11px] font-black uppercase tracking-[0.2em] text-gray-500 dark:text-gray-400 mb-8 flex items-center gap-2.5">
+                     <div className="w-2 h-2 rounded-full bg-rose-500 shadow-[0_0_8px_rgba(239,68,68,0.5)]"></div>
+                     Active Incidents
                   </h3>
                   <div className="space-y-4 overflow-y-auto flex-1 min-h-0 pr-2 custom-scrollbar">
                      {incidents.length > 0 ? (
-                        incidents.map(w => (
-                           <div key={w.id} className="p-5 rounded-2xl border border-zinc-100 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-950/50 group hover:border-indigo-500/30 transition-all shadow-sm">
-                              <div className="flex justify-between items-start mb-3">
+                        incidents.map((w, idx) => (
+                           <div key={w.id} className="p-5 rounded-2xl border border-gray-50 dark:border-white/5 bg-gray-50/50 dark:bg-dark-bg/50 group hover:border-primary-500/30 transition-all duration-300 shadow-sm animate-in fade-in slide-in-from-left-2" style={{ animationDelay: `${idx * 100}ms` }}>
+                              <div className="flex justify-between items-start mb-4">
                                  <div className="flex items-center gap-3">
                                     <div className={`w-2 h-2 rounded-full ${w.status === 'Critical' ? 'bg-rose-500 animate-pulse' : 'bg-amber-500'}`} />
                                     <div>
-                                       <span className="text-sm font-black text-zinc-900 dark:text-white uppercase tracking-tight block leading-none">{w.name}</span>
-                                       <span className="text-[9px] font-bold text-zinc-400 uppercase tracking-wide mt-1 block">Active Incident</span>
+                                       <span className="text-[13px] font-black text-gray-900 dark:text-white uppercase tracking-tight block leading-none mb-1">{w.name}</span>
+                                       <span className="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest block">Active Incident</span>
                                     </div>
                                  </div>
-                                 <span className={`text-[8px] font-black uppercase px-2 py-0.5 rounded-md border ${w.status === 'Critical' ? 'bg-rose-500/10 text-rose-500 border-rose-500/20' : 'bg-amber-500/10 text-amber-500 border-amber-500/20'}`}>
+                                 <span className={`text-[9px] font-black uppercase px-2.5 py-1 rounded-md border ${w.status === 'Critical' ? 'bg-rose-500/10 text-rose-500 border-rose-500/20' : 'bg-amber-500/10 text-amber-500 border-amber-500/20'}`}>
                                     {w.status}
                                  </span>
                               </div>
 
-                              <p className="text-[11px] font-bold text-zinc-600 dark:text-zinc-400 mb-4 leading-relaxed">
+                              <p className="text-[12px] font-medium text-gray-600 dark:text-gray-400 mb-5 leading-relaxed">
                                  {getIncidentSummary(w)}
                               </p>
 
                               <button
                                  onClick={() => onTriageRequest?.(w.id, 'Resource Constraints')}
-                                 className="w-full flex items-center justify-between gap-2 bg-white dark:bg-zinc-800 p-2.5 rounded-xl border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-750 transition-all group/btn"
+                                 className="w-full flex items-center justify-between gap-2 bg-white dark:bg-[#1A1D23] p-3 rounded-xl border border-gray-100 dark:border-white/5 hover:border-primary-500/50 hover:bg-primary-50/50 dark:hover:bg-primary-500/5 transition-all duration-300 group/btn shadow-sm"
                               >
-                                 <span className="text-[9px] font-black uppercase tracking-widest flex items-center gap-2 text-zinc-600 dark:text-zinc-300">
-                                    <Sparkles className="w-3.5 h-3.5 text-indigo-500" />
+                                 <span className="text-[10px] font-black uppercase tracking-widest flex items-center gap-2.5 text-gray-700 dark:text-gray-300">
+                                    <Sparkles className="w-4 h-4 text-primary-500" />
                                     Investigate with AI
                                  </span>
-                                 <ChevronRight className="w-4 h-4 text-zinc-400 group-hover/btn:translate-x-1 transition-all" />
+                                 <ChevronRight className="w-5 h-5 text-gray-400 group-hover/btn:translate-x-1 transition-all" />
                               </button>
                            </div>
                         ))
                      ) : (
-                        <div className="p-10 text-center flex flex-col items-center">
-                           <HeartPulse className="w-10 h-10 text-emerald-500 mb-3" />
-                           <p className="text-xs font-black uppercase text-zinc-400 tracking-widest">All services nominal</p>
+                        <div className="p-12 text-center flex flex-col items-center">
+                           <div className="p-4 bg-emerald-500/10 rounded-full mb-4">
+                              <HeartPulse className="w-12 h-12 text-emerald-500" />
+                           </div>
+                           <p className="text-[11px] font-black uppercase text-gray-400 tracking-widest">All services nominal</p>
                         </div>
                      )}
                   </div>
                </div>
 
-               <div className="bg-white dark:bg-zinc-900 rounded-3xl border border-zinc-200 dark:border-zinc-800 p-6 md:p-8 flex flex-col shadow-sm">
-                  <h3 className="text-xs font-black uppercase tracking-widest text-zinc-400 mb-6 flex items-center gap-2">
-                     <Activity className="w-4 h-4 text-indigo-500" /> Status Distribution
+               <div className="bg-white dark:bg-[#16191E] rounded-[2rem] border border-gray-100 dark:border-white/5 p-6 md:p-8 flex flex-col shadow-sm animate-in fade-in slide-in-from-left-4 duration-700 delay-300">
+                  <h3 className="text-[11px] font-black uppercase tracking-[0.2em] text-gray-500 dark:text-gray-400 mb-8 flex items-center gap-2.5">
+                     <Activity className="w-4 h-4 text-primary-500" /> Status Distribution
                   </h3>
                   <div className="h-48 w-full">
                      <ResponsiveContainer width="100%" height="100%">
                         <PieChart>
-                           <Pie data={statusData} cx="50%" cy="50%" innerRadius={60} outerRadius={80} paddingAngle={8} dataKey="value" stroke="none">
+                           <Pie data={statusData} cx="50%" cy="50%" innerRadius={65} outerRadius={85} paddingAngle={8} dataKey="value" stroke="none">
                               {statusData.map((entry, index) => (
                                  <Cell key={`cell-${index}`} fill={entry.color} />
                               ))}
@@ -307,67 +311,62 @@ export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = tr
                </div>
             </div>
 
-            <div className="lg:col-span-3 bg-white dark:bg-zinc-900 rounded-3xl border border-zinc-200 dark:border-zinc-800 p-6 md:p-8 flex flex-col shadow-sm h-full">
-               <h3 className="text-xs font-black uppercase tracking-widest text-zinc-400 mb-8 flex items-center gap-2">
-                  <Zap className="w-4 h-4 text-amber-500" /> Resource Saturation (CPU)
+            <div className="lg:col-span-3 bg-white dark:bg-[#16191E] rounded-[2rem] border border-gray-100 dark:border-white/5 p-6 md:p-8 flex flex-col shadow-sm h-full animate-in fade-in slide-in-from-right-4 duration-700 delay-200">
+               <h3 className="text-[11px] font-black uppercase tracking-[0.2em] text-gray-500 dark:text-gray-400 mb-10 flex items-center gap-2.5">
+                  <Zap className="w-4 h-4 text-primary-500 shadow-[0_0_8px_rgba(14,165,233,0.4)]" /> Resource Saturation (CPU)
                </h3>
                <div className="flex-1 min-h-0 w-full overflow-y-auto pr-2 custom-scrollbar">
-                  <div className="space-y-4">
+                  <div className="space-y-6">
                      {resourceData
                         .sort((a, b) => {
-                           // Handle potential division by zero or NaN in sorting
                            const aSat = (a.requested > 0) ? (a.used / a.requested) : 0;
                            const bSat = (b.requested > 0) ? (b.used / b.requested) : 0;
                            return bSat - aSat;
                         })
                         .map((item, idx) => {
-                           // Ensure requested is not zero to avoid NaN
                            const saturation = item.requested > 0 ? Math.min(100, Math.round((item.used / item.requested) * 100)) : 0;
                            const isCritical = saturation >= 90;
                            const isWarning = saturation >= 70 && saturation < 90;
 
-                           // Gradient classes
                            const colorClass = isCritical
-                              ? 'bg-gradient-to-r from-rose-500 to-pink-600'
+                              ? 'bg-gradient-to-r from-rose-500 to-pink-600 shadow-[0_0_12px_rgba(244,63,94,0.3)]'
                               : isWarning
-                                 ? 'bg-gradient-to-r from-amber-400 to-orange-500'
-                                 : 'bg-gradient-to-r from-emerald-400 to-teal-500';
+                                 ? 'bg-gradient-to-r from-amber-400 to-orange-500 shadow-[0_0_12px_rgba(245,158,11,0.2)]'
+                                 : 'bg-gradient-to-r from-primary-400 to-teal-500 shadow-[0_0_12px_rgba(56,189,248,0.2)]';
 
                            return (
                               <div
                                  key={idx}
                                  onClick={() => onTriageRequest?.(item.name, 'General Health')}
-                                 className="group flex items-center gap-4 p-3 rounded-xl hover:bg-zinc-50 dark:hover:bg-zinc-800/50 border border-transparent hover:border-zinc-100 dark:hover:border-zinc-800 transition-all cursor-pointer hover:scale-[1.01] active:scale-[0.99]"
+                                 className="group flex items-center gap-6 p-4 rounded-2xl hover:bg-gray-50 dark:hover:bg-dark-bg transition-all duration-300 cursor-pointer border border-transparent hover:border-gray-100 dark:hover:border-white/5 animate-in fade-in slide-in-from-right-2"
+                                 style={{ animationDelay: `${idx * 50}ms` }}
                               >
-                                 {/* Name & Type */}
-                                 <div className="w-48 shrink-0">
-                                    <h4 className="text-xs font-bold text-zinc-700 dark:text-zinc-300 truncate" title={item.name}>{item.name}</h4>
-                                    <div className="flex items-center gap-2 mt-1">
-                                       <div className={`w-1.5 h-1.5 rounded-full ${item.status === 'Critical' ? 'bg-rose-500' : 'bg-emerald-500'}`} />
-                                       <span className="text-[9px] font-medium text-zinc-400 uppercase tracking-wider">{item.status}</span>
+                                 <div className="w-56 shrink-0">
+                                    <h4 className="text-[14px] font-bold text-gray-800 dark:text-white truncate" title={item.name}>{item.name}</h4>
+                                    <div className="flex items-center gap-2.5 mt-1.5 font-bold">
+                                       <div className={`w-2 h-2 rounded-full ${item.status === 'Critical' ? 'bg-rose-500' : 'bg-emerald-500'}`} />
+                                       <span className="text-[10px] text-gray-500 dark:text-gray-400 uppercase tracking-[0.1em]">{item.status}</span>
                                     </div>
                                  </div>
 
-                                 {/* Progress Bar */}
                                  <div className="flex-1 flex flex-col justify-center">
-                                    <div className="flex justify-between items-end mb-1">
-                                       <span className="text-[9px] font-bold text-zinc-400">CPU Saturation</span>
-                                       <span className={`text-[10px] font-black ${isCritical ? 'text-rose-500' : 'text-zinc-500'}`}>{saturation}%</span>
+                                    <div className="flex justify-between items-end mb-2">
+                                       <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none">CPU Saturation</span>
+                                       <span className={`text-[12px] font-black ${isCritical ? 'text-rose-500' : 'text-gray-700 dark:text-gray-200'}`}>{saturation}%</span>
                                     </div>
-                                    <div className="h-2 w-full bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden">
+                                    <div className="h-2.5 w-full bg-gray-100 dark:bg-dark-bg/80 rounded-full overflow-hidden shadow-inner">
                                        <div
-                                          className={`h-full rounded-full shadow-sm ${colorClass} transition-all duration-1000 ease-out`}
+                                          className={`h-full rounded-full transition-all duration-1000 ease-out ${colorClass}`}
                                           style={{ width: `${saturation}%` }}
                                        />
                                     </div>
                                  </div>
 
-                                 {/* Metric Values */}
-                                 <div className="w-24 shrink-0 text-right">
-                                    <div className="text-[10px] font-mono text-zinc-500">
-                                       <span className="text-zinc-900 dark:text-white font-bold">{item.used.toFixed(3).replace(/\.?0+$/, '')}m</span> / {item.requested.toFixed(3).replace(/\.?0+$/, '')}m
+                                 <div className="w-28 shrink-0 text-right">
+                                    <div className="text-[11px] font-mono text-gray-500 dark:text-gray-400">
+                                       <span className="text-gray-900 dark:text-white font-black">{item.used.toFixed(2)}m</span> <span className="opacity-40">/</span> {item.requested.toFixed(0)}m
                                     </div>
-                                    <span className="text-[9px] text-zinc-400 font-medium">cores</span>
+                                    <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-0.5 block">cores</span>
                                  </div>
                               </div>
                            );
@@ -378,28 +377,29 @@ export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = tr
          </div>
 
          {/* Error Budget Section */}
-         <div className="bg-white dark:bg-zinc-900 rounded-[2.5rem] border border-zinc-200 dark:border-zinc-800 overflow-hidden shadow-sm">
-            <div className="p-8 border-b border-zinc-100 dark:border-zinc-800 flex justify-between items-center bg-zinc-50/30 dark:bg-zinc-950/30">
-               <div className="flex items-center gap-4">
-                  <div className="p-3 bg-rose-500/10 rounded-2xl text-rose-500 shadow-lg shadow-rose-500/5">
-                     <ShieldAlert className="w-7 h-7" />
+         <div className="bg-white dark:bg-[#16191E] rounded-[3rem] border border-gray-100 dark:border-white/5 overflow-hidden shadow-sm animate-in fade-in slide-in-from-bottom-6 duration-700 delay-500">
+            <div className="p-10 border-b border-gray-50 dark:border-white/5 flex justify-between items-center bg-gray-50/20 dark:bg-dark-bg/20">
+               <div className="flex items-center gap-6">
+                  <div className="p-4 bg-primary-500/10 rounded-[1.5rem] text-primary-500 shadow-lg shadow-primary-500/5">
+                     <ShieldAlert className="w-9 h-9" />
                   </div>
                   <div>
-                     <h3 className="text-xl font-black tracking-tighter uppercase text-zinc-900 dark:text-white leading-none mb-1">Reliability Control Center</h3>
-                     <p className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-400">30-Day Rolling Error Budget Window</p>
+                     <h3 className="text-3xl font-black tracking-tighter uppercase text-gray-900 dark:text-white leading-none mb-2">Reliability Control</h3>
+                     <p className="text-[11px] font-black uppercase tracking-[0.3em] text-gray-500 dark:text-gray-400">30-Day Rolling Error Budget Window</p>
                   </div>
                </div>
-               <div className="flex items-center gap-6">
+               <div className="flex items-center gap-8">
                   <div className="text-right">
-                     <p className="text-[10px] font-black uppercase tracking-widest text-zinc-400 leading-none mb-1">Target SLO</p>
-                     <p className="text-xl font-black text-indigo-500 dark:text-indigo-400 leading-none font-mono">{reliabilityMetrics.slo}%</p>
+                     <p className="text-[11px] font-black uppercase tracking-[0.2em] text-gray-500 dark:text-gray-401 leading-none mb-2">Target SLO</p>
+                     <p className="text-3xl font-black text-primary-500 dark:text-primary-400 leading-none font-mono">{reliabilityMetrics.slo}%</p>
                   </div>
                </div>
             </div>
 
-            <div className="p-8 grid grid-cols-1 lg:grid-cols-3 gap-12">
+            <div className="p-10 grid grid-cols-1 lg:grid-cols-3 gap-16">
                <div className="flex flex-col items-center justify-center">
-                  <div className="relative w-56 h-56 group">
+                  <div className="relative w-64 h-64 group">
+                     <div className="absolute inset-0 bg-primary-500/5 rounded-full blur-[80px] group-hover:bg-primary-500/10 transition-colors"></div>
                      <ResponsiveContainer width="100%" height="100%">
                         <PieChart>
                            <Pie
@@ -408,8 +408,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = tr
                               cy="50%"
                               startAngle={210}
                               endAngle={-30}
-                              innerRadius={70}
-                              outerRadius={80}
+                              innerRadius={85}
+                              outerRadius={95}
                               dataKey="value"
                               stroke="none"
                            >
@@ -420,61 +420,61 @@ export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = tr
                         </PieChart>
                      </ResponsiveContainer>
                      <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
-                        <span className="text-[10px] font-black text-zinc-400 uppercase tracking-widest mb-1">Budget</span>
-                        <span className={`text-4xl font-black tracking-tighter ${reliabilityMetrics.severity === 'Critical' ? 'text-red-500' : 'text-zinc-900 dark:text-white'}`}>
+                        <span className="text-[11px] font-black text-gray-500 uppercase tracking-[0.2em] mb-2">Budget</span>
+                        <span className={`text-5xl font-black tracking-tighter ${reliabilityMetrics.severity === 'Critical' ? 'text-rose-500' : 'text-gray-900 dark:text-white'}`}>
                            {reliabilityMetrics.budgetPercentage.toFixed(1)}%
                         </span>
-                        <span className="text-[10px] font-black text-zinc-500 uppercase tracking-tighter mt-1">REMAINING</span>
+                        <span className="text-[11px] font-black text-gray-400 uppercase tracking-[0.1em] mt-2">REMAINING</span>
                      </div>
                   </div>
                </div>
 
-               <div className="flex flex-col justify-center space-y-6">
-                  <div className="bg-zinc-50 dark:bg-zinc-950/50 p-6 rounded-3xl border border-zinc-100 dark:border-zinc-800">
-                     <div className="flex justify-between items-center mb-4">
-                        <div className="flex items-center gap-2">
-                           <ShieldCheck className="w-4 h-4 text-emerald-500" />
-                           <span className="text-[10px] font-black uppercase text-zinc-500 tracking-widest">Risk Factor</span>
+               <div className="flex flex-col justify-center space-y-8">
+                  <div className="bg-gray-50/50 dark:bg-dark-bg/50 p-8 rounded-[2.5rem] border border-gray-100 dark:border-white/5 shadow-sm">
+                     <div className="flex justify-between items-center mb-5">
+                        <div className="flex items-center gap-3">
+                           <ShieldCheck className="w-5 h-5 text-emerald-500" />
+                           <span className="text-[11px] font-black uppercase text-gray-500 tracking-[0.2em]">Risk Factor</span>
                         </div>
-                        <span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded-md ${reliabilityMetrics.severity === 'Healthy' ? 'bg-emerald-500/10 text-emerald-500' :
-                           reliabilityMetrics.severity === 'Warning' ? 'bg-amber-500/10 text-amber-500' : 'bg-red-500/10 text-red-500'
+                        <span className={`text-[10px] font-black uppercase px-3 py-1 rounded-full border ${reliabilityMetrics.severity === 'Healthy' ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' :
+                           reliabilityMetrics.severity === 'Warning' ? 'bg-amber-500/10 text-amber-500 border-amber-500/20' : 'bg-rose-500/10 text-rose-500 border-rose-500/20'
                            }`}>
                            {reliabilityMetrics.severity}
                         </span>
                      </div>
-                     <div className="flex items-center gap-3">
-                        <div className="text-3xl font-black text-zinc-900 dark:text-white tracking-tighter leading-none">{reliabilityMetrics.burnRate.toFixed(2)}x</div>
-                        <div className="text-[10px] font-black uppercase text-zinc-400 leading-tight">Burn Rate<br />vs Normal</div>
+                     <div className="flex items-center gap-4">
+                        <div className="text-4xl font-black text-gray-900 dark:text-white tracking-tighter leading-none">{reliabilityMetrics.burnRate.toFixed(2)}x</div>
+                        <div className="text-[11px] font-bold uppercase text-gray-400 leading-tight tracking-widest">Burn Rate<br />vs Normal</div>
                      </div>
                   </div>
 
-                  <div className="bg-zinc-50 dark:bg-zinc-950/50 p-6 rounded-3xl border border-zinc-100 dark:border-zinc-800">
-                     <div className="flex justify-between items-center mb-4">
-                        <div className="flex items-center gap-2">
-                           <Target className="w-4 h-4 text-indigo-500" />
-                           <span className="text-[10px] font-black uppercase text-zinc-500 tracking-widest">Exhaustion Forecast</span>
+                  <div className="bg-gray-50/50 dark:bg-dark-bg/50 p-8 rounded-[2.5rem] border border-gray-100 dark:border-white/5 shadow-sm">
+                     <div className="flex justify-between items-center mb-5">
+                        <div className="flex items-center gap-3">
+                           <Target className="w-5 h-5 text-primary-500" />
+                           <span className="text-[11px] font-black uppercase text-gray-500 tracking-[0.2em]">Exhaustion Forecast</span>
                         </div>
                      </div>
-                     <div className="flex items-center gap-3">
-                        <div className="text-3xl font-black text-zinc-900 dark:text-white tracking-tighter leading-none">{reliabilityMetrics.uptimeForecast}</div>
-                        <div className="text-[10px] font-black uppercase text-zinc-400 leading-tight">Time until<br />SLO breach</div>
+                     <div className="flex items-center gap-4">
+                        <div className="text-4xl font-black text-gray-900 dark:text-white tracking-tighter leading-none">{reliabilityMetrics.uptimeForecast}</div>
+                        <div className="text-[11px] font-bold uppercase text-gray-400 leading-tight tracking-widest">Time until<br />SLO breach</div>
                      </div>
                   </div>
                </div>
 
-               <div className="bg-zinc-50 dark:bg-zinc-950/50 p-6 rounded-3xl border border-zinc-100 dark:border-zinc-800 flex flex-col justify-between">
+               <div className="bg-gray-50/50 dark:bg-dark-bg/50 p-8 rounded-[2.5rem] border border-gray-100 dark:border-white/5 flex flex-col justify-between shadow-sm">
                   <div>
-                     <h4 className="text-xs font-black uppercase tracking-widest text-zinc-900 dark:text-white mb-2">Policy Compliance</h4>
-                     <p className="text-[10px] text-zinc-500 font-bold leading-relaxed mb-6">
-                        Current resource distribution is within 15% of the &quot;Balanced Production&quot; template. No immediate re-balancing required.
+                     <h4 className="text-[13px] font-black uppercase tracking-widest text-gray-900 dark:text-white mb-4">Policy Compliance</h4>
+                     <p className="text-[12px] text-gray-500 dark:text-gray-400 font-medium leading-relaxed mb-8">
+                        Current resource distribution is within 15% of the <span className="text-primary-500 font-bold">"Balanced Production"</span> template. No immediate re-balancing required.
                      </p>
                   </div>
                   <button
                      onClick={() => onTriageRequest?.('w-6', 'General Health')}
-                     className="w-full flex items-center justify-between p-4 bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-700 hover:border-indigo-500 transition-all group/pol"
+                     className="w-full flex items-center justify-between p-5 bg-white dark:bg-[#1A1D23] rounded-2xl border border-gray-100 dark:border-white/5 hover:border-primary-500 hover:shadow-lg hover:shadow-primary-500/5 transition-all duration-300 group/pol shadow-sm"
                   >
-                     <span className="text-[9px] font-black uppercase tracking-widest text-zinc-600 dark:text-zinc-400 group-hover/pol:text-indigo-500">Run Compliance Audit</span>
-                     <ExternalLink className="w-4 h-4 text-zinc-300 group-hover/pol:text-indigo-500" />
+                     <span className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-600 dark:text-gray-400 group-hover/pol:text-primary-500">Run Compliance Audit</span>
+                     <ExternalLink className="w-5 h-5 text-gray-300 group-hover/pol:text-primary-500 transition-colors" />
                   </button>
                </div>
             </div>

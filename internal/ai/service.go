@@ -248,26 +248,35 @@ func (s *AIService) GenerateTopology(ctx context.Context, providerName, model, w
 	}
 
 	prompt := fmt.Sprintf(`
-	You are a Cloud Architecture Expert.
-	Based on the following list of Kubernetes workloads, generate a Mermaid JS diagram (flowchart TB or graph TB) that visualizes the architecture.
+	You are a Cloud Architecture Expert specializing in Kubernetes.
+	Based on the list of workloads below, generate a Mermaid JS diagram to visualize the architecture.
 	
 	Workloads:
 	%s
 	
-	GUIDELINES:
-	- Start immediately with 'flowchart TB'.
-	- DO NOT include ANY introductory or concluding text.
-	- WRAP the output in a markdown code block (using triple backticks and 'mermaid').
-	- **CRITICAL**: Use simplified, alphanumeric snake_case for Node IDs (e.g. 'gitlab_runner' instead of 'gitlab-runner').
-	- REPLACE all hyphens, dots, and spaces in IDs with underscores.
-	- Use strict node_id["Display Name"] format.
-	- Example: gitlab_runner_7f4b["gitlab-runner-7f4b"].
-	- Group by Namespace using subgraph ns_name ["Namespace Name"].
-	- Visualize connections if traffic patterns can be inferred.
+	Strict Mermaid Syntax Requirements:
+	- Diagram Type: 'flowchart TB'
+	- Use 'subgraph' to group workloads by Namespace.
+	- Node IDs: MUST be alphanumeric snake_case (e.g., frontend_api, redis_cache). NO hyphens, NO dots.
+	- Display Names: Use brackets for display names as defined in Kubernetes (e.g., node_id["Original-Name"]).
+	- Connections: Infer traffic patterns (e.g., frontend calls backend, backend calls db).
+	
+	Output Format:
+	- Return ONLY the Mermaid code block.
+	- DO NOT include ANY introductory text, concluding remarks, or side explanations.
+	- Wrap the Mermaid code in a markdown block: `+"```mermaid"+` [CODE] `+"```"+`.
+	
+	Example Output Pattern:
+	`+"```mermaid"+`
+	flowchart TB
+	  subgraph ns_prod ["production"]
+	    app_v1["app-v1"] --> db_prod["db-main"]
+	  end
+	`+"```"+`
 	`, workloadSummary)
 
 	// Enforce a timeout for Diagram Generation (slow local LLMs might hang)
-	ctxWithTimeout, cancel := context.WithTimeout(ctx, 10*time.Second)
+	ctxWithTimeout, cancel := context.WithTimeout(ctx, 15*time.Second) // Increased slightly for complex graphs
 	defer cancel()
 
 	rawResponse, err := provider.GenerateContent(ctxWithTimeout, prompt, model)
@@ -281,20 +290,37 @@ func (s *AIService) GenerateTopology(ctx context.Context, providerName, model, w
     end`, nil
 	}
 
-	// Clean up markdown
+	// Clean up potentially messy AI response
 	cleanResponse := strings.TrimSpace(rawResponse)
 
 	// Robust code block extraction
+	// 1. Look for ```mermaid ... ```
 	if start := strings.Index(cleanResponse, "```mermaid"); start != -1 {
 		cleanResponse = cleanResponse[start+10:]
+		if end := strings.LastIndex(cleanResponse, "```"); end != -1 {
+			cleanResponse = cleanResponse[:end]
+		}
 	} else if start := strings.Index(cleanResponse, "```"); start != -1 {
+		// 2. Fallback to generic ``` ... ```
 		cleanResponse = cleanResponse[start+3:]
+		if end := strings.LastIndex(cleanResponse, "```"); end != -1 {
+			cleanResponse = cleanResponse[:end]
+		}
 	}
 
-	if end := strings.LastIndex(cleanResponse, "```"); end != -1 {
-		cleanResponse = cleanResponse[:end]
+	cleanResponse = strings.TrimSpace(cleanResponse)
+
+	// Final Sanitization: Ensure it starts with a valid Mermaid header if it looks like just nodes
+	if !strings.HasPrefix(cleanResponse, "flowchart") &&
+		!strings.HasPrefix(cleanResponse, "graph") &&
+		!strings.HasPrefix(cleanResponse, "sequenceDiagram") &&
+		!strings.HasPrefix(cleanResponse, "classDiagram") {
+		// If it's missing a header but has content, prepend a default flowchart header
+		if len(cleanResponse) > 0 {
+			cleanResponse = "flowchart TB\n" + cleanResponse
+		}
 	}
 
-	log.Printf("DEBUG: Mermaid Response: \n%s", strings.TrimSpace(cleanResponse))
-	return strings.TrimSpace(cleanResponse), nil
+	log.Printf("DEBUG: Cleaned Mermaid Response: \n%s", cleanResponse)
+	return cleanResponse, nil
 }

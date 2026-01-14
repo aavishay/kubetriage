@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Box, Loader2, Github, Chrome } from 'lucide-react';
+import { Box, Loader2, Github, Chrome, ArrowRight } from 'lucide-react';
 
 interface LoginViewProps {
   onLogin: () => void;
@@ -21,7 +21,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLogin }) => {
   };
 
   return (
-    <div className="min-h-screen w-full flex items-center justify-center bg-zinc-50 dark:bg-[#09090b] transition-colors duration-300 p-4 relative overflow-hidden font-sans">
+    <div className="min-h-screen w-full flex items-center justify-center bg-gray-50 dark:bg-dark-bg transition-colors duration-300 p-4 relative overflow-hidden font-sans">
       {/* Background Decor */}
       <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
         <div className="absolute -top-24 -left-24 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl"></div>
@@ -29,13 +29,13 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLogin }) => {
         <div className="absolute bottom-0 left-1/3 w-72 h-72 bg-indigo-500/5 rounded-full blur-3xl"></div>
       </div>
 
-      <div className="w-full max-w-md bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl shadow-xl p-8 relative z-10 animate-fadeIn">
+      <div className="w-full max-w-md bg-white dark:bg-dark-card border border-gray-100 dark:border-white/5 rounded-[2.5rem] shadow-2xl p-10 relative z-10 animate-in fade-in zoom-in duration-700">
         <div className="flex flex-col items-center mb-8">
           <div className="mb-4">
             <img src="/favicon.png" alt="Logo" className="w-12 h-12 object-contain" />
           </div>
-          <h1 className="text-2xl font-bold text-zinc-900 dark:text-white tracking-tight">Welcome back</h1>
-          <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-2">Sign in to KubeTriage Platform</p>
+          <h1 className="text-3xl font-black text-gray-900 dark:text-white tracking-tighter uppercase mb-1">Welcome back</h1>
+          <p className="text-[11px] font-black text-gray-500 dark:text-gray-400 uppercase tracking-widest">Sign in to KubeTriage Platform</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-5">
@@ -66,9 +66,9 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLogin }) => {
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full bg-blue-600 hover:bg-blue-500 text-white font-medium py-2.5 rounded-lg transition-all shadow-lg shadow-blue-500/25 disabled:opacity-70 flex justify-center items-center"
+            className="w-full bg-primary-600 hover:bg-primary-500 text-white font-black uppercase tracking-widest py-4 rounded-2xl transition-all shadow-xl shadow-primary-500/25 disabled:opacity-70 flex justify-center items-center gap-3 active:scale-[0.98]"
           >
-            {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Sign In'}
+            {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : <>Sign In <ArrowRight className="w-4 h-4" /></>}
           </button>
         </form>
 

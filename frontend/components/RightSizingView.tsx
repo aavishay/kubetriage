@@ -113,8 +113,8 @@ const CustomTooltip = ({ active, payload, isDarkMode, type }: any) => {
     const color = type === 'cpu' ? 'text-indigo-500' : type === 'memory' ? 'text-emerald-500' : 'text-amber-500';
 
     return (
-      <div className={`p-4 rounded-2xl border shadow-2xl text-[10px] min-w-[200px] font-mono backdrop-blur-md ${isDarkMode ? 'bg-zinc-900/95 border-zinc-700 text-zinc-300' : 'bg-white/95 border-zinc-200 text-zinc-700'}`}>
-        <div className="font-black border-b border-zinc-100 dark:border-zinc-800 pb-2 mb-3 uppercase tracking-widest text-zinc-500">
+      <div className={`p-4 rounded-2xl border shadow-2xl text-[12px] min-w-[220px] font-mono backdrop-blur-md ${isDarkMode ? 'bg-[#16191E]/95 border-white/10 text-gray-300' : 'bg-white/95 border-gray-200 text-gray-700'}`}>
+        <div className="font-black border-b border-gray-100 dark:border-white/5 pb-2 mb-3 uppercase tracking-widest text-gray-500">
           Frame: {data.time}
         </div>
         <div className="space-y-2">
@@ -295,20 +295,20 @@ export const RightSizingView: React.FC<RightSizingViewProps> = ({ workloads, isD
 
       <aside className={`
         ${selectedId && !isSidebarOpen ? 'hidden' : 'flex'}
-        lg:flex w-full lg:w-80 h-auto lg:h-full shrink-0 bg-white dark:bg-zinc-900 rounded-[2rem] overflow-hidden flex flex-col border border-zinc-200 dark:border-zinc-800 shadow-sm
+        lg:flex w-full lg:w-80 h-auto lg:h-full shrink-0 bg-white dark:bg-dark-card rounded-[2.5rem] overflow-hidden flex flex-col border border-gray-100 dark:border-white/5 shadow-sm
       `}>
         <div className="p-5 md:p-6 border-b border-zinc-100 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950/50">
           <h3 className="font-black text-zinc-900 dark:text-white flex items-center gap-2 uppercase tracking-tighter text-base">
             <Scale className="w-5 h-5 text-indigo-500" /> Infrastructure Fleet
           </h3>
           <div className="mt-6 relative">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
             <input
               type="text"
               placeholder="Search services..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-12 pr-4 py-3 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-800 rounded-2xl text-[11px] font-black uppercase focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
+              className="w-full pl-12 pr-4 py-3 bg-white dark:bg-dark-bg border border-gray-100 dark:border-white/5 rounded-2xl text-[11px] font-black uppercase focus:outline-none focus:ring-2 focus:ring-primary-500/50"
             />
           </div>
         </div>
@@ -317,7 +317,7 @@ export const RightSizingView: React.FC<RightSizingViewProps> = ({ workloads, isD
             <div
               key={w.id}
               onClick={() => { setSelectedId(w.id); setRecommendation(null); setIsSidebarOpen(false); }}
-              className={`p-5 rounded-2xl cursor-pointer transition-all border ${selectedId === w.id ? 'bg-indigo-600 text-white border-indigo-500 shadow-xl shadow-indigo-600/20' : 'bg-white dark:bg-zinc-900 border-transparent hover:bg-zinc-100 dark:hover:bg-zinc-800'}`}
+              className={`p-5 rounded-2xl cursor-pointer transition-all border-2 ${selectedId === w.id ? 'bg-primary-600 text-white border-primary-500 shadow-xl shadow-primary-600/20' : 'bg-white dark:bg-dark-card border-transparent hover:bg-gray-100 dark:hover:bg-white/5'}`}
             >
               <div className="flex justify-between items-center mb-1">
                 <span className="text-sm font-black truncate uppercase tracking-tight">{w.name}</span>
@@ -333,7 +333,7 @@ export const RightSizingView: React.FC<RightSizingViewProps> = ({ workloads, isD
 
       <main className={`
         ${!selectedId || isSidebarOpen ? 'hidden' : 'flex'}
-        lg:flex flex-1 min-w-0 bg-white dark:bg-zinc-900 rounded-[2.5rem] overflow-hidden flex flex-col border border-zinc-200 dark:border-zinc-800 shadow-sm
+        lg:flex flex-1 min-w-0 bg-white dark:bg-dark-card rounded-[2.5rem] overflow-hidden flex flex-col border border-gray-100 dark:border-white/5 shadow-sm
       `}>
         {selectedWorkload ? (
           <div className="flex flex-col h-full min-h-0">
@@ -342,20 +342,20 @@ export const RightSizingView: React.FC<RightSizingViewProps> = ({ workloads, isD
                 <button onClick={() => setIsSidebarOpen(true)} className="lg:hidden p-2.5 rounded-2xl bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700">
                   <ChevronLeft className="w-5 h-5 text-indigo-500" />
                 </button>
-                <div className="p-4 bg-indigo-600 rounded-[1.25rem] shadow-xl shadow-indigo-600/20 shrink-0">
+                <div className="p-4 bg-primary-600 rounded-[1.25rem] shadow-xl shadow-primary-600/20 shrink-0">
                   <Gauge className="w-6 h-6 text-white" />
                 </div>
                 <div className="min-w-0">
-                  <h2 className="text-xl md:text-2xl font-black text-zinc-900 dark:text-white tracking-tighter leading-none">{selectedWorkload.name}</h2>
+                  <h2 className="text-2xl md:text-3xl font-black text-gray-900 dark:text-white tracking-tighter leading-none">{selectedWorkload.name}</h2>
                   <div className="flex items-center gap-3 mt-1.5">
-                    <span className="text-[10px] font-black uppercase text-zinc-400 tracking-widest">{selectedWorkload.namespace}</span>
-                    <span className="text-[10px] px-2 py-0.5 rounded-md bg-indigo-100 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-300 font-black uppercase tracking-widest">{selectedWorkload.kind}</span>
+                    <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{selectedWorkload.namespace}</span>
+                    <span className="text-[10px] px-2 py-0.5 rounded-md bg-primary-100 dark:bg-primary-900/40 text-primary-600 dark:text-primary-300 font-black uppercase tracking-widest">{selectedWorkload.kind}</span>
                   </div>
                 </div>
               </div>
 
               <div className="flex items-center gap-3">
-                <button onClick={handleOptimize} disabled={loading} className="flex items-center gap-2 px-6 py-3 bg-indigo-600 text-white text-[10px] font-black uppercase tracking-widest rounded-2xl hover:bg-indigo-700 transition-all shadow-xl disabled:opacity-50">
+                <button onClick={handleOptimize} disabled={loading} className="flex items-center gap-2 px-8 py-4 bg-primary-600 text-white text-[10px] font-black uppercase tracking-widest rounded-2xl hover:bg-primary-700 transition-all shadow-xl disabled:opacity-50 active:scale-95">
                   {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />} Analyze Capacity
                 </button>
               </div>
@@ -366,7 +366,7 @@ export const RightSizingView: React.FC<RightSizingViewProps> = ({ workloads, isD
               <section className="bg-white dark:bg-zinc-900 rounded-[3rem] border-2 border-zinc-100 dark:border-zinc-800 shadow-xl overflow-hidden">
                 <div className="p-6 md:p-8 border-b border-zinc-100 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-950/50 flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <div className="p-3 bg-indigo-600 rounded-2xl shadow-lg shadow-indigo-600/20"><Settings2 className="w-5 h-5 text-white" /></div>
+                    <div className="p-3 bg-primary-600 rounded-2xl shadow-lg shadow-primary-600/20"><Settings2 className="w-5 h-5 text-white" /></div>
                     <div>
                       <h3 className="text-sm font-black uppercase tracking-widest text-zinc-900 dark:text-white">Right-Sizing Simulation Cockpit</h3>
                       <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">Simulate resource caps to detect potential DiskPressure or OOM evictions</p>
@@ -379,10 +379,10 @@ export const RightSizingView: React.FC<RightSizingViewProps> = ({ workloads, isD
                   <div className="flex flex-col xl:flex-row gap-8 items-center bg-zinc-50/50 dark:bg-zinc-950/50 p-6 rounded-3xl border border-zinc-100 dark:border-zinc-800">
                     <div className="flex-[3] w-full space-y-4">
                       <div className="flex justify-between items-end">
-                        <div className="flex items-center gap-2"><Cpu className="w-4 h-4 text-indigo-500" /><label className="text-[10px] font-black uppercase text-zinc-400 tracking-widest">CPU Limit (Simulated)</label></div>
-                        <span className="text-2xl font-black font-mono text-indigo-500">{adjustedCpuLimit.toFixed(2)}c</span>
+                        <div className="flex items-center gap-2"><Cpu className="w-4 h-4 text-primary-500" /><label className="text-[10px] font-black uppercase text-gray-400 tracking-widest">CPU Limit (Simulated)</label></div>
+                        <span className="text-2xl font-black font-mono text-primary-500">{adjustedCpuLimit.toFixed(2)}c</span>
                       </div>
-                      <input type="range" min="0.01" max={selectedWorkload.metrics.cpuLimit * 2} step="0.01" value={adjustedCpuLimit} onChange={(e) => setAdjustedCpuLimit(parseFloat(e.target.value))} className="w-full h-3 bg-zinc-100 dark:bg-zinc-800 rounded-full appearance-none cursor-pointer accent-indigo-600" />
+                      <input type="range" min="0.01" max={selectedWorkload.metrics.cpuLimit * 2} step="0.01" value={adjustedCpuLimit} onChange={(e) => setAdjustedCpuLimit(parseFloat(e.target.value))} className="w-full h-3 bg-gray-100 dark:bg-dark-bg rounded-full appearance-none cursor-pointer accent-primary-600" />
                     </div>
                     <div className="flex-[1] w-full p-4 rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 text-center">
                       <p className="text-[8px] font-black uppercase text-zinc-400 mb-1">CPU Load</p>

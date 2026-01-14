@@ -184,7 +184,7 @@ export const NotificationsView: React.FC<NotificationsViewProps> = ({
 
    const getMetricIcon = (metric: AlertRule['metric']) => {
       switch (metric) {
-         case 'CPU': return <Cpu className="w-5 h-5 text-indigo-500" />;
+         case 'CPU': return <Cpu className="w-5 h-5 text-primary-500" />;
          case 'Memory': return <MemoryStick className="w-5 h-5 text-emerald-500" />;
          case 'Cost': return <DollarSign className="w-5 h-5 text-amber-500" />;
          default: return <Zap className="w-5 h-5 text-blue-500" />;
@@ -214,34 +214,34 @@ export const NotificationsView: React.FC<NotificationsViewProps> = ({
    };
 
    return (
-      <div className="space-y-6">
-         <div className="bg-white dark:bg-zinc-900 rounded-[2.5rem] p-6 border border-zinc-200 dark:border-zinc-800 shadow-sm flex flex-col md:flex-row justify-between items-center gap-6">
+      <div className="space-y-6 font-sans">
+         <div className="bg-white dark:bg-dark-card rounded-[2.5rem] p-6 border border-gray-100 dark:border-white/5 shadow-sm flex flex-col md:flex-row justify-between items-center gap-6">
             <div>
                <div className="flex items-center gap-3 mb-2">
-                  <div className="p-2.5 bg-indigo-500/10 rounded-2xl">
-                     <Bell className="w-6 h-6 text-indigo-500" />
+                  <div className="p-2.5 bg-primary-500/10 rounded-2xl">
+                     <Bell className="w-6 h-6 text-primary-500" />
                   </div>
-                  <h2 className="text-2xl font-black tracking-tighter text-zinc-900 dark:text-white uppercase">Broadcast & Logic</h2>
+                  <h2 className="text-2xl font-black tracking-tighter text-gray-900 dark:text-white uppercase">Broadcast & Logic</h2>
                </div>
-               <p className="text-sm text-zinc-500 font-semibold max-w-sm">Define alert thresholds and connect external notification sinks for proactive cluster monitoring.</p>
+               <p className="text-sm text-gray-500 font-bold uppercase tracking-wider max-w-sm opacity-60">Define alert thresholds and connect external notification sinks.</p>
             </div>
 
-            <div className="flex bg-zinc-100 dark:bg-zinc-800 p-1.5 rounded-2xl border border-zinc-200 dark:border-zinc-700">
+            <div className="flex bg-gray-100 dark:bg-dark-bg p-1.5 rounded-2xl border border-gray-100 dark:border-white/5">
                <button
                   onClick={() => setActiveTab('rules')}
-                  className={`px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${activeTab === 'rules' ? 'bg-white dark:bg-zinc-700 text-indigo-500 shadow-lg' : 'text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-300'}`}
+                  className={`px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${activeTab === 'rules' ? 'bg-white dark:bg-zinc-700 text-primary-500 shadow-lg' : 'text-gray-500 hover:text-gray-900 dark:hover:text-gray-300'}`}
                >
                   Alert Logic
                </button>
                <button
                   onClick={() => setActiveTab('channels')}
-                  className={`px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${activeTab === 'channels' ? 'bg-white dark:bg-zinc-700 text-indigo-500 shadow-lg' : 'text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-300'}`}
+                  className={`px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${activeTab === 'channels' ? 'bg-white dark:bg-zinc-700 text-primary-500 shadow-lg' : 'text-gray-500 hover:text-gray-900 dark:hover:text-gray-300'}`}
                >
                   Global Sinks
                </button>
                <button
                   onClick={() => setActiveTab('history')}
-                  className={`px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${activeTab === 'history' ? 'bg-white dark:bg-zinc-700 text-indigo-500 shadow-lg' : 'text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-300'}`}
+                  className={`px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${activeTab === 'history' ? 'bg-white dark:bg-zinc-700 text-primary-500 shadow-lg' : 'text-gray-500 hover:text-gray-900 dark:hover:text-gray-300'}`}
                >
                   History
                </button>
@@ -249,16 +249,16 @@ export const NotificationsView: React.FC<NotificationsViewProps> = ({
          </div>
 
          {/* Global Preferences Card */}
-         <div className="relative overflow-hidden bg-white/50 dark:bg-zinc-900/50 backdrop-blur-xl rounded-[2.5rem] p-6 border border-white/20 dark:border-zinc-700/30 shadow-2xl">
-            <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 via-purple-500/5 to-pink-500/5 pointer-events-none" />
+         <div className="relative overflow-hidden bg-white/50 dark:bg-dark-card/50 backdrop-blur-xl rounded-[2.5rem] p-6 border border-white/20 dark:border-white/5 shadow-2xl">
+            <div className="absolute inset-0 bg-gradient-to-br from-primary-500/5 via-purple-500/5 to-pink-500/5 pointer-events-none" />
 
             <div className="relative flex flex-col md:flex-row items-center justify-between gap-8">
                <div className="flex items-center gap-5">
-                  <div className="p-4 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl shadow-lg shadow-indigo-500/30 text-white">
+                  <div className="p-4 bg-gradient-to-br from-primary-500 to-purple-600 rounded-2xl shadow-lg shadow-primary-500/30 text-white">
                      <Settings2 className="w-6 h-6" />
                   </div>
                   <div>
-                     <h3 className="text-zinc-900 dark:text-white font-black tracking-tighter text-xl">Alert Frequency Control</h3>
+                     <h3 className="text-gray-900 dark:text-white font-black tracking-tighter text-xl uppercase">Alert Frequency Control</h3>
                      <p className="text-xs text-zinc-500 dark:text-zinc-400 font-bold uppercase tracking-wider mt-1.5 flex items-center gap-2">
                         <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
                         Global Toast Policy
@@ -277,7 +277,7 @@ export const NotificationsView: React.FC<NotificationsViewProps> = ({
                            onChange={(e) => updateNotificationSettings({ ...notificationSettings, toastEnabled: e.target.checked })}
                            className="sr-only peer"
                         />
-                        <div className="w-12 h-7 bg-zinc-200 dark:bg-zinc-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[4px] after:left-[4px] after:bg-white after:border-zinc-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600 shadow-inner group-hover:scale-105 transition-transform" />
+                        <div className="w-12 h-7 bg-gray-200 dark:bg-dark-bg peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[4px] after:left-[4px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-600 shadow-inner group-hover:scale-105 transition-transform" />
                      </label>
                   </div>
 

@@ -96,7 +96,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
   const { user } = useAuth();
 
   return (
-    <div className="flex h-screen bg-zinc-50 dark:bg-[#09090b] text-zinc-900 dark:text-zinc-300 overflow-hidden flex-col md:flex-row">
+    <div className="flex h-screen bg-gray-50 dark:bg-dark-bg text-gray-900 dark:text-gray-300 overflow-hidden flex-col md:flex-row">
       <RegisterClusterModal isOpen={isRegisterModalOpen} onClose={() => setIsRegisterModalOpen(false)} />
       <DeleteClusterModal
         isOpen={!!clusterToDelete}
@@ -127,7 +127,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
         ${isMobileMenuOpen ? 'translate-x-0 w-64' : '-translate-x-full md:translate-x-0'}
         ${isCollapsed ? 'md:w-20' : 'md:w-64'}
       `}>
-        <div className={`flex p-6 items-center ${isCollapsed ? 'md:justify-center' : 'gap-3'} h-20 border-b border-zinc-100 dark:border-zinc-800 overflow-hidden shrink-0`}>
+        <div className={`flex p-6 items-center ${isCollapsed ? 'md:justify-center' : 'gap-3'} h-20 border-b border-gray-100 dark:border-white/5 overflow-hidden shrink-0`}>
           <div className="shrink-0">
             <img src="/favicon.png" alt="Logo" className="w-8 h-8 object-contain" />
           </div>
@@ -137,7 +137,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
               <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest mt-1">Platform Console</p>
             </div>
           )}
-          <button className="ml-auto md:hidden p-2 text-zinc-400" onClick={() => setIsMobileMenuOpen(false)}>
+          <button className="ml-auto md:hidden p-2 text-gray-400" onClick={() => setIsMobileMenuOpen(false)}>
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -147,7 +147,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
             <NavLink
               key={item.path}
               to={item.path}
-              className={({ isActive }) => `flex items-center w-full p-3 rounded-xl transition-all group ${isActive ? 'bg-indigo-600 text-white shadow-xl shadow-indigo-600/20' : 'text-zinc-500 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800/50 hover:text-zinc-900 dark:hover:text-white'}`}
+              className={({ isActive }) => `flex items-center w-full p-3 rounded-xl transition-all group ${isActive ? 'bg-primary-600 text-white shadow-xl shadow-primary-600/20' : 'text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/5 hover:text-gray-900 dark:hover:text-white'}`}
             >
               <item.icon className={`w-5 h-5 shrink-0 transition-transform group-hover:scale-110 ${isCollapsed && !isMobileMenuOpen ? 'mx-auto' : 'mr-3'}`} />
               {(!isCollapsed || isMobileMenuOpen) && <span className="font-bold text-sm truncate tracking-tight">{item.label}</span>}
@@ -155,8 +155,8 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
           ))}
         </nav>
 
-        <div className="p-4 border-t border-zinc-100 dark:border-zinc-800 hidden md:block">
-          <button onClick={() => setIsCollapsed(!isCollapsed)} className="flex items-center justify-center w-full p-2.5 rounded-xl hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-400 transition-all active:scale-95">
+        <div className="p-4 border-t border-gray-100 dark:border-white/5 hidden md:block">
+          <button onClick={() => setIsCollapsed(!isCollapsed)} className="flex items-center justify-center w-full p-2.5 rounded-xl hover:bg-gray-100 dark:hover:bg-white/5 text-gray-400 transition-all active:scale-95">
             {isCollapsed ? <ChevronRight className="w-5 h-5" /> : <ChevronLeft className="w-5 h-5" />}
           </button>
         </div>
@@ -180,7 +180,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
             <div className="relative" ref={clusterMenuRef}>
               <button
                 onClick={() => setIsClusterMenuOpen(!isClusterMenuOpen)}
-                className="flex items-center gap-3 px-3 md:px-4 py-2 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-2xl hover:border-indigo-500/50 transition-all shadow-sm active:scale-[0.98]"
+                className="flex items-center gap-3 px-3 md:px-4 py-2 bg-white dark:bg-dark-card border border-gray-100 dark:border-white/5 rounded-2xl hover:border-primary-500/50 transition-all shadow-sm active:scale-[0.98]"
               >
                 {selectedCluster ? (
                   <>
@@ -208,15 +208,15 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
               </button>
 
               {isClusterMenuOpen && (
-                <div className="absolute top-full left-0 mt-3 w-72 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl shadow-2xl py-2 animate-in fade-in zoom-in-95 duration-150 origin-top-left z-50">
-                  <div className="px-4 py-3 border-b border-zinc-100 dark:border-zinc-800 mb-2">
-                    <p className="text-[10px] font-black uppercase tracking-widest text-zinc-400">Control Plane Fleet</p>
+                <div className="absolute top-full left-0 mt-3 w-72 bg-white dark:bg-dark-card border border-gray-100 dark:border-white/5 rounded-2xl shadow-2xl py-2 animate-in fade-in zoom-in-95 duration-150 origin-top-left z-50">
+                  <div className="px-4 py-3 border-b border-gray-50 dark:border-white/5 mb-2">
+                    <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">Control Plane Fleet</p>
                   </div>
                   {clusters.map(cluster => (
                     <button
                       key={cluster.id}
                       onClick={() => { setSelectedCluster(cluster); setIsClusterMenuOpen(false); }}
-                      className={`w-full flex items-center gap-3 px-4 py-3 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors text-left ${selectedCluster?.id === cluster.id ? 'bg-indigo-50/50 dark:bg-indigo-900/10 border-l-4 border-indigo-600' : 'border-l-4 border-transparent'}`}
+                      className={`w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors text-left ${selectedCluster?.id === cluster.id ? 'bg-primary-50/50 dark:bg-primary-900/10 border-l-4 border-primary-600' : 'border-l-4 border-transparent'}`}
                     >
                       <ProviderIcon provider={cluster.provider} className="w-5 h-5 shrink-0" />
                       <div className="flex-1 min-w-0">
@@ -239,7 +239,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
                   <div className="h-px bg-zinc-100 dark:border-zinc-800 my-2" />
                   <button
                     onClick={() => { setIsRegisterModalOpen(true); setIsClusterMenuOpen(false); }}
-                    className="w-full flex items-center gap-3 px-4 py-2.5 text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors"
+                    className="w-full flex items-center gap-3 px-4 py-2.5 text-xs font-bold text-primary-600 dark:text-primary-400 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors"
                   >
                     <Plus className="w-4 h-4" /> Add Cluster
                   </button>
@@ -278,7 +278,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
               <span className="text-[10px] font-black uppercase text-zinc-500">{apiLatency}ms <span className="opacity-40">IO</span></span>
             </div>
 
-            <button onClick={toggleTheme} className="p-2.5 rounded-xl bg-zinc-100 dark:bg-zinc-800 text-zinc-500 hover:text-indigo-500 dark:hover:text-indigo-400 transition-all shadow-sm">
+            <button onClick={toggleTheme} className="p-2.5 rounded-xl bg-gray-100 dark:bg-white/5 text-gray-500 hover:text-primary-500 dark:hover:text-primary-400 transition-all shadow-sm">
               {isDarkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
             </button>
 
@@ -287,8 +287,8 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
                 <div className="w-full h-full rounded-[10px] bg-white dark:bg-zinc-900 flex items-center justify-center font-bold text-zinc-900 dark:text-white text-xs">{(user?.email || "AU").substring(0, 2).toUpperCase()}</div>
               </button>
               {isUserMenuOpen && (
-                <div className="absolute right-0 mt-3 w-60 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl shadow-2xl py-2 animate-in fade-in zoom-in-95 duration-150 origin-top-right">
-                  <div className="px-4 py-3 border-b border-zinc-100 dark:border-zinc-800 mb-2">
+                <div className="absolute right-0 mt-3 w-60 bg-white dark:bg-dark-card border border-gray-100 dark:border-white/5 rounded-2xl shadow-2xl py-2 animate-in fade-in zoom-in-95 duration-150 origin-top-right">
+                  <div className="px-4 py-3 border-b border-gray-50 dark:border-white/5 mb-2">
                     <p className="font-bold text-sm">{user?.email || "Admin User"}</p>
                     <p className="text-[10px] text-zinc-500 uppercase tracking-widest font-black">{user?.role || "SRE Lead"}</p>
                   </div>
@@ -305,8 +305,8 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
 
         {/* Loading Progress Bar */}
         {isWorkloadsLoading && (
-          <div className="absolute top-14 md:top-16 left-0 right-0 h-1 z-40 overflow-hidden bg-zinc-100 dark:bg-zinc-800">
-            <div className="h-full bg-gradient-to-r from-indigo-500 via-purple-500 to-indigo-500 w-[200%] animate-loading-bar"></div>
+          <div className="absolute top-14 md:top-16 left-0 right-0 h-1 z-40 overflow-hidden bg-gray-100 dark:bg-white/5">
+            <div className="h-full bg-gradient-to-r from-primary-500 via-purple-500 to-primary-500 w-[200%] animate-loading-bar"></div>
           </div>
         )}
 

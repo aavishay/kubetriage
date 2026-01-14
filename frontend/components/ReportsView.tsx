@@ -87,22 +87,22 @@ export const ReportsView: React.FC<ReportsViewProps> = ({ isDarkMode = true }) =
     );
 
     return (
-        <div className="space-y-12 pb-20">
+        <div className="space-y-12 pb-20 font-sans">
             {/* Hero Header */}
-            <div className="bg-zinc-900 dark:bg-zinc-950 rounded-[2.5rem] p-8 md:p-10 text-white relative overflow-hidden shadow-2xl border border-zinc-800">
+            <div className="bg-white dark:bg-dark-card rounded-[3.5rem] p-10 md:p-14 text-gray-900 dark:text-white relative overflow-hidden shadow-2xl border border-gray-100 dark:border-white/5">
                 <div className="relative z-10 max-w-2xl">
-                    <div className="inline-flex items-center gap-2 bg-indigo-500/10 text-indigo-400 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest mb-6 border border-indigo-500/20">
-                        <Shield className="w-3 h-3" /> Compliance & Audit
+                    <div className="inline-flex items-center gap-2 bg-primary-500/10 text-primary-500 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest mb-6 border border-primary-500/20">
+                        <Shield className="w-4 h-4" /> Compliance & Audit
                     </div>
-                    <h1 className="text-4xl font-black mb-4 tracking-tighter leading-tight">Reporting Center</h1>
-                    <p className="text-zinc-400 text-lg mb-10 leading-relaxed font-medium">
+                    <h1 className="text-5xl font-black mb-4 tracking-tighter leading-none uppercase">Reporting Center</h1>
+                    <p className="text-gray-500 dark:text-gray-400 text-lg mb-10 leading-relaxed font-bold uppercase tracking-tight opacity-80">
                         Generate compliance artifacts and review historical AI triage analysis.
                     </p>
 
                     <div className="flex flex-wrap gap-4">
                         <button
                             onClick={handleDownloadCompliance}
-                            className="flex items-center gap-3 bg-white text-zinc-900 hover:bg-zinc-200 px-6 py-4 rounded-2xl font-black text-xs uppercase tracking-widest transition-all shadow-lg hover:scale-105 active:scale-95"
+                            className="flex items-center gap-3 bg-primary-600 text-white hover:bg-primary-700 px-10 py-5 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all shadow-2xl shadow-primary-500/30 hover:scale-105 active:scale-95"
                         >
                             <Download className="w-4 h-4" /> Download SOC2 Report (PDF)
                         </button>
@@ -126,16 +126,16 @@ export const ReportsView: React.FC<ReportsViewProps> = ({ isDarkMode = true }) =
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {/* SOC2 Card */}
-                    <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-[2rem] p-6 flex flex-col hover:shadow-xl transition-all group cursor-pointer" onClick={handleDownloadCompliance}>
-                        <div className="p-4 rounded-2xl w-fit mb-6 bg-blue-500/10 text-blue-500">
+                    <div className="bg-white dark:bg-dark-card border border-gray-100 dark:border-white/5 rounded-[2.5rem] p-8 flex flex-col hover:shadow-2xl transition-all group cursor-pointer" onClick={handleDownloadCompliance}>
+                        <div className="p-4 rounded-2xl w-fit mb-6 bg-primary-500/10 text-primary-500">
                             <Shield className="w-7 h-7" />
                         </div>
-                        <h3 className="text-lg font-black text-zinc-900 dark:text-white mb-2 tracking-tight">SOC 2 Compliance Audit</h3>
-                        <p className="text-xs text-zinc-500 dark:text-zinc-400 mb-6 flex-1 leading-relaxed font-medium">
+                        <h3 className="text-xl font-black text-gray-900 dark:text-white mb-2 tracking-tighter uppercase">SOC 2 Compliance Audit</h3>
+                        <p className="text-[11px] text-gray-400 dark:text-gray-500 mb-8 flex-1 leading-relaxed font-black uppercase tracking-widest">
                             Complete audit log of all sensitive user actions, authentication events, and configuration changes filtered by project.
                         </p>
-                        <div className="flex items-center gap-2 text-[10px] font-black uppercase text-zinc-400">
-                            <span className="w-2 h-2 rounded-full bg-emerald-500" /> Ready for Download
+                        <div className="flex items-center gap-2 text-[10px] font-black uppercase text-primary-500">
+                            <span className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]" /> Ready for Download
                         </div>
                     </div>
 

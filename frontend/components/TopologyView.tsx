@@ -63,6 +63,7 @@ export const TopologyView: React.FC<TopologyViewProps> = ({ workloads, isDarkMod
                     }
                 } catch (renderError) {
                     console.error("Mermaid Render Error", renderError);
+                    console.error("Failed Diagram Code:\n", code);
                     if (isMounted.current) {
                         setError("Failed to render diagram. The AI generated invalid syntax.");
                     }
@@ -104,12 +105,12 @@ export const TopologyView: React.FC<TopologyViewProps> = ({ workloads, isDarkMod
     };
 
     return (
-        <div className="flex flex-col h-full w-full bg-zinc-50 dark:bg-zinc-900 transition-colors duration-300">
+        <div className="flex flex-col h-full w-full bg-gray-50 dark:bg-dark-bg transition-colors duration-300 font-sans">
             {/* Header - Fixed Height */}
             <div className="shrink-0 p-4 border-b border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div>
-                    <h2 className="text-xl font-bold text-zinc-900 dark:text-white flex items-center gap-2">
-                        <Share2 className="w-6 h-6 text-indigo-500" />
+                    <h2 className="text-2xl font-black text-gray-900 dark:text-white flex items-center gap-3 tracking-tighter uppercase">
+                        <Share2 className="w-6 h-6 text-primary-500" />
                         Architecture Topology
                     </h2>
                     <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-1">
@@ -121,18 +122,18 @@ export const TopologyView: React.FC<TopologyViewProps> = ({ workloads, isDarkMod
                     <div className="flex bg-zinc-100 dark:bg-zinc-800 rounded-lg p-1 border border-zinc-200 dark:border-zinc-700">
                         <button
                             onClick={() => setViewMode('schematic')}
-                            className={`px-3 py-1.5 text-xs font-medium rounded-md flex items-center gap-2 transition-all ${viewMode === 'schematic'
-                                ? 'bg-white dark:bg-zinc-700 text-indigo-600 dark:text-indigo-400 shadow-sm'
-                                : 'text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-300'
+                            className={`px-3 py-1.5 text-xs font-black uppercase tracking-widest rounded-md flex items-center gap-2 transition-all ${viewMode === 'schematic'
+                                ? 'bg-white dark:bg-zinc-700 text-primary-600 dark:text-primary-400 shadow-sm'
+                                : 'text-gray-500 hover:text-gray-900 dark:hover:text-gray-300'
                                 }`}
                         >
                             <LayoutGrid className="w-3.5 h-3.5" /> Schematic
                         </button>
                         <button
                             onClick={() => setViewMode('graph')}
-                            className={`px-3 py-1.5 text-xs font-medium rounded-md flex items-center gap-2 transition-all ${viewMode === 'graph'
-                                ? 'bg-white dark:bg-zinc-700 text-indigo-600 dark:text-indigo-400 shadow-sm'
-                                : 'text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-300'
+                            className={`px-3 py-1.5 text-xs font-black uppercase tracking-widest rounded-md flex items-center gap-2 transition-all ${viewMode === 'graph'
+                                ? 'bg-white dark:bg-zinc-700 text-primary-600 dark:text-primary-400 shadow-sm'
+                                : 'text-gray-500 hover:text-gray-900 dark:hover:text-gray-300'
                                 }`}
                         >
                             <ImageIcon className="w-3.5 h-3.5" /> AI Diagram
@@ -156,10 +157,10 @@ export const TopologyView: React.FC<TopologyViewProps> = ({ workloads, isDarkMod
                             <button
                                 onClick={handleGenerateDiagram}
                                 disabled={isLoading}
-                                className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-xs font-medium flex items-center gap-2 transition-colors shadow-lg shadow-indigo-500/20 disabled:opacity-50"
+                                className="bg-primary-600 hover:bg-primary-700 text-white px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center gap-2 transition-all shadow-lg shadow-primary-500/20 disabled:opacity-50 active:scale-95"
                             >
                                 {isLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}
-                                {renderedSvg ? 'Regenerate' : 'Generate'}
+                                {renderedSvg ? 'Regenerate' : 'Generate Map'}
                             </button>
 
                             {renderedSvg && (
@@ -233,7 +234,7 @@ export const TopologyView: React.FC<TopologyViewProps> = ({ workloads, isDarkMod
                 {viewMode === 'schematic' && (
                     <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 pb-20">
                         {Object.entries(groupedWorkloads).map(([namespace, items]: [string, Workload[]]) => (
-                            <div key={namespace} className="bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800 overflow-hidden shadow-sm flex flex-col">
+                            <div key={namespace} className="bg-white dark:bg-dark-card rounded-[2.5rem] border border-gray-100 dark:border-white/5 overflow-hidden shadow-sm flex flex-col group/namespace hover:shadow-xl transition-shadow">
                                 <div className="bg-zinc-50 dark:bg-zinc-800/50 p-3 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between">
                                     <div className="flex items-center gap-2">
                                         <Layers className="w-4 h-4 text-zinc-500" />
@@ -248,7 +249,7 @@ export const TopologyView: React.FC<TopologyViewProps> = ({ workloads, isDarkMod
                                         <div
                                             key={w.id}
                                             onClick={() => navigate(`/triage?workload=${w.name}&playbook=General%20Health`)}
-                                            className="flex items-center justify-between p-3 rounded-lg border border-zinc-100 dark:border-zinc-800 hover:border-indigo-200 dark:hover:border-indigo-800 bg-zinc-50/50 dark:bg-black/20 transition-all cursor-pointer hover:bg-zinc-100 dark:hover:bg-zinc-800/50 group"
+                                            className="flex items-center justify-between p-4 rounded-3xl border-2 border-transparent hover:border-primary-500/30 bg-gray-50/50 dark:bg-dark-bg/50 transition-all cursor-pointer hover:bg-white dark:hover:bg-white/5 group shadow-sm hover:shadow-lg"
                                         >
                                             <div className="flex items-center gap-3">
                                                 <div className={`w-2 h-8 rounded-full transition-all group-hover:scale-110 ${w.status === 'Healthy' ? 'bg-emerald-500' :
