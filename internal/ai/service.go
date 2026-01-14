@@ -257,8 +257,10 @@ func (s *AIService) GenerateTopology(ctx context.Context, providerName, model, w
 	Strict Mermaid Syntax Requirements:
 	- Diagram Type: 'flowchart TB'
 	- Use 'subgraph' to group workloads by Namespace.
-	- Node IDs: MUST be alphanumeric snake_case (e.g., frontend_api, redis_cache). NO hyphens, NO dots.
-	- Display Names: Use brackets for display names as defined in Kubernetes (e.g., node_id["Original-Name"]).
+	- Node IDs: MUST be STRICTLY alphanumeric snake_case (e.g., frontend_api, redis_cache). 
+	    - ABSOLUTELY NO hyphens ('-') in Node IDs. Use underscores ('_') instead.
+	    - ABSOLUTELY NO dots ('.') in Node IDs.
+	- Display Names: Use brackets for display names which CAN contain hyphens (e.g., node_id["Original-Name"]).
 	- Connections: Infer traffic patterns (e.g., frontend calls backend, backend calls db).
 	
 	Output Format:

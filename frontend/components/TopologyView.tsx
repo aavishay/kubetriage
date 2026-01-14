@@ -21,6 +21,7 @@ export const TopologyView: React.FC<TopologyViewProps> = ({ workloads, isDarkMod
     const [isLoading, setIsLoading] = useState(false);
     const [aspectRatio, setAspectRatio] = useState('16:9');
     const [error, setError] = useState<string | null>(null);
+    const [showDebug, setShowDebug] = useState(false);
 
     // Initialize mermaid
     useEffect(() => {
@@ -182,10 +183,23 @@ export const TopologyView: React.FC<TopologyViewProps> = ({ workloads, isDarkMod
 
                 {/* Error State */}
                 {error && (
-                    <div className="absolute top-4 left-1/2 -translate-x-1/2 z-10 bg-red-50 dark:bg-red-900/50 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-300 px-4 py-3 rounded-xl shadow-lg flex items-center gap-3 max-w-lg animate-in fade-in slide-in-from-top-4">
-                        <AlertCircle className="w-5 h-5 shrink-0" />
-                        <p className="text-sm">{error}</p>
-                        <button onClick={() => setError(null)} className="ml-auto text-red-400 hover:text-red-700 dark:hover:text-red-200"><Box className="w-4 h-4 rotate-45" /></button>
+                    <div className="absolute top-4 left-1/2 -translate-x-1/2 z-50 flex flex-col items-center max-w-2xl w-full animate-in fade-in slide-in-from-top-4">
+                        <div className="bg-red-50 dark:bg-red-900/50 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-300 px-4 py-3 rounded-xl shadow-lg flex items-center gap-3 w-full">
+                            <AlertCircle className="w-5 h-5 shrink-0" />
+                            <p className="text-sm font-medium flex-1">{error}</p>
+                            <button
+                                onClick={() => setShowDebug(!showDebug)}
+                                className="text-xs font-bold uppercase underline decoration-red-400/50 hover:text-red-800 dark:hover:text-red-100"
+                            >
+                                {showDebug ? 'Hide Code' : 'Show Code'}
+                            </button>
+                            <button onClick={() => setError(null)} className="ml-2 text-red-400 hover:text-red-700 dark:hover:text-red-200"><Box className="w-4 h-4 rotate-45" /></button>
+                        </div>
+                        {showDebug && diagramCode && (
+                            <div className="mt-2 w-full bg-zinc-900 text-zinc-300 p-4 rounded-xl text-xs font-mono overflow-auto max-h-64 border border-zinc-700 shadow-2xl">
+                                <pre>{diagramCode}</pre>
+                            </div>
+                        )}
                     </div>
                 )}
 
