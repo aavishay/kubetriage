@@ -437,26 +437,6 @@ export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = tr
                                           style={{ width: `${saturation}%` }}
                                        />
                                     </div>
-                                    <div className="flex gap-4 mt-2">
-                                       {item.avg > 0 && (
-                                          <div className="flex items-center gap-1.5 grayscale opacity-70 group-hover:grayscale-0 group-hover:opacity-100 transition-all">
-                                             <div className="w-1.5 h-1.5 rounded-full bg-blue-400" />
-                                             <span className="text-[9px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-wider">Avg: {item.avg.toFixed(1)}{item.unit}</span>
-                                          </div>
-                                       )}
-                                       {item.p95 > 0 && (
-                                          <div className="flex items-center gap-1.5 grayscale opacity-70 group-hover:grayscale-0 group-hover:opacity-100 transition-all">
-                                             <div className="w-1.5 h-1.5 rounded-full bg-amber-400" />
-                                             <span className="text-[9px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-wider">P95: {item.p95.toFixed(1)}{item.unit}</span>
-                                          </div>
-                                       )}
-                                       {item.p99 > 0 && (
-                                          <div className="flex items-center gap-1.5 grayscale opacity-70 group-hover:grayscale-0 group-hover:opacity-100 transition-all">
-                                             <div className="w-1.5 h-1.5 rounded-full bg-rose-400" />
-                                             <span className="text-[9px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-wider">P99: {item.p99.toFixed(1)}{item.unit}</span>
-                                          </div>
-                                       )}
-                                    </div>
                                  </div>
 
                                  <div className="w-32 shrink-0 text-right">
