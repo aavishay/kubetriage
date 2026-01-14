@@ -11,6 +11,7 @@ import (
 
 	// "github.com/aavishay/kubetriage/backend/internal/ai" // Assuming existing AI service package
 	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -58,7 +59,8 @@ func RunWorkloadScanner() {
 				// Deduplicate: Check if we have an unread report for this workload in the last hour?
 				// For simplified MVP, just check if ANY unread report exists
 				var existingReport db.TriageReport
-				result := db.DB.Where("cluster_id = ? AND namespace = ? AND workload_name = ? AND is_read = ?", cluster.ID, pod.Namespace, pod.Name, false).First(&existingReport)
+				// Use Silent logger to avoid "record not found" spam in logs
+				result := db.DB.Session(&gorm.Session{Logger: db.DB.Logger.LogMode(logger.Silent)}).Where("cluster_id = ? AND namespace = ? AND workload_name = ? AND is_read = ?", cluster.ID, pod.Namespace, pod.Name, false).First(&existingReport)
 
 				if result.Error == nil {
 					// Found an existing unread report, skip to avoid spam
