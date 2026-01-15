@@ -320,14 +320,14 @@ export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = tr
                   <h3 className="text-[11px] font-black uppercase tracking-[0.2em] text-gray-500 dark:text-gray-400 flex items-center gap-2.5">
                      <Zap className="w-4 h-4 text-primary-500 shadow-[0_0_8px_rgba(14,165,233,0.4)]" /> Resource Saturation
                   </h3>
-                  <div className="flex items-center gap-4">
+                  <div className="flex flex-wrap items-center gap-2 justify-end">
                      {/* Timeframe Selector */}
                      <div className="flex p-1 bg-gray-100/50 dark:bg-white/5 rounded-xl border border-gray-200 dark:border-white/5">
                         {(['5m', '15m', '30m', '1h'] as const).map((win) => (
                            <button
                               key={win}
                               onClick={() => setMetricsWindow?.(win)}
-                              className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${metricsWindow === win
+                              className={`px-2 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${metricsWindow === win
                                  ? 'bg-white dark:bg-[#1A1D23] text-indigo-500 shadow-sm border border-gray-200 dark:border-white/10'
                                  : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-200'
                                  }`}
@@ -342,7 +342,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = tr
                            <button
                               key={sort}
                               onClick={() => setSaturationSort(sort)}
-                              className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${saturationSort === sort
+                              className={`px-2 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${saturationSort === sort
                                  ? 'bg-white dark:bg-[#1A1D23] text-indigo-500 shadow-sm border border-gray-200 dark:border-white/10'
                                  : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-200'
                                  }`}
@@ -358,7 +358,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = tr
                            <button
                               key={type}
                               onClick={() => setSaturationTab(type)}
-                              className={`px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${saturationTab === type
+                              className={`px-2 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${saturationTab === type
                                  ? 'bg-white dark:bg-[#1A1D23] text-primary-500 shadow-sm border border-gray-200 dark:border-white/10'
                                  : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-200'
                                  }`}
