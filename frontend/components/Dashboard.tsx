@@ -380,11 +380,11 @@ export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = tr
                            let live = 0, avg = 0, p95 = 0, p99 = 0;
 
                            if (saturationTab === 'CPU') {
-                              base = (Number(metrics.cpuLimit) || Number(metrics.cpuRequest)) || 0;
-                              live = Number(metrics.cpuUsage) || 0;
-                              avg = Number(metrics.cpuAvg) || 0;
-                              p95 = Number(metrics.cpuP95) || 0;
-                              p99 = Number(metrics.cpuP99) || 0;
+                              base = ((Number(metrics.cpuLimit) || Number(metrics.cpuRequest)) || 0) * 1000;
+                              live = (Number(metrics.cpuUsage) || 0) * 1000;
+                              avg = (Number(metrics.cpuAvg) || 0) * 1000;
+                              p95 = (Number(metrics.cpuP95) || 0) * 1000;
+                              p99 = (Number(metrics.cpuP99) || 0) * 1000;
                               unit = 'm';
                               label = `CPU ${saturationSort === 'Live' ? 'Saturation' : saturationSort}`;
                            } else if (saturationTab === 'Memory') {
@@ -423,15 +423,19 @@ export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = tr
                            return bSat - aSat;
                         })
                         .map((item, idx) => {
+                           const isUnbounded = item.base === 0;
                            const saturation = item.base > 0 ? Math.min(100, Math.round((item.used / item.base) * 100)) : 0;
                            const isCritical = saturationTab === 'Memory' ? saturation >= 95 : saturation >= 90;
                            const isWarning = saturation >= 70 && !isCritical;
 
-                           const colorClass = isCritical
-                              ? 'bg-gradient-to-r from-rose-500 to-pink-600 shadow-[0_0_12px_rgba(244,63,94,0.3)]'
-                              : isWarning
-                                 ? 'bg-gradient-to-r from-amber-400 to-orange-500 shadow-[0_0_12px_rgba(245,158,11,0.2)]'
-                                 : 'bg-gradient-to-r from-primary-400 to-teal-500 shadow-[0_0_12px_rgba(56,189,248,0.2)]';
+                           // Saturation Bar Color
+                           const colorClass = isUnbounded
+                              ? 'bg-gray-200 dark:bg-gray-700'
+                              : isCritical
+                                 ? 'bg-gradient-to-r from-rose-500 to-pink-600 shadow-[0_0_12px_rgba(244,63,94,0.3)]'
+                                 : isWarning
+                                    ? 'bg-gradient-to-r from-amber-400 to-orange-500 shadow-[0_0_12px_rgba(245,158,11,0.2)]'
+                                    : 'bg-gradient-to-r from-primary-400 to-teal-500 shadow-[0_0_12px_rgba(56,189,248,0.2)]';
 
                            return (
                               <div
@@ -451,26 +455,34 @@ export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = tr
                                  <div className="flex-1 flex flex-col justify-center">
                                     <div className="flex justify-between items-end mb-2">
                                        <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none">{item.label}</span>
-                                       <span className={`text-[12px] font-black ${isCritical ? 'text-rose-500' : 'text-gray-700 dark:text-gray-200'}`}>{saturation}%</span>
+                                       <span className={`text-[12px] font-black ${isCritical && !isUnbounded ? 'text-rose-500' : 'text-gray-700 dark:text-gray-200'}`}>
+                                          {isUnbounded ? 'N/A' : `${saturation}%`}
+                                       </span>
                                     </div>
                                     <div className="h-2.5 w-full bg-gray-100 dark:bg-dark-bg/80 rounded-full overflow-hidden shadow-inner">
                                        <div
                                           className={`h-full rounded-full transition-all duration-1000 ease-out ${colorClass}`}
-                                          style={{ width: `${saturation}%` }}
+                                          style={{ width: isUnbounded ? '0%' : `${saturation}%` }}
                                        />
                                     </div>
                                  </div>
 
                                  <div className="w-32 shrink-0 text-right">
                                     <div className="text-[11px] font-mono text-gray-500 dark:text-gray-400">
-                                       <span className="text-gray-900 dark:text-white font-black">{item.used.toFixed(saturationTab === 'Network' ? 1 : 2)}{item.unit}</span>
-                                       {item.base > 0 && saturationTab !== 'Network' && (
-                                          <> <span className="opacity-40">/</span> {item.base.toFixed(0)}{item.unit}</>
+                                       <span className="text-gray-900 dark:text-white font-black">{item.used.toFixed(saturationTab === 'Network' ? 1 : 0)}{item.unit}</span>
+                                       {isUnbounded ? (
+                                          <span className="block text-[9px] text-gray-400 uppercase tracking-wider mt-0.5">No Limit</span>
+                                       ) : (
+                                          item.base > 0 && saturationTab !== 'Network' && (
+                                             <> <span className="opacity-40">/</span> {item.base.toFixed(0)}{item.unit}</>
+                                          )
                                        )}
                                     </div>
-                                    <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-0.5 block">
-                                       {saturationTab === 'CPU' ? 'cores limit' : saturationTab === 'Memory' ? 'ram limit' : saturationTab === 'Storage' ? 'disk limit' : 'bandwidth'}
-                                    </span>
+                                    {!isUnbounded && (
+                                       <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-0.5 block">
+                                          {saturationTab === 'CPU' ? 'cores limit' : saturationTab === 'Memory' ? 'ram limit' : saturationTab === 'Storage' ? 'disk limit' : 'bandwidth'}
+                                       </span>
+                                    )}
                                  </div>
                               </div>
                            );
