@@ -140,7 +140,7 @@ func getStatus(available, replicas int32) string {
 	return "Warning"
 }
 
-func getRealMetrics(ctx context.Context, namespace, name, kind string, podSpec v1.PodSpec) ResourceMetrics {
+func getRealMetrics(ctx context.Context, namespace, name, kind string, podSpec v1.PodSpec, window string) ResourceMetrics {
 	metrics := ResourceMetrics{}
 
 	// 1. Calculate Requests/Limits from Pod Spec
@@ -204,31 +204,40 @@ func getRealMetrics(ctx context.Context, namespace, name, kind string, podSpec v
 			metrics.NetworkOut = val / (1024 * 1024) // MB/s
 		}
 
-		// 3. Advanced Metrics (1h Window)
+		// 3. Advanced Metrics (Dynamic Window)
+		// Default resolution is 5m for 1h window. For shorter windows, use 1m.
+		subStep := "5m"
+		if window == "5m" || window == "10m" || window == "15m" || window == "30m" {
+			subStep = "1m"
+		}
+		if window == "1m" {
+			subStep = "10s"
+		}
+
 		// CPU Advanced
-		cpuAvgQuery := fmt.Sprintf(`avg_over_time(sum(rate(container_cpu_usage_seconds_total{namespace="%s", pod=~"%s-.*", container!=""}[2m]))[1h:5m])`, namespace, name)
+		cpuAvgQuery := fmt.Sprintf(`avg_over_time(sum(rate(container_cpu_usage_seconds_total{namespace="%s", pod=~"%s-.*", container!=""}[2m]))[%s:%s])`, namespace, name, window, subStep)
 		if val, err := prometheus.GlobalClient.QueryVector(ctx, cpuAvgQuery); err == nil {
 			metrics.CpuAvg = val
 		}
-		cpuP95Query := fmt.Sprintf(`quantile_over_time(0.95, sum(rate(container_cpu_usage_seconds_total{namespace="%s", pod=~"%s-.*", container!=""}[2m]))[1h:5m])`, namespace, name)
+		cpuP95Query := fmt.Sprintf(`quantile_over_time(0.95, sum(rate(container_cpu_usage_seconds_total{namespace="%s", pod=~"%s-.*", container!=""}[2m]))[%s:%s])`, namespace, name, window, subStep)
 		if val, err := prometheus.GlobalClient.QueryVector(ctx, cpuP95Query); err == nil {
 			metrics.CpuP95 = val
 		}
-		cpuP99Query := fmt.Sprintf(`quantile_over_time(0.99, sum(rate(container_cpu_usage_seconds_total{namespace="%s", pod=~"%s-.*", container!=""}[2m]))[1h:5m])`, namespace, name)
+		cpuP99Query := fmt.Sprintf(`quantile_over_time(0.99, sum(rate(container_cpu_usage_seconds_total{namespace="%s", pod=~"%s-.*", container!=""}[2m]))[%s:%s])`, namespace, name, window, subStep)
 		if val, err := prometheus.GlobalClient.QueryVector(ctx, cpuP99Query); err == nil {
 			metrics.CpuP99 = val
 		}
 
 		// Memory Advanced
-		memAvgQuery := fmt.Sprintf(`avg_over_time(sum(container_memory_working_set_bytes{namespace="%s", pod=~"%s-.*", container!=""})[1h:5m])`, namespace, name)
+		memAvgQuery := fmt.Sprintf(`avg_over_time(sum(container_memory_working_set_bytes{namespace="%s", pod=~"%s-.*", container!=""})[%s:%s])`, namespace, name, window, subStep)
 		if val, err := prometheus.GlobalClient.QueryVector(ctx, memAvgQuery); err == nil {
 			metrics.MemoryAvg = val / (1024 * 1024)
 		}
-		memP95Query := fmt.Sprintf(`quantile_over_time(0.95, sum(container_memory_working_set_bytes{namespace="%s", pod=~"%s-.*", container!=""})[1h:5m])`, namespace, name)
+		memP95Query := fmt.Sprintf(`quantile_over_time(0.95, sum(container_memory_working_set_bytes{namespace="%s", pod=~"%s-.*", container!=""})[%s:%s])`, namespace, name, window, subStep)
 		if val, err := prometheus.GlobalClient.QueryVector(ctx, memP95Query); err == nil {
 			metrics.MemoryP95 = val / (1024 * 1024)
 		}
-		memP99Query := fmt.Sprintf(`quantile_over_time(0.99, sum(container_memory_working_set_bytes{namespace="%s", pod=~"%s-.*", container!=""})[1h:5m])`, namespace, name)
+		memP99Query := fmt.Sprintf(`quantile_over_time(0.99, sum(container_memory_working_set_bytes{namespace="%s", pod=~"%s-.*", container!=""})[%s:%s])`, namespace, name, window, subStep)
 		if val, err := prometheus.GlobalClient.QueryVector(ctx, memP99Query); err == nil {
 			metrics.MemoryP99 = val / (1024 * 1024)
 		}
@@ -758,6 +767,10 @@ func ClustersHandler(c *gin.Context) {
 
 func WorkloadsHandler(c *gin.Context) {
 	clusterID := c.Query("cluster")
+	window := c.Query("window")
+	if window == "" {
+		window = "1h"
+	}
 	var client *kubernetes.Clientset
 
 	if clusterID != "" && k8s.Manager != nil {
@@ -841,7 +854,7 @@ func WorkloadsHandler(c *gin.Context) {
 					AvailableReplicas: d.Status.AvailableReplicas,
 					Status:            getStatus(d.Status.AvailableReplicas, *d.Spec.Replicas),
 					CostPerMonth:      rand.Intn(500) + 50,
-					Metrics:           getRealMetrics(enrichCtx, d.Namespace, d.Name, "Deployment", d.Spec.Template.Spec),
+					Metrics:           getRealMetrics(enrichCtx, d.Namespace, d.Name, "Deployment", d.Spec.Template.Spec, window),
 					RecentLogs:        fetchRecentLogs(enrichCtx, client, d.Namespace, d.Spec.Selector.MatchLabels),
 					Events:            fetchRecentEvents(enrichCtx, client, d.Namespace, d.Name, "Deployment"),
 					Scaling:           getScalingInfo(enrichCtx, client, dynClient, d.Namespace, d.Name),
@@ -872,7 +885,7 @@ func WorkloadsHandler(c *gin.Context) {
 					AvailableReplicas: s.Status.ReadyReplicas,
 					Status:            getStatus(s.Status.ReadyReplicas, *s.Spec.Replicas),
 					CostPerMonth:      rand.Intn(500) + 100,
-					Metrics:           getRealMetrics(enrichCtx, s.Namespace, s.Name, "StatefulSet", s.Spec.Template.Spec),
+					Metrics:           getRealMetrics(enrichCtx, s.Namespace, s.Name, "StatefulSet", s.Spec.Template.Spec, window),
 					RecentLogs:        fetchRecentLogs(enrichCtx, client, s.Namespace, s.Spec.Selector.MatchLabels),
 					Events:            fetchRecentEvents(enrichCtx, client, s.Namespace, s.Name, "StatefulSet"),
 					Scaling:           getScalingInfo(enrichCtx, client, dynClient, s.Namespace, s.Name),
@@ -903,7 +916,7 @@ func WorkloadsHandler(c *gin.Context) {
 					AvailableReplicas: ds.Status.NumberReady,
 					Status:            getStatus(ds.Status.NumberReady, ds.Status.DesiredNumberScheduled),
 					CostPerMonth:      rand.Intn(200) + 50,
-					Metrics:           getRealMetrics(enrichCtx, ds.Namespace, ds.Name, "DaemonSet", ds.Spec.Template.Spec),
+					Metrics:           getRealMetrics(enrichCtx, ds.Namespace, ds.Name, "DaemonSet", ds.Spec.Template.Spec, window),
 					RecentLogs:        fetchRecentLogs(enrichCtx, client, ds.Namespace, ds.Spec.Selector.MatchLabels),
 					Events:            fetchRecentEvents(enrichCtx, client, ds.Namespace, ds.Name, "DaemonSet"),
 				}
@@ -1011,7 +1024,7 @@ func WorkloadsHandler(c *gin.Context) {
 					w := Workload{
 						ID: string(uid), Name: name, Namespace: namespace, Kind: "ScaledJob",
 						Replicas: int32(childCount), AvailableReplicas: int32(running), Status: status,
-						Metrics:      getRealMetrics(enrichCtx, namespace, name, "Job", v1.PodSpec{}),
+						Metrics:      getRealMetrics(enrichCtx, namespace, name, "Job", v1.PodSpec{}, window),
 						CostPerMonth: rand.Intn(100) + 10,
 						RecentLogs:   recentLogs, Events: recentEvents,
 						Scaling: ScalingInfo{

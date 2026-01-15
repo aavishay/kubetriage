@@ -28,6 +28,8 @@ interface MonitoringContextType {
   unreadReports: number;
   refreshClusters: () => Promise<void>;
   refreshWorkloads: () => Promise<void>;
+  metricsWindow: string;
+  setMetricsWindow: (window: string) => void;
 
   // Notification Config
   notificationSettings: { toastEnabled: boolean; toastFrequency: number };
@@ -90,6 +92,7 @@ export const MonitoringProvider: React.FC<MonitoringProviderProps> = ({ children
 
   // --- Core Data State ---
   const [workloads, setWorkloads] = useState<Workload[]>([]);
+  const [metricsWindow, setMetricsWindow] = useState<string>('1h');
   const [isWorkloadsLoading, setIsWorkloadsLoading] = useState(false);
   const [clusters, setClusters] = useState<Cluster[]>([]);
   const [selectedCluster, setSelectedCluster] = useState<Cluster | null>(() => {
@@ -162,7 +165,7 @@ export const MonitoringProvider: React.FC<MonitoringProviderProps> = ({ children
     const fetchWorkloads = async () => {
       // Clear current workloads when switching clusters to prevent stale data visibility
       // SWR: Load from cache first
-      const cacheKey = `cache_workloads_${selectedCluster.id}`;
+      const cacheKey = `cache_workloads_${selectedCluster?.id || ''}_${metricsWindow}`;
       const cached = localStorage.getItem(cacheKey);
       if (cached) {
         setWorkloads(JSON.parse(cached));
@@ -177,7 +180,7 @@ export const MonitoringProvider: React.FC<MonitoringProviderProps> = ({ children
       setIsWorkloadsLoading(true);
 
       try {
-        const response = await fetch(`/api/cluster/workloads?cluster=${selectedCluster.id}`);
+        const response = await fetch(`/api/cluster/workloads?cluster=${selectedCluster.id}&window=${metricsWindow}`);
         if (response.ok) {
           const data = await response.json();
           const workloadsWithEvents = Array.isArray(data) ? data.map((w: any) => ({
@@ -197,13 +200,13 @@ export const MonitoringProvider: React.FC<MonitoringProviderProps> = ({ children
       }
     };
     fetchWorkloads();
-  }, [selectedCluster]);
+  }, [selectedCluster, metricsWindow]);
 
   const refreshWorkloads = useCallback(async () => {
     if (!selectedCluster) return;
     setIsWorkloadsLoading(true);
     try {
-      const response = await fetch(`/api/cluster/workloads?cluster=${selectedCluster.id}`);
+      const response = await fetch(`/api/cluster/workloads?cluster=${selectedCluster.id}&window=${metricsWindow}`);
       if (response.ok) {
         const data = await response.json();
         const workloadsWithEvents = Array.isArray(data) ? data.map((w: any) => ({
@@ -508,6 +511,8 @@ export const MonitoringProvider: React.FC<MonitoringProviderProps> = ({ children
       unreadReports,
       refreshClusters,
       refreshWorkloads,
+      metricsWindow,
+      setMetricsWindow,
       notificationSettings,
       updateNotificationSettings,
       aiConfig,

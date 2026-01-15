@@ -45,7 +45,9 @@ const AppContent: React.FC = () => {
     updateAlertRule,
     deleteAlertRule,
     login,
-    refreshWorkloads
+    refreshWorkloads,
+    metricsWindow,
+    setMetricsWindow
   } = useMonitoring();
 
   const [isChatOpen, setIsChatOpen] = useState(false);
@@ -107,7 +109,7 @@ const AppContent: React.FC = () => {
     <div className={isDarkMode ? 'dark' : ''}>
       <Layout>
         <Routes>
-          <Route path="/" element={<Dashboard workloads={workloads} isLoading={isWorkloadsLoading} isDarkMode={isDarkMode} onTriageRequest={handleNavigateToTriage} onRefresh={refreshWorkloads} />} />
+          <Route path="/" element={<Dashboard workloads={workloads} isLoading={isWorkloadsLoading} isDarkMode={isDarkMode} onTriageRequest={handleNavigateToTriage} onRefresh={refreshWorkloads} metricsWindow={metricsWindow} setMetricsWindow={setMetricsWindow} />} />
           <Route path="/dashboard" element={<Navigate to="/" replace />} />
           <Route path="/login" element={<Navigate to="/" replace />} />
           <Route path="/templates" element={<TemplateLibraryView onApplyTemplate={(view, tmpl) => handleApplyTemplate(tmpl)} isDarkMode={isDarkMode} />} />

@@ -11,9 +11,11 @@ interface DashboardProps {
    isLoading?: boolean;
    onRefresh?: () => void;
    onTriageRequest?: (workloadId: string, playbook: DiagnosticPlaybook) => void;
+   metricsWindow?: string;
+   setMetricsWindow?: (window: string) => void;
 }
 
-export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = true, isLoading = false, onTriageRequest, onRefresh }) => {
+export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = true, isLoading = false, onTriageRequest, onRefresh, metricsWindow = '1h', setMetricsWindow }) => {
    const [saturationTab, setSaturationTab] = React.useState<'CPU' | 'Memory' | 'Storage' | 'Network'>('CPU');
    const [saturationSort, setSaturationSort] = React.useState<'Live' | 'Avg' | 'P95' | 'P99'>('Live');
    const totalCost = workloads.reduce((acc, w) => acc + (w.costPerMonth || 0), 0);
@@ -319,6 +321,21 @@ export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = tr
                      <Zap className="w-4 h-4 text-primary-500 shadow-[0_0_8px_rgba(14,165,233,0.4)]" /> Resource Saturation
                   </h3>
                   <div className="flex items-center gap-4">
+                     {/* Timeframe Selector */}
+                     <div className="flex p-1 bg-gray-100/50 dark:bg-white/5 rounded-xl border border-gray-200 dark:border-white/5">
+                        {(['5m', '15m', '30m', '1h'] as const).map((win) => (
+                           <button
+                              key={win}
+                              onClick={() => setMetricsWindow?.(win)}
+                              className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${metricsWindow === win
+                                 ? 'bg-white dark:bg-[#1A1D23] text-indigo-500 shadow-sm border border-gray-200 dark:border-white/10'
+                                 : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-200'
+                                 }`}
+                           >
+                              {win}
+                           </button>
+                        ))}
+                     </div>
                      {/* Sort Selector */}
                      <div className="flex p-1 bg-gray-100/50 dark:bg-white/5 rounded-xl border border-gray-200 dark:border-white/5">
                         {(['Live', 'Avg', 'P95', 'P99'] as const).map((sort) => (
@@ -359,7 +376,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = tr
                            let base = 0, used = 0, unit = 'm', label = 'Saturation';
 
                            // Extract all potential metrics first
-                           const metrics = w.metrics || {};
+                           const metrics = w.metrics || {} as any;
                            let live = 0, avg = 0, p95 = 0, p99 = 0;
 
                            if (saturationTab === 'CPU') {
