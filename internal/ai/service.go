@@ -2,8 +2,6 @@ package ai
 
 import (
 	"context"
-	"encoding/base64"
-	"encoding/json"
 	"fmt"
 	"log"
 	"strings"
@@ -286,15 +284,33 @@ func (s *AIService) GenerateRemediation(ctx context.Context, providerName, model
 	%s
 	%s
 	Based on the logs and the provided analysis (if any), suggest a specific remediation action.
-	Return ONLY a valid JSON object with the following structure, no other text:
-	{
-		"description": "Short title of the fix",
-		"patchType": "application/strategic-merge-patch+yaml",
-		"patchContentBase64": "The complete YAML patch content Base64 encoded",
-		"risk": "Low" | "Medium" | "High",
-		"reasoning": "Brief explanation of why this fix is needed"
-	}
-	IMPORTANT: 'patchContentBase64' MUST be the Base64 encoding of the valid multi-line YAML string. Ensure no artifacts remain.
+	
+	OUTPUT FORMAT INSTRUCTIONS:
+	Do NOT return JSON. Return a structured text block exactly as follows:
+
+	---BEGIN_REMEDIATION---
+	DESCRIPTION: <Short title of the fix>
+	RISK: <Low/Medium/High>
+	REASONING: <Brief explanation of why this fix is needed>
+	PATCH:
+	<The complete YAML patch content. Can be multi-line>
+	---END_REMEDIATION---
+	
+	Example:
+	---BEGIN_REMEDIATION---
+	DESCRIPTION: Increase Memory Limit
+	RISK: Low
+	REASONING: Pod is OOMKilled.
+	PATCH:
+	spec:
+	  template:
+	    spec:
+	      containers:
+	      - name: my-app
+	        resources:
+	          limits:
+	            memory: "512Mi"
+	---END_REMEDIATION---
 	`, resourceKind, resourceName, errorLog, analysisContext)
 
 	rawResponse, err := provider.GenerateContent(ctx, prompt, model)
@@ -302,59 +318,73 @@ func (s *AIService) GenerateRemediation(ctx context.Context, providerName, model
 		return nil, err
 	}
 
-	// Clean up potentially messy AI response (e.g. Markdown, conversational filler)
 	cleanResponse := strings.TrimSpace(rawResponse)
 
-	// Robustly extract JSON object
-	if start := strings.Index(cleanResponse, "{"); start != -1 {
-		cleanResponse = cleanResponse[start:]
+	// Custom Text Parser
+	var suggestion PatchSuggestion
+	suggestion.PatchType = "application/strategic-merge-patch+yaml" // Default
+
+	// defined markers
+	startMarker := "---BEGIN_REMEDIATION---"
+	endMarker := "---END_REMEDIATION---"
+
+	startIndex := strings.Index(cleanResponse, startMarker)
+	if startIndex != -1 {
+		cleanResponse = cleanResponse[startIndex+len(startMarker):]
 	}
-	if end := strings.LastIndex(cleanResponse, "}"); end != -1 {
-		cleanResponse = cleanResponse[:end+1]
+	endIndex := strings.LastIndex(cleanResponse, endMarker)
+	if endIndex != -1 {
+		cleanResponse = cleanResponse[:endIndex]
 	}
 
-	// Temporary struct to handle Base64 decoding
-	var rawSuggestion struct {
-		Description        string `json:"description"`
-		PatchType          string `json:"patchType"`
-		PatchContentBase64 string `json:"patchContentBase64"`
-		Risk               string `json:"risk"`
-		Reasoning          string `json:"reasoning"`
+	lines := strings.Split(cleanResponse, "\n")
+	currentSection := ""
+	var patchBuilder strings.Builder
+
+	for _, line := range lines {
+		trimmedLine := strings.TrimSpace(line)
+		if trimmedLine == "" && currentSection != "PATCH" {
+			continue
+		}
+
+		if strings.HasPrefix(trimmedLine, "DESCRIPTION:") {
+			suggestion.Description = strings.TrimSpace(strings.TrimPrefix(trimmedLine, "DESCRIPTION:"))
+			currentSection = "DESCRIPTION"
+		} else if strings.HasPrefix(trimmedLine, "RISK:") {
+			suggestion.Risk = strings.TrimSpace(strings.TrimPrefix(trimmedLine, "RISK:"))
+			currentSection = "RISK"
+		} else if strings.HasPrefix(trimmedLine, "REASONING:") {
+			suggestion.Reasoning = strings.TrimSpace(strings.TrimPrefix(trimmedLine, "REASONING:"))
+			currentSection = "REASONING"
+		} else if strings.HasPrefix(trimmedLine, "PATCH:") {
+			currentSection = "PATCH"
+			continue
+		} else {
+			// Content handling
+			if currentSection == "PATCH" {
+				patchBuilder.WriteString(line + "\n")
+			} else if currentSection == "REASONING" && suggestion.Reasoning != "" {
+				// Append multi-line reasoning if needed, though usually one line in simple format
+				suggestion.Reasoning += " " + trimmedLine
+			}
+		}
 	}
 
-	if err := json.Unmarshal([]byte(cleanResponse), &rawSuggestion); err != nil {
-		// Fallback: If JSON parsing fails, return a generic error or try to wrap the raw text
-		log.Printf("Failed to parse LLM JSON response: %v. Raw: %s", err, rawResponse)
-		// Attempt to return a generic "Manual Review" suggestion if parsing fails
+	suggestion.PatchContent = strings.TrimSpace(patchBuilder.String())
+
+	// Fallback validation
+	if suggestion.Description == "" || suggestion.PatchContent == "" {
+		log.Printf("Failed to parse AI Text response. Raw: %s", rawResponse)
 		return &PatchSuggestion{
 			Description:  "Manual Review Required",
-			Reasoning:    "AI response could not be parsed structurally. See logs for details.",
-			PatchContent: "# Failed to parse patch",
+			Reasoning:    "AI response format was invalid. See logs.",
+			PatchContent: "# Failed to parse patch from text format",
 			Risk:         "High",
 			PatchType:    "text/plain",
 		}, nil
 	}
 
-	// Decode Base64
-	decodedBytes, err := base64.StdEncoding.DecodeString(rawSuggestion.PatchContentBase64)
-	if err != nil {
-		log.Printf("Failed to decode Base64 patch from LLM: %v", err)
-		return &PatchSuggestion{
-			Description:  "Error Decoding Patch",
-			Reasoning:    fmt.Sprintf("Failed to decode AI patch: %v", err),
-			PatchContent: "# Failed to decode patch",
-			Risk:         "High",
-			PatchType:    "text/plain",
-		}, nil
-	}
-
-	return &PatchSuggestion{
-		Description:  rawSuggestion.Description,
-		PatchType:    rawSuggestion.PatchType,
-		Reasoning:    rawSuggestion.Reasoning,
-		Risk:         rawSuggestion.Risk,
-		PatchContent: string(decodedBytes),
-	}, nil
+	return &suggestion, nil
 }
 
 func (s *AIService) GenerateTopology(ctx context.Context, providerName, model, workloadSummary string) (string, error) {
@@ -394,15 +424,16 @@ func (s *AIService) GenerateTopology(ctx context.Context, providerName, model, w
 	`, workloadSummary)
 
 	// Enforce a timeout for Diagram Generation (slow local LLMs might hang)
-	ctxWithTimeout, cancel := context.WithTimeout(ctx, 15*time.Second) // Increased slightly for complex graphs
+	ctxWithTimeout, cancel := context.WithTimeout(ctx, 45*time.Second) // Increased for complex graphs
 	defer cancel()
 
 	rawResponse, err := provider.GenerateContent(ctxWithTimeout, prompt, model)
 	if err != nil {
 		log.Printf("ERROR: AI Provider %s failed: %v. Falling back to Mock Diagram.", providerName, err)
-		// Fallback for Demo/Dev
+		// Fallback for Demo/Dev - Simplified Syntax
 		return `flowchart TB
-    subgraph Mock_Namespace [Mock Namespace]
+    subgraph Mock_Namespace
+        direction TB
         demo_app["Demo App"] --> demo_db["Demo DB"]
         demo_app --> demo_cache["Redis Cache"]
     end`, nil
