@@ -2,6 +2,7 @@ package ai
 
 import (
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -288,12 +289,12 @@ func (s *AIService) GenerateRemediation(ctx context.Context, providerName, model
 	Return ONLY a valid JSON object with the following structure, no other text:
 	{
 		"description": "Short title of the fix",
-	"patchType": "application/strategic-merge-patch+yaml",
-		"patchContent": "The complete YAML patch content (e.g., \nspec:\n  replicas: 3)",
+		"patchType": "application/strategic-merge-patch+yaml",
+		"patchContentBase64": "The complete YAML patch content Base64 encoded",
 		"risk": "Low" | "Medium" | "High",
 		"reasoning": "Brief explanation of why this fix is needed"
 	}
-	IMPORTANT: 'patchContent' MUST be a valid multi-line YAML string. DO NOT use JSON format for the patch content.
+	IMPORTANT: 'patchContentBase64' MUST be the Base64 encoding of the valid multi-line YAML string. Ensure no artifacts remain.
 	`, resourceKind, resourceName, errorLog, analysisContext)
 
 	rawResponse, err := provider.GenerateContent(ctx, prompt, model)
@@ -301,7 +302,6 @@ func (s *AIService) GenerateRemediation(ctx context.Context, providerName, model
 		return nil, err
 	}
 
-	// Clean up potential markdown code blocks
 	// Clean up potentially messy AI response (e.g. Markdown, conversational filler)
 	cleanResponse := strings.TrimSpace(rawResponse)
 
@@ -313,9 +313,16 @@ func (s *AIService) GenerateRemediation(ctx context.Context, providerName, model
 		cleanResponse = cleanResponse[:end+1]
 	}
 
-	var suggestion PatchSuggestion
-	// We need standard json package
-	if err := json.Unmarshal([]byte(cleanResponse), &suggestion); err != nil {
+	// Temporary struct to handle Base64 decoding
+	var rawSuggestion struct {
+		Description        string `json:"description"`
+		PatchType          string `json:"patchType"`
+		PatchContentBase64 string `json:"patchContentBase64"`
+		Risk               string `json:"risk"`
+		Reasoning          string `json:"reasoning"`
+	}
+
+	if err := json.Unmarshal([]byte(cleanResponse), &rawSuggestion); err != nil {
 		// Fallback: If JSON parsing fails, return a generic error or try to wrap the raw text
 		log.Printf("Failed to parse LLM JSON response: %v. Raw: %s", err, rawResponse)
 		// Attempt to return a generic "Manual Review" suggestion if parsing fails
@@ -328,7 +335,26 @@ func (s *AIService) GenerateRemediation(ctx context.Context, providerName, model
 		}, nil
 	}
 
-	return &suggestion, nil
+	// Decode Base64
+	decodedBytes, err := base64.StdEncoding.DecodeString(rawSuggestion.PatchContentBase64)
+	if err != nil {
+		log.Printf("Failed to decode Base64 patch from LLM: %v", err)
+		return &PatchSuggestion{
+			Description:  "Error Decoding Patch",
+			Reasoning:    fmt.Sprintf("Failed to decode AI patch: %v", err),
+			PatchContent: "# Failed to decode patch",
+			Risk:         "High",
+			PatchType:    "text/plain",
+		}, nil
+	}
+
+	return &PatchSuggestion{
+		Description:  rawSuggestion.Description,
+		PatchType:    rawSuggestion.PatchType,
+		Reasoning:    rawSuggestion.Reasoning,
+		Risk:         rawSuggestion.Risk,
+		PatchContent: string(decodedBytes),
+	}, nil
 }
 
 func (s *AIService) GenerateTopology(ctx context.Context, providerName, model, workloadSummary string) (string, error) {
