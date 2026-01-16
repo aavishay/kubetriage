@@ -82,12 +82,17 @@ export const MonitoringProvider: React.FC<MonitoringProviderProps> = ({ children
   const [isCheckingKey, setIsCheckingKey] = useState(true);
 
   // --- Theme State ---
-  const [isDarkMode, setIsDarkMode] = useState(() => {
-    if (typeof window !== 'undefined' && window.matchMedia) {
-      return window.matchMedia('(prefers-color-scheme: dark)').matches;
+  // --- Theme State ---
+  const [isDarkMode, setIsDarkMode] = useState(false);
+
+  useEffect(() => {
+    if (isDarkMode) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
     }
-    return true;
-  });
+  }, [isDarkMode]);
+
   const toggleTheme = () => setIsDarkMode(!isDarkMode);
 
   // --- Core Data State ---

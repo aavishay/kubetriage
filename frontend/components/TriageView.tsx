@@ -33,12 +33,12 @@ const CopyButton = ({ text, className = "" }: { text: string, className?: string
   );
 };
 
-const CodeBlock = ({ language, children }: { language: string, children: React.ReactNode }) => {
+const CodeBlock = ({ language, children, className = "my-6 rounded-2xl", fontSize = "13px" }: { language: string, children: React.ReactNode, className?: string, fontSize?: string }) => {
   const [isWrapped, setIsWrapped] = useState(false);
   const code = String(children).replace(/\n$/, '');
 
   return (
-    <div className="my-6 rounded-2xl overflow-hidden shadow-2xl relative group bg-[#1e1e1e]">
+    <div className={`${className} overflow-hidden shadow-2xl relative group bg-[#1e1e1e]`}>
       <div className="absolute right-4 top-4 flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
         <button
           onClick={() => setIsWrapped(!isWrapped)}
@@ -54,7 +54,7 @@ const CodeBlock = ({ language, children }: { language: string, children: React.R
         language={language}
         PreTag="div"
         wrapLongLines={isWrapped}
-        customStyle={{ margin: 0, padding: '2rem', fontSize: '13px', lineHeight: '1.5' }}
+        customStyle={{ margin: 0, padding: '2rem', fontSize: fontSize, lineHeight: '1.5' }}
       >
         {code}
       </SyntaxHighlighter>
@@ -612,11 +612,13 @@ export const TriageView: React.FC<TriageViewProps> = ({ workloads, isDarkMode = 
                               <div className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${patchSuggestion.risk === 'High' ? 'bg-rose-500/10 text-rose-500' : 'bg-emerald-500/10 text-emerald-500'}`}>Risk: {patchSuggestion.risk}</div>
                             </div>
                             <p className="text-sm text-zinc-600 dark:text-zinc-300 mb-4">{patchSuggestion.reasoning}</p>
-                            <div className="mb-4 rounded-xl overflow-hidden border border-zinc-800">
-                              <SyntaxHighlighter language="yaml" style={vscDarkPlus} customStyle={{ margin: 0, borderRadius: 0, fontSize: '11px' }}>
-                                {patchSuggestion.patchContent}
-                              </SyntaxHighlighter>
-                            </div>
+                            <CodeBlock
+                              language="yaml"
+                              className="mb-4 rounded-xl border border-zinc-800"
+                              fontSize="11px"
+                            >
+                              {patchSuggestion.patchContent}
+                            </CodeBlock>
                             <div className="flex justify-end gap-3">
                               <button onClick={() => setPatchSuggestion(null)} className="px-6 py-3 rounded-xl text-xs font-bold text-zinc-500 hover:text-zinc-900 dark:hover:text-white">Cancel</button>
                               <button onClick={handleApplyFix} disabled={isApplyingFix} className="bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-3 rounded-xl text-xs font-bold shadow-lg shadow-indigo-600/20 flex items-center gap-2">

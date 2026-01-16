@@ -67,8 +67,13 @@ func ClusterMetricsHandler(c *gin.Context) {
 	}
 
 	result, err := prometheus.GlobalClient.QueryRange(c.Request.Context(), query, start, end, step)
+	// QueryRange call was already made above
+
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		// Soft fail: If Prometheus is down/unreachable, return empty list instead of 500
+		// This allows the UI to render the rest of the page (e.g. 0% CPU)
+		fmt.Printf("Warning: Prometheus Query Failed: %v\n", err)
+		c.JSON(http.StatusOK, []prometheus.MetricPoint{})
 		return
 	}
 

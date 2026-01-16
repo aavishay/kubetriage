@@ -361,7 +361,7 @@ func (s *AIService) GenerateTopology(ctx context.Context, providerName, model, w
 	Example Output Pattern:
 	`+"```mermaid"+`
 	flowchart TB
-	  subgraph ns_prod ["production"]
+	  subgraph ns_prod [production]
 	    app_v1["app-v1"] --> db_prod["db-main"]
 	  end
 	`+"```"+`
@@ -376,7 +376,7 @@ func (s *AIService) GenerateTopology(ctx context.Context, providerName, model, w
 		log.Printf("ERROR: AI Provider %s failed: %v. Falling back to Mock Diagram.", providerName, err)
 		// Fallback for Demo/Dev
 		return `flowchart TB
-    subgraph Mock_Namespace ["Mock Namespace"]
+    subgraph Mock_Namespace [Mock Namespace]
         demo_app["Demo App"] --> demo_db["Demo DB"]
         demo_app --> demo_cache["Redis Cache"]
     end`, nil
