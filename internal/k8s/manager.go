@@ -11,6 +11,7 @@ import (
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/client-go/util/homedir"
+	metrics "k8s.io/metrics/pkg/client/clientset/versioned"
 )
 
 // Cluster represents a connected Kubernetes context
@@ -19,6 +20,7 @@ type Cluster struct {
 	Name          string
 	ClientSet     *kubernetes.Clientset
 	DynamicClient *dynamic.DynamicClient
+	MetricsClient *metrics.Clientset
 	Config        *rest.Config
 	Namespace     string
 }
@@ -95,6 +97,12 @@ func (m *ClusterManager) LoadClustersFromKubeconfig() error {
 			continue
 		}
 
+		metricsClient, err := metrics.NewForConfig(restConfig)
+		if err != nil {
+			fmt.Printf("Warning: Failed to create metrics client for context %s: %v\n", contextName, err)
+			// Don't continue, metrics are optional
+		}
+
 		namespace, _, _ := clientConfig.Namespace()
 
 		m.clusters[contextName] = &Cluster{
@@ -102,6 +110,7 @@ func (m *ClusterManager) LoadClustersFromKubeconfig() error {
 			Name:          contextName,
 			ClientSet:     clientset,
 			DynamicClient: dynamicClient,
+			MetricsClient: metricsClient,
 			Config:        restConfig,
 			Namespace:     namespace,
 		}
@@ -113,8 +122,9 @@ func (m *ClusterManager) LoadClustersFromKubeconfig() error {
 		if config, err := rest.InClusterConfig(); err == nil {
 			cls, _ := kubernetes.NewForConfig(config)
 			dyn, _ := dynamic.NewForConfig(config)
+			met, _ := metrics.NewForConfig(config)
 			m.clusters["in-cluster"] = &Cluster{
-				ID: "in-cluster", Name: "In Cluster", ClientSet: cls, DynamicClient: dyn, Config: config,
+				ID: "in-cluster", Name: "In Cluster", ClientSet: cls, DynamicClient: dyn, MetricsClient: met, Config: config,
 			}
 		}
 	}
@@ -189,6 +199,11 @@ func (m *ClusterManager) AddClusterFromKubeconfig(rawConfig []byte) (*Cluster, e
 		return nil, fmt.Errorf("failed to create dynamic client: %v", err)
 	}
 
+	metricsClient, err := metrics.NewForConfig(restConfig)
+	if err != nil {
+		fmt.Printf("Warning: Failed to create metrics client: %v\n", err)
+	}
+
 	namespace, _, _ := clientConfig.Namespace()
 
 	// 3. Add to Map
@@ -197,6 +212,7 @@ func (m *ClusterManager) AddClusterFromKubeconfig(rawConfig []byte) (*Cluster, e
 		Name:          contextName,
 		ClientSet:     clientset,
 		DynamicClient: dynamicClient,
+		MetricsClient: metricsClient,
 		Config:        restConfig,
 		Namespace:     namespace,
 	}

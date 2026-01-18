@@ -64,20 +64,21 @@ type K8sEvent struct {
 
 // Workload struct mapping to frontend
 type Workload struct {
-	ID                string            `json:"id"`
-	Name              string            `json:"name"`
-	Namespace         string            `json:"namespace"`
-	Kind              string            `json:"kind"`
-	Replicas          int32             `json:"replicas"`
-	AvailableReplicas int32             `json:"availableReplicas"`
-	Status            string            `json:"status"`
-	Metrics           ResourceMetrics   `json:"metrics"`
-	RecentLogs        []string          `json:"recentLogs"`
-	Events            []K8sEvent        `json:"events"`
-	CostPerMonth      int               `json:"costPerMonth"`
-	Scaling           ScalingInfo       `json:"scaling"`
-	SchedulerLogs     []string          `json:"schedulerLogs,omitempty"`
-	Provisioning      *ProvisioningInfo `json:"provisioning,omitempty"`
+	ID                 string            `json:"id"`
+	Name               string            `json:"name"`
+	Namespace          string            `json:"namespace"`
+	Kind               string            `json:"kind"`
+	Replicas           int32             `json:"replicas"`
+	AvailableReplicas  int32             `json:"availableReplicas"`
+	Status             string            `json:"status"`
+	Metrics            ResourceMetrics   `json:"metrics"`
+	RecentLogs         []string          `json:"recentLogs"`
+	Events             []K8sEvent        `json:"events"`
+	CostPerMonth       int               `json:"costPerMonth"`
+	Scaling            ScalingInfo       `json:"scaling"`
+	SchedulerLogs      []string          `json:"schedulerLogs,omitempty"`
+	Provisioning       *ProvisioningInfo `json:"provisioning,omitempty"`
+	ProvisioningStatus string            `json:"provisioningStatus,omitempty"` // e.g. "Provisioning", "Scheduled"
 }
 
 type ProvisioningInfo struct {
@@ -140,7 +141,7 @@ func getStatus(available, replicas int32) string {
 	return "Warning"
 }
 
-func getRealMetrics(ctx context.Context, namespace, name, kind string, podSpec v1.PodSpec, window string) ResourceMetrics {
+func getRealMetrics(ctx context.Context, namespace, name, kind string, podSpec v1.PodSpec, window string, matchLabels map[string]string) ResourceMetrics {
 	metrics := ResourceMetrics{}
 
 	// 1. Calculate Requests/Limits from Pod Spec
@@ -161,7 +162,7 @@ func getRealMetrics(ctx context.Context, namespace, name, kind string, podSpec v
 			metrics.MemoryLimit += float64(q.Value()) / (1024 * 1024) // MiB
 		}
 
-		// Storage (Ephemeral)
+		// Ephemeral Storage
 		if q, ok := container.Resources.Requests[v1.ResourceEphemeralStorage]; ok {
 			metrics.StorageRequest += float64(q.Value()) / (1024 * 1024 * 1024) // GiB
 		}
@@ -171,12 +172,10 @@ func getRealMetrics(ctx context.Context, namespace, name, kind string, podSpec v
 	}
 
 	// 2. Fetch Usage from Prometheus (if avail)
-	// Query: sum(rate(container_cpu_usage_seconds_total{namespace="X", pod=~"Name-.*"}[5m]))
-	// Note: We match pod name prefix. For Deployments/StatefulSets this works well.
 	if prometheus.GlobalClient != nil {
 		// CPU Usage
 		cpuQuery := fmt.Sprintf(`sum(rate(container_cpu_usage_seconds_total{namespace="%s", pod=~"%s-.*", container!=""}[2m]))`, namespace, name)
-		if val, err := prometheus.GlobalClient.QueryVector(ctx, cpuQuery); err == nil {
+		if val, err := prometheus.GlobalClient.QueryVector(ctx, cpuQuery); err == nil && val > 0 {
 			metrics.CpuUsage = val
 		}
 
@@ -192,20 +191,17 @@ func getRealMetrics(ctx context.Context, namespace, name, kind string, podSpec v
 			metrics.StorageUsage = val / (1024 * 1024 * 1024) // GiB
 		}
 
-		// Network In
+		// Network
 		netInQuery := fmt.Sprintf(`sum(rate(container_network_receive_bytes_total{namespace="%s", pod=~"%s-.*"}[2m]))`, namespace, name)
 		if val, err := prometheus.GlobalClient.QueryVector(ctx, netInQuery); err == nil {
 			metrics.NetworkIn = val / (1024 * 1024) // MB/s
 		}
-
-		// Network Out
 		netOutQuery := fmt.Sprintf(`sum(rate(container_network_transmit_bytes_total{namespace="%s", pod=~"%s-.*"}[2m]))`, namespace, name)
 		if val, err := prometheus.GlobalClient.QueryVector(ctx, netOutQuery); err == nil {
 			metrics.NetworkOut = val / (1024 * 1024) // MB/s
 		}
 
-		// 3. Advanced Metrics (Dynamic Window)
-		// Default resolution is 5m for 1h window. For shorter windows, use 1m.
+		// Advanced Metrics (Avg/P95/P99)
 		subStep := "5m"
 		if window == "5m" || window == "10m" || window == "15m" || window == "30m" {
 			subStep = "1m"
@@ -214,37 +210,54 @@ func getRealMetrics(ctx context.Context, namespace, name, kind string, podSpec v
 			subStep = "10s"
 		}
 
-		// CPU Advanced
 		cpuAvgQuery := fmt.Sprintf(`avg_over_time(sum(rate(container_cpu_usage_seconds_total{namespace="%s", pod=~"%s-.*", container!=""}[2m]))[%s:%s])`, namespace, name, window, subStep)
 		if val, err := prometheus.GlobalClient.QueryVector(ctx, cpuAvgQuery); err == nil {
 			metrics.CpuAvg = val
 		}
-		cpuP95Query := fmt.Sprintf(`quantile_over_time(0.95, sum(rate(container_cpu_usage_seconds_total{namespace="%s", pod=~"%s-.*", container!=""}[2m]))[%s:%s])`, namespace, name, window, subStep)
-		if val, err := prometheus.GlobalClient.QueryVector(ctx, cpuP95Query); err == nil {
-			metrics.CpuP95 = val
-		}
-		cpuP99Query := fmt.Sprintf(`quantile_over_time(0.99, sum(rate(container_cpu_usage_seconds_total{namespace="%s", pod=~"%s-.*", container!=""}[2m]))[%s:%s])`, namespace, name, window, subStep)
-		if val, err := prometheus.GlobalClient.QueryVector(ctx, cpuP99Query); err == nil {
-			metrics.CpuP99 = val
-		}
 
-		// Memory Advanced
 		memAvgQuery := fmt.Sprintf(`avg_over_time(sum(container_memory_working_set_bytes{namespace="%s", pod=~"%s-.*", container!=""})[%s:%s])`, namespace, name, window, subStep)
 		if val, err := prometheus.GlobalClient.QueryVector(ctx, memAvgQuery); err == nil {
 			metrics.MemoryAvg = val / (1024 * 1024)
 		}
-		memP95Query := fmt.Sprintf(`quantile_over_time(0.95, sum(container_memory_working_set_bytes{namespace="%s", pod=~"%s-.*", container!=""})[%s:%s])`, namespace, name, window, subStep)
-		if val, err := prometheus.GlobalClient.QueryVector(ctx, memP95Query); err == nil {
-			metrics.MemoryP95 = val / (1024 * 1024)
+	}
+
+	// 4. Fallback: Metrics Server (Real Data)
+	// If usage is still 0 (Prometheus failed or missing), try Kubernetes Metrics API
+	if metrics.CpuUsage == 0 && metrics.MemoryUsage == 0 && len(matchLabels) > 0 {
+		mgr := k8s.GetClusterManager()
+		if mgr != nil {
+			selector := ""
+			for k, v := range matchLabels {
+				if selector != "" {
+					selector += ","
+				}
+				selector += fmt.Sprintf("%s=%s", k, v)
+			}
+
+			// Try all clusters that have metrics client (usually just local)
+			for _, cls := range mgr.ListClusters() {
+				if cls.MetricsClient != nil {
+					podMetrics, err := cls.MetricsClient.MetricsV1beta1().PodMetricses(namespace).List(ctx, metav1.ListOptions{LabelSelector: selector})
+					if err == nil {
+						var cpuTotal float64
+						var memTotal float64
+
+						for _, pm := range podMetrics.Items {
+							for _, c := range pm.Containers {
+								cpuTotal += float64(c.Usage.Cpu().MilliValue()) / 1000.0      // Cores
+								memTotal += float64(c.Usage.Memory().Value()) / (1024 * 1024) // MiB
+							}
+						}
+
+						if cpuTotal > 0 || memTotal > 0 {
+							metrics.CpuUsage = cpuTotal
+							metrics.MemoryUsage = memTotal
+							break // Found data
+						}
+					}
+				}
+			}
 		}
-		memP99Query := fmt.Sprintf(`quantile_over_time(0.99, sum(container_memory_working_set_bytes{namespace="%s", pod=~"%s-.*", container!=""})[%s:%s])`, namespace, name, window, subStep)
-		if val, err := prometheus.GlobalClient.QueryVector(ctx, memP99Query); err == nil {
-			metrics.MemoryP99 = val / (1024 * 1024)
-		}
-	} else {
-		// If no Prometheus, fallback to mock (or 0)
-		// User requested "no mock", but 0 might look broken if they expect data without Prom.
-		// We'll leave usage as 0 if Prom is missing, but show Requests/Limits which ARE real.
 	}
 
 	return metrics
@@ -468,6 +481,65 @@ func fetchKarpenterProvisioning(ctx context.Context, dynClient dynamic.Interface
 	}
 
 	return info
+}
+
+func analyzeScheduling(events []K8sEvent, spec v1.PodSpec, prov *ProvisioningInfo) string {
+	// 1. Check if Karpenter is actively doing something
+	if prov != nil && len(prov.NodeClaims) > 0 {
+		// If ANY NodeClaim is pending, we assume cluster is scaling up
+		for _, nc := range prov.NodeClaims {
+			if strings.Contains(nc, "Pending") {
+				return "Provisioning Nodes"
+			}
+		}
+	}
+
+	// 2. Check Events for why we are pending
+	for _, e := range events {
+		if e.Reason == "FailedScheduling" {
+			msg := strings.ToLower(e.Message)
+
+			// Resource Constraints
+			if strings.Contains(msg, "insufficient") {
+				return "Waiting for Resources"
+			}
+
+			// Taints & Tolerations
+			if strings.Contains(msg, "taint") && strings.Contains(msg, "not tolerated") {
+				if prov != nil {
+					prov.Misconfigurations = append(prov.Misconfigurations, fmt.Sprintf("Scheduling Failed: Pod does not tolerate node taints. (Event: %s)", e.Message))
+				}
+				// Check which tolerations are missing?
+				// Simple heuristic: If no tolerations, suggest adding them.
+				if len(spec.Tolerations) == 0 && prov != nil {
+					prov.Misconfigurations = append(prov.Misconfigurations, "Hint: Pod has NO tolerations defined.")
+				}
+				return "Blocked: Taints"
+			}
+
+			// Affinity
+			if strings.Contains(msg, "affinity") || strings.Contains(msg, "anti-affinity") {
+				if prov != nil {
+					prov.Misconfigurations = append(prov.Misconfigurations, fmt.Sprintf("Scheduling Failed: Affinity rules not satisfied. (Event: %s)", e.Message))
+				}
+				return "Blocked: Affinity"
+			}
+
+			// Node Selector
+			if strings.Contains(msg, "node(s) didn't match pod's node affinity/selector") || strings.Contains(msg, "node selector") {
+				if prov != nil {
+					prov.Misconfigurations = append(prov.Misconfigurations, fmt.Sprintf("Scheduling Failed: Node Selector/Affinity mismatch. (Event: %s)", e.Message))
+				}
+				return "Blocked: Node Selector"
+			}
+
+			return "Unscheduled"
+		}
+		if e.Reason == "TriggeredScaleUp" {
+			return "Scaling Up"
+		}
+	}
+	return ""
 }
 
 // Helper to fetch KEDA ScaledObject
@@ -854,7 +926,7 @@ func WorkloadsHandler(c *gin.Context) {
 					AvailableReplicas: d.Status.AvailableReplicas,
 					Status:            getStatus(d.Status.AvailableReplicas, *d.Spec.Replicas),
 					CostPerMonth:      rand.Intn(500) + 50,
-					Metrics:           getRealMetrics(enrichCtx, d.Namespace, d.Name, "Deployment", d.Spec.Template.Spec, window),
+					Metrics:           getRealMetrics(enrichCtx, d.Namespace, d.Name, "Deployment", d.Spec.Template.Spec, window, d.Spec.Selector.MatchLabels),
 					RecentLogs:        fetchRecentLogs(enrichCtx, client, d.Namespace, d.Spec.Selector.MatchLabels),
 					Events:            fetchRecentEvents(enrichCtx, client, d.Namespace, d.Name, "Deployment"),
 					Scaling:           getScalingInfo(enrichCtx, client, dynClient, d.Namespace, d.Name),
@@ -862,6 +934,7 @@ func WorkloadsHandler(c *gin.Context) {
 				if w.Status != "Healthy" {
 					w.SchedulerLogs = fetchKarpenterLogs(enrichCtx, client, d.Name)
 					w.Provisioning = fetchKarpenterProvisioning(enrichCtx, dynClient, d.Name)
+					w.ProvisioningStatus = analyzeScheduling(w.Events, d.Spec.Template.Spec, w.Provisioning)
 				}
 				addWorkload(w)
 				return nil
@@ -885,7 +958,7 @@ func WorkloadsHandler(c *gin.Context) {
 					AvailableReplicas: s.Status.ReadyReplicas,
 					Status:            getStatus(s.Status.ReadyReplicas, *s.Spec.Replicas),
 					CostPerMonth:      rand.Intn(500) + 100,
-					Metrics:           getRealMetrics(enrichCtx, s.Namespace, s.Name, "StatefulSet", s.Spec.Template.Spec, window),
+					Metrics:           getRealMetrics(enrichCtx, s.Namespace, s.Name, "StatefulSet", s.Spec.Template.Spec, window, s.Spec.Selector.MatchLabels),
 					RecentLogs:        fetchRecentLogs(enrichCtx, client, s.Namespace, s.Spec.Selector.MatchLabels),
 					Events:            fetchRecentEvents(enrichCtx, client, s.Namespace, s.Name, "StatefulSet"),
 					Scaling:           getScalingInfo(enrichCtx, client, dynClient, s.Namespace, s.Name),
@@ -893,6 +966,7 @@ func WorkloadsHandler(c *gin.Context) {
 				if w.Status != "Healthy" {
 					w.SchedulerLogs = fetchKarpenterLogs(enrichCtx, client, s.Name)
 					w.Provisioning = fetchKarpenterProvisioning(enrichCtx, dynClient, s.Name)
+					w.ProvisioningStatus = analyzeScheduling(w.Events, s.Spec.Template.Spec, w.Provisioning)
 				}
 				addWorkload(w)
 				return nil
@@ -916,9 +990,15 @@ func WorkloadsHandler(c *gin.Context) {
 					AvailableReplicas: ds.Status.NumberReady,
 					Status:            getStatus(ds.Status.NumberReady, ds.Status.DesiredNumberScheduled),
 					CostPerMonth:      rand.Intn(200) + 50,
-					Metrics:           getRealMetrics(enrichCtx, ds.Namespace, ds.Name, "DaemonSet", ds.Spec.Template.Spec, window),
+					Metrics:           getRealMetrics(enrichCtx, ds.Namespace, ds.Name, "DaemonSet", ds.Spec.Template.Spec, window, ds.Spec.Selector.MatchLabels),
 					RecentLogs:        fetchRecentLogs(enrichCtx, client, ds.Namespace, ds.Spec.Selector.MatchLabels),
 					Events:            fetchRecentEvents(enrichCtx, client, ds.Namespace, ds.Name, "DaemonSet"),
+				}
+				if w.Status != "Healthy" {
+					// DaemonSets usually don't use Karpenter provisioning like Deployments do
+					// But we can still analyze scheduling issues
+					w.Provisioning = &ProvisioningInfo{Enabled: false} // Placeholder
+					w.ProvisioningStatus = analyzeScheduling(w.Events, ds.Spec.Template.Spec, w.Provisioning)
 				}
 				addWorkload(w)
 				return nil
@@ -1013,9 +1093,14 @@ func WorkloadsHandler(c *gin.Context) {
 
 					var recentLogs []string
 					var recentEvents []K8sEvent
+					var jobLabels map[string]string
+
 					if len(relevantPods) > 0 {
 						latestPod := relevantPods[len(relevantPods)-1]
-						recentLogs = fetchRecentLogs(enrichCtx, client, namespace, map[string]string{"job-name": latestPod.Labels["job-name"]})
+						if jn, ok := latestPod.Labels["job-name"]; ok {
+							jobLabels = map[string]string{"job-name": jn}
+						}
+						recentLogs = fetchRecentLogs(enrichCtx, client, namespace, jobLabels)
 						recentEvents = fetchRecentEvents(enrichCtx, client, namespace, name, "ScaledJob")
 					} else {
 						recentEvents = fetchRecentEvents(enrichCtx, client, namespace, name, "ScaledJob")
@@ -1024,7 +1109,7 @@ func WorkloadsHandler(c *gin.Context) {
 					w := Workload{
 						ID: string(uid), Name: name, Namespace: namespace, Kind: "ScaledJob",
 						Replicas: int32(childCount), AvailableReplicas: int32(running), Status: status,
-						Metrics:      getRealMetrics(enrichCtx, namespace, name, "Job", v1.PodSpec{}, window),
+						Metrics:      getRealMetrics(enrichCtx, namespace, name, "Job", v1.PodSpec{}, window, jobLabels),
 						CostPerMonth: rand.Intn(100) + 10,
 						RecentLogs:   recentLogs, Events: recentEvents,
 						Scaling: ScalingInfo{
@@ -1079,6 +1164,9 @@ func WorkloadsHandler(c *gin.Context) {
 					if w.Status != "Healthy" {
 						w.SchedulerLogs = fetchKarpenterLogs(enrichCtx, client, name)
 						w.Provisioning = fetchKarpenterProvisioning(enrichCtx, dynClient, name)
+						w.ProvisioningStatus = analyzeScheduling(w.Events, v1.PodSpec{}, w.Provisioning) // Job spec not easily avail here without fetching Job
+						// Ideally we'd pass job.Spec.Template.Spec if we had the Job object handy.
+						// We can fetch it or just pass empty for now (misses toleration hints).
 					}
 					addWorkload(w)
 					return nil

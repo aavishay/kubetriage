@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"regexp"
 	"strings"
 	"time"
 )
@@ -176,9 +177,9 @@ func (s *AIService) AnalyzeWorkload(ctx context.Context, req AnalyzeWorkloadRequ
     - **Instruction**: %s
     
     **TELEMETRY**:
-    - CPU: %s / %s
-    - RAM: %s / %s
-    - Storage: %s / %s
+    - CPU: %s Cores / %s Cores (Limit)
+    - RAM: %s MiB / %s MiB (Limit)
+    - Storage: %s GiB / %s GiB (Limit)
     - Disk I/O: %s
     
     **SCALING (HPA/KEDA)**:
@@ -267,7 +268,7 @@ type PatchSuggestion struct {
 	Reasoning    string `json:"reasoning"`
 }
 
-func (s *AIService) GenerateRemediation(ctx context.Context, providerName, model, resourceKind, resourceName, errorLog, analysis string) (*PatchSuggestion, error) {
+func (s *AIService) GenerateRemediation(ctx context.Context, providerName, model, resourceKind, resourceName, errorLog, analysis, currentImages string) (*PatchSuggestion, error) {
 	provider, err := s.getProvider(providerName)
 	if err != nil {
 		return nil, err
@@ -278,12 +279,22 @@ func (s *AIService) GenerateRemediation(ctx context.Context, providerName, model
 		analysisContext = fmt.Sprintf("\n\tDiagnostic Analysis (RCA) from SRE:\n\t%s\n", analysis)
 	}
 
+	imagesContext := ""
+	if currentImages != "" {
+		imagesContext = fmt.Sprintf("\n\tCURRENT CONTAINER IMAGES (Use these EXACTLY, do NOT use placeholders):\n\t%s\n", currentImages)
+	}
+
 	prompt := fmt.Sprintf(`
 	You are a Kubernetes Expert.
 	The resource %s/%s has the following error logs:
 	%s
 	%s
+	%s
 	Based on the logs and the provided analysis (if any), suggest a specific remediation action.
+	
+	IMPORTANT:
+	- If the remediation involves updating the pod spec (e.g., resources, env vars), you MUST use the CURRENT IMAGES provided above.
+	- NEVER use placeholders like "<image-name>". Use the actual image string from the context.
 	
 	OUTPUT FORMAT INSTRUCTIONS:
 	Do NOT return JSON. Return a structured text block exactly as follows:
@@ -311,7 +322,9 @@ func (s *AIService) GenerateRemediation(ctx context.Context, providerName, model
 	          limits:
 	            memory: "512Mi"
 	---END_REMEDIATION---
-	`, resourceKind, resourceName, errorLog, analysisContext)
+	---END_REMEDIATION---
+	---END_REMEDIATION---
+	`, resourceKind, resourceName, errorLog, analysisContext, imagesContext)
 
 	rawResponse, err := provider.GenerateContent(ctx, prompt, model)
 	if err != nil {
@@ -343,6 +356,13 @@ func (s *AIService) GenerateRemediation(ctx context.Context, providerName, model
 
 	for _, line := range lines {
 		trimmedLine := strings.TrimSpace(line)
+
+		// Robust Stop Condition: If we see the end marker (or something close to it)
+		// Stop processing immediately to avoid leaking footer text into Patch content.
+		if strings.Contains(trimmedLine, "END_REMEDIATION") {
+			break
+		}
+
 		if trimmedLine == "" && currentSection != "PATCH" {
 			continue
 		}
@@ -406,8 +426,13 @@ func (s *AIService) GenerateTopology(ctx context.Context, providerName, model, w
 	- Node IDs: MUST be STRICTLY alphanumeric snake_case (e.g., frontend_api, redis_cache). 
 	    - ABSOLUTELY NO hyphens ('-') in Node IDs. Use underscores ('_') instead.
 	    - ABSOLUTELY NO dots ('.') in Node IDs.
+	    - **CRITICAL**: To prevent duplicate ID errors, YOU MUST PREPEND THE NAMESPACE to the Node ID (e.g., ns_prod_my_app vs ns_dev_my_app).
+	- Subgraph IDs: MUST be STRICTLY alphanumeric snake_case.
+	    - ABSOLUTELY NO hyphens ('-') in Subgraph IDs (e.g., use 'subgraph kube_system', NOT 'subgraph kube-system').
 	- Display Names: Use brackets for display names which CAN contain hyphens (e.g., node_id["Original-Name"]).
-	- Connections: Infer traffic patterns (e.g., frontend calls backend, backend calls db).
+	- Connections: Infer traffic patterns (e.g., frontend calls backend, backend calls db). Use simple arrows '-->'.
+	- No Edge Labels: DO NOT add text labels to arrows (e.g. no '|text|').
+	- Subgraphs: Use syntax 'subgraph id [Title]' with a space before the Title bracket. ID must be snake_case.
 	
 	Output Format:
 	- Return ONLY the Mermaid code block.
@@ -418,13 +443,13 @@ func (s *AIService) GenerateTopology(ctx context.Context, providerName, model, w
 	`+"```mermaid"+`
 	flowchart TB
 	  subgraph ns_prod [production]
-	    app_v1["app-v1"] --> db_prod["db-main"]
+	    ns_prod_app_v1["app-v1"] --> ns_prod_db_prod["db-main"]
 	  end
 	`+"```"+`
 	`, workloadSummary)
 
 	// Enforce a timeout for Diagram Generation (slow local LLMs might hang)
-	ctxWithTimeout, cancel := context.WithTimeout(ctx, 45*time.Second) // Increased for complex graphs
+	ctxWithTimeout, cancel := context.WithTimeout(ctx, 180*time.Second) // Increased for complex graphs
 	defer cancel()
 
 	rawResponse, err := provider.GenerateContent(ctxWithTimeout, prompt, model)
@@ -459,11 +484,70 @@ func (s *AIService) GenerateTopology(ctx context.Context, providerName, model, w
 
 	cleanResponse = strings.TrimSpace(cleanResponse)
 
-	// Final Sanitization: Ensure it starts with a valid Mermaid header if it looks like just nodes
-	if !strings.HasPrefix(cleanResponse, "flowchart") &&
-		!strings.HasPrefix(cleanResponse, "graph") &&
-		!strings.HasPrefix(cleanResponse, "sequenceDiagram") &&
-		!strings.HasPrefix(cleanResponse, "classDiagram") {
+	// --- TRUNCATION REPAIR START ---
+	// Check if the output seems truncated (doesn't end with "end" or a closing bracket/parenthesis if it's a node)
+	// Actually, robust way: Count "subgraph" vs "end".
+	lines := strings.Split(cleanResponse, "\n")
+	if len(lines) > 0 {
+		subgraphCount := 0
+		endCount := 0
+		for _, line := range lines {
+			if strings.Contains(line, "subgraph ") {
+				subgraphCount++
+			}
+			if strings.TrimSpace(line) == "end" {
+				endCount++
+			}
+		}
+
+		if subgraphCount > endCount {
+			log.Printf("DEBUG: Detected truncated Mermaid output. Subgraphs: %d, Ends: %d. Repairing...", subgraphCount, endCount)
+
+			// 1. Remove the last line as it might be half-written
+			if len(lines) > 0 {
+				lines = lines[:len(lines)-1]
+			}
+
+			// 2. Add missing "end"s
+			needed := subgraphCount - endCount
+			for i := 0; i < needed; i++ {
+				lines = append(lines, "  end")
+			}
+			cleanResponse = strings.Join(lines, "\n")
+		}
+	}
+	// --- TRUNCATION REPAIR END ---
+
+	// Sanitization 0: Fix common Subgraph syntax error (missing space before title)
+	// patterns like: subgraph foo[bar] -> subgraph foo [bar]
+	reSubgraph := regexp.MustCompile(`subgraph\s+([a-zA-Z0-9_\-]+)\[`)
+	cleanResponse = reSubgraph.ReplaceAllString(cleanResponse, "subgraph $1 [")
+
+	// Sanitization 1: Remove any edge labels (-->|label|) to prevent syntax errors
+	// Matches -->|...| and replaces with -->
+	reEdgeLabels := regexp.MustCompile(`-->\|[^|]+\|`)
+	cleanResponse = reEdgeLabels.ReplaceAllString(cleanResponse, "-->")
+
+	// Sanitization 2: Fix hyphenated Subgraph IDs (Critical for Mermaid)
+	// Expl: "subgraph kube-system" is interpreted as "kube minus system". Must be "kube_system".
+	// We capture: subgraph (ID) [Title] OR subgraph (ID)
+	// We'll iterate and replace non-alphanumeric chars in the ID part.
+	reSubgraphIDs := regexp.MustCompile(`subgraph\s+([a-zA-Z0-9_\-]+)`)
+	cleanResponse = reSubgraphIDs.ReplaceAllStringFunc(cleanResponse, func(match string) string {
+		parts := strings.Fields(match)
+		if len(parts) >= 2 {
+			id := parts[1]
+			safeID := strings.ReplaceAll(id, "-", "_")
+			safeID = strings.ReplaceAll(safeID, ".", "_")
+			return "subgraph " + safeID
+		}
+		return match
+	})
+
+	// Final Sanitization: Ensure it starts with a valid Mermaid header
+	// We use regex to check if a header exists, ignoring comments (%% ...) and whitespace
+	reHeader := regexp.MustCompile(`(?i)^\s*(?:%%.*[\r\n]+)*\s*(flowchart|graph|sequenceDiagram|classDiagram|erDiagram|stateDiagram)`)
+	if !reHeader.MatchString(cleanResponse) {
 		// If it's missing a header but has content, prepend a default flowchart header
 		if len(cleanResponse) > 0 {
 			cleanResponse = "flowchart TB\n" + cleanResponse

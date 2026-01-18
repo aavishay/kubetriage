@@ -31,6 +31,10 @@ export default defineConfig(({ mode }) => {
       environment: 'jsdom',
       setupFiles: './src/test/setup.ts',
     },
+    // Optimize Mermaid for proper bundling - prevents dynamic import errors
+    optimizeDeps: {
+      include: ['mermaid']
+    },
     // Build Optimization
     build: {
       rollupOptions: {
@@ -39,7 +43,8 @@ export default defineConfig(({ mode }) => {
             vendor: ['react', 'react-dom', 'react-router-dom'],
             charts: ['recharts'],
             icons: ['lucide-react'],
-            ai: ['@google/genai']
+            ai: ['@google/genai'],
+            mermaid: ['mermaid']
           }
         }
       }

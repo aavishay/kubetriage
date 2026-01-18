@@ -54,6 +54,10 @@ func (p *GeminiProvider) GenerateContent(ctx context.Context, prompt string, mod
 	}
 	model := p.client.GenerativeModel(targetModel)
 
+	// Increase output token limit for large diagrams
+	model.SetMaxOutputTokens(8192)
+	model.SetTemperature(0.2) // Low temperature for deterministic diagrams
+
 	resp, err := model.GenerateContent(ctx, genai.Text(prompt))
 	if err != nil {
 		return "", err

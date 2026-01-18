@@ -35,9 +35,10 @@ func (p *OllamaProvider) Name() string {
 }
 
 type OllamaRequest struct {
-	Model  string `json:"model"`
-	Prompt string `json:"prompt"`
-	Stream bool   `json:"stream"`
+	Model   string                 `json:"model"`
+	Prompt  string                 `json:"prompt"`
+	Stream  bool                   `json:"stream"`
+	Options map[string]interface{} `json:"options,omitempty"`
 }
 
 type OllamaResponse struct {
@@ -55,6 +56,10 @@ func (p *OllamaProvider) GenerateContent(ctx context.Context, prompt string, mod
 		Model:  modelToUse,
 		Prompt: prompt,
 		Stream: false,
+		Options: map[string]interface{}{
+			"num_predict": 16384, // Increase context window for large diagrams
+			"temperature": 0.2,
+		},
 	}
 
 	jsonBody, err := json.Marshal(reqBody)

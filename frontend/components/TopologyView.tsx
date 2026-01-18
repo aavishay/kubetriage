@@ -66,7 +66,8 @@ export const TopologyView: React.FC<TopologyViewProps> = ({ workloads, isDarkMod
                     console.error("Mermaid Render Error", renderError);
                     console.error("Failed Diagram Code:\n", code);
                     if (isMounted.current) {
-                        setError("Failed to render diagram. The AI generated invalid syntax.");
+                        const errorMessage = renderError instanceof Error ? renderError.message : String(renderError);
+                        setError(`Failed to render diagram. Mermaid Error: ${errorMessage}`);
                     }
                     // Attempt to clean up any stray error divs mermaid might have appended to body
                     const errorDiv = document.querySelector(`#dmermaid-${Date.now()}`); // Heuristic
