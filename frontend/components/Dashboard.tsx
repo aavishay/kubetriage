@@ -456,7 +456,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = tr
                                     <div className="flex justify-between items-end mb-2">
                                        <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none">{item.label}</span>
                                        <span className={`text-[12px] font-black ${isCritical && !isUnbounded ? 'text-rose-500' : 'text-gray-700 dark:text-gray-200'}`}>
-                                          {isUnbounded ? 'N/A' : `${saturation}%`}
+                                          {isUnbounded ? '—' : `${saturation}%`}
                                        </span>
                                     </div>
                                     <div className="h-2.5 w-full bg-gray-100 dark:bg-dark-bg/80 rounded-full overflow-hidden shadow-inner">
@@ -469,7 +469,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = tr
 
                                  <div className="w-32 shrink-0 text-right">
                                     <div className="text-[11px] font-mono text-gray-500 dark:text-gray-400">
-                                       <span className="text-gray-900 dark:text-white font-black">{item.used.toFixed(saturationTab === 'Network' ? 1 : 0)}{item.unit}</span>
+                                       <span className="text-gray-900 dark:text-white font-black">{item.used.toFixed(2)}{item.unit}</span>
                                        {isUnbounded ? (
                                           <span className="block text-[9px] text-gray-400 uppercase tracking-wider mt-0.5">No Limit</span>
                                        ) : (
