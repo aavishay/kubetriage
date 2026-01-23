@@ -82,6 +82,8 @@ type AnalyzeWorkloadRequest struct {
 	StorageUsage  string            `json:"storageUsage"`
 	StorageLimit  string            `json:"storageLimit"`
 	DiskIo        string            `json:"diskIo"`
+	Yaml          string            `json:"yaml"`    // The manifest of the workload
+	Metrics       string            `json:"metrics"` // Historical metrics as a text table/summary
 	Logs          []string          `json:"logs"`
 	Events        []string          `json:"events"`
 	SchedulerLogs []string          `json:"schedulerLogs"`
@@ -182,6 +184,12 @@ func (s *AIService) AnalyzeWorkload(ctx context.Context, req AnalyzeWorkloadRequ
     - Storage: %s GiB / %s GiB (Limit)
     - Disk I/O: %s
     
+    **HISTORICAL METRICS (Trend)**:
+    %s
+    
+    **YAML MANIFEST (Current State)**:
+    %s
+    
     **SCALING (HPA/KEDA)**:
     - Enabled: %v
     - Replicas: %d Min / %d Max / %d Current
@@ -249,6 +257,7 @@ func (s *AIService) AnalyzeWorkload(ctx context.Context, req AnalyzeWorkloadRequ
 	`,
 		req.WorkloadName, req.Status, req.Playbook, req.Instructions,
 		req.CpuUsage, req.CpuLimit, req.MemoryUsage, req.MemoryLimit, req.StorageUsage, req.StorageLimit, req.DiskIo,
+		req.Metrics, req.Yaml,
 		scalingEnabled, scalingMin, scalingMax, scalingCurrent, scalingReady,
 		scalingActive, scalingFallback, scalingPaused, scalingTriggers, scalingMisconfigs,
 		provEnabled, provNodePools, provNodeClaims, provMisconfigs,

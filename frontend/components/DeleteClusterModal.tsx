@@ -40,28 +40,30 @@ export const DeleteClusterModal: React.FC<DeleteClusterModalProps> = ({ isOpen, 
     return (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
             <div
-                className="absolute inset-0 bg-black/50 backdrop-blur-sm animate-in fade-in"
+                className="absolute inset-0 bg-black/80 backdrop-blur-md animate-in fade-in duration-300"
                 onClick={onClose}
             />
 
-            <div className="relative w-full max-w-md bg-white dark:bg-zinc-900 rounded-2xl shadow-2xl border border-zinc-200 dark:border-zinc-800 overflow-hidden animate-in zoom-in-95 duration-200">
-                <div className="flex items-center justify-between px-6 py-4 border-b border-zinc-100 dark:border-zinc-800 bg-rose-50/50 dark:bg-rose-900/10">
-                    <div className="flex items-center gap-2 text-rose-600 dark:text-rose-500">
-                        <AlertTriangle className="w-5 h-5" />
-                        <h3 className="font-bold text-lg">Remove Cluster?</h3>
+            <div className="relative w-full max-w-md bg-dark-card border border-white/10 rounded-2xl shadow-[0_0_50px_rgba(225,29,72,0.15)] overflow-hidden animate-in zoom-in-95 duration-300">
+                <div className="flex items-center justify-between px-6 py-5 border-b border-white/5 bg-rose-500/5">
+                    <div className="flex items-center gap-3 text-rose-500">
+                        <div className="p-2 bg-rose-500/10 rounded-lg border border-rose-500/20">
+                            <AlertTriangle className="w-5 h-5" />
+                        </div>
+                        <h3 className="font-black text-lg font-display tracking-wide text-white uppercase">Remove Cluster</h3>
                     </div>
-                    <button onClick={onClose} className="p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg transition-colors">
-                        <X className="w-5 h-5 text-zinc-500" />
+                    <button onClick={onClose} className="p-2 hover:bg-white/5 rounded-lg transition-colors text-zinc-500 hover:text-white">
+                        <X className="w-5 h-5" />
                     </button>
                 </div>
 
-                <div className="p-6 space-y-4">
-                    <p className="text-sm text-zinc-600 dark:text-zinc-300 leading-relaxed">
-                        This will permanently remove the cluster <span className="font-bold text-zinc-900 dark:text-white">"{clusterName}"</span> and all its associated data from KubeTriage. This action cannot be undone.
+                <div className="p-6 space-y-6">
+                    <p className="text-sm text-zinc-400 leading-relaxed font-medium">
+                        This will permanently remove the cluster <span className="font-bold text-white bg-white/5 px-1 py-0.5 rounded border border-white/10">"{clusterName}"</span> and all its associated telemetry from Neural Ops. This action cannot be undone.
                     </p>
 
-                    <div className="space-y-2">
-                        <label className="text-xs font-bold text-zinc-500 uppercase tracking-widest">
+                    <div className="space-y-3">
+                        <label className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em]">
                             Type <span className="text-rose-500 select-all">{clusterName}</span> to confirm
                         </label>
                         <input
@@ -69,7 +71,7 @@ export const DeleteClusterModal: React.FC<DeleteClusterModalProps> = ({ isOpen, 
                             value={inputValue}
                             onChange={(e) => setInputValue(e.target.value)}
                             placeholder={clusterName}
-                            className="w-full px-4 py-3 bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700 rounded-xl focus:ring-2 focus:ring-rose-500 focus:border-transparent outline-none font-bold text-zinc-900 dark:text-white"
+                            className="w-full px-4 py-3 bg-black/50 border border-white/10 rounded-xl focus:ring-1 focus:ring-rose-500/50 focus:border-rose-500/50 outline-none font-bold text-white placeholder:text-zinc-700 transition-all font-mono text-sm"
                             autoFocus
                         />
                     </div>
@@ -77,22 +79,22 @@ export const DeleteClusterModal: React.FC<DeleteClusterModalProps> = ({ isOpen, 
                     <div className="flex justify-end gap-3 pt-2">
                         <button
                             onClick={onClose}
-                            className="px-4 py-2 text-sm font-bold text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300 transition-colors"
+                            className="px-4 py-2 text-xs font-bold text-zinc-500 hover:text-white transition-colors uppercase tracking-wider"
                         >
                             Cancel
                         </button>
                         <button
                             onClick={handleConfirm}
                             disabled={!isMatch || isDeleting}
-                            className="flex items-center gap-2 px-6 py-2 bg-rose-600 hover:bg-rose-700 disabled:bg-zinc-200 dark:disabled:bg-zinc-800 disabled:text-zinc-400 text-white rounded-xl font-bold text-sm transition-all shadow-lg shadow-rose-600/20 disabled:shadow-none"
+                            className="flex items-center gap-2 px-6 py-2.5 bg-rose-600 hover:bg-rose-500 disabled:bg-white/5 disabled:text-zinc-600 text-white rounded-xl font-black text-xs uppercase tracking-wider transition-all shadow-[0_0_20px_rgba(225,29,72,0.3)] hover:shadow-[0_0_30px_rgba(225,29,72,0.5)] disabled:shadow-none active:scale-[0.98]"
                         >
                             {isDeleting ? (
                                 <>
-                                    <Loader2 className="w-4 h-4 animate-spin" /> Removing...
+                                    <Loader2 className="w-4 h-4 animate-spin" /> TERMINATING...
                                 </>
                             ) : (
                                 <>
-                                    <Trash2 className="w-4 h-4" /> Remove Cluster
+                                    <Trash2 className="w-4 h-4" /> CONFIRM REMOVAL
                                 </>
                             )}
                         </button>

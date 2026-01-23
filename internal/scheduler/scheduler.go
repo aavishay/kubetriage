@@ -3,16 +3,17 @@ package scheduler
 import (
 	"log"
 
+	"github.com/aavishay/kubetriage/backend/internal/ai"
 	"github.com/robfig/cron/v3"
 )
 
 var c *cron.Cron
 
-func InitScheduler() {
+func InitScheduler(aiService *ai.AIService) {
 	c = cron.New()
 
 	// Register Jobs
-	_, err := c.AddFunc("@every 2m", RunWorkloadScanner) // Run every 2 mins for demo purposes
+	_, err := c.AddFunc("@every 2m", func() { RunWorkloadScanner(aiService) })
 	if err != nil {
 		log.Printf("Error adding cron job: %v", err)
 	}

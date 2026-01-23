@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { Box, Loader2, Github, Chrome, ArrowRight } from 'lucide-react';
-import logo from '../src/assets/kubetriage_logo.svg';
+import { Box, Loader2, Github, Chrome, ArrowRight, Lock, Mail, Terminal } from 'lucide-react';
+import logo from '../assets/kubetriage_logo.svg';
 
 interface LoginViewProps {
   onLogin: () => void;
@@ -22,89 +22,117 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLogin }) => {
   };
 
   return (
-    <div className="min-h-screen w-full flex items-center justify-center bg-gray-50 dark:bg-dark-bg transition-colors duration-300 p-4 relative overflow-hidden font-sans">
-      {/* Background Decor */}
-      <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
-        <div className="absolute -top-24 -left-24 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl"></div>
-        <div className="absolute top-1/2 right-0 w-64 h-64 bg-purple-500/10 rounded-full blur-3xl"></div>
-        <div className="absolute bottom-0 left-1/3 w-72 h-72 bg-indigo-500/5 rounded-full blur-3xl"></div>
+    <div className="min-h-screen w-full flex items-center justify-center bg-black selection:bg-primary-500/30 font-sans relative overflow-hidden">
+      {/* Dynamic Background */}
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_120%,rgba(14,165,233,0.1),rgba(0,0,0,0)_50%)]"></div>
+      <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-primary-900/10 rounded-full blur-[120px] -translate-y-1/2 translate-x-1/2 pointer-events-none"></div>
+      <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-indigo-900/10 rounded-full blur-[100px] translate-y-1/3 -translate-x-1/4 pointer-events-none"></div>
+
+      {/* Grid Pattern Overlay */}
+      <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 pointer-events-none"></div>
+
+      <div className="w-full max-w-md relative z-10 p-4">
+        {/* Card Container */}
+        <div className="bg-dark-card/60 backdrop-blur-2xl border border-white/10 rounded-[2.5rem] shadow-[0_0_50px_rgba(0,0,0,0.5)] p-8 md:p-12 relative overflow-hidden group animate-in fade-in zoom-in duration-700 slide-in-from-bottom-4">
+
+          {/* Top aesthetic border */}
+          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-primary-500 to-transparent opacity-50"></div>
+
+          <div className="flex flex-col items-center mb-10">
+            <div className="mb-6 p-4 bg-white/5 rounded-2xl border border-white/10 shadow-[0_0_20px_rgba(255,255,255,0.05)] group-hover:scale-110 transition-transform duration-500">
+              <img src={logo} alt="Logo" className="w-10 h-10 object-contain" />
+            </div>
+            <h1 className="text-3xl font-black text-white tracking-widest uppercase mb-2 font-display text-center drop-shadow-lg">
+              Neural<span className="text-primary-500">Ops</span>
+            </h1>
+            <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-[0.3em] text-center border-b border-white/5 pb-4 w-full">
+              KubeTriage Access Terminal
+            </p>
+          </div>
+
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="space-y-4">
+              <div className="relative group">
+                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500 group-focus-within:text-primary-400 transition-colors">
+                  <Mail className="w-4 h-4" />
+                </div>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full bg-black/40 border border-white/10 rounded-xl pl-11 pr-4 py-4 text-white text-sm font-medium placeholder:text-zinc-700 focus:outline-none focus:border-primary-500/50 focus:bg-black/60 focus:ring-1 focus:ring-primary-500/20 transition-all font-mono"
+                  placeholder="OPERATOR ID"
+                />
+              </div>
+
+              <div className="relative group">
+                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500 group-focus-within:text-primary-400 transition-colors">
+                  <Lock className="w-4 h-4" />
+                </div>
+                <input
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full bg-black/40 border border-white/10 rounded-xl pl-11 pr-4 py-4 text-white text-sm font-medium placeholder:text-zinc-700 focus:outline-none focus:border-primary-500/50 focus:bg-black/60 focus:ring-1 focus:ring-primary-500/20 transition-all font-mono"
+                  placeholder="ACCESS KEY"
+                />
+              </div>
+            </div>
+
+            <button
+              type="submit"
+              disabled={isLoading}
+              className="w-full bg-gradient-to-r from-primary-600 to-indigo-600 hover:from-primary-500 hover:to-indigo-500 text-white font-black uppercase tracking-widest py-4 rounded-xl transition-all shadow-lg shadow-primary-900/20 hover:shadow-primary-600/30 disabled:opacity-70 flex justify-center items-center gap-3 active:scale-[0.98] border border-white/10 group/btn mt-2"
+            >
+              {isLoading ? (
+                <Loader2 className="w-5 h-5 animate-spin" />
+              ) : (
+                <>
+                  Authenticate <ArrowRight className="w-4 h-4 group-hover/btn:translate-x-1 transition-transform" />
+                </>
+              )}
+            </button>
+          </form>
+
+          <div className="mt-8">
+            <div className="relative mb-6">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t border-white/5" />
+              </div>
+              <div className="relative flex justify-center text-[10px] uppercase font-bold tracking-wider">
+                <span className="bg-transparent px-3 text-zinc-600">Alternative Access Protocols</span>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <button
+                type="button"
+                onClick={() => window.location.href = '/api/auth/login'}
+                className="flex items-center justify-center gap-2 rounded-xl border border-white/5 bg-white/5 px-4 py-3 text-xs font-bold text-zinc-400 hover:text-white hover:bg-white/10 hover:border-white/20 transition-all"
+              >
+                <Chrome className="h-4 w-4" />
+                <span>GOOGLE CLOUD</span>
+              </button>
+              <button
+                type="button"
+                className="flex items-center justify-center gap-2 rounded-xl border border-white/5 bg-white/5 px-4 py-3 text-xs font-bold text-zinc-400 hover:text-white hover:bg-white/10 hover:border-white/20 transition-all"
+              >
+                <Github className="h-4 w-4" />
+                <span>GITHUB ENT</span>
+              </button>
+            </div>
+          </div>
+
+          <div className="mt-8 text-center">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/5 border border-emerald-500/10 text-[10px] font-mono text-emerald-500/70">
+              <Terminal className="w-3 h-3" /> SYSTEM ONLINE v2.4.0
+            </div>
+          </div>
+        </div>
       </div>
 
-      <div className="w-full max-w-md bg-white dark:bg-dark-card border border-gray-100 dark:border-white/5 rounded-[2.5rem] shadow-2xl p-10 relative z-10 animate-in fade-in zoom-in duration-700">
-        <div className="flex flex-col items-center mb-8">
-          <div className="mb-4">
-            <img src={logo} alt="Logo" className="w-12 h-12 object-contain" />
-          </div>
-          <h1 className="text-3xl font-black text-gray-900 dark:text-white tracking-tighter uppercase mb-1">Welcome back</h1>
-          <p className="text-[11px] font-black text-gray-500 dark:text-gray-400 uppercase tracking-widest">Sign in to KubeTriage Platform</p>
-        </div>
-
-        <form onSubmit={handleSubmit} className="space-y-5">
-          <div className="space-y-1.5">
-            <label className="text-xs font-semibold text-zinc-500 uppercase tracking-wider">Email Address</label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-lg px-4 py-2.5 text-zinc-900 dark:text-zinc-200 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all"
-              placeholder="name@company.com"
-            />
-          </div>
-          <div className="space-y-1.5">
-            <div className="flex justify-between">
-              <label className="text-xs font-semibold text-zinc-500 uppercase tracking-wider">Password</label>
-              <a href="#" className="text-xs text-blue-600 hover:text-blue-500 dark:text-blue-400">Forgot password?</a>
-            </div>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-lg px-4 py-2.5 text-zinc-900 dark:text-zinc-200 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all"
-              placeholder="••••••••"
-            />
-          </div>
-
-          <button
-            type="submit"
-            disabled={isLoading}
-            className="w-full bg-primary-600 hover:bg-primary-500 text-white font-black uppercase tracking-widest py-4 rounded-2xl transition-all shadow-xl shadow-primary-500/25 disabled:opacity-70 flex justify-center items-center gap-3 active:scale-[0.98]"
-          >
-            {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : <>Sign In <ArrowRight className="w-4 h-4" /></>}
-          </button>
-        </form>
-
-        <div className="mt-6">
-          <div className="relative">
-            <div className="absolute inset-0 flex items-center">
-              <span className="w-full border-t border-zinc-200 dark:border-zinc-800" />
-            </div>
-            <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-white dark:bg-zinc-900 px-2 text-zinc-500">Or continue with</span>
-            </div>
-          </div>
-
-          <div className="mt-6 grid grid-cols-2 gap-3">
-            <button
-              type="button"
-              onClick={() => window.location.href = '/api/auth/login'}
-              className="flex w-full items-center justify-center gap-2 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 px-4 py-2 text-sm font-medium text-zinc-700 dark:text-zinc-200 hover:bg-zinc-50 dark:hover:bg-zinc-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all"
-            >
-              <Chrome className="h-4 w-4" />
-              <span>Google</span>
-            </button>
-            <button
-              type="button"
-              className="flex w-full items-center justify-center gap-2 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 px-4 py-2 text-sm font-medium text-zinc-700 dark:text-zinc-200 hover:bg-zinc-50 dark:hover:bg-zinc-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all"
-            >
-              <Github className="h-4 w-4" />
-              <span>GitHub</span>
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <div className="absolute bottom-6 text-xs text-zinc-400">
-        &copy; 2026 KubeTriage Inc. All rights reserved.
+      <div className="absolute bottom-8 text-[10px] text-zinc-600 font-mono tracking-widest uppercase opacity-50">
+        &copy; 2026 Neural Ops Inc. Secure Terminal.
       </div>
     </div>
   );

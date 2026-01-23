@@ -84,16 +84,16 @@ export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = tr
       { name: 'Remaining', value: Math.max(0, isFinite(reliabilityMetrics.budgetPercentage) ? reliabilityMetrics.budgetPercentage : 0), color: isDarkMode ? '#27272a' : '#f4f4f5' },
    ];
 
-   const cardClass = "bg-white dark:bg-[#16191E] p-4 md:p-6 rounded-[2rem] border border-gray-100 dark:border-white/5 shadow-sm transition-all duration-300 hover:shadow-xl hover:shadow-primary-500/5 hover:-translate-y-0.5";
+   const cardClass = "bg-white dark:bg-dark-card p-4 md:p-6 rounded-4xl border border-gray-100 dark:border-white/5 shadow-sm transition-all duration-300 hover:shadow-2xl hover:shadow-primary-500/10 hover:-translate-y-1 cyber-card";
    const tooltipStyle = {
-      backgroundColor: isDarkMode ? '#16191E' : '#ffffff',
-      borderColor: isDarkMode ? 'rgba(255,255,255,0.1)' : '#f3f4f6',
+      backgroundColor: isDarkMode ? '#12151B' : '#ffffff',
+      borderColor: isDarkMode ? 'rgba(255,255,255,0.05)' : '#f3f4f6',
       color: isDarkMode ? '#fff' : '#111827',
-      borderRadius: '16px',
+      borderRadius: '1.5rem',
       border: '1px solid ' + (isDarkMode ? 'rgba(255,255,255,0.1)' : '#f3f4f6'),
       fontSize: '12px',
       fontWeight: '600',
-      padding: '8px 12px'
+      padding: '12px 16px'
    };
 
    // Loading State - Only show full page spinner on initial fetch (no data yet)
@@ -111,20 +111,23 @@ export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = tr
 
    if (workloads.length === 0) {
       return (
-         <div className="flex flex-col items-center justify-center min-h-[400px] animate-in fade-in duration-500">
-            <div className="p-6 bg-zinc-100 dark:bg-zinc-800 rounded-full mb-6 relative">
-               <Server className="w-12 h-12 text-zinc-400" />
-               <div className="absolute top-0 right-0 w-4 h-4 bg-amber-500 rounded-full animate-ping" />
+         <div className="flex flex-col items-center justify-center min-h-[600px] animate-in fade-in zoom-in-95 duration-700 bg-mesh">
+            <div className="relative mb-12">
+               <div className="absolute inset-0 bg-primary-500 rounded-full blur-[100px] opacity-10 animate-pulse"></div>
+               <div className="p-12 bg-dark-card rounded-full border border-white/5 relative z-10 shadow-2xl">
+                  <Server className="w-16 h-16 text-gray-600" />
+               </div>
+               <div className="absolute -top-2 -right-2 w-6 h-6 bg-accent-rose rounded-full animate-ping" />
             </div>
-            <h2 className="text-2xl font-black text-zinc-900 dark:text-white uppercase tracking-tighter mb-2">No Workloads Found</h2>
-            <p className="text-zinc-500 max-w-md text-center mb-8">
-               We couldn&apos;t detect any compatible workloads in this cluster. This might be due to missing RBAC permissions or an empty namespace.
+            <h2 className="text-4xl font-black text-gray-900 dark:text-white uppercase tracking-tighter mb-4 font-display">Ghost Fleet Detected</h2>
+            <p className="text-gray-500 max-w-sm text-center mb-10 text-sm font-medium leading-relaxed opacity-70">
+               Zero active target vectors in the current sector. Synchronize RBAC headers or switch to a populated cluster sector.
             </p>
             <button
                onClick={() => onRefresh?.()}
-               className="px-6 py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl shadow-lg hover:scale-105 transition-all flex items-center gap-2"
+               className="px-12 py-5 bg-primary-600 hover:bg-primary-500 text-white font-black text-[11px] uppercase tracking-[0.2em] rounded-3xl shadow-2xl shadow-primary-500/20 active:scale-95 transition-all flex items-center gap-3 border-b-4 border-primary-800"
             >
-               <Activity className="w-4 h-4" /> Refresh Dashboard
+               <Activity className="w-4 h-4" /> Re-Scan Sector
             </button>
          </div>
       );
@@ -158,89 +161,94 @@ export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = tr
    return (
       <div className="space-y-5 md:space-y-6 animate-in fade-in duration-500">
 
-         {/* Priority Investigation Hero - Focused on ingress-nginx network issues */}
-         <section className="relative group animate-in slide-in-from-top-4 duration-700">
-            <div className="absolute inset-0 bg-gradient-to-r from-primary-600/20 to-purple-600/20 rounded-[3rem] blur-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-            <div className="relative bg-[#16191E] dark:bg-[#0A0C0E] rounded-[3rem] p-6 md:p-10 border border-white/5 shadow-2xl overflow-hidden">
-               <div className="flex flex-col lg:flex-row items-center gap-10">
+         {/* Priority Investigation Hero */}
+         <section className="relative group perspective-1000">
+            <div className="absolute -inset-1 bg-gradient-to-r from-primary-600 to-accent-violet rounded-5xl blur-2xl opacity-10 group-hover:opacity-30 transition-opacity duration-1000"></div>
+            <div className="relative bg-dark-bg/90 rounded-5xl p-8 md:p-14 border border-white/10 shadow-[0_40px_100px_rgba(0,0,0,0.6)] overflow-hidden cyber-card">
+               {/* Background Elements */}
+               <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-primary-600/10 rounded-full blur-[140px] -translate-y-1/2 translate-x-1/2 pointer-events-none"></div>
+               <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-accent-violet/10 rounded-full blur-[120px] translate-y-1/2 -translate-x-1/2 pointer-events-none"></div>
+               <div className="absolute inset-0 bg-mesh opacity-20 pointer-events-none"></div>
+
+               <div className="flex flex-col lg:flex-row items-center gap-12 relative z-10">
                   <div className="relative shrink-0">
-                     <div className="p-8 bg-primary-500/10 rounded-[2.5rem] border border-primary-500/20 shadow-inner">
-                        <Network className="w-14 h-14 text-primary-400 animate-pulse" />
+                     <div className="p-12 bg-dark-card rounded-4xl border border-white/10 shadow-inner group-hover:border-primary-500/50 transition-colors duration-500 neon-border">
+                        <Network className="w-20 h-20 text-primary-400 animate-pulse" />
                      </div>
-                     <div className="absolute -top-3 -right-3 w-8 h-8 bg-rose-500 rounded-full flex items-center justify-center text-xs font-black text-white shadow-lg animate-bounce border-4 border-[#16191E]">1</div>
+                     <div className="absolute -top-4 -right-4 w-12 h-12 bg-accent-rose rounded-3xl flex items-center justify-center text-[12px] font-black text-white shadow-2xl border-4 border-dark-bg neon-text">CRITICAL</div>
                   </div>
 
                   <div className="flex-1 text-center lg:text-left">
-                     <div className="flex flex-wrap justify-center lg:justify-start items-center gap-3 mb-6">
-                        <span className="px-4 py-1.5 rounded-full bg-rose-500/10 text-rose-500 border border-rose-500/20 text-[11px] font-black uppercase tracking-widest shadow-sm">Priority investigation</span>
-                        <span className="px-4 py-1.5 rounded-full bg-primary-500/10 text-primary-400 border border-primary-500/20 text-[11px] font-black uppercase tracking-widest flex items-center gap-2 shadow-sm">
-                           <Wifi className="w-4 h-4" /> Network connectivity
-                        </span>
+                     <div className="flex flex-wrap justify-center lg:justify-start items-center gap-6 mb-10">
+                        <span className="px-6 py-2.5 rounded-full bg-accent-rose/10 text-accent-rose border border-accent-rose/20 text-[10px] font-black uppercase tracking-[0.3em] font-display">Neural High-Priority</span>
+                        <div className="flex items-center gap-3 px-6 py-2.5 rounded-full bg-primary-500/10 text-primary-400 border border-primary-500/20 text-[10px] font-black uppercase tracking-[0.3em] font-display">
+                           <Wifi className="w-5 h-5" /> Live Ingress Vector
+                        </div>
                      </div>
-                     <h2 className="text-3xl md:text-5xl font-black text-white uppercase tracking-tighter mb-4 leading-none">
-                        Diagnose: <span className="text-primary-400">ingress-nginx</span>
+                     <h2 className="text-5xl md:text-7xl font-black text-white uppercase tracking-tighter font-display mb-8 leading-none">
+                        Link Breach: <span className="bg-gradient-to-r from-primary-400 to-accent-cyan bg-clip-text text-transparent underline decoration-accent-rose/30 decoration-8 underline-offset-12">ingress-svc</span>
                      </h2>
-                     <p className="text-gray-400 text-base font-medium max-w-2xl leading-relaxed">
-                        Critical upstream latency detected. Multiple 504 Gateway Timeouts reported in production. AI suggests a targeted connectivity triage of the NGINX control plane.
+                     <p className="text-gray-400 text-xl font-medium max-w-2xl leading-relaxed opacity-90">
+                        Detected erratic upstream latency spikes. 504 Gateway errors are proliferating across the prod sector. AI suggests an immediate network fabric injection.
                      </p>
                   </div>
 
-                  <div className="shrink-0 flex flex-col gap-4 w-full lg:w-auto">
+                  <div className="shrink-0 flex flex-col gap-8 w-full lg:w-auto">
                      <button
                         onClick={() => onTriageRequest?.('w-6', 'Network Connectivity')}
-                        className="bg-white text-[#0A0C0E] px-10 py-5 rounded-2xl text-[11px] font-black uppercase tracking-[0.2em] shadow-2xl hover:bg-primary-50 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-3 group/btn"
+                        className="bg-white text-dark-bg px-16 py-8 rounded-[2.5rem] text-[12px] font-black uppercase tracking-[0.3em] shadow-2xl hover:bg-primary-50 hover:scale-[1.08] active:scale-95 transition-all flex items-center justify-center gap-4 group/btn border-b-8 border-gray-200"
                      >
-                        <Sparkles className="w-5 h-5 text-primary-600" />
-                        Initialize Diagnostic
-                        <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                        <Sparkles className="w-6 h-6 text-primary-600 animate-pulse" />
+                        Execute AI Triage
+                        <ArrowRight className="w-6 h-6 group-hover:translate-x-2 transition-transform" />
                      </button>
-                     <div className="flex items-center justify-center gap-2.5 text-[11px] font-black text-gray-500 uppercase tracking-[0.1em]">
-                        <SearchCode className="w-4 h-4" /> Analyzing logs & topology
+                     <div className="flex items-center justify-center gap-4 text-[11px] font-black text-gray-500 uppercase tracking-[0.3em] font-display">
+                        <span className="w-2 h-2 rounded-full bg-primary-500 animate-ping"></span>
+                        Neural Core Scanning...
                      </div>
                   </div>
                </div>
-               {/* Design detail */}
-               <div className="absolute -bottom-24 -right-24 w-64 h-64 bg-primary-500/10 rounded-full blur-[100px] pointer-events-none"></div>
-               <div className="absolute -top-24 -left-24 w-64 h-64 bg-purple-500/10 rounded-full blur-[100px] pointer-events-none"></div>
             </div>
          </section>
 
          {/* Top Metrics Grid */}
-         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
-            <div className={`${cardClass} animate-in fade-in slide-in-from-bottom-2 duration-500 delay-[100ms]`}>
-               <div className="flex justify-between items-start mb-6">
-                  <div className="p-2.5 bg-primary-500/10 rounded-2xl text-primary-600 dark:text-primary-400 shadow-sm"><DollarSign className="w-6 h-6" /></div>
-                  <span className="text-[11px] font-black text-primary-500 bg-primary-500/5 px-2 py-0.5 rounded-full uppercase tracking-widest border border-primary-500/10">+4.2%</span>
+         <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
+            <div className={`${cardClass} animate-in fade-in slide-in-from-bottom-4 duration-700 delay-[100ms] neon-border`}>
+               <div className="flex justify-between items-start mb-8">
+                  <div className="p-4 bg-primary-500/10 rounded-3xl text-primary-400 border border-primary-500/20 shadow-[0_0_15px_rgba(14,165,233,0.1)]"><DollarSign className="w-8 h-8" /></div>
+                  <div className="flex flex-col items-end">
+                     <span className="text-[10px] font-black text-primary-500 bg-primary-500/10 px-3 py-1 rounded-lg uppercase tracking-[0.2em] border border-primary-500/20 mb-1">+4.2%</span>
+                  </div>
                </div>
-               <p className="text-gray-500 dark:text-gray-400 text-[11px] font-black uppercase tracking-[0.15em] leading-none mb-3">OpEx Monthly</p>
-               <h3 className="text-2xl md:text-3xl font-black text-gray-900 dark:text-white tracking-tighter leading-none">${totalCost.toLocaleString()}</h3>
+               <p className="text-gray-500 text-[10px] font-black uppercase tracking-[0.3em] mb-4 font-display">Neural Burn Rate</p>
+               <h3 className="text-4xl font-black text-gray-900 dark:text-white tracking-tighter font-display leading-none">${totalCost.toLocaleString()}</h3>
             </div>
 
-            <div className={`${cardClass} animate-in fade-in slide-in-from-bottom-2 duration-500 delay-[200ms]`}>
-               <div className="flex justify-between items-start mb-6">
-                  <div className="p-2.5 bg-emerald-500/10 rounded-2xl text-emerald-600 dark:text-emerald-400 shadow-sm"><Activity className="w-6 h-6" /></div>
-                  <span className="text-[11px] font-black text-emerald-500 bg-emerald-500/5 px-2 py-0.5 rounded-full uppercase tracking-widest border border-emerald-500/10">Healthy</span>
+            <div className={`${cardClass} animate-in fade-in slide-in-from-bottom-4 duration-700 delay-[200ms]`}>
+               <div className="flex justify-between items-start mb-8">
+                  <div className="p-4 bg-emerald-500/10 rounded-3xl text-emerald-400 border border-emerald-500/20 shadow-[0_0_15px_rgba(16,185,129,0.1)]"><Activity className="w-8 h-8" /></div>
+                  <span className="text-[10px] font-black text-emerald-400 bg-emerald-500/10 px-3 py-1 rounded-lg uppercase tracking-[0.2em] border border-emerald-500/20">Operational</span>
                </div>
-               <p className="text-gray-500 dark:text-gray-400 text-[11px] font-black uppercase tracking-[0.15em] leading-none mb-3">Fleet Integrity</p>
-               <h3 className="text-2xl md:text-3xl font-black text-gray-900 dark:text-white tracking-tighter leading-none">{Math.round((1 - (criticalCount / workloads.length)) * 100)}%</h3>
+               <p className="text-gray-500 text-[10px] font-black uppercase tracking-[0.3em] mb-4 font-display">Cluster Fidelity</p>
+               <h3 className="text-4xl font-black text-gray-900 dark:text-white tracking-tighter font-display leading-none">{Math.round((1 - (criticalCount / workloads.length)) * 100)}%</h3>
             </div>
 
-            <div className={`${cardClass} animate-in fade-in slide-in-from-bottom-2 duration-500 delay-[300ms]`}>
-               <div className="flex justify-between items-start mb-6">
-                  <div className="p-2.5 bg-purple-500/10 rounded-2xl text-purple-600 dark:text-purple-400 shadow-sm"><TrendingDown className="w-6 h-6" /></div>
-                  <span className="text-[11px] font-black text-purple-500 bg-purple-500/5 px-2 py-0.5 rounded-full uppercase tracking-widest border border-purple-500/10">Optimizable</span>
+            <div className={`${cardClass} animate-in fade-in slide-in-from-bottom-4 duration-700 delay-[300ms]`}>
+               <div className="flex justify-between items-start mb-8">
+                  <div className="p-4 bg-accent-violet/10 rounded-3xl text-accent-violet border border-accent-violet/20 shadow-[0_0_15px_rgba(139,92,246,0.1)]"><TrendingDown className="w-8 h-8" /></div>
+                  <span className="text-[10px] font-black text-accent-violet bg-accent-violet/10 px-3 py-1 rounded-lg uppercase tracking-[0.2em] border border-accent-violet/20">Recovery</span>
                </div>
-               <p className="text-gray-500 dark:text-gray-400 text-[11px] font-black uppercase tracking-[0.15em] leading-none mb-3">Waste Forecast</p>
-               <h3 className="text-2xl md:text-3xl font-black text-gray-900 dark:text-white tracking-tighter leading-none">${Math.round(potentialSavings).toLocaleString()}</h3>
+               <p className="text-gray-500 text-[10px] font-black uppercase tracking-[0.3em] mb-4 font-display">Waste Forecast</p>
+               <h3 className="text-4xl font-black text-gray-900 dark:text-white tracking-tighter font-display leading-none">${Math.round(potentialSavings).toLocaleString()}</h3>
             </div>
 
-            <div className={`${cardClass} animate-in fade-in slide-in-from-bottom-2 duration-500 delay-[400ms]`}>
-               <div className="flex justify-between items-start mb-6">
-                  <div className="p-2.5 bg-orange-500/10 rounded-2xl text-orange-600 dark:text-orange-400 shadow-sm"><Box className="w-6 h-6" /></div>
-                  <span className="text-[11px] font-black text-orange-500 bg-orange-500/5 px-2 py-0.5 rounded-full uppercase tracking-widest border border-orange-500/10">{workloads.length} Units</span>
+            <div className={`${cardClass} animate-in fade-in slide-in-from-bottom-4 duration-700 delay-[400ms]`}>
+               <div className="flex justify-between items-start mb-8">
+                  <div className="p-4 bg-accent-cyan/10 rounded-3xl text-accent-cyan border border-accent-cyan/20 shadow-[0_0_15px_rgba(34,211,238,0.1)]"><Box className="w-8 h-8" /></div>
+                  <span className="text-[10px] font-black text-accent-cyan bg-accent-cyan/10 px-3 py-1 rounded-lg uppercase tracking-[0.2em] border border-accent-cyan/20">{workloads.length} UNITS</span>
                </div>
-               <p className="text-gray-500 dark:text-gray-400 text-[11px] font-black uppercase tracking-[0.15em] leading-none mb-3">Active Services</p>
-               <h3 className="text-2xl md:text-3xl font-black text-gray-900 dark:text-white tracking-tighter leading-none">Ready</h3>
+               <p className="text-gray-500 text-[10px] font-black uppercase tracking-[0.3em] mb-4 font-display">Active Vectors</p>
+               <h3 className="text-4xl font-black text-gray-900 dark:text-white tracking-tighter font-display leading-none">Healthy</h3>
             </div>
          </div>
 
@@ -315,10 +323,10 @@ export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = tr
                </div>
             </div>
 
-            <div className="lg:col-span-3 bg-white dark:bg-[#16191E] rounded-[2rem] border border-gray-100 dark:border-white/5 p-6 md:p-8 flex flex-col shadow-sm h-full animate-in fade-in slide-in-from-right-4 duration-700 delay-200">
-               <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-10">
-                  <h3 className="text-[11px] font-black uppercase tracking-[0.2em] text-gray-500 dark:text-gray-400 flex items-center gap-2.5">
-                     <Zap className="w-4 h-4 text-primary-500 shadow-[0_0_8px_rgba(14,165,233,0.4)]" /> Resource Saturation
+            <div className="lg:col-span-3 bg-white dark:bg-dark-card rounded-5xl border border-gray-100 dark:border-white/5 p-8 md:p-12 flex flex-col shadow-sm h-full animate-in fade-in slide-in-from-right-6 duration-700 delay-200 cyber-card">
+               <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-12">
+                  <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-400 dark:text-gray-500 flex items-center gap-3 font-display">
+                     <Zap className="w-5 h-5 text-primary-500 shadow-[0_0_15px_rgba(14,165,233,0.4)]" /> Resource Saturation
                   </h3>
                   <div className="flex flex-wrap items-center gap-2 justify-end">
                      {/* Timeframe Selector */}
@@ -430,12 +438,12 @@ export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = tr
 
                            // Saturation Bar Color
                            const colorClass = isUnbounded
-                              ? 'bg-gray-200 dark:bg-gray-700'
+                              ? 'bg-gray-200 dark:bg-gray-800'
                               : isCritical
-                                 ? 'bg-gradient-to-r from-rose-500 to-pink-600 shadow-[0_0_12px_rgba(244,63,94,0.3)]'
+                                 ? 'bg-gradient-to-r from-accent-rose to-pink-600 shadow-[0_0_15px_rgba(244,63,94,0.4)]'
                                  : isWarning
-                                    ? 'bg-gradient-to-r from-amber-400 to-orange-500 shadow-[0_0_12px_rgba(245,158,11,0.2)]'
-                                    : 'bg-gradient-to-r from-primary-400 to-teal-500 shadow-[0_0_12px_rgba(56,189,248,0.2)]';
+                                    ? 'bg-gradient-to-r from-amber-400 to-orange-500 shadow-[0_0_15px_rgba(245,158,11,0.3)]'
+                                    : 'bg-gradient-to-r from-primary-400 to-accent-cyan shadow-[0_0_15px_rgba(14,165,233,0.3)]';
 
                            return (
                               <div
@@ -493,21 +501,21 @@ export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = tr
          </div>
 
          {/* Error Budget Section */}
-         <div className="bg-white dark:bg-[#16191E] rounded-[3rem] border border-gray-100 dark:border-white/5 overflow-hidden shadow-sm animate-in fade-in slide-in-from-bottom-6 duration-700 delay-500">
-            <div className="p-10 border-b border-gray-50 dark:border-white/5 flex justify-between items-center bg-gray-50/20 dark:bg-dark-bg/20">
-               <div className="flex items-center gap-6">
-                  <div className="p-4 bg-primary-500/10 rounded-[1.5rem] text-primary-500 shadow-lg shadow-primary-500/5">
-                     <ShieldAlert className="w-9 h-9" />
+         <div className="bg-white dark:bg-dark-card rounded-5xl border border-gray-100 dark:border-white/5 overflow-hidden shadow-sm animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-500 cyber-card">
+            <div className="p-12 border-b border-gray-50 dark:border-white/5 flex flex-col md:flex-row justify-between items-center gap-8 bg-gray-50/20 dark:bg-white/[0.02]">
+               <div className="flex items-center gap-8">
+                  <div className="p-6 bg-primary-500/10 rounded-4xl text-primary-500 shadow-[0_0_30px_rgba(14,165,233,0.15)] border border-primary-500/20">
+                     <ShieldAlert className="w-10 h-10" />
                   </div>
                   <div>
-                     <h3 className="text-3xl font-black tracking-tighter uppercase text-gray-900 dark:text-white leading-none mb-2">Reliability Control</h3>
-                     <p className="text-[11px] font-black uppercase tracking-[0.3em] text-gray-500 dark:text-gray-400">30-Day Rolling Error Budget Window</p>
+                     <h3 className="text-4xl font-black tracking-tight uppercase text-gray-900 dark:text-white leading-none mb-3 font-display">System Resilience</h3>
+                     <p className="text-[10px] font-black uppercase tracking-[0.4em] text-gray-500 dark:text-gray-500">30-Day Autonomous Error Budget</p>
                   </div>
                </div>
-               <div className="flex items-center gap-8">
+               <div className="flex items-center gap-12">
                   <div className="text-right">
-                     <p className="text-[11px] font-black uppercase tracking-[0.2em] text-gray-500 dark:text-gray-401 leading-none mb-2">Target SLO</p>
-                     <p className="text-3xl font-black text-primary-500 dark:text-primary-400 leading-none font-mono">{reliabilityMetrics.slo}%</p>
+                     <p className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-400 leading-none mb-3 font-display">Operational SLO</p>
+                     <p className="text-4xl font-black text-primary-500 dark:text-primary-400 leading-none font-mono">{reliabilityMetrics.slo}%</p>
                   </div>
                </div>
             </div>

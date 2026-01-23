@@ -4,18 +4,20 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"strings"
 
+	"github.com/aavishay/kubetriage/backend/internal/ai"
 	"github.com/aavishay/kubetriage/backend/internal/db"
 	"github.com/aavishay/kubetriage/backend/internal/integrations"
 	"github.com/aavishay/kubetriage/backend/internal/k8s"
+	"github.com/aavishay/kubetriage/backend/internal/triage"
 
-	// "github.com/aavishay/kubetriage/backend/internal/ai" // Assuming existing AI service package
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func RunWorkloadScanner() {
+func RunWorkloadScanner(aiService *ai.AIService) {
 	log.Println("RunWorkloadScanner: Starting scan...")
 	manager := k8s.GetClusterManager()
 	if manager == nil {
@@ -48,7 +50,8 @@ func RunWorkloadScanner() {
 					break
 				}
 				if !containerStatus.Ready && containerStatus.State.Waiting != nil {
-					if containerStatus.State.Waiting.Reason == "CrashLoopBackOff" || containerStatus.State.Waiting.Reason == "ImagePullBackOff" {
+					reason := containerStatus.State.Waiting.Reason
+					if reason == "CrashLoopBackOff" || reason == "ImagePullBackOff" || reason == "CreateContainerConfigError" || reason == "ErrImagePull" {
 						isRisky = true
 						break
 					}
@@ -56,14 +59,11 @@ func RunWorkloadScanner() {
 			}
 
 			if isRisky {
-				// Deduplicate: Check if we have an unread report for this workload in the last hour?
-				// For simplified MVP, just check if ANY unread report exists
+				// Deduplicate: Check if we have an unread report for this workload
 				var existingReport db.TriageReport
-				// Use Silent logger to avoid "record not found" spam in logs
 				result := db.DB.Session(&gorm.Session{Logger: db.DB.Logger.LogMode(logger.Silent)}).Where("cluster_id = ? AND namespace = ? AND workload_name = ? AND is_read = ?", cluster.ID, pod.Namespace, pod.Name, false).First(&existingReport)
 
 				if result.Error == nil {
-					// Found an existing unread report, skip to avoid spam
 					continue
 				} else if result.Error != gorm.ErrRecordNotFound {
 					log.Printf("DB error checking reports: %v", result.Error)
@@ -73,29 +73,54 @@ func RunWorkloadScanner() {
 				// Trigger AI Analysis
 				log.Printf("Triggering Proactive Analysis for %s/%s", pod.Namespace, pod.Name)
 
-				// TODO: Call actual AI service. For now, creating a mock report.
-				// In real impl: analysis, err := ai.AnalyzeLogs(...)
-				analysis := fmt.Sprintf("## Proactive Alert\n\nPod `%s` in namespace `%s` is exhibiting instability.\n\n**Detected Issues:**\n- High Restart Count\n- Potential CrashLoopBackOff\n\n**Recommendation:** Check logs and resources.", pod.Name, pod.Namespace)
+				if aiService == nil {
+					log.Println("Warning: AIService not available for proactive scan.")
+					continue
+				}
+
+				// Prepare Request
+				req := ai.AnalyzeWorkloadRequest{
+					WorkloadName: pod.Name,
+					Namespace:    pod.Namespace,
+					Kind:         "Pod",
+					Status:       string(pod.Status.Phase),
+					Playbook:     "General Health",
+					Instructions: "Proactive background triage of a failing pod detected by Cluster Watcher.",
+				}
+
+				// Enrich
+				triage.EnrichAnalyzeRequest(context.Background(), client, &req)
+
+				// Analyze
+				analysis, err := aiService.AnalyzeWorkload(context.Background(), req)
+				if err != nil {
+					log.Printf("Error during proactive AI analysis: %v", err)
+					analysis = fmt.Sprintf("AI Analysis failed: %v. Manual investigation required for %s/%s", err, pod.Namespace, pod.Name)
+				}
+
 				severity := "High"
+				if strings.Contains(strings.ToLower(analysis), "critical") {
+					severity = "Critical"
+				}
 
 				report := db.TriageReport{
 					ClusterID:    cluster.ID,
 					Namespace:    pod.Namespace,
-					WorkloadName: pod.Name, // Using Pod name as proxy for workload for now
+					WorkloadName: pod.Name,
 					Kind:         "Pod",
 					Analysis:     analysis,
 					Severity:     severity,
 				}
 
 				if err := db.DB.Create(&report).Error; err != nil {
-					log.Printf("Error saving report: %v", err)
+					log.Printf("Error saving proactive report: %v", err)
 				}
 
 				// Send Slack Notification
 				if severity == "High" || severity == "Critical" {
 					go integrations.SendSlackAlert(
-						fmt.Sprintf("🚨 AI Alert: %s/%s", pod.Namespace, pod.Name),
-						fmt.Sprintf("Cluster: %s\nDetected instability. Check Dashboard for full analysis.", cluster.Name),
+						fmt.Sprintf("🚨 Proactive Triage: %s/%s", pod.Namespace, pod.Name),
+						fmt.Sprintf("Cluster: %s\nIssue detected and triaged by AI Copilot.\n\n*Summary:*\n%s", cluster.Name, truncate(analysis, 500)),
 						severity,
 						nil,
 					)
@@ -104,4 +129,11 @@ func RunWorkloadScanner() {
 		}
 	}
 	log.Println("RunWorkloadScanner: Scan complete.")
+}
+
+func truncate(s string, max int) string {
+	if len(s) <= max {
+		return s
+	}
+	return s[:max] + "..."
 }

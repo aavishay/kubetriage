@@ -87,103 +87,123 @@ export const ReportsView: React.FC<ReportsViewProps> = ({ isDarkMode = true }) =
     );
 
     return (
-        <div className="space-y-12 pb-20 font-sans">
+        <div className="space-y-12 pb-20 font-sans custom-scrollbar h-full overflow-y-auto px-4">
             {/* Hero Header */}
-            <div className="bg-white dark:bg-dark-card rounded-[3.5rem] p-10 md:p-14 text-gray-900 dark:text-white relative overflow-hidden shadow-2xl border border-gray-100 dark:border-white/5">
-                <div className="relative z-10 max-w-2xl">
-                    <div className="inline-flex items-center gap-2 bg-primary-500/10 text-primary-500 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest mb-6 border border-primary-500/20">
-                        <Shield className="w-4 h-4" /> Compliance & Audit
+            <div className="relative rounded-[3rem] p-10 md:p-14 overflow-hidden shadow-2xl border border-white/5 group">
+                {/* Dynamic Background */}
+                <div className="absolute inset-0 bg-dark-card/80 backdrop-blur-xl z-0"></div>
+                <div className="absolute inset-0 bg-gradient-to-br from-primary-900/20 via-black/50 to-indigo-900/20 z-0"></div>
+
+                {/* Animated Orbs */}
+                <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-primary-600/10 rounded-full -mr-48 -mt-48 blur-[120px] animate-pulse pointer-events-none" />
+                <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-indigo-600/10 rounded-full -ml-48 -mb-48 blur-[100px] pointer-events-none" />
+
+                <div className="relative z-10 max-w-3xl">
+                    <div className="inline-flex items-center gap-2 bg-emerald-500/10 text-emerald-400 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest mb-6 border border-emerald-500/20 shadow-[0_0_15px_rgba(16,185,129,0.1)]">
+                        <Shield className="w-3.5 h-3.5" /> Compliance & Neural Audit
                     </div>
-                    <h1 className="text-5xl font-black mb-4 tracking-tighter leading-none uppercase">Reporting Center</h1>
-                    <p className="text-gray-500 dark:text-gray-400 text-lg mb-10 leading-relaxed font-bold uppercase tracking-tight opacity-80">
-                        Generate compliance artifacts and review historical AI triage analysis.
+                    <h1 className="text-5xl md:text-6xl font-black mb-4 tracking-tight leading-none text-white font-display uppercase drop-shadow-xl">
+                        Reporting Center
+                    </h1>
+                    <p className="text-zinc-400 text-lg mb-10 leading-relaxed font-light tracking-wide max-w-2xl border-l-2 border-primary-500 pl-6">
+                        Generate compliance artifacts and review historical AI triage correlations. Access your SOC 2 audit logs and past incident analyses.
                     </p>
 
                     <div className="flex flex-wrap gap-4">
                         <button
                             onClick={handleDownloadCompliance}
-                            className="flex items-center gap-3 bg-primary-600 text-white hover:bg-primary-700 px-10 py-5 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all shadow-2xl shadow-primary-500/30 hover:scale-105 active:scale-95"
+                            className="flex items-center gap-3 bg-white text-black hover:bg-zinc-200 px-8 py-4 rounded-xl font-black text-xs uppercase tracking-widest transition-all shadow-[0_0_20px_rgba(255,255,255,0.15)] hover:shadow-[0_0_30px_rgba(255,255,255,0.25)] hover:-translate-y-1 active:scale-95 active:translate-y-0"
                         >
-                            <Download className="w-4 h-4" /> Download SOC2 Report (PDF)
+                            <Download className="w-4 h-4" /> Download SOC2 Report
                         </button>
                     </div>
                 </div>
-                {/* Background Decor */}
-                <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-blue-600/10 rounded-full -mr-48 -mt-48 blur-[100px]" />
-                <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-indigo-600/5 rounded-full -ml-48 -mb-48 blur-[100px]" />
             </div>
 
             {/* Available Reports Section */}
-            <section>
-                <div className="flex items-center justify-between mb-8">
+            <section className="space-y-6">
+                <div className="flex items-center justify-between">
                     <div>
-                        <h2 className="text-2xl font-black text-zinc-900 dark:text-white flex items-center gap-3 tracking-tighter uppercase">
-                            <FileCheck className="w-6 h-6 text-emerald-500" /> Available Reports
+                        <h2 className="text-2xl font-black text-white flex items-center gap-3 tracking-wide font-display uppercase">
+                            <div className="p-2 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-lg shadow-lg shadow-emerald-500/20">
+                                <FileCheck className="w-5 h-5 text-white" />
+                            </div>
+                            Available Artifacts
                         </h2>
-                        <p className="text-sm text-zinc-500 font-semibold mt-1">Ready-to-export compliance and operational documents</p>
+                        <p className="text-sm text-zinc-500 font-medium mt-2 pl-12">Ready-to-export compliance documents</p>
                     </div>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {/* SOC2 Card */}
-                    <div className="bg-white dark:bg-dark-card border border-gray-100 dark:border-white/5 rounded-[2.5rem] p-8 flex flex-col hover:shadow-2xl transition-all group cursor-pointer" onClick={handleDownloadCompliance}>
-                        <div className="p-4 rounded-2xl w-fit mb-6 bg-primary-500/10 text-primary-500">
-                            <Shield className="w-7 h-7" />
-                        </div>
-                        <h3 className="text-xl font-black text-gray-900 dark:text-white mb-2 tracking-tighter uppercase">SOC 2 Compliance Audit</h3>
-                        <p className="text-[11px] text-gray-400 dark:text-gray-500 mb-8 flex-1 leading-relaxed font-black uppercase tracking-widest">
-                            Complete audit log of all sensitive user actions, authentication events, and configuration changes filtered by project.
-                        </p>
-                        <div className="flex items-center gap-2 text-[10px] font-black uppercase text-primary-500">
-                            <span className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]" /> Ready for Download
+                    <div className="bg-dark-card/50 backdrop-blur-md border border-white/5 rounded-[2rem] p-8 flex flex-col hover:border-primary-500/30 hover:bg-white/5 transition-all cursor-pointer group relative overflow-hidden" onClick={handleDownloadCompliance}>
+                        <div className="absolute inset-0 bg-gradient-to-br from-primary-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+
+                        <div className="relative z-10">
+                            <div className="p-4 rounded-2xl w-fit mb-6 bg-primary-500/10 text-primary-400 border border-primary-500/20 group-hover:scale-110 transition-transform duration-500">
+                                <Shield className="w-8 h-8" />
+                            </div>
+                            <h3 className="text-2xl font-black text-white mb-3 tracking-wide font-display uppercase">SOC 2 Compliance Audit</h3>
+                            <p className="text-sm text-zinc-400 mb-8 flex-1 leading-relaxed font-light">
+                                Complete audit log of all sensitive user actions, authentication events, and configuration changes filtered by project scope.
+                            </p>
+                            <div className="flex items-center gap-2 text-[10px] font-bold uppercase text-emerald-400 tracking-widest">
+                                <span className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_10px_currentColor] animate-pulse" /> Ready for Download
+                            </div>
                         </div>
                     </div>
 
-                    {/* Workload Health Card (Placeholder for future) */}
-                    <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-[2rem] p-8 flex flex-col hover:shadow-xl transition-all group opacity-60">
-                        <div className="p-4 rounded-2xl w-fit mb-6 bg-purple-500/10 text-purple-500">
-                            <Activity className="w-7 h-7" />
-                        </div>
-                        <h3 className="text-lg font-black text-zinc-900 dark:text-white mb-2 tracking-tight">Cluster Health Summary</h3>
-                        <p className="text-xs text-zinc-500 dark:text-zinc-400 mb-6 flex-1 leading-relaxed font-medium">
-                            Monthly aggregated uptime, resource utilization, and incident frequency report.
-                        </p>
-                        <div className="flex items-center gap-2 text-[10px] font-black uppercase text-zinc-400">
-                            <span className="w-2 h-2 rounded-full bg-zinc-600" /> Coming Soon
+                    {/* Workload Health Card */}
+                    <div className="bg-dark-card/30 backdrop-blur-sm border border-white/5 rounded-[2rem] p-8 flex flex-col opacity-75 hover:opacity-100 transition-all group relative overflow-hidden grayscale hover:grayscale-0">
+                        <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                        <div className="relative z-10">
+                            <div className="p-4 rounded-2xl w-fit mb-6 bg-purple-500/10 text-purple-400 border border-purple-500/20">
+                                <Activity className="w-8 h-8" />
+                            </div>
+                            <h3 className="text-2xl font-black text-white mb-3 tracking-wide font-display uppercase">Cluster Health Summary</h3>
+                            <p className="text-sm text-zinc-400 mb-8 flex-1 leading-relaxed font-light">
+                                Monthly aggregated uptime, resource utilization signals, and incident frequency matrices.
+                            </p>
+                            <div className="flex items-center gap-2 text-[10px] font-bold uppercase text-zinc-500 tracking-widest">
+                                <span className="w-2 h-2 rounded-full bg-zinc-600" /> Coming Soon
+                            </div>
                         </div>
                     </div>
                 </div>
             </section>
 
             {/* History Section */}
-            <section>
-                <div className="flex items-center justify-between mb-8">
+            <section className="space-y-6">
+                <div className="flex items-center justify-between">
                     <div>
-                        <h2 className="text-2xl font-black text-zinc-900 dark:text-white flex items-center gap-3 tracking-tighter uppercase">
-                            <Clock className="w-6 h-6 text-indigo-500" /> Analysis History
+                        <h2 className="text-2xl font-black text-white flex items-center gap-3 tracking-wide font-display uppercase">
+                            <div className="p-2 bg-gradient-to-br from-indigo-500 to-violet-600 rounded-lg shadow-lg shadow-indigo-500/20">
+                                <Clock className="w-5 h-5 text-white" />
+                            </div>
+                            Neural Analysis History
                         </h2>
-                        <p className="text-sm text-zinc-500 font-semibold mt-1">Archive of AI-generated triage reports</p>
+                        <p className="text-sm text-zinc-500 font-medium mt-2 pl-12">Archive of AI-generated triage reports</p>
                     </div>
 
                     <div className="flex items-center gap-4">
-                        <div className="relative">
-                            <Search className="w-4 h-4 text-zinc-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                        <div className="relative group">
+                            <Search className="w-4 h-4 text-zinc-500 group-focus-within:text-white absolute left-4 top-1/2 -translate-y-1/2 transition-colors" />
                             <input
                                 type="text"
-                                placeholder="Search reports..."
+                                placeholder="Search archives..."
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
-                                className="pl-10 pr-4 py-2 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl text-xs font-bold text-zinc-900 dark:text-white focus:outline-none focus:border-indigo-500 transition-colors w-64"
+                                className="pl-11 pr-4 py-3 bg-black/20 border border-white/10 rounded-xl text-xs font-bold text-white focus:outline-none focus:ring-1 focus:ring-primary-500/50 focus:border-primary-500/50 transition-all w-64 placeholder:text-zinc-600 hover:bg-black/30"
                             />
                         </div>
                         {user?.role === 'admin' && (
                             <button
                                 onClick={() => setShowConfirm(true)}
                                 disabled={isDeleting || reports.length === 0}
-                                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${isDeleting || reports.length === 0 ? 'opacity-50 cursor-not-allowed bg-zinc-100 dark:bg-zinc-800 text-zinc-400' : 'bg-rose-500/10 text-rose-500 hover:bg-rose-500 hover:text-white ring-1 ring-rose-500/20'}`}
+                                className={`flex items-center gap-2 px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border border-transparent ${isDeleting || reports.length === 0 ? 'opacity-50 cursor-not-allowed bg-zinc-800 text-zinc-500' : 'bg-rose-500/10 text-rose-500 hover:bg-rose-500 hover:text-white hover:shadow-[0_0_20px_rgba(244,63,94,0.3)] border-rose-500/20'}`}
                                 title="Permanently delete all reports"
                             >
-                                {isDeleting ? <Loader2 className="w-3 h-3 animate-spin" /> : <Trash2 className="w-3 h-3" />}
+                                {isDeleting ? <Loader2 className="w-3 h-3 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
                                 Clean Archive
                             </button>
                         )}
@@ -192,25 +212,27 @@ export const ReportsView: React.FC<ReportsViewProps> = ({ isDarkMode = true }) =
 
                 {/* Modern Confirmation Modal */}
                 {showConfirm && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
-                        <div className="bg-white dark:bg-zinc-900 rounded-[2.5rem] p-10 max-w-md w-full shadow-2xl border border-zinc-200 dark:border-zinc-800 animate-in zoom-in-95 duration-200 text-left">
-                            <div className="p-4 bg-rose-500/10 text-rose-500 rounded-2xl w-fit mb-6">
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200">
+                        <div className="bg-zinc-900 rounded-[2.5rem] p-10 max-w-md w-full shadow-2xl border border-white/10 animate-in zoom-in-95 duration-200 text-left relative overflow-hidden">
+                            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-rose-500 to-transparent"></div>
+
+                            <div className="p-4 bg-rose-500/10 text-rose-500 rounded-2xl w-fit mb-6 border border-rose-500/20 shadow-[0_0_20px_rgba(244,63,94,0.2)]">
                                 <Trash2 className="w-8 h-8" />
                             </div>
-                            <h3 className="text-2xl font-black text-zinc-900 dark:text-white mb-4 tracking-tighter uppercase">Wipe Report Archive?</h3>
-                            <p className="text-zinc-500 dark:text-zinc-400 mb-8 font-medium leading-relaxed">
-                                You are about to permanently delete all historical AI triage reports. This action <span className="text-rose-500 font-bold uppercase underline">cannot be undone</span>.
+                            <h3 className="text-2xl font-black text-white mb-4 tracking-wide font-display uppercase">Wipe Report Archive?</h3>
+                            <p className="text-zinc-400 mb-8 font-medium leading-relaxed border-l-2 border-rose-500/30 pl-4">
+                                You are about to permanently delete all historical AI triage reports. This action <span className="text-rose-500 font-bold uppercase">cannot be undone</span>.
                             </p>
                             <div className="flex gap-4">
                                 <button
                                     onClick={() => setShowConfirm(false)}
-                                    className="flex-1 px-6 py-4 rounded-2xl bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 font-black text-xs uppercase tracking-widest hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-all border border-zinc-200 dark:border-zinc-700"
+                                    className="flex-1 px-6 py-4 rounded-xl bg-zinc-800 text-zinc-300 font-black text-xs uppercase tracking-widest hover:bg-zinc-700 transition-all border border-white/5"
                                 >
-                                    Go Back
+                                    Cancel
                                 </button>
                                 <button
                                     onClick={handleCleanArchive}
-                                    className="flex-1 px-6 py-4 rounded-2xl bg-rose-500 text-white font-black text-xs uppercase tracking-widest shadow-lg shadow-rose-500/20 hover:bg-rose-600 hover:scale-[1.02] active:scale-95 transition-all"
+                                    className="flex-1 px-6 py-4 rounded-xl bg-gradient-to-r from-rose-600 to-red-600 text-white font-black text-xs uppercase tracking-widest shadow-lg shadow-rose-600/20 hover:shadow-rose-600/40 hover:scale-[1.02] active:scale-95 transition-all"
                                 >
                                     Wipe Archive
                                 </button>
@@ -224,25 +246,32 @@ export const ReportsView: React.FC<ReportsViewProps> = ({ isDarkMode = true }) =
                 {/* Detail View Modal */}
                 {
                     selectedReport && (
-                        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-in fade-in duration-200" onClick={() => setSelectedReport(null)}>
-                            <div className="bg-white dark:bg-zinc-950 rounded-[2.5rem] w-full max-w-4xl h-[85vh] flex flex-col shadow-2xl border border-zinc-200 dark:border-zinc-800 animate-in zoom-in-95 duration-200 overflow-hidden" onClick={e => e.stopPropagation()}>
-                                <div className="flex items-center justify-between p-8 border-b border-zinc-100 dark:border-zinc-800 bg-zinc-50/50 dark:bg-black/20">
-                                    <div>
-                                        <h3 className="text-2xl font-black text-zinc-900 dark:text-white tracking-tighter uppercase mb-2">{selectedReport.WorkloadName} Analysis</h3>
+                        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-lg animate-in fade-in duration-200" onClick={() => setSelectedReport(null)}>
+                            <div className="bg-dark-bg/95 backdrop-blur-2xl rounded-[2rem] w-full max-w-4xl h-[85vh] flex flex-col shadow-[0_0_50px_rgba(0,0,0,0.5)] border border-white/10 animate-in zoom-in-95 duration-200 overflow-hidden" onClick={e => e.stopPropagation()}>
+                                <div className="flex items-center justify-between p-8 border-b border-white/5 bg-white/5">
+                                    <div className="flex-1">
+                                        <h3 className="text-2xl font-black text-white tracking-wide font-display uppercase mb-3 flex items-center gap-3">
+                                            {selectedReport.WorkloadName} <span className="text-zinc-500 font-light">Analysis</span>
+                                        </h3>
                                         <div className="flex items-center gap-3">
-                                            <span className={`px-2 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider ${selectedReport.Severity === 'Critical' ? 'bg-rose-500/10 text-rose-500' : 'bg-indigo-500/10 text-indigo-500'}`}>{selectedReport.Severity} Severity</span>
-                                            <span className="text-xs text-zinc-400 font-bold">{formatDate(selectedReport.CreatedAt)}</span>
+                                            <span className={`px-2.5 py-1 rounded-md text-[10px] font-black uppercase tracking-widest border ${selectedReport.Severity === 'Critical' ? 'bg-rose-500/10 text-rose-400 border-rose-500/20' : 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20'}`}>
+                                                {selectedReport.Severity} Severity
+                                            </span>
+                                            <span className="text-xs text-zinc-500 font-mono">{formatDate(selectedReport.CreatedAt)}</span>
                                         </div>
                                     </div>
-                                    <button onClick={() => setSelectedReport(null)} className="p-2 hover:bg-zinc-200 dark:hover:bg-zinc-800 rounded-full transition-colors">
-                                        <CheckCircle2 className="w-6 h-6 text-zinc-400" />
+                                    <button onClick={() => setSelectedReport(null)} className="p-3 text-zinc-400 hover:text-white hover:bg-white/10 rounded-xl transition-all">
+                                        <CheckCircle2 className="w-6 h-6" />
                                     </button>
                                 </div>
-                                <div className="flex-1 overflow-y-auto p-10 prose prose-zinc dark:prose-invert max-w-none prose-headings:font-black prose-headings:uppercase prose-headings:tracking-tighter">
+                                <div className="flex-1 overflow-y-auto p-10 prose prose-invert max-w-none prose-headings:font-display prose-headings:uppercase prose-headings:tracking-wide custom-scrollbar prose-a:text-primary-400 prose-code:bg-black/50 prose-code:px-1 prose-code:py-0.5 prose-code:rounded prose-code:text-primary-300">
                                     <ReactMarkdown>{selectedReport.Analysis}</ReactMarkdown>
                                 </div>
-                                <div className="p-6 border-t border-zinc-100 dark:border-zinc-800 bg-zinc-50/50 dark:bg-black/20 flex justify-end">
-                                    <button onClick={() => setSelectedReport(null)} className="bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 px-8 py-3 rounded-xl font-black text-xs uppercase tracking-widest hover:scale-105 transition-transform">Close Report</button>
+                                <div className="p-6 border-t border-white/5 bg-black/40 flex justify-between items-center">
+                                    <div className="text-xs text-zinc-500 font-mono">
+                                        RID: {selectedReport.ID} • CLUSTER: {selectedReport.ClusterID}
+                                    </div>
+                                    <button onClick={() => setSelectedReport(null)} className="bg-white text-black hover:bg-zinc-200 px-8 py-3 rounded-xl font-black text-xs uppercase tracking-widest hover:scale-105 transition-all shadow-[0_0_20px_rgba(255,255,255,0.1)]">Close Report</button>
                                 </div>
                             </div>
                         </div>
@@ -252,30 +281,35 @@ export const ReportsView: React.FC<ReportsViewProps> = ({ isDarkMode = true }) =
                 {
                     isLoading ? (
                         <div className="flex justify-center py-20">
-                            <Loader2 className="w-8 h-8 animate-spin text-zinc-300" />
+                            <div className="relative">
+                                <div className="absolute inset-0 bg-primary-500 blur-xl opacity-20 animate-pulse"></div>
+                                <Loader2 className="w-10 h-10 animate-spin text-primary-500 relative z-10" />
+                            </div>
                         </div>
                     ) : filteredReports.length > 0 ? (
                         <div className="grid grid-cols-1 gap-4">
                             {filteredReports.map((report) => (
-                                <div key={report.ID} onClick={() => setSelectedReport(report)} className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-[1.5rem] p-6 flex items-start sm:items-center gap-6 hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-colors shadow-sm hover:shadow-md cursor-pointer group">
-                                    <div className={`p-3 rounded-xl shrink-0 ${report.Severity === 'Critical' ? 'bg-red-500/10 text-red-500' : 'bg-amber-500/10 text-amber-500'}`}>
+                                <div key={report.ID} onClick={() => setSelectedReport(report)} className="bg-dark-card/40 backdrop-blur-sm border border-white/5 rounded-3xl p-6 flex items-start sm:items-center gap-6 hover:bg-white/5 hover:border-primary-500/30 transition-all shadow-sm hover:shadow-[0_0_30px_rgba(0,0,0,0.3)] cursor-pointer group relative overflow-hidden">
+                                    <div className="absolute inset-y-0 left-0 w-1 bg-primary-500 scale-y-0 group-hover:scale-y-100 transition-transform duration-300 origin-bottom"></div>
+
+                                    <div className={`p-3 rounded-2xl shrink-0 border transition-colors ${report.Severity === 'Critical' ? 'bg-rose-500/10 text-rose-500 border-rose-500/20 group-hover:bg-rose-500/20' : 'bg-amber-500/10 text-amber-500 border-amber-500/20 group-hover:bg-amber-500/20'}`}>
                                         <AlertCircle className="w-5 h-5" />
                                     </div>
                                     <div className="flex-1 min-w-0">
-                                        <div className="flex items-center gap-2 mb-1">
-                                            <h4 className="text-sm font-black text-zinc-900 dark:text-white uppercase tracking-tighter group-hover:text-indigo-500 transition-colors">
+                                        <div className="flex items-center gap-3 mb-1.5">
+                                            <h4 className="text-sm font-bold text-white tracking-wide group-hover:text-primary-400 transition-colors">
                                                 {report.WorkloadName || 'Cluster Issue'}
                                             </h4>
-                                            <span className="text-[9px] px-2 py-1 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-zinc-100 dark:bg-zinc-800 text-zinc-500 font-black uppercase tracking-wider">
+                                            <span className="text-[9px] px-2 py-0.5 rounded-full border border-white/10 bg-black/20 text-zinc-500 font-mono">
                                                 {formatDate(report.CreatedAt)}
                                             </span>
                                         </div>
-                                        <p className="text-xs text-zinc-500 dark:text-zinc-400 font-medium line-clamp-1">
+                                        <p className="text-xs text-zinc-400 font-medium line-clamp-1 opacity-80 group-hover:opacity-100 transition-opacity">
                                             {report.Analysis ? report.Analysis.substring(0, 150) + "..." : 'No content'}
                                         </p>
                                     </div>
                                     <div className="hidden sm:block text-right shrink-0">
-                                        <span className={`text-[9px] font-black uppercase tracking-widest px-3 py-1.5 rounded-xl ${report.Severity === 'Critical' ? 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400' : 'bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400'}`}>
+                                        <span className={`text-[9px] font-black uppercase tracking-widest px-3 py-1.5 rounded-lg border ${report.Severity === 'Critical' ? 'bg-rose-500/10 text-rose-400 border-rose-500/20' : 'bg-amber-500/10 text-amber-400 border-amber-500/20'}`}>
                                             {report.Severity}
                                         </span>
                                     </div>
@@ -283,10 +317,14 @@ export const ReportsView: React.FC<ReportsViewProps> = ({ isDarkMode = true }) =
                             ))}
                         </div>
                     ) : (
-                        <div className="text-center py-20 border-2 border-dashed border-zinc-200 dark:border-zinc-800 rounded-[2.5rem] bg-zinc-50/50 dark:bg-zinc-950/20">
-                            <FileText className="w-12 h-12 text-zinc-300 mx-auto mb-4" />
-                            <h3 className="text-zinc-900 dark:text-white font-black uppercase tracking-widest mb-1">No Reports Found</h3>
-                            <p className="text-xs text-zinc-400 font-bold">No historical analysis records available.</p>
+                        <div className="text-center py-24 border border-dashed border-white/10 rounded-[3rem] bg-black/20 flex flex-col items-center justify-center group hover:bg-black/30 transition-colors">
+                            <div className="mb-6 p-6 bg-zinc-900 rounded-full border border-white/5 group-hover:scale-110 transition-transform duration-500 shadow-2xl">
+                                <FileText className="w-10 h-10 text-zinc-600 group-hover:text-zinc-400 transition-colors" />
+                            </div>
+                            <h3 className="text-white font-black uppercase tracking-widest mb-2 font-display text-lg">No Archives Found</h3>
+                            <p className="text-xs text-zinc-500 font-medium max-w-xs mx-auto leading-relaxed">
+                                No historical analysis records are currently available in the neural database.
+                            </p>
                         </div>
                     )
                 }

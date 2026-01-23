@@ -13,7 +13,7 @@ export const analyzeWorkload = async (
     playbook: DiagnosticPlaybook = 'General Health',
     provider: string = 'gemini',
     model: string = ''
-): Promise<{ analysis: string, reportId?: number }> => {
+): Promise<{ analysis: string, reportId?: number, context?: any }> => {
     let playbookInstructions = "";
     switch (playbook) {
         case 'Network Connectivity':
@@ -77,7 +77,8 @@ export const analyzeWorkload = async (
         const data = await response.json();
         return {
             analysis: data.analysis || "No analysis generated.",
-            reportId: data.reportId
+            reportId: data.reportId,
+            context: data.context
         };
     } catch (error) {
         console.error("Gemini API Error (Backend):", error);
