@@ -191,3 +191,27 @@ func (h *AIHandler) GenerateTopology(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"diagram": diagram})
 }
+
+type ChatRequest struct {
+	Provider string           `json:"provider"`
+	Model    string           `json:"model"`
+	History  []ai.ChatMessage `json:"history"`
+	Message  string           `json:"message"`
+}
+
+func (h *AIHandler) Chat(c *gin.Context) {
+	var req ChatRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
+		return
+	}
+
+	response, err := h.service.Chat(c.Request.Context(), req.Provider, req.Model, req.History, req.Message)
+	if err != nil {
+		log.Printf("Chat error: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate chat response"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"response": response})
+}

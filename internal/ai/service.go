@@ -269,6 +269,86 @@ func (s *AIService) AnalyzeWorkload(ctx context.Context, req AnalyzeWorkloadRequ
 	return provider.GenerateContent(ctx, prompt, req.Model)
 }
 
+func (s *AIService) Chat(ctx context.Context, providerName string, model string, history []ChatMessage, message string) (string, error) {
+	provider, err := s.getProvider(providerName)
+	if err != nil {
+		return "", err
+	}
+
+	// 1. Initial Injection of System Prompt + Agent Tools (if brand new session)
+	// For now, we prepend it to the history if it's empty, or trust the user instructions
+	// A robust way: Add System prompt as the VERY first message if not present.
+	agentSystemPrompt := GenerateAgentSystemPrompt()
+
+	// Create a working history slice
+	workingHistory := make([]ChatMessage, len(history))
+	copy(workingHistory, history)
+
+	// If history is empty, prepend system prompt
+	if len(workingHistory) == 0 {
+		workingHistory = append(workingHistory, ChatMessage{Role: "user", Content: "SYSTEM: " + agentSystemPrompt})
+	}
+
+	// 2. The Agent Loop
+	// We allow up to 5 turns to prevent infinite loops
+	maxTurns := 5
+	currentMessage := message
+
+	for i := 0; i < maxTurns; i++ {
+		response, err := provider.Chat(ctx, workingHistory, currentMessage, model)
+		if err != nil {
+			return "", err
+		}
+
+		// Check for TOOL_CALL
+		if strings.Contains(response, "TOOL_CALL:") {
+			// Find the line
+			lines := strings.Split(response, "\n")
+			var toolOutput strings.Builder
+			toolCalled := false
+
+			for _, line := range lines {
+				if strings.HasPrefix(strings.TrimSpace(line), "TOOL_CALL:") {
+					toolCalled = true
+					cmd := strings.TrimSpace(strings.TrimPrefix(strings.TrimSpace(line), "TOOL_CALL:"))
+					parts := strings.Fields(cmd)
+					if len(parts) > 0 {
+						toolName := parts[0]
+						args := parts[1:]
+
+						if tool, exists := AgentTools[toolName]; exists {
+							log.Printf("🤖 Agent executing tool: %s args: %v", toolName, args)
+							result, err := tool.Execute(args)
+							if err != nil {
+								toolOutput.WriteString(fmt.Sprintf("\nTOOL_ERROR (%s): %v\n", toolName, err))
+							} else {
+								toolOutput.WriteString(fmt.Sprintf("\nTOOL_RESULT (%s): %s\n", toolName, result))
+							}
+						} else {
+							toolOutput.WriteString(fmt.Sprintf("\nTOOL_ERROR: Unknown tool '%s'\n", toolName))
+						}
+					}
+				}
+			}
+
+			if toolCalled {
+				// Add the AI's "Thought" (the tool call) to history so it knows what it asked
+				workingHistory = append(workingHistory, ChatMessage{Role: "user", Content: currentMessage}) // User request
+				workingHistory = append(workingHistory, ChatMessage{Role: "model", Content: response})      // AI Tool Call
+
+				// Prepare next input (Tool Result)
+				currentMessage = "SYSTEM: " + toolOutput.String()
+				continue // Loop again with tool results
+			}
+		}
+
+		// No tool call? Return the final answer.
+		return response, nil
+	}
+
+	return "I'm detecting a loop in my reasoning. Please try refining your query.", nil
+}
+
 type PatchSuggestion struct {
 	Description  string `json:"description"`
 	PatchType    string `json:"patchType"`    // e.g., "application/merge-patch+json"

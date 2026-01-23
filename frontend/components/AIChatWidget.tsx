@@ -1,9 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { X, Send, Minimize2, Maximize2, Sparkles, User, Bot } from 'lucide-react';
-import { ChatMessage } from '../types';
-import { createChatSession, streamChatMessage } from '../services/geminiService';
+import { ChatMessage, sendChatMessage } from '../services/geminiService';
 import ReactMarkdown from 'react-markdown';
-import { Chat } from "@google/genai";
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
 
@@ -25,14 +23,6 @@ export const AIChatWidget: React.FC<AIChatWidgetProps> = ({ isOpen, onClose, ini
   // Ref for the scrollable container
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  // Ref to hold the Chat Session instance
-  const chatSessionRef = useRef<Chat | null>(null);
-
-  useEffect(() => {
-    // Initialize chat session
-    chatSessionRef.current = createChatSession();
-  }, []);
-
   // Scroll to bottom when messages change
   useEffect(() => {
     if (scrollRef.current) {
@@ -46,13 +36,13 @@ export const AIChatWidget: React.FC<AIChatWidgetProps> = ({ isOpen, onClose, ini
 
   // Handle incoming context from other views
   useEffect(() => {
-    if (isOpen && initialContext && chatSessionRef.current) {
+    if (isOpen && initialContext) {
       handleSendMessage(initialContext, true);
     }
   }, [initialContext, isOpen]);
 
   const handleSendMessage = async (text: string, isSystemContext: boolean = false) => {
-    if ((!text.trim() && !isSystemContext) || !chatSessionRef.current) return;
+    if ((!text.trim() && !isSystemContext)) return;
 
     // User Message
     const newUserMsg: ChatMessage = {
@@ -65,21 +55,15 @@ export const AIChatWidget: React.FC<AIChatWidgetProps> = ({ isOpen, onClose, ini
     setInput('');
     setIsTyping(true);
 
-    // Placeholder for Model Response
-    const modelMsgId = Date.now() + 1;
-    setMessages(prev => [...prev, { role: 'model', content: '', timestamp: modelMsgId }]);
+    // Filter messages for backend history (exclude system timestamp, etc if needed, but strict type check helps)
+    const history = messages.map(m => ({
+      role: m.role,
+      content: m.content
+    })) as ChatMessage[];
 
-    let fullResponse = "";
+    const responseText = await sendChatMessage(history, newUserMsg.content);
 
-    await streamChatMessage(chatSessionRef.current, newUserMsg.content, (chunk) => {
-      fullResponse += chunk;
-      setMessages(prev => prev.map(msg =>
-        msg.timestamp === modelMsgId
-          ? { ...msg, content: fullResponse }
-          : msg
-      ));
-    });
-
+    setMessages(prev => [...prev, { role: 'model', content: responseText, timestamp: Date.now() }]);
     setIsTyping(false);
   };
 
@@ -137,15 +121,15 @@ export const AIChatWidget: React.FC<AIChatWidgetProps> = ({ isOpen, onClose, ini
         {messages.map((msg, idx) => (
           <div key={idx} className={`flex gap-4 ${msg.role === 'user' ? 'flex-row-reverse' : 'flex-row'}`}>
             <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 border shadow-lg mt-1 ${msg.role === 'user'
-                ? 'bg-primary-600/20 border-primary-500/30'
-                : 'bg-white/5 border-white/10'
+              ? 'bg-primary-600/20 border-primary-500/30'
+              : 'bg-white/5 border-white/10'
               }`}>
               {msg.role === 'user' ? <User className="w-4 h-4 text-primary-400" /> : <Bot className="w-4 h-4 text-emerald-400" />}
             </div>
 
             <div className={`max-w-[85%] p-4 rounded-2xl text-sm shadow-sm relative overflow-hidden group ${msg.role === 'user'
-                ? 'bg-primary-600 text-white rounded-tr-sm shadow-primary-500/20'
-                : 'bg-white/5 border border-white/5 text-zinc-300 rounded-tl-sm'
+              ? 'bg-primary-600 text-white rounded-tr-sm shadow-primary-500/20'
+              : 'bg-white/5 border border-white/5 text-zinc-300 rounded-tl-sm'
               }`}>
               {/* Subtle background gradient for messages */}
               <div className={`absolute inset-0 opacity-10 pointer-events-none ${msg.role === 'user' ? 'bg-gradient-to-br from-white to-transparent' : 'bg-gradient-to-br from-blue-500 to-transparent'

@@ -69,6 +69,7 @@ func SetupRouter(aiService *ai.AIService, rootFS http.FileSystem, assetsFS http.
 			protected.GET("/ai/models", aiHandler.GetModels)
 			protected.POST("/ai/analyze", aiHandler.AnalyzeWorkload)
 			protected.POST("/ai/topology", aiHandler.GenerateTopology)
+			protected.POST("/ai/chat", aiHandler.Chat)
 			protected.POST("/remediate/generate", aiHandler.GenerateRemediation)
 
 			// Playbooks (Public Read)

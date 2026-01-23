@@ -66,6 +66,34 @@ func (p *GeminiProvider) GenerateContent(ctx context.Context, prompt string, mod
 	return getResponseText(resp), nil
 }
 
+func (p *GeminiProvider) Chat(ctx context.Context, history []ChatMessage, message string, modelName string) (string, error) {
+	targetModel := p.model
+	if modelName != "" {
+		targetModel = modelName
+	}
+	model := p.client.GenerativeModel(targetModel)
+	cs := model.StartChat()
+
+	// Convert history
+	for _, msg := range history {
+		role := "user"
+		if msg.Role == "model" || msg.Role == "ai" || msg.Role == "assistant" {
+			role = "model"
+		}
+		cs.History = append(cs.History, &genai.Content{
+			Role:  role,
+			Parts: []genai.Part{genai.Text(msg.Content)},
+		})
+	}
+
+	resp, err := cs.SendMessage(ctx, genai.Text(message))
+	if err != nil {
+		return "", err
+	}
+
+	return getResponseText(resp), nil
+}
+
 func (p *GeminiProvider) GetAvailableModels(ctx context.Context) ([]string, error) {
 	// For now, return hardcoded known models as listing all Google models might be too much noise
 	// or we can implement p.client.ListModels(ctx) if desired later.

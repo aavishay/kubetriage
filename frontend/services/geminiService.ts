@@ -227,6 +227,48 @@ export const generateTopologyDiagram = async (workloads: Workload[], requestedAs
     }
 }
 
+// ... (keep existing exports)
+
+export interface ChatMessage {
+    role: 'user' | 'model'; // 'model' maps to 'ai' or 'assistant' in backend
+    content: string;
+    timestamp?: number;
+}
+
+export const sendChatMessage = async (
+    history: ChatMessage[],
+    message: string,
+    provider: string = 'gemini',
+    model: string = ''
+): Promise<string> => {
+    try {
+        const response = await fetch('/api/ai/chat', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                provider,
+                model,
+                history,
+                message
+            })
+        });
+
+        if (!response.ok) {
+            throw new Error(`Backend Error: ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        return data.response;
+    } catch (error) {
+        console.error("Chat Error:", error);
+        return "I encountered an error connecting to the Neural Core.";
+    }
+};
+
+// ... keep existing createChatSession for reference or fallback if needed, 
+// though we will likely unused it in the Widget.
 export const createChatSession = (): Chat => {
     const ai = createClient();
     return ai.chats.create({
@@ -238,6 +280,7 @@ export const createChatSession = (): Chat => {
 };
 
 export const streamChatMessage = async (chat: Chat, message: string, onChunk: (text: string) => void): Promise<void> => {
+    // Deprecated in favor of backend Chat, but keeping for compatibility if mixed usage
     try {
         const result = await chat.sendMessageStream({ message });
         for await (const chunk of result) {
