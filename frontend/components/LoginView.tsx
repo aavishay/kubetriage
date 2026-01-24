@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Box, Loader2, Github, Chrome, ArrowRight, Lock, Mail, Terminal } from 'lucide-react';
-import logo from '../assets/kubetriage_logo.svg';
+import logo from '../src/assets/kubetriage_logo.svg';
 
 interface LoginViewProps {
   onLogin: () => void;

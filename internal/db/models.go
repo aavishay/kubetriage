@@ -66,14 +66,18 @@ func (p *Playbook) BeforeCreate(tx *gorm.DB) (err error) {
 
 type TriageReport struct {
 	gorm.Model
-	ClusterID    string
-	Namespace    string
-	WorkloadName string
-	Kind         string
-	Analysis     string     // Markdown analysis
-	Severity     string     // Low, Medium, High, Critical
-	IsRead       bool       `gorm:"default:false"`
-	ProjectID    *uuid.UUID `gorm:"type:uuid"`
+	ClusterID              string
+	Namespace              string
+	WorkloadName           string
+	Kind                   string
+	Analysis               string     // Markdown analysis
+	Severity               string     // Low, Medium, High, Critical
+	IsRead                 bool       `gorm:"default:false"`
+	ProjectID              *uuid.UUID `gorm:"type:uuid"`
+	IncidentType           string     // e.g., "CrashLoopBackOff", "OOMKilled"
+	AutoRemediationPayload string     `gorm:"type:text"`      // JSON/YAML patch
+	ApprovalStatus         string     `gorm:"default:'None'"` // Pending, Approved, Rejected, None
+	ApproverID             *uuid.UUID `gorm:"type:uuid"`
 }
 
 type AuditLog struct {
@@ -90,6 +94,28 @@ type AuditLog struct {
 func (a *AuditLog) BeforeCreate(tx *gorm.DB) (err error) {
 	if a.ID == uuid.Nil {
 		a.ID = uuid.New()
+	}
+	return
+}
+
+// Comment model for Incident Comments
+type Comment struct {
+	ID           uuid.UUID `gorm:"type:uuid;primaryKey"`
+	UserID       uuid.UUID `gorm:"type:uuid;not null"`
+	User         User      `gorm:"foreignKey:UserID"`
+	Content      string    `gorm:"type:text;not null"`
+	ReportID     *uint     `gorm:"index"` // Link to TriageReport (uint ID from gorm.Model)
+	ClusterID    string    `gorm:"index"` // Link to Workload (Cluster)
+	Namespace    string    `gorm:"index"` // Link to Workload (Namespace)
+	WorkloadName string    `gorm:"index"` // Link to Workload (Name)
+	CreatedAt    time.Time
+	UpdatedAt    time.Time
+	DeletedAt    gorm.DeletedAt `gorm:"index"`
+}
+
+func (c *Comment) BeforeCreate(tx *gorm.DB) (err error) {
+	if c.ID == uuid.Nil {
+		c.ID = uuid.New()
 	}
 	return
 }

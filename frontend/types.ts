@@ -45,6 +45,7 @@ export interface Workload {
   status: 'Healthy' | 'Warning' | 'Critical';
   metrics: ResourceMetrics;
   recentLogs: string[];
+  podNames: string[];
   events: K8sEvent[];
   costPerMonth: number;
   recommendation?: {
@@ -169,4 +170,22 @@ export interface Playbook {
   prompt: string;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface CommentUser {
+  ID: string;
+  Email: string;
+  AvatarURL?: string;
+}
+
+export interface Comment {
+  ID: string;
+  UserID: string;
+  User?: CommentUser;
+  Content: string;
+  ReportID?: number;
+  ClusterID?: string;
+  Namespace?: string;
+  WorkloadName?: string;
+  CreatedAt: string;
 }

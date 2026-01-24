@@ -33,3 +33,19 @@ func GetPodLogs(ctx context.Context, client *kubernetes.Clientset, namespace, po
 
 	return buf.String(), nil
 }
+
+// GetPodLogStream returns a stream reader for pod logs
+func GetPodLogStream(ctx context.Context, client *kubernetes.Clientset, namespace, podName string, container string, follow bool, tailParams *int64) (io.ReadCloser, error) {
+	opts := &corev1.PodLogOptions{
+		Follow: follow,
+	}
+	if tailParams != nil {
+		opts.TailLines = tailParams
+	}
+	if container != "" {
+		opts.Container = container
+	}
+
+	req := client.CoreV1().Pods(namespace).GetLogs(podName, opts)
+	return req.Stream(ctx)
+}

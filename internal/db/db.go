@@ -60,7 +60,7 @@ func InitDB(dsn string) (*gorm.DB, error) {
 	}
 
 	// Auto-Migrate Schemas
-	err = DB.AutoMigrate(&User{}, &Session{}, &Playbook{}, &TriageReport{}, &AuditLog{}, &Project{}, &ClusterProject{})
+	err = DB.AutoMigrate(&User{}, &Session{}, &Playbook{}, &TriageReport{}, &AuditLog{}, &Project{}, &ClusterProject{}, &Comment{})
 	if err != nil {
 		log.Printf("Warning: AutoMigrate failed: %v", err)
 	}

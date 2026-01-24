@@ -73,12 +73,20 @@ type Workload struct {
 	Status             string            `json:"status"`
 	Metrics            ResourceMetrics   `json:"metrics"`
 	RecentLogs         []string          `json:"recentLogs"`
+	PodNames           []string          `json:"podNames"`
 	Events             []K8sEvent        `json:"events"`
 	CostPerMonth       int               `json:"costPerMonth"`
 	Scaling            ScalingInfo       `json:"scaling"`
 	SchedulerLogs      []string          `json:"schedulerLogs,omitempty"`
 	Provisioning       *ProvisioningInfo `json:"provisioning,omitempty"`
 	ProvisioningStatus string            `json:"provisioningStatus,omitempty"` // e.g. "Provisioning", "Scheduled"
+	Recommendation     *Recommendation   `json:"recommendation,omitempty"`
+}
+
+type Recommendation struct {
+	Action     string `json:"action"` // "Upsize", "Downsize", "None"
+	Confidence int    `json:"confidence"`
+	Reason     string `json:"reason"`
 }
 
 type ProvisioningInfo struct {
@@ -317,6 +325,28 @@ func fetchRecentLogs(ctx context.Context, client *kubernetes.Clientset, namespac
 		}
 	}
 	return result
+}
+
+func fetchPodNames(ctx context.Context, client *kubernetes.Clientset, namespace string, matchLabels map[string]string) []string {
+	if len(matchLabels) == 0 {
+		return []string{}
+	}
+
+	listOpts := metav1.ListOptions{
+		LabelSelector: labels.Set(matchLabels).String(),
+		Limit:         50, // Limit to prevent huge lists
+	}
+
+	pods, err := client.CoreV1().Pods(namespace).List(ctx, listOpts)
+	if err != nil {
+		return []string{}
+	}
+
+	var names []string
+	for _, p := range pods.Items {
+		names = append(names, p.Name)
+	}
+	return names
 }
 
 func fetchRecentEvents(ctx context.Context, client *kubernetes.Clientset, namespace, name, kind string) []K8sEvent {
@@ -770,6 +800,51 @@ func getScalingInfo(ctx context.Context, client *kubernetes.Clientset, dynClient
 	return res
 }
 
+func calculateRecommendation(metrics ResourceMetrics) *Recommendation {
+	// Simple Heuristic Logic for MVP
+	// If Usage < 30% of Request -> DOWNSIZE
+	// If Usage > 85% of Limit -> UPSIZE
+
+	// CPU
+	cpuUtil := 0.0
+	if metrics.CpuRequest > 0 {
+		cpuUtil = metrics.CpuUsage / metrics.CpuRequest
+	} else if metrics.CpuLimit > 0 {
+		cpuUtil = metrics.CpuUsage / metrics.CpuLimit
+	}
+
+	// Memory
+	memUtil := 0.0
+	if metrics.MemoryRequest > 0 {
+		memUtil = metrics.MemoryUsage / metrics.MemoryRequest
+	} else if metrics.MemoryLimit > 0 {
+		memUtil = metrics.MemoryUsage / metrics.MemoryLimit
+	}
+
+	// Logic
+	if (cpuUtil > 0.85 || memUtil > 0.85) && (metrics.CpuUsage > 0 || metrics.MemoryUsage > 0) {
+		return &Recommendation{
+			Action:     "Upsize",
+			Confidence: 90,
+			Reason:     fmt.Sprintf("High utilization detected (CPU: %.0f%%, Mem: %.0f%%). Risk of throttle/OOM.", cpuUtil*100, memUtil*100),
+		}
+	}
+
+	if (cpuUtil > 0 && cpuUtil < 0.30) && (memUtil > 0 && memUtil < 0.30) {
+		return &Recommendation{
+			Action:     "Downsize",
+			Confidence: 75,
+			Reason:     fmt.Sprintf("Low utilization (CPU: %.0f%%, Mem: %.0f%%). Resources are over-provisioned.", cpuUtil*100, memUtil*100),
+		}
+	}
+
+	return &Recommendation{
+		Action:     "None",
+		Confidence: 100,
+		Reason:     "Workload is right-sized.",
+	}
+}
+
 func ClustersHandler(c *gin.Context) {
 	// 1. Try Cache
 	if val, err := cache.Get(c.Request.Context(), "clusters_list"); err == nil {
@@ -939,6 +1014,7 @@ func WorkloadsHandler(c *gin.Context) {
 					CostPerMonth:      rand.Intn(500) + 50,
 					Metrics:           getRealMetrics(enrichCtx, d.Namespace, d.Name, "Deployment", d.Spec.Template.Spec, window, d.Spec.Selector.MatchLabels, *d.Spec.Replicas),
 					RecentLogs:        fetchRecentLogs(enrichCtx, client, d.Namespace, d.Spec.Selector.MatchLabels),
+					PodNames:          fetchPodNames(enrichCtx, client, d.Namespace, d.Spec.Selector.MatchLabels),
 					Events:            fetchRecentEvents(enrichCtx, client, d.Namespace, d.Name, "Deployment"),
 					Scaling:           getScalingInfo(enrichCtx, client, dynClient, d.Namespace, d.Name),
 				}
@@ -947,6 +1023,7 @@ func WorkloadsHandler(c *gin.Context) {
 					w.Provisioning = fetchKarpenterProvisioning(enrichCtx, dynClient, d.Name)
 					w.ProvisioningStatus = analyzeScheduling(w.Events, d.Spec.Template.Spec, w.Provisioning)
 				}
+				w.Recommendation = calculateRecommendation(w.Metrics)
 				addWorkload(w)
 				return nil
 			})
@@ -971,6 +1048,7 @@ func WorkloadsHandler(c *gin.Context) {
 					CostPerMonth:      rand.Intn(500) + 100,
 					Metrics:           getRealMetrics(enrichCtx, s.Namespace, s.Name, "StatefulSet", s.Spec.Template.Spec, window, s.Spec.Selector.MatchLabels, *s.Spec.Replicas),
 					RecentLogs:        fetchRecentLogs(enrichCtx, client, s.Namespace, s.Spec.Selector.MatchLabels),
+					PodNames:          fetchPodNames(enrichCtx, client, s.Namespace, s.Spec.Selector.MatchLabels),
 					Events:            fetchRecentEvents(enrichCtx, client, s.Namespace, s.Name, "StatefulSet"),
 					Scaling:           getScalingInfo(enrichCtx, client, dynClient, s.Namespace, s.Name),
 				}
@@ -979,6 +1057,7 @@ func WorkloadsHandler(c *gin.Context) {
 					w.Provisioning = fetchKarpenterProvisioning(enrichCtx, dynClient, s.Name)
 					w.ProvisioningStatus = analyzeScheduling(w.Events, s.Spec.Template.Spec, w.Provisioning)
 				}
+				w.Recommendation = calculateRecommendation(w.Metrics)
 				addWorkload(w)
 				return nil
 			})
@@ -1003,6 +1082,7 @@ func WorkloadsHandler(c *gin.Context) {
 					CostPerMonth:      rand.Intn(200) + 50,
 					Metrics:           getRealMetrics(enrichCtx, ds.Namespace, ds.Name, "DaemonSet", ds.Spec.Template.Spec, window, ds.Spec.Selector.MatchLabels, ds.Status.DesiredNumberScheduled),
 					RecentLogs:        fetchRecentLogs(enrichCtx, client, ds.Namespace, ds.Spec.Selector.MatchLabels),
+					PodNames:          fetchPodNames(enrichCtx, client, ds.Namespace, ds.Spec.Selector.MatchLabels),
 					Events:            fetchRecentEvents(enrichCtx, client, ds.Namespace, ds.Name, "DaemonSet"),
 				}
 				if w.Status != "Healthy" {
@@ -1010,7 +1090,9 @@ func WorkloadsHandler(c *gin.Context) {
 					// But we can still analyze scheduling issues
 					w.Provisioning = &ProvisioningInfo{Enabled: false} // Placeholder
 					w.ProvisioningStatus = analyzeScheduling(w.Events, ds.Spec.Template.Spec, w.Provisioning)
+					w.ProvisioningStatus = analyzeScheduling(w.Events, ds.Spec.Template.Spec, w.Provisioning)
 				}
+				w.Recommendation = calculateRecommendation(w.Metrics)
 				addWorkload(w)
 				return nil
 			})

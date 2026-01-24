@@ -3,13 +3,16 @@ import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { useLocation, Link } from 'react-router-dom';
 import { Workload, ViewPropsWithChat, DiagnosticPlaybook } from '../types';
 import { useMonitoring } from '../contexts/MonitoringContext';
+import { usePresence } from '../contexts/PresenceContext';
 import { analyzeWorkload } from '../services/geminiService';
 import { generateRemediation, applyRemediation } from '../services/remediationService';
 import ReactMarkdown from 'react-markdown';
-import { Terminal, Loader2, Sparkles, Activity, Search, Clock, Globe, ChevronLeft, MessageSquareShare, ArrowRight, PanelLeftClose, PanelLeft, AlertCircle, CheckCircle2, ChevronRight, Layers, ArrowDown, Server, Zap, Globe2, WifiOff, MoreHorizontal, Info, ActivitySquare, Radio, ShieldCheck, HardDrive, WrapText, Bot, Copy, Check, FileCheck, Scroll, Hash, HeartPulse } from 'lucide-react';
+import { Terminal, Loader2, Sparkles, Activity, Search, Clock, Globe, ChevronLeft, MessageSquareShare, ArrowRight, PanelLeftClose, PanelLeft, AlertCircle, CheckCircle2, ChevronRight, Layers, ArrowDown, Server, Zap, Globe2, WifiOff, MoreHorizontal, Info, ActivitySquare, Radio, ShieldCheck, HardDrive, WrapText, Bot, Copy, Check, FileCheck, Scroll, Hash, HeartPulse, Share2, Coins, TrendingDown, TrendingUp } from 'lucide-react';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import { MetricsChart } from './MetricsChart';
+import { LogStreamViewer } from './LogStreamViewer';
+import { CommentsThread } from './CommentsThread';
 
 interface TriageViewProps extends ViewPropsWithChat {
   initialWorkloadId?: string; // Kept for backward compatibility or direct usage if needed
@@ -108,6 +111,8 @@ export const TriageView: React.FC<TriageViewProps> = ({ workloads, isDarkMode = 
   const urlWorkload = searchParams.get('workload');
   const urlPlaybook = searchParams.get('playbook');
 
+  const { activeUsers, notifyView, notifyLeave, broadcastLogState, logStateEvents } = usePresence();
+
   // Priority: URL > Router State > Props
   const targetWorkloadId = urlWorkload || location.state?.workloadId || propId;
   const targetTemplate = urlPlaybook || location.state?.playbook || propTemplate;
@@ -136,6 +141,59 @@ export const TriageView: React.FC<TriageViewProps> = ({ workloads, isDarkMode = 
   const [workloadSearchTerm, setWorkloadSearchTerm] = useState<string>('');
   const [logSearchTerm, setLogSearchTerm] = useState<string>('');
   const [isLogWrapEnabled, setIsLogWrapEnabled] = useState(false);
+  const [isLogSyncEnabled, setIsLogSyncEnabled] = useState(false); // Sync Toggle
+  const [o11yTemplates, setO11yTemplates] = useState<{ name: string, url: string }[]>([
+    { name: 'Grafana', url: 'https://grafana.example.com/d/k8s-pod?var-pod=${pod_name}&var-namespace=${namespace}' },
+    { name: 'Datadog', url: 'https://app.datadoghq.com/logs?query=pod_name:${pod_name}' }
+  ]);
+
+  // Sync Logic
+  useEffect(() => {
+    if (!selectedWorkload || !isLogSyncEnabled) return;
+
+    // Listen for incoming events
+    const event = logStateEvents[`workload-${selectedWorkload.id}`];
+    if (event && event.payload) {
+      // Only update if different to avoid loops (basic check)
+      if (event.payload.searchTerm !== logSearchTerm) setLogSearchTerm(event.payload.searchTerm);
+      if (event.payload.isWrapEnabled !== isLogWrapEnabled) setIsLogWrapEnabled(event.payload.isWrapEnabled);
+    }
+  }, [logStateEvents, selectedWorkload, isLogSyncEnabled]);
+
+  const handleLogSearchChange = (val: string) => {
+    setLogSearchTerm(val);
+    if (selectedWorkload && isLogSyncEnabled) {
+      broadcastLogState(`workload-${selectedWorkload.id}`, { searchTerm: val, isWrapEnabled: isLogWrapEnabled });
+    }
+  };
+
+  const handleLogWrapToggle = () => {
+    const newVal = !isLogWrapEnabled;
+    setIsLogWrapEnabled(newVal);
+    if (selectedWorkload && isLogSyncEnabled) {
+      broadcastLogState(`workload-${selectedWorkload.id}`, { searchTerm: logSearchTerm, isWrapEnabled: newVal });
+    }
+  };
+
+  const handleHandover = () => {
+    if (!selectedWorkload || !analysis) return;
+
+    // Create Markdown Summary
+    const summary = `
+🚨 **INCIDENT HANDOVER: ${selectedWorkload.name}**
+**Severity**: ${selectedWorkload.status === 'Critical' ? 'CRITICAL' : 'WARNING'}
+**Target**: \`${selectedWorkload.namespace}/${selectedWorkload.kind}/${selectedWorkload.name}\`
+**Time**: ${new Date().toLocaleString()}
+
+🔍 **AI Summary**:
+> ${analysis.split('\n').find(l => l.length > 50) || 'See full report.'}
+
+🔗 **Triage Console**: ${window.location.origin}/triage?workload=${selectedWorkload.name}
+    `.trim();
+
+    navigator.clipboard.writeText(summary);
+    alert("Incident Summary copied to clipboard for Slack/Jira!");
+  };
 
   // Remediation State
   const [patchSuggestion, setPatchSuggestion] = useState<import('../services/remediationService').PatchSuggestion | null>(null);
@@ -176,7 +234,12 @@ export const TriageView: React.FC<TriageViewProps> = ({ workloads, isDarkMode = 
       const workload = workloads.find(w => w.id === targetWorkloadId || w.name === targetWorkloadId);
       if (workload) {
         if (selectedWorkload?.id !== workload.id) {
+          // Leave previous
+          if (selectedWorkload) notifyLeave(`workload-${selectedWorkload.id}`);
+
           setSelectedWorkload(workload);
+          notifyView(`workload-${workload.id}`);
+
           setIsSidebarOpen(false);
           // Only trigger auto-analysis if NOT cached
           const cacheKey = `analysis_${workload.id}_${selectedPlaybook}`;
@@ -190,6 +253,13 @@ export const TriageView: React.FC<TriageViewProps> = ({ workloads, isDarkMode = 
       }
     }
   }, [targetWorkloadId, workloads, targetTemplate]);
+
+  // Clean up presence on unmount
+  useEffect(() => {
+    return () => {
+      if (selectedWorkload) notifyLeave(`workload-${selectedWorkload.id}`);
+    };
+  }, [selectedWorkload]);
 
   // Validation: Reset selectedWorkload if it's not in the current workloads list (e.g. cluster switch)
   useEffect(() => {
@@ -429,7 +499,14 @@ export const TriageView: React.FC<TriageViewProps> = ({ workloads, isDarkMode = 
             <div
               key={w.id}
               ref={selectedWorkload?.id === w.id ? selectedRef : null}
-              onClick={() => { setSelectedWorkload(w); setAnalysis(null); setPatchSuggestion(null); setIsSidebarOpen(false); }}
+              onClick={() => {
+                if (selectedWorkload) notifyLeave(`workload-${selectedWorkload.id}`);
+                setSelectedWorkload(w);
+                notifyView(`workload-${w.id}`);
+                setAnalysis(null);
+                setPatchSuggestion(null);
+                setIsSidebarOpen(false);
+              }}
               className={`group relative p-8 rounded-4xl cursor-pointer transition-all border-2 ${selectedWorkload?.id === w.id ? 'bg-primary-600 border-primary-500 text-white shadow-[0_20px_40px_rgba(14,165,233,0.15)] translate-x-2' : 'bg-white dark:bg-dark-card border-transparent shadow-sm hover:translate-x-1 hover:shadow-2xl hover:shadow-primary-500/10 hover:border-primary-500/20'}`}
             >
               <span className="text-base font-black truncate leading-none uppercase tracking-tight block mb-2 font-display">{w.name}</span>
@@ -442,6 +519,18 @@ export const TriageView: React.FC<TriageViewProps> = ({ workloads, isDarkMode = 
             </div>
           ))}
         </div>
+
+        {/* Comments Section in Sidebar */}
+        {selectedWorkload && (
+          <div className="p-4 border-t border-gray-100 dark:border-white/5 bg-gray-50/50 dark:bg-black/20">
+            <CommentsThread
+              clusterID="default" // MVP assumption
+              namespace={selectedWorkload.namespace}
+              workloadName={selectedWorkload.name}
+              isDarkMode={isDarkMode}
+            />
+          </div>
+        )}
       </aside>
 
       <main className={`${!selectedWorkload || isSidebarOpen ? 'hidden' : 'flex'} lg:flex flex-1 min-w-0 bg-white dark:bg-dark-bg rounded-5xl overflow-hidden flex flex-col border border-gray-100 dark:border-white/5 shadow-sm`}>
@@ -454,10 +543,40 @@ export const TriageView: React.FC<TriageViewProps> = ({ workloads, isDarkMode = 
                   <h2 className="text-3xl md:text-5xl font-black text-gray-900 dark:text-white tracking-tighter uppercase leading-none font-display">
                     {selectedWorkload.name}
                   </h2>
-                  <p className="text-[10px] font-black text-gray-500 uppercase tracking-[0.4em] mt-3 font-display">Infrastructure Vector • {selectedWorkload.namespace} • {selectedWorkload.kind}</p>
+                  <div className="flex items-center gap-4 mt-3">
+                    <p className="text-[10px] font-black text-gray-500 uppercase tracking-[0.4em] font-display">Infrastructure Vector • {selectedWorkload.namespace} • {selectedWorkload.kind}</p>
+
+                    {/* Presence */}
+                    {activeUsers[`workload-${selectedWorkload.id}`] && activeUsers[`workload-${selectedWorkload.id}`].length > 0 && (
+                      <div className="flex -space-x-2">
+                        {activeUsers[`workload-${selectedWorkload.id}`].map((u) => (
+                          <img key={u.userId} src={u.avatarUrl} alt={u.userName} title={u.userName} className="w-6 h-6 rounded-full border border-black" />
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
-              <div className="flex flex-wrap items-center gap-6 w-full xl:w-auto">
+
+              {/* Deep Links Ribbon */}
+              <div className="flex gap-4 overflow-x-auto pb-2">
+                {o11yTemplates.map(tmpl => {
+                  if (!selectedWorkload.podNames || selectedWorkload.podNames.length === 0) return null;
+                  const url = tmpl.url
+                    .replace('${pod_name}', selectedWorkload.podNames[0])
+                    .replace('${namespace}', selectedWorkload.namespace)
+                    .replace('${workload}', selectedWorkload.name);
+
+                  return (
+                    <a key={tmpl.name} href={url} target="_blank" rel="noreferrer" className="flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-xs font-bold text-zinc-400 hover:text-white transition-all whitespace-nowrap">
+                      <ActivitySquare className="w-3.5 h-3.5" />
+                      Open in {tmpl.name}
+                    </a>
+                  );
+                })}
+              </div>
+
+              <div className="flex flex-1 items-center gap-6 w-full xl:w-auto">
                 <div className="flex items-center gap-4 bg-gray-50 dark:bg-dark-card border border-gray-100 dark:border-white/5 px-6 py-4 rounded-3xl shadow-sm glass">
                   <div className="p-2.5 bg-primary-500/10 rounded-xl"><ActivitySquare className="w-5 h-5 text-primary-500" /></div>
                   <div className="flex flex-col">
@@ -507,6 +626,36 @@ export const TriageView: React.FC<TriageViewProps> = ({ workloads, isDarkMode = 
                   <span className={`text-4xl font-black tracking-tight font-display ${saturation.storage > 85 ? 'text-accent-rose animate-pulse' : 'text-primary-400'}`}>{saturation.storage}%</span>
                 </div>
               </div>
+
+              {/* Cost Optimization Card */}
+              {selectedWorkload.recommendation && selectedWorkload.recommendation.action !== 'None' && (
+                <div className="bg-gradient-to-r from-emerald-500/10 to-teal-500/10 border border-emerald-500/20 rounded-4xl p-8 flex flex-col md:flex-row items-center justify-between gap-8 shadow-sm relative overflow-hidden group">
+                  <div className="absolute inset-0 bg-[radial-gradient(circle_at_0%_0%,rgba(16,185,129,0.15),transparent)] pointer-events-none" />
+                  <div className="flex items-center gap-6 relative z-10">
+                    <div className="p-4 bg-emerald-500/20 rounded-2xl ring-1 ring-emerald-500/40 shadow-lg">
+                      <Coins className="w-8 h-8 text-emerald-500" />
+                    </div>
+                    <div>
+                      <h4 className="text-xl font-black text-gray-900 dark:text-white uppercase tracking-tighter font-display">Optimization Opportunity</h4>
+                      <p className="text-emerald-500 font-bold text-sm mt-1">{selectedWorkload.recommendation.reason}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-6 relative z-10">
+                    <div className="text-right">
+                      <span className="block text-[10px] font-black text-gray-500 uppercase tracking-widest">Suggested Action</span>
+                      <span className={`text-2xl font-black uppercase tracking-tight flex items-center justify-end gap-2 ${selectedWorkload.recommendation.action === 'Downsize' ? 'text-emerald-500' : 'text-amber-500'}`}>
+                        {selectedWorkload.recommendation.action === 'Downsize' ? <TrendingDown className="w-6 h-6" /> : <TrendingUp className="w-6 h-6" />}
+                        {selectedWorkload.recommendation.action}
+                      </span>
+                    </div>
+                    <div className="h-12 w-px bg-white/10" />
+                    <div className="text-center">
+                      <span className="block text-3xl font-black text-white">{selectedWorkload.recommendation.confidence}%</span>
+                      <span className="text-[9px] font-black text-gray-500 uppercase tracking-widest">Confidence</span>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {/* Scaling Configuration (KEDA) */}
               {selectedWorkload.scaling && selectedWorkload.scaling.enabled && (
@@ -653,14 +802,21 @@ export const TriageView: React.FC<TriageViewProps> = ({ workloads, isDarkMode = 
                         {/* Remediation Section */}
                         <div className="mt-16 pt-12 border-t border-gray-100 dark:border-white/5 font-display">
                           {!patchSuggestion ? (
-                            <div className="flex flex-col md:flex-row justify-center gap-6">
-                              <button onClick={handleDeepDive} className="bg-dark-bg text-white px-10 py-4 rounded-3xl text-[10px] font-black uppercase tracking-widest shadow-xl hover:-translate-y-1 transition-all flex items-center justify-center gap-3 border border-white/10 group">
-                                Copilot Deep Dive <MessageSquareShare className="w-5 h-5 text-primary-500 group-hover:scale-110 transition-transform" />
-                              </button>
-                              <button onClick={handleGenerateFix} disabled={isGeneratingFix} className="bg-primary-600 text-white px-10 py-4 rounded-3xl text-[10px] font-black uppercase tracking-widest shadow-2xl shadow-primary-600/20 hover:-translate-y-1 transition-all flex items-center justify-center gap-3 border-b-4 border-primary-800">
-                                {isGeneratingFix ? <Loader2 className="w-5 h-5 animate-spin" /> : <ShieldCheck className="w-5 h-5 fill-white" />}
-                                {isGeneratingFix ? 'Neutralizing Vectors...' : 'Generate Neural Fix'}
-                              </button>
+                            <div className="flex flex-col gap-8">
+                              <div className="flex flex-col md:flex-row justify-center gap-6">
+                                <button onClick={handleDeepDive} className="bg-dark-bg text-white px-10 py-4 rounded-3xl text-[10px] font-black uppercase tracking-widest shadow-xl hover:-translate-y-1 transition-all flex items-center justify-center gap-3 border border-white/10 group">
+                                  Copilot Deep Dive <MessageSquareShare className="w-5 h-5 text-primary-500 group-hover:scale-110 transition-transform" />
+                                </button>
+                                <button onClick={handleGenerateFix} disabled={isGeneratingFix} className="bg-primary-600 text-white px-10 py-4 rounded-3xl text-[10px] font-black uppercase tracking-widest shadow-2xl shadow-primary-600/20 hover:-translate-y-1 transition-all flex items-center justify-center gap-3 border-b-4 border-primary-800">
+                                  {isGeneratingFix ? <Loader2 className="w-5 h-5 animate-spin" /> : <ShieldCheck className="w-5 h-5 fill-white" />}
+                                  {isGeneratingFix ? 'Neutralizing Vectors...' : 'Generate Neural Fix'}
+                                </button>
+                              </div>
+                              <div className="flex justify-center">
+                                <button onClick={handleHandover} className="text-zinc-500 hover:text-zinc-300 text-[10px] font-bold uppercase tracking-widest flex items-center gap-2 hover:underline">
+                                  <Share2 className="w-4 h-4" /> Export to Slack / Jira
+                                </button>
+                              </div>
                             </div>
                           ) : (
                             <div className="bg-dark-card p-10 rounded-5xl border-2 border-primary-500/30 animate-in zoom-in-95 shadow-2xl glass cyber-card">
@@ -701,54 +857,71 @@ export const TriageView: React.FC<TriageViewProps> = ({ workloads, isDarkMode = 
                 </section>
 
                 <section className="bg-dark-bg/90 rounded-5xl border border-white/5 shadow-2xl overflow-hidden flex flex-col min-h-[600px] cyber-card">
-                  <div className="px-8 py-6 border-b border-white/5 bg-black/40 flex items-center justify-between gap-4 backdrop-blur-md">
-                    <div className="flex items-center gap-4">
-                      <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)] animate-pulse"></div>
-                      <Terminal className="w-5 h-5 text-gray-400" />
-                      <h3 className="text-[10px] font-black text-gray-100 uppercase tracking-[0.3em] font-display">Neural Log Stream</h3>
-                    </div>
-                    <div className="flex items-center gap-6">
-                      <div className="relative">
-                        <Search className="w-4 h-4 text-gray-600 absolute left-4 top-1/2 -translate-y-1/2" />
-                        <input
-                          type="text"
-                          placeholder="Search heap..."
-                          value={logSearchTerm}
-                          onChange={(e) => setLogSearchTerm(e.target.value)}
-                          className="bg-black/40 border border-white/5 rounded-2xl pl-12 pr-6 py-2.5 text-[11px] text-gray-300 placeholder:text-gray-700 focus:outline-none focus:border-primary-500/50 w-64 font-mono transition-all"
-                        />
-                      </div>
-                      <button
-                        onClick={() => setIsLogWrapEnabled(!isLogWrapEnabled)}
-                        className={`p-3 rounded-2xl transition-all ${isLogWrapEnabled ? 'bg-primary-500/20 text-primary-400 border border-primary-500/30 shadow-[0_0_15px_rgba(14,165,233,0.1)]' : 'hover:bg-white/5 text-gray-600 border border-transparent'}`}
-                        title={isLogWrapEnabled ? "Disable Wrap" : "Enable Wrap"}
-                      >
-                        <WrapText className="w-5 h-5" />
-                      </button>
-                    </div>
-                  </div>
-                  <div className="p-8 overflow-auto font-mono text-[11px] leading-relaxed flex-1 bg-black/20 custom-scrollbar">
-                    {(!selectedWorkload.recentLogs || selectedWorkload.recentLogs.length === 0) ? (
-                      <div className="h-full flex flex-col items-center justify-center text-gray-700 gap-6 opacity-40">
-                        <div className="p-10 bg-white/5 rounded-full ring-1 ring-white/10">
-                          <Terminal className="w-12 h-12" />
+                  {selectedWorkload.podNames && selectedWorkload.podNames.length > 0 ? (
+                    <LogStreamViewer
+                      namespace={selectedWorkload.namespace}
+                      podNames={selectedWorkload.podNames}
+                    />
+                  ) : (
+                    <>
+                      <div className="px-8 py-6 border-b border-white/5 bg-black/40 flex items-center justify-between gap-4 backdrop-blur-md">
+                        <div className="flex items-center gap-4">
+                          <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)] animate-pulse"></div>
+                          <Terminal className="w-5 h-5 text-gray-400" />
+                          <h3 className="text-[10px] font-black text-gray-100 uppercase tracking-[0.3em] font-display">Neural Log Stream</h3>
                         </div>
-                        <p className="font-black uppercase tracking-[0.5em] text-[10px] font-display">Empty Vector Space</p>
-                      </div>
-                    ) : (
-                      selectedWorkload.recentLogs
-                        .filter(log => !logSearchTerm || log.toLowerCase().includes(logSearchTerm.toLowerCase()))
-                        .map((log, i) => (
-                          <div key={i} className="flex gap-6 group hover:bg-primary-500/5 odd:bg-white/[0.01] px-6 py-1 items-start leading-relaxed border-l-2 border-transparent hover:border-primary-500 transition-all font-mono min-w-fit">
-                            <span className="text-gray-700 select-none text-[10px] w-10 font-bold flex-shrink-0 text-right opacity-30 mt-[2px]">{i + 1}</span>
-                            <div className={`text-gray-400 min-w-0 flex-1 text-[12px] selection:bg-primary-500/30 ${isLogWrapEnabled ? 'break-all whitespace-pre-wrap' : 'whitespace-nowrap'}`}>
-                              {highlightLog(log)}
-                            </div>
-                            <CopyButton text={log} className="opacity-0 group-hover:opacity-100 flex-shrink-0 scale-75 hover:bg-primary-500/20" />
+                        <div className="flex items-center gap-6">
+                          <button
+                            onClick={() => setIsLogSyncEnabled(!isLogSyncEnabled)}
+                            className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest transition-all ${isLogSyncEnabled ? 'bg-indigo-500/20 text-indigo-400 border border-indigo-500/30' : 'bg-white/5 text-gray-500 border border-transparent hover:text-gray-300'}`}
+                            title="Sync View with Team"
+                          >
+                            <div className={`w-2 h-2 rounded-full ${isLogSyncEnabled ? 'bg-indigo-500 animate-pulse' : 'bg-gray-600'}`} />
+                            Sync View
+                          </button>
+                          <div className="relative">
+                            <Search className="w-4 h-4 text-gray-600 absolute left-4 top-1/2 -translate-y-1/2" />
+                            <input
+                              type="text"
+                              placeholder="Search heap..."
+                              value={logSearchTerm}
+                              onChange={(e) => handleLogSearchChange(e.target.value)}
+                              className="bg-black/40 border border-white/5 rounded-2xl pl-12 pr-6 py-2.5 text-[11px] text-gray-300 placeholder:text-gray-700 focus:outline-none focus:border-primary-500/50 w-64 font-mono transition-all"
+                            />
                           </div>
-                        ))
-                    )}
-                  </div>
+                          <button
+                            onClick={handleLogWrapToggle}
+                            className={`p-3 rounded-2xl transition-all ${isLogWrapEnabled ? 'bg-primary-500/20 text-primary-400 border border-primary-500/30 shadow-[0_0_15px_rgba(14,165,233,0.1)]' : 'hover:bg-white/5 text-gray-600 border border-transparent'}`}
+                            title={isLogWrapEnabled ? "Disable Wrap" : "Enable Wrap"}
+                          >
+                            <WrapText className="w-5 h-5" />
+                          </button>
+                        </div>
+                      </div>
+                      <div className="p-8 overflow-auto font-mono text-[11px] leading-relaxed flex-1 bg-black/20 custom-scrollbar">
+                        {(!selectedWorkload.recentLogs || selectedWorkload.recentLogs.length === 0) ? (
+                          <div className="h-full flex flex-col items-center justify-center text-gray-700 gap-6 opacity-40">
+                            <div className="p-10 bg-white/5 rounded-full ring-1 ring-white/10">
+                              <Terminal className="w-12 h-12" />
+                            </div>
+                            <p className="font-black uppercase tracking-[0.5em] text-[10px] font-display">Empty Vector Space</p>
+                          </div>
+                        ) : (
+                          selectedWorkload.recentLogs
+                            .filter(log => !logSearchTerm || log.toLowerCase().includes(logSearchTerm.toLowerCase()))
+                            .map((log, i) => (
+                              <div key={i} className="flex gap-6 group hover:bg-primary-500/5 odd:bg-white/[0.01] px-6 py-1 items-start leading-relaxed border-l-2 border-transparent hover:border-primary-500 transition-all font-mono min-w-fit">
+                                <span className="text-gray-700 select-none text-[10px] w-10 font-bold flex-shrink-0 text-right opacity-30 mt-[2px]">{i + 1}</span>
+                                <div className={`text-gray-400 min-w-0 flex-1 text-[12px] selection:bg-primary-500/30 ${isLogWrapEnabled ? 'break-all whitespace-pre-wrap' : 'whitespace-nowrap'}`}>
+                                  {highlightLog(log)}
+                                </div>
+                                <CopyButton text={log} className="opacity-0 group-hover:opacity-100 flex-shrink-0 scale-75 hover:bg-primary-500/20" />
+                              </div>
+                            ))
+                        )}
+                      </div>
+                    </>
+                  )}
                 </section>
               </div>
 
@@ -779,7 +952,7 @@ export const TriageView: React.FC<TriageViewProps> = ({ workloads, isDarkMode = 
                 </div>
               </section>
             </div>
-          </div>
+          </div >
         ) : (
           <div className="flex-1 flex flex-col items-center justify-center p-20 text-center h-full animate-in fade-in duration-1000">
             <div className="relative mb-12">
@@ -793,7 +966,8 @@ export const TriageView: React.FC<TriageViewProps> = ({ workloads, isDarkMode = 
               Synchronize with the fleet by selecting a target vector from the triage matrix on the left.
             </p>
           </div>
-        )}
+        )
+        }
       </main >
     </div >
   );

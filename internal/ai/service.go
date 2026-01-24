@@ -284,18 +284,20 @@ func (s *AIService) Chat(ctx context.Context, providerName string, model string,
 	workingHistory := make([]ChatMessage, len(history))
 	copy(workingHistory, history)
 
-	// If history is empty, prepend system prompt
-	if len(workingHistory) == 0 {
-		workingHistory = append(workingHistory, ChatMessage{Role: "user", Content: "SYSTEM: " + agentSystemPrompt})
-	}
-
 	// 2. The Agent Loop
 	// We allow up to 5 turns to prevent infinite loops
 	maxTurns := 5
 	currentMessage := message
 
 	for i := 0; i < maxTurns; i++ {
-		response, err := provider.Chat(ctx, workingHistory, currentMessage, model)
+		// Construct the context for this specific turn
+		// We always prepend the System Prompt to ensure the Agent knows its tools
+		// regardless of how long the conversation gets.
+		turnHistory := make([]ChatMessage, 0, len(workingHistory)+2)
+		turnHistory = append(turnHistory, ChatMessage{Role: "user", Content: "SYSTEM: " + agentSystemPrompt})
+		turnHistory = append(turnHistory, workingHistory...)
+
+		response, err := provider.Chat(ctx, turnHistory, currentMessage, model)
 		if err != nil {
 			return "", err
 		}

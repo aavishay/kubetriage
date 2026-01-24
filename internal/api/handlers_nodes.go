@@ -57,7 +57,7 @@ func NodesHandler(c *gin.Context) {
 	}
 
 	// 2. Get Client
-	var client *k8s.Cluster
+	var client *k8s.ClusterConn
 	if clusterID != "" && k8s.Manager != nil {
 		cls, err := k8s.Manager.GetCluster(clusterID)
 		if err != nil {

@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { FileText, Download, Clock, Shield, Search, Filter, Loader2, CheckCircle2, AlertCircle, FileCheck, Activity, Trash2 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useMonitoring } from '../contexts/MonitoringContext';
+import { usePresence } from '../contexts/PresenceContext';
 
 // Backend uses PascalCase by default for struct fields without json tags
 interface TriageReport {
@@ -13,6 +14,8 @@ interface TriageReport {
     Severity: string;
     IsRead: boolean;
     CreatedAt: string;
+    AutoRemediationPayload?: string;
+    ApprovalStatus?: string;
 }
 
 import ReactMarkdown from 'react-markdown';
@@ -24,6 +27,7 @@ interface ReportsViewProps {
 export const ReportsView: React.FC<ReportsViewProps> = ({ isDarkMode = true }) => {
     const { user } = useAuth();
     const { selectedCluster } = useMonitoring();
+    const { activeUsers, notifyView, notifyLeave } = usePresence();
     const [reports, setReports] = useState<TriageReport[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [selectedReport, setSelectedReport] = useState<TriageReport | null>(null); // For Modal
@@ -79,6 +83,35 @@ export const ReportsView: React.FC<ReportsViewProps> = ({ isDarkMode = true }) =
         const d = new Date(dateStr);
         if (isNaN(d.getTime())) return 'Just Now';
         return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+    };
+
+    const handleApprove = async (report: TriageReport) => {
+        try {
+            const res = await fetch(`/api/reports/${report.ID}/approve`, { method: 'POST' });
+            if (res.ok) {
+                alert('Fix applied successfully!');
+                fetchReports(); // Refresh
+                setSelectedReport(null);
+            } else {
+                const err = await res.json();
+                alert(`Failed to apply fix: ${err.error || 'Unknown error'}`);
+            }
+        } catch (e) {
+            console.error(e);
+            alert('Network error approving fix');
+        }
+    };
+
+    const handleReject = async (report: TriageReport) => {
+        try {
+            const res = await fetch(`/api/reports/${report.ID}/reject`, { method: 'POST' });
+            if (res.ok) {
+                fetchReports();
+                setSelectedReport(null);
+            }
+        } catch (e) {
+            console.error(e);
+        }
     };
 
     const filteredReports = reports.filter(r =>
@@ -246,7 +279,7 @@ export const ReportsView: React.FC<ReportsViewProps> = ({ isDarkMode = true }) =
                 {/* Detail View Modal */}
                 {
                     selectedReport && (
-                        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-lg animate-in fade-in duration-200" onClick={() => setSelectedReport(null)}>
+                        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-lg animate-in fade-in duration-200" onClick={() => { notifyLeave(`report-${selectedReport.ID}`); setSelectedReport(null); }}>
                             <div className="bg-dark-bg/95 backdrop-blur-2xl rounded-[2rem] w-full max-w-4xl h-[85vh] flex flex-col shadow-[0_0_50px_rgba(0,0,0,0.5)] border border-white/10 animate-in zoom-in-95 duration-200 overflow-hidden" onClick={e => e.stopPropagation()}>
                                 <div className="flex items-center justify-between p-8 border-b border-white/5 bg-white/5">
                                     <div className="flex-1">
@@ -258,14 +291,54 @@ export const ReportsView: React.FC<ReportsViewProps> = ({ isDarkMode = true }) =
                                                 {selectedReport.Severity} Severity
                                             </span>
                                             <span className="text-xs text-zinc-500 font-mono">{formatDate(selectedReport.CreatedAt)}</span>
+
+                                            {/* Presence Indicators in Header */}
+                                            {activeUsers[`report-${selectedReport.ID}`] && activeUsers[`report-${selectedReport.ID}`].length > 0 && (
+                                                <div className="flex items-center gap-1 ml-4 border-l border-white/10 pl-4">
+                                                    <span className="text-[9px] uppercase tracking-widest text-zinc-500 mr-2">Viewing:</span>
+                                                    <div className="flex -space-x-2">
+                                                        {activeUsers[`report-${selectedReport.ID}`].map((u) => (
+                                                            <img key={u.userId} src={u.avatarUrl} alt={u.userName} title={u.userName} className="w-6 h-6 rounded-full border border-black" />
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
-                                    <button onClick={() => setSelectedReport(null)} className="p-3 text-zinc-400 hover:text-white hover:bg-white/10 rounded-xl transition-all">
+                                    <button onClick={() => { notifyLeave(`report-${selectedReport.ID}`); setSelectedReport(null); }} className="p-3 text-zinc-400 hover:text-white hover:bg-white/10 rounded-xl transition-all">
                                         <CheckCircle2 className="w-6 h-6" />
                                     </button>
                                 </div>
                                 <div className="flex-1 overflow-y-auto p-10 prose prose-invert max-w-none prose-headings:font-display prose-headings:uppercase prose-headings:tracking-wide custom-scrollbar prose-a:text-primary-400 prose-code:bg-black/50 prose-code:px-1 prose-code:py-0.5 prose-code:rounded prose-code:text-primary-300">
                                     <ReactMarkdown>{selectedReport.Analysis}</ReactMarkdown>
+
+                                    {selectedReport.AutoRemediationPayload && selectedReport.ApprovalStatus === 'Pending' && (
+                                        <div className="mt-8 p-6 bg-primary-500/10 border border-primary-500/30 rounded-3xl">
+                                            <h4 className="text-lg font-black text-white uppercase tracking-widest mb-4 flex items-center gap-2">
+                                                <Shield className="w-5 h-5 text-primary-400" /> Auto-Fix Available
+                                            </h4>
+                                            <p className="text-sm text-gray-300 mb-4">
+                                                The AI has generated a patch to resolve this issue. Please review and approve.
+                                            </p>
+                                            <div className="bg-black/50 p-4 rounded-xl font-mono text-xs text-gray-300 overflow-x-auto mb-6 border border-white/5">
+                                                <pre>{selectedReport.AutoRemediationPayload}</pre>
+                                            </div>
+                                            <div className="flex gap-4">
+                                                <button onClick={() => handleApprove(selectedReport)} className="bg-emerald-500 hover:bg-emerald-600 text-white px-6 py-3 rounded-xl font-black text-xs uppercase tracking-widest shadow-lg shadow-emerald-500/20 transition-all flex items-center gap-2">
+                                                    <CheckCircle2 className="w-4 h-4" /> Approve & Apply
+                                                </button>
+                                                <button onClick={() => handleReject(selectedReport)} className="bg-white/5 hover:bg-white/10 text-gray-300 px-6 py-3 rounded-xl font-black text-xs uppercase tracking-widest transition-all">
+                                                    Reject
+                                                </button>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {selectedReport.ApprovalStatus === 'Approved' && (
+                                        <div className="mt-8 p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl flex items-center gap-3 text-emerald-400 font-bold text-sm">
+                                            <CheckCircle2 className="w-5 h-5" /> Auto-Fix Applied successfully.
+                                        </div>
+                                    )}
                                 </div>
                                 <div className="p-6 border-t border-white/5 bg-black/40 flex justify-between items-center">
                                     <div className="text-xs text-zinc-500 font-mono">
@@ -289,7 +362,7 @@ export const ReportsView: React.FC<ReportsViewProps> = ({ isDarkMode = true }) =
                     ) : filteredReports.length > 0 ? (
                         <div className="grid grid-cols-1 gap-4">
                             {filteredReports.map((report) => (
-                                <div key={report.ID} onClick={() => setSelectedReport(report)} className="bg-dark-card/40 backdrop-blur-sm border border-white/5 rounded-3xl p-6 flex items-start sm:items-center gap-6 hover:bg-white/5 hover:border-primary-500/30 transition-all shadow-sm hover:shadow-[0_0_30px_rgba(0,0,0,0.3)] cursor-pointer group relative overflow-hidden">
+                                <div key={report.ID} onClick={() => { setSelectedReport(report); notifyView(`report-${report.ID}`); }} className="bg-dark-card/40 backdrop-blur-sm border border-white/5 rounded-3xl p-6 flex items-start sm:items-center gap-6 hover:bg-white/5 hover:border-primary-500/30 transition-all shadow-sm hover:shadow-[0_0_30px_rgba(0,0,0,0.3)] cursor-pointer group relative overflow-hidden">
                                     <div className="absolute inset-y-0 left-0 w-1 bg-primary-500 scale-y-0 group-hover:scale-y-100 transition-transform duration-300 origin-bottom"></div>
 
                                     <div className={`p-3 rounded-2xl shrink-0 border transition-colors ${report.Severity === 'Critical' ? 'bg-rose-500/10 text-rose-500 border-rose-500/20 group-hover:bg-rose-500/20' : 'bg-amber-500/10 text-amber-500 border-amber-500/20 group-hover:bg-amber-500/20'}`}>
@@ -312,6 +385,15 @@ export const ReportsView: React.FC<ReportsViewProps> = ({ isDarkMode = true }) =
                                         <span className={`text-[9px] font-black uppercase tracking-widest px-3 py-1.5 rounded-lg border ${report.Severity === 'Critical' ? 'bg-rose-500/10 text-rose-400 border-rose-500/20' : 'bg-amber-500/10 text-amber-400 border-amber-500/20'}`}>
                                             {report.Severity}
                                         </span>
+
+                                        {/* Avatar Stack on Card */}
+                                        {activeUsers[`report-${report.ID}`] && activeUsers[`report-${report.ID}`].length > 0 && (
+                                            <div className="flex -space-x-2 justify-end mt-2">
+                                                {activeUsers[`report-${report.ID}`].map((u) => (
+                                                    <img key={u.userId} src={u.avatarUrl} className="w-5 h-5 rounded-full border border-black" title={u.userName} />
+                                                ))}
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
                             ))}

@@ -14,8 +14,8 @@ import (
 	metrics "k8s.io/metrics/pkg/client/clientset/versioned"
 )
 
-// Cluster represents a connected Kubernetes context
-type Cluster struct {
+// ClusterConn represents a connected Kubernetes context
+type ClusterConn struct {
 	ID            string // Usually the context name
 	Name          string
 	ClientSet     *kubernetes.Clientset
@@ -26,7 +26,7 @@ type Cluster struct {
 }
 
 type ClusterManager struct {
-	clusters map[string]*Cluster
+	clusters map[string]*ClusterConn
 	mu       sync.RWMutex
 }
 
@@ -39,7 +39,7 @@ var (
 func InitManager() *ClusterManager {
 	onceMgr.Do(func() {
 		Manager = &ClusterManager{
-			clusters: make(map[string]*Cluster),
+			clusters: make(map[string]*ClusterConn),
 		}
 	})
 	return Manager
@@ -105,7 +105,7 @@ func (m *ClusterManager) LoadClustersFromKubeconfig() error {
 
 		namespace, _, _ := clientConfig.Namespace()
 
-		m.clusters[contextName] = &Cluster{
+		m.clusters[contextName] = &ClusterConn{
 			ID:            contextName,
 			Name:          contextName,
 			ClientSet:     clientset,
@@ -123,7 +123,7 @@ func (m *ClusterManager) LoadClustersFromKubeconfig() error {
 			cls, _ := kubernetes.NewForConfig(config)
 			dyn, _ := dynamic.NewForConfig(config)
 			met, _ := metrics.NewForConfig(config)
-			m.clusters["in-cluster"] = &Cluster{
+			m.clusters["in-cluster"] = &ClusterConn{
 				ID: "in-cluster", Name: "In Cluster", ClientSet: cls, DynamicClient: dyn, MetricsClient: met, Config: config,
 			}
 		}
@@ -133,7 +133,7 @@ func (m *ClusterManager) LoadClustersFromKubeconfig() error {
 }
 
 // GetCluster returns a cluster by ID
-func (m *ClusterManager) GetCluster(id string) (*Cluster, error) {
+func (m *ClusterManager) GetCluster(id string) (*ClusterConn, error) {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
 
@@ -144,11 +144,11 @@ func (m *ClusterManager) GetCluster(id string) (*Cluster, error) {
 }
 
 // ListClusters returns all loaded clusters
-func (m *ClusterManager) ListClusters() []*Cluster {
+func (m *ClusterManager) ListClusters() []*ClusterConn {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
 
-	list := make([]*Cluster, 0, len(m.clusters))
+	list := make([]*ClusterConn, 0, len(m.clusters))
 	for _, c := range m.clusters {
 		list = append(list, c)
 	}
@@ -156,7 +156,7 @@ func (m *ClusterManager) ListClusters() []*Cluster {
 }
 
 // AddClusterFromKubeconfig parses a raw kubeconfig and adds it to the manager
-func (m *ClusterManager) AddClusterFromKubeconfig(rawConfig []byte) (*Cluster, error) {
+func (m *ClusterManager) AddClusterFromKubeconfig(rawConfig []byte) (*ClusterConn, error) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
@@ -207,7 +207,7 @@ func (m *ClusterManager) AddClusterFromKubeconfig(rawConfig []byte) (*Cluster, e
 	namespace, _, _ := clientConfig.Namespace()
 
 	// 3. Add to Map
-	cluster := &Cluster{
+	cluster := &ClusterConn{
 		ID:            contextName, // using context name as ID for simplicity
 		Name:          contextName,
 		ClientSet:     clientset,

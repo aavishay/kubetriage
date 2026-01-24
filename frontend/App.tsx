@@ -19,6 +19,7 @@ import { ReportsView } from './components/ReportsView';
 import { BellRing, X, Loader2, Key, ExternalLink, Settings2 } from 'lucide-react';
 import { DiagnosticPlaybook } from './types';
 import { ErrorBoundary } from './components/ErrorBoundary';
+import { PresenceProvider } from './contexts/PresenceContext';
 
 // Wrapper component to consume Context and enforce Auth
 const AppContent: React.FC = () => {
@@ -222,11 +223,13 @@ const App: React.FC = () => {
   return (
     <AuthProvider>
       <MonitoringProvider>
-        <BrowserRouter>
-          <ErrorBoundary>
-            <AppContent />
-          </ErrorBoundary>
-        </BrowserRouter>
+        <PresenceProvider>
+          <BrowserRouter>
+            <ErrorBoundary>
+              <AppContent />
+            </ErrorBoundary>
+          </BrowserRouter>
+        </PresenceProvider>
       </MonitoringProvider>
     </AuthProvider>
   );
