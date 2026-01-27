@@ -498,46 +498,46 @@ func (s *AIService) GenerateRemediation(ctx context.Context, providerName, model
 	return &suggestion, nil
 }
 
-func (s *AIService) GenerateTopology(ctx context.Context, providerName, model, workloadSummary string) (string, error) {
+func (s *AIService) GenerateTopology(ctx context.Context, providerName, model, workloadSummary, incidentSummary string) (string, error) {
 	provider, err := s.getProvider(providerName)
 	if err != nil {
 		return "", err
 	}
 
+	incidentContext := ""
+	if incidentSummary != "" {
+		incidentContext = fmt.Sprintf("\n\tACTIVE INCIDENTS (Highlight these nodes):\n\t%s\n", incidentSummary)
+	}
+
 	prompt := fmt.Sprintf(`
 	You are a Cloud Architecture Expert specializing in Kubernetes.
-	Based on the list of workloads below, generate a Mermaid JS diagram to visualize the architecture.
+	Based on the list of workloads and active incidents below, generate a Mermaid JS diagram to visualize the architecture.
 	
 	Workloads:
+	%s
 	%s
 	
 	Strict Mermaid Syntax Requirements:
 	- Diagram Type: 'flowchart TB'
 	- Use 'subgraph' to group workloads by Namespace.
-	- Node IDs: MUST be STRICTLY alphanumeric snake_case (e.g., frontend_api, redis_cache). 
-	    - ABSOLUTELY NO hyphens ('-') in Node IDs. Use underscores ('_') instead.
-	    - ABSOLUTELY NO dots ('.') in Node IDs.
-	    - **CRITICAL**: To prevent duplicate ID errors, YOU MUST PREPEND THE NAMESPACE to the Node ID (e.g., ns_prod_my_app vs ns_dev_my_app).
-	- Subgraph IDs: MUST be STRICTLY alphanumeric snake_case.
-	    - ABSOLUTELY NO hyphens ('-') in Subgraph IDs (e.g., use 'subgraph kube_system', NOT 'subgraph kube-system').
-	- Display Names: Use brackets for display names which CAN contain hyphens (e.g., node_id["Original-Name"]).
-	- Connections: Infer traffic patterns (e.g., frontend calls backend, backend calls db). Use simple arrows '-->'.
-	- No Edge Labels: DO NOT add text labels to arrows (e.g. no '|text|').
-	- Subgraphs: Use syntax 'subgraph id [Title]' with a space before the Title bracket. ID must be snake_case.
+	- Node IDs: MUST be STRICTLY alphanumeric snake_case.
+	    - **CRITICAL**: PREPEND THE NAMESPACE to the Node ID (e.g., ns_prod_my_app).
+	- Connections: Infer traffic patterns. Use simple arrows '-->'.
+	- No Edge Labels: DO NOT add text labels to arrows.
+	
+	REACTIVE STYLING (Live War Room Mode):
+	- Define CSS classes at the top of the diagram:
+	    classDef critical fill:#f43f5e,stroke:#fff,stroke-width:2px,color:#fff;
+	    classDef warning fill:#fbbf24,stroke:#fff,stroke-width:1px,color:#000;
+	- Apply classes to nodes with active incidents:
+	    - Use 'critical' for 'Critical' or 'High' severity incidents.
+	    - Use 'warning' for 'Warning' or 'Medium' severity incidents.
+	- Example: class ns_prod_app_v1 critical;
 	
 	Output Format:
 	- Return ONLY the Mermaid code block.
-	- DO NOT include ANY introductory text, concluding remarks, or side explanations.
-	- Wrap the Mermaid code in a markdown block: `+"```mermaid"+` [CODE] `+"```"+`.
-	
-	Example Output Pattern:
-	`+"```mermaid"+`
-	flowchart TB
-	  subgraph ns_prod [production]
-	    ns_prod_app_v1["app-v1"] --> ns_prod_db_prod["db-main"]
-	  end
-	`+"```"+`
-	`, workloadSummary)
+	- Wrap in `+"```mermaid"+` [CODE] `+"```"+`.
+	`, workloadSummary, incidentContext)
 
 	// Enforce a timeout for Diagram Generation (slow local LLMs might hang)
 	ctxWithTimeout, cancel := context.WithTimeout(ctx, 180*time.Second) // Increased for complex graphs

@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { FileText, Download, Clock, Shield, Search, Filter, Loader2, CheckCircle2, AlertCircle, FileCheck, Activity, Trash2 } from 'lucide-react';
+import { FileText, Download, Clock, Shield, Search, Filter, Loader2, CheckCircle2, AlertCircle, FileCheck, Activity, Trash2, MessageSquare, Ticket, Share2 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useMonitoring } from '../contexts/MonitoringContext';
 import { usePresence } from '../contexts/PresenceContext';
@@ -16,6 +16,7 @@ interface TriageReport {
     CreatedAt: string;
     AutoRemediationPayload?: string;
     ApprovalStatus?: string;
+    IncidentType?: string;
 }
 
 import ReactMarkdown from 'react-markdown';
@@ -111,6 +112,22 @@ export const ReportsView: React.FC<ReportsViewProps> = ({ isDarkMode = true }) =
             }
         } catch (e) {
             console.error(e);
+        }
+    };
+
+    const handleExport = async (report: TriageReport, target: 'slack' | 'jira') => {
+        try {
+            const res = await fetch(`/api/reports/${report.ID}/export?target=${target}`, { method: 'POST' });
+            if (res.ok) {
+                const data = await res.json();
+                alert(data.message || `Exported to ${target} successfully!`);
+            } else {
+                const err = await res.json();
+                alert(`Failed to export: ${err.error || 'Unknown error'}`);
+            }
+        } catch (e) {
+            console.error(e);
+            alert('Network error during export');
         }
     };
 
@@ -344,7 +361,24 @@ export const ReportsView: React.FC<ReportsViewProps> = ({ isDarkMode = true }) =
                                     <div className="text-xs text-zinc-500 font-mono">
                                         RID: {selectedReport.ID} • CLUSTER: {selectedReport.ClusterID}
                                     </div>
-                                    <button onClick={() => setSelectedReport(null)} className="bg-white text-black hover:bg-zinc-200 px-8 py-3 rounded-xl font-black text-xs uppercase tracking-widest hover:scale-105 transition-all shadow-[0_0_20px_rgba(255,255,255,0.1)]">Close Report</button>
+                                    <div className="flex items-center gap-3">
+                                        <button
+                                            onClick={() => handleExport(selectedReport, 'slack')}
+                                            className="flex items-center gap-2 bg-indigo-500/10 text-indigo-400 hover:bg-indigo-500/20 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border border-indigo-500/20"
+                                            title="Export to Slack"
+                                        >
+                                            <MessageSquare className="w-3.5 h-3.5" /> Slack
+                                        </button>
+                                        <button
+                                            onClick={() => handleExport(selectedReport, 'jira')}
+                                            className="flex items-center gap-2 bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border border-blue-500/20"
+                                            title="Create Jira Ticket"
+                                        >
+                                            <Ticket className="w-3.5 h-3.5" /> Jira
+                                        </button>
+                                        <div className="w-px h-6 bg-white/10 mx-2" />
+                                        <button onClick={() => setSelectedReport(null)} className="bg-white text-black hover:bg-zinc-200 px-8 py-3 rounded-xl font-black text-xs uppercase tracking-widest hover:scale-105 transition-all shadow-[0_0_20px_rgba(255,255,255,0.1)]">Close Report</button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -361,42 +395,45 @@ export const ReportsView: React.FC<ReportsViewProps> = ({ isDarkMode = true }) =
                         </div>
                     ) : filteredReports.length > 0 ? (
                         <div className="grid grid-cols-1 gap-4">
-                            {filteredReports.map((report) => (
-                                <div key={report.ID} onClick={() => { setSelectedReport(report); notifyView(`report-${report.ID}`); }} className="bg-dark-card/40 backdrop-blur-sm border border-white/5 rounded-3xl p-6 flex items-start sm:items-center gap-6 hover:bg-white/5 hover:border-primary-500/30 transition-all shadow-sm hover:shadow-[0_0_30px_rgba(0,0,0,0.3)] cursor-pointer group relative overflow-hidden">
-                                    <div className="absolute inset-y-0 left-0 w-1 bg-primary-500 scale-y-0 group-hover:scale-y-100 transition-transform duration-300 origin-bottom"></div>
+                            {filteredReports.map((report) => {
+                                const isSecurity = (report.IncidentType && (report.IncidentType.includes('Privileged') || report.IncidentType.includes('Root') || report.IncidentType.includes('Security'))) || (report.Analysis || '').includes('Security Violation');
+                                return (
+                                    <div key={report.ID} onClick={() => { setSelectedReport(report); notifyView(`report-${report.ID}`); }} className={`bg-dark-card/40 backdrop-blur-sm border rounded-3xl p-6 flex items-start sm:items-center gap-6 transition-all shadow-sm hover:shadow-[0_0_30px_rgba(0,0,0,0.3)] cursor-pointer group relative overflow-hidden ${isSecurity ? 'border-rose-500/30 hover:bg-rose-500/5' : 'border-white/5 hover:bg-white/5 hover:border-primary-500/30'}`}>
+                                        <div className={`absolute inset-y-0 left-0 w-1 scale-y-0 group-hover:scale-y-100 transition-transform duration-300 origin-bottom ${isSecurity ? 'bg-rose-500' : 'bg-primary-500'}`}></div>
 
-                                    <div className={`p-3 rounded-2xl shrink-0 border transition-colors ${report.Severity === 'Critical' ? 'bg-rose-500/10 text-rose-500 border-rose-500/20 group-hover:bg-rose-500/20' : 'bg-amber-500/10 text-amber-500 border-amber-500/20 group-hover:bg-amber-500/20'}`}>
-                                        <AlertCircle className="w-5 h-5" />
-                                    </div>
-                                    <div className="flex-1 min-w-0">
-                                        <div className="flex items-center gap-3 mb-1.5">
-                                            <h4 className="text-sm font-bold text-white tracking-wide group-hover:text-primary-400 transition-colors">
-                                                {report.WorkloadName || 'Cluster Issue'}
-                                            </h4>
-                                            <span className="text-[9px] px-2 py-0.5 rounded-full border border-white/10 bg-black/20 text-zinc-500 font-mono">
-                                                {formatDate(report.CreatedAt)}
-                                            </span>
+                                        <div className={`p-3 rounded-2xl shrink-0 border transition-colors ${isSecurity ? 'bg-rose-500/10 text-rose-500 border-rose-500/20' : report.Severity === 'Critical' ? 'bg-rose-500/10 text-rose-500 border-rose-500/20 group-hover:bg-rose-500/20' : 'bg-amber-500/10 text-amber-500 border-amber-500/20 group-hover:bg-amber-500/20'}`}>
+                                            {isSecurity ? <Shield className="w-5 h-5" /> : <AlertCircle className="w-5 h-5" />}
                                         </div>
-                                        <p className="text-xs text-zinc-400 font-medium line-clamp-1 opacity-80 group-hover:opacity-100 transition-opacity">
-                                            {report.Analysis ? report.Analysis.substring(0, 150) + "..." : 'No content'}
-                                        </p>
-                                    </div>
-                                    <div className="hidden sm:block text-right shrink-0">
-                                        <span className={`text-[9px] font-black uppercase tracking-widest px-3 py-1.5 rounded-lg border ${report.Severity === 'Critical' ? 'bg-rose-500/10 text-rose-400 border-rose-500/20' : 'bg-amber-500/10 text-amber-400 border-amber-500/20'}`}>
-                                            {report.Severity}
-                                        </span>
-
-                                        {/* Avatar Stack on Card */}
-                                        {activeUsers[`report-${report.ID}`] && activeUsers[`report-${report.ID}`].length > 0 && (
-                                            <div className="flex -space-x-2 justify-end mt-2">
-                                                {activeUsers[`report-${report.ID}`].map((u) => (
-                                                    <img key={u.userId} src={u.avatarUrl} className="w-5 h-5 rounded-full border border-black" title={u.userName} />
-                                                ))}
+                                        <div className="flex-1 min-w-0">
+                                            <div className="flex items-center gap-3 mb-1.5">
+                                                <h4 className="text-sm font-bold text-white tracking-wide group-hover:text-primary-400 transition-colors">
+                                                    {report.WorkloadName || 'Cluster Issue'}
+                                                </h4>
+                                                <span className="text-[9px] px-2 py-0.5 rounded-full border border-white/10 bg-black/20 text-zinc-500 font-mono">
+                                                    {formatDate(report.CreatedAt)}
+                                                </span>
                                             </div>
-                                        )}
+                                            <p className="text-xs text-zinc-400 font-medium line-clamp-1 opacity-80 group-hover:opacity-100 transition-opacity">
+                                                {report.Analysis ? report.Analysis.substring(0, 150) + "..." : 'No content'}
+                                            </p>
+                                        </div>
+                                        <div className="hidden sm:block text-right shrink-0">
+                                            <span className={`text-[9px] font-black uppercase tracking-widest px-3 py-1.5 rounded-lg border ${report.Severity === 'Critical' ? 'bg-rose-500/10 text-rose-400 border-rose-500/20' : 'bg-amber-500/10 text-amber-400 border-amber-500/20'}`}>
+                                                {report.Severity}
+                                            </span>
+
+                                            {/* Avatar Stack on Card */}
+                                            {activeUsers[`report-${report.ID}`] && activeUsers[`report-${report.ID}`].length > 0 && (
+                                                <div className="flex -space-x-2 justify-end mt-2">
+                                                    {activeUsers[`report-${report.ID}`].map((u) => (
+                                                        <img key={u.userId} src={u.avatarUrl} className="w-5 h-5 rounded-full border border-black" title={u.userName} />
+                                                    ))}
+                                                </div>
+                                            )}
+                                        </div>
                                     </div>
-                                </div>
-                            ))}
+                                );
+                            })}
                         </div>
                     ) : (
                         <div className="text-center py-24 border border-dashed border-white/10 rounded-[3rem] bg-black/20 flex flex-col items-center justify-center group hover:bg-black/30 transition-colors">

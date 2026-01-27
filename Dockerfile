@@ -25,8 +25,8 @@ COPY --from=backend-builder /app/server .
 # Copy Frontend Static Assets
 COPY --from=frontend-builder /app/frontend/dist ./frontend/dist
 
-# Create non-root user
-RUN adduser -D -g '' appuser
+# Create non-root user and set permissions
+RUN adduser -D -g '' appuser && chown -R appuser:appuser /app
 USER appuser
 
 EXPOSE 3001

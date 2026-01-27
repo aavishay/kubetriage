@@ -150,3 +150,24 @@ func (cp *ClusterProject) BeforeCreate(tx *gorm.DB) (err error) {
 	}
 	return
 }
+
+// Recipe model for Automation Engine (Phase 2)
+type Recipe struct {
+	ID            uuid.UUID `gorm:"type:uuid;primaryKey"`
+	Name          string    `gorm:"not null"`
+	Description   string
+	TriggerType   string // e.g., "Metric", "Event", "PodStatus", "Security"
+	TriggerConfig string // JSON config for the trigger
+	ActionType    string // e.g., "Report", "Remediate"
+	IsEnabled     bool   `gorm:"default:true"`
+	CreatedAt     time.Time
+	UpdatedAt     time.Time
+	DeletedAt     gorm.DeletedAt `gorm:"index"`
+}
+
+func (r *Recipe) BeforeCreate(tx *gorm.DB) (err error) {
+	if r.ID == uuid.Nil {
+		r.ID = uuid.New()
+	}
+	return
+}

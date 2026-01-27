@@ -180,9 +180,17 @@ func (h *AIHandler) GenerateTopology(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
 		return
 	}
-	log.Printf("DEBUG: Received Topology Request. Provider: '%s', Model: '%s'", req.Provider, req.Model)
 
-	diagram, err := h.service.GenerateTopology(c.Request.Context(), req.Provider, req.Model, req.WorkloadSummary)
+	// Fetch Active Incidents for Reactive Styling
+	var activeReports []db.TriageReport
+	incidentSummary := ""
+	if err := db.DB.Where("is_read = ?", false).Find(&activeReports).Error; err == nil {
+		for _, r := range activeReports {
+			incidentSummary += fmt.Sprintf("- %s in %s: %s (Severity: %s)\n", r.WorkloadName, r.Namespace, r.IncidentType, r.Severity)
+		}
+	}
+
+	diagram, err := h.service.GenerateTopology(c.Request.Context(), req.Provider, req.Model, req.WorkloadSummary, incidentSummary)
 	if err != nil {
 		log.Printf("Error generating topology: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate topology"})

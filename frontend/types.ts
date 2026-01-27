@@ -172,6 +172,17 @@ export interface Playbook {
   updatedAt: string;
 }
 
+export interface Recipe {
+  ID: string;
+  Name: string;
+  Description: string;
+  TriggerType: string;
+  TriggerConfig: string;
+  ActionType: string;
+  IsEnabled: boolean;
+  CreatedAt: string;
+}
+
 export interface CommentUser {
   ID: string;
   Email: string;

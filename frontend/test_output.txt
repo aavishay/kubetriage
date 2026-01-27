@@ -1,0 +1,37 @@
+
+[1m[46m RUN [49m[22m [36mv4.0.17 [39m[90m/Users/avishay/src/kubetriage/frontend[39m
+
+(node:96258) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+ [31m❯[39m src/App.test.tsx [2m([22m[2m1 test[22m[2m | [22m[31m1 failed[39m[2m)[22m[32m 20[2mms[22m[39m
+[31m     [31m×[31m renders without crashing[39m[32m 19[2mms[22m[39m
+
+[31m⎯⎯⎯⎯⎯⎯⎯[39m[1m[41m Failed Tests 1 [49m[22m[31m⎯⎯⎯⎯⎯⎯⎯[39m
+
+[41m[1m FAIL [22m[49m src/App.test.tsx[2m > [22mApp[2m > [22mrenders without crashing
+[31m[1mTypeError[22m: localStorage.setItem is not a function[39m
+[36m [2m❯[22m contexts/MonitoringContext.tsx:[2m271:18[22m[39m
+    [90m269| [39m  [90m// Persistence Effects[39m
+    [90m270| [39m  [34museEffect[39m(() [33m=>[39m {
+    [90m271| [39m    localStorage.setItem('notification_channels', JSON.stringify(notif…
+    [90m   | [39m                 [31m^[39m
+    [90m272| [39m  }[33m,[39m [notificationChannels])[33m;[39m
+    [90m273| [39m
+[90m [2m❯[22m Object.react_stack_bottom_frame ../node_modules/react-dom/cjs/react-dom-client.development.js:[2m25989:20[22m[39m
+[90m [2m❯[22m runWithFiberInDEV ../node_modules/react-dom/cjs/react-dom-client.development.js:[2m874:13[22m[39m
+[90m [2m❯[22m commitHookEffectListMount ../node_modules/react-dom/cjs/react-dom-client.development.js:[2m13249:29[22m[39m
+[90m [2m❯[22m commitHookPassiveMountEffects ../node_modules/react-dom/cjs/react-dom-client.development.js:[2m13336:11[22m[39m
+[90m [2m❯[22m commitPassiveMountOnFiber ../node_modules/react-dom/cjs/react-dom-client.development.js:[2m15484:13[22m[39m
+[90m [2m❯[22m recursivelyTraversePassiveMountEffects ../node_modules/react-dom/cjs/react-dom-client.development.js:[2m15439:11[22m[39m
+[90m [2m❯[22m commitPassiveMountOnFiber ../node_modules/react-dom/cjs/react-dom-client.development.js:[2m15718:11[22m[39m
+[90m [2m❯[22m recursivelyTraversePassiveMountEffects ../node_modules/react-dom/cjs/react-dom-client.development.js:[2m15439:11[22m[39m
+[90m [2m❯[22m commitPassiveMountOnFiber ../node_modules/react-dom/cjs/react-dom-client.development.js:[2m15476:11[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯[22m[39m
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m   Start at [22m 11:00:53
+[2m   Duration [22m 2.30s[2m (transform 370ms, setup 75ms, import 1.50s, tests 20ms, environment 533ms)[22m
+

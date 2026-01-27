@@ -60,7 +60,7 @@ func TestGenerateTopology_CleanResponse(t *testing.T) {
 				},
 			}
 
-			got, err := s.GenerateTopology(context.Background(), "mock", "mock-model", "summary")
+			got, err := s.GenerateTopology(context.Background(), "mock", "mock-model", "summary", "")
 			if err != nil {
 				t.Fatalf("GenerateTopology() error = %v", err)
 			}

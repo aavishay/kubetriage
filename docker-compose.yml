@@ -1,59 +1,41 @@
-version: '3.8'
-
 services:
-  backend:
+  app:
     build:
       context: .
-    container_name: kubetriage-backend
+      dockerfile: Dockerfile
+    container_name: kubetriage-app
     ports:
-      - "8081:3001"
+      - "3001:3001"
     environment:
-      - NODE_ENV=production
-      - PORT=3001
-      - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger:4317
-      - DATABASE_URL=host=postgres user=kubetriage password=kubetriage dbname=kubetriage port=5432 sslmode=disable
       - GEMINI_API_KEY=${GEMINI_API_KEY}
-      - REDIS_ADDR=kubetriage-redis:6379
-      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
-      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
-      - GOOGLE_REDIRECT_URL=http://localhost:8081/api/auth/google/callback
-
-  kubetriage-redis:
-    image: redis:alpine
-    ports:
-      - "6379:6379"
-    restart: always
+      - DATABASE_URL=${DATABASE_URL:-kubetriage.db}
+      - REDIS_ADDR=${REDIS_ADDR:-redis:6379}
+      - PROMETHEUS_URL=${PROMETHEUS_URL:-http://prometheus:9090}
+      - JWT_SECRET=${JWT_SECRET:-change-me-please}
+      - MOCK_OIDC=${MOCK_OIDC:-true}
     volumes:
-      - redis_data:/data
+      - ./kubetriage.db:/app/kubetriage.db
+      - ${HOME}/.kube/config:/home/appuser/.kube/config:ro
+    depends_on:
+      - redis
+      - prometheus
+    restart: unless-stopped
 
-  postgres:
-    image: postgres:15-alpine
-    container_name: kubetriage-postgres
+  redis:
+    image: bitnami/redis:latest
+    container_name: kubetriage-redis
     environment:
-      - POSTGRES_USER=kubetriage
-      - POSTGRES_PASSWORD=kubetriage
-      - POSTGRES_DB=kubetriage
+      - ALLOW_EMPTY_PASSWORD=yes
     ports:
-      - "5433:5432"
+      - "6381:6379"
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: kubetriage-prometheus
     volumes:
-      - pgdata:/var/lib/postgresql/data
-    restart: always
-
-  jaeger:
-    image: jaegertracing/all-in-one:latest
-    container_name: kubetriage-jaeger
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
     ports:
-      - "16686:16686" # UI
-      - "4317:4317" # OTLP gRPC
-      - "4318:4318" # OTLP HTTP
-    environment:
-      - COLLECTOR_OTLP_ENABLED=true
-    restart: always
-
-networks:
-  default:
-    driver: bridge
+      - "9091:9090"
 
 volumes:
-  pgdata:
   redis_data:

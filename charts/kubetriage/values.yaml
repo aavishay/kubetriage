@@ -82,11 +82,13 @@ backend:
     MOCK_OIDC: "true"
     FRONTEND_URL: "http://localhost:8081"
     # GEMINI_API_KEY: "set-via-secret"
-    # REDIS_ADDR: "kubetriage-redis-master:6379"
+    REDIS_ADDR: "kubetriage-redis-master:6379"
 
 redis:
   enabled: true
   architecture: standalone
+  image:
+    tag: latest
   auth:
     enabled: false # For MVP simplicity
 

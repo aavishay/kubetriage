@@ -1,7 +1,7 @@
 
-import React from 'react';
-import { BookOpen, Scale, Shield, Network, Cpu, Database, Activity, Zap, TrendingDown, Gauge, ArrowRight, ExternalLink, Sparkles, AlertCircle, Ghost, ServerCrash, BarChart, CloudRain, Anchor } from 'lucide-react';
-import { ViewState, DiagnosticPlaybook, OptimizationProfile } from '../types';
+import React, { useState, useEffect } from 'react';
+import { BookOpen, Scale, Shield, Network, Cpu, Database, Activity, Zap, TrendingDown, Gauge, ArrowRight, ExternalLink, Sparkles, AlertCircle, Ghost, ServerCrash, BarChart, CloudRain, Anchor, ShieldCheck, Play, Pause } from 'lucide-react';
+import { ViewState, DiagnosticPlaybook, OptimizationProfile, Recipe } from '../types';
 
 interface TemplateLibraryViewProps {
    onApplyTemplate: (view: ViewState, template: string) => void;
@@ -85,8 +85,31 @@ export const TemplateLibraryView: React.FC<TemplateLibraryViewProps> = ({ onAppl
       }
    ];
 
+   const [recipes, setRecipes] = useState<Recipe[]>([]);
+
+   useEffect(() => {
+      const fetchRecipes = async () => {
+         try {
+            const res = await fetch('/api/recipes');
+            if (res.ok) setRecipes(await res.json());
+         } catch (e) { console.error(e); }
+      };
+      fetchRecipes();
+   }, []);
+
+   const handleToggleRecipe = async (id: string) => {
+      try {
+         const res = await fetch(`/api/recipes/${id}/toggle`, { method: 'POST' });
+         if (res.ok) {
+            setRecipes(recipes.map(r => r.ID === id ? { ...r, IsEnabled: !r.IsEnabled } : r));
+         }
+      } catch (e) { console.error(e); }
+   };
+
    return (
       <div className="space-y-12 pb-20 font-sans">
+         {/* ... existing code ... */}
+         {/* Hero Header is at 91+ */}
          {/* Hero Header */}
          <div className="bg-white dark:bg-dark-card rounded-[3.5rem] p-10 md:p-14 text-gray-900 dark:text-white relative overflow-hidden shadow-2xl border border-gray-100 dark:border-white/5">
             <div className="relative z-10 max-w-2xl">
@@ -110,6 +133,13 @@ export const TemplateLibraryView: React.FC<TemplateLibraryViewProps> = ({ onAppl
                      <div className="text-left">
                         <p className="text-[9px] font-black uppercase text-zinc-500 leading-none mb-1">Sizing Profiles</p>
                         <p className="text-xs font-bold">8 Active</p>
+                     </div>
+                  </div>
+                  <div className="flex items-center gap-3 bg-gray-50 dark:bg-dark-bg p-4 rounded-2xl border border-gray-100 dark:border-white/5 shadow-sm">
+                     <Zap className="w-6 h-6 text-amber-500" />
+                     <div className="text-left">
+                        <p className="text-[9px] font-black uppercase text-zinc-500 leading-none mb-1">Automation</p>
+                        <p className="text-xs font-bold">4 Rules</p>
                      </div>
                   </div>
                </div>
@@ -196,6 +226,43 @@ export const TemplateLibraryView: React.FC<TemplateLibraryViewProps> = ({ onAppl
                      >
                         Apply Strategy <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                      </button>
+                  </div>
+               ))}
+            </div>
+         </section>
+         {/* Automation & Security Recipes */}
+         <section>
+            <div className="flex items-center justify-between mb-8">
+               <div>
+                  <h2 className="text-3xl font-black text-gray-900 dark:text-white flex items-center gap-4 tracking-tighter uppercase leading-none">
+                     <ShieldCheck className="w-8 h-8 text-amber-500" /> Automation & Security
+                  </h2>
+                  <p className="text-[11px] text-gray-400 font-bold uppercase tracking-[0.2em] mt-2 ml-12 opacity-80">Proactive background guardrails & automated fixes</p>
+               </div>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+               {recipes.map(recipe => (
+                  <div key={recipe.ID} className={`bg-white dark:bg-dark-card border rounded-[2.5rem] p-8 flex items-center justify-between group transition-all ${recipe.IsEnabled ? 'border-amber-500/30' : 'border-gray-100 dark:border-white/5 opacity-60'}`}>
+                     <div className="flex items-center gap-6">
+                        <div className={`p-4 rounded-2xl ${recipe.TriggerType === 'Security' ? 'bg-rose-500/10 text-rose-500' : 'bg-amber-500/10 text-amber-500'}`}>
+                           {recipe.TriggerType === 'Security' ? <Shield className="w-6 h-6" /> : <Zap className="w-6 h-6" />}
+                        </div>
+                        <div>
+                           <h3 className="text-lg font-black text-zinc-900 dark:text-white tracking-tight">{recipe.Name}</h3>
+                           <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1 font-medium">{recipe.Description}</p>
+                        </div>
+                     </div>
+                     <div className="flex items-center gap-4">
+                        <div className={`px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest ${recipe.IsEnabled ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20' : 'bg-gray-500/10 text-gray-500 border border-gray-500/20'}`}>
+                           {recipe.IsEnabled ? 'Active' : 'Paused'}
+                        </div>
+                        <button
+                           onClick={() => handleToggleRecipe(recipe.ID)}
+                           className="p-3 hover:bg-gray-100 dark:hover:bg-white/5 rounded-2xl transition-all"
+                        >
+                           {recipe.IsEnabled ? <Pause className="w-5 h-5 text-zinc-400" /> : <Play className="w-5 h-5 text-indigo-500" />}
+                        </button>
+                     </div>
                   </div>
                ))}
             </div>

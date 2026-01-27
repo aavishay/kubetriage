@@ -44,6 +44,7 @@ export const PresenceProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
         const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
         const host = window.location.host;
+        if (typeof WebSocket === 'undefined') return;
         const ws = new WebSocket(`${protocol}//${host}/ws/presence`);
         wsRef.current = ws;
 

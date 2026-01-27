@@ -60,6 +60,9 @@ func (w *Watcher) scanClusters(ctx context.Context) {
 	for _, cls := range clusters {
 		w.scanCluster(ctx, cls)
 	}
+
+	// 3. Scan Prometheus Metrics (Phase 2 - Automation Recipes)
+	w.scanPrometheus(ctx)
 }
 
 func (w *Watcher) scanCluster(ctx context.Context, cls *k8s.ClusterConn) {
@@ -78,6 +81,12 @@ func (w *Watcher) scanCluster(ctx context.Context, cls *k8s.ClusterConn) {
 	for _, pod := range pods.Items {
 		w.analyzePod(ctx, cls, pod)
 	}
+
+	// 2. Scan for Security Violations (Phase 4)
+	w.scanSecurity(ctx, cls)
+
+	// 3. Run Automation Recipes (Phase 2)
+	w.scanAutomation(ctx, cls)
 }
 
 func (w *Watcher) analyzePod(ctx context.Context, cls *k8s.ClusterConn, pod corev1.Pod) {

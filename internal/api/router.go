@@ -67,6 +67,7 @@ func SetupRouter(aiService *ai.AIService, rootFS http.FileSystem, assetsFS http.
 			protected.DELETE("/reports", auth.RequireRole(auth.RoleAdmin), DeleteAllReportsHandler)
 			protected.GET("/reports/compliance", GenerateComplianceReportHandler)
 			protected.POST("/reports/:id/read", MarkReportReadHandler)
+			protected.POST("/reports/:id/export", ExportReportHandler)
 			protected.GET("/ws/logs", StreamLogsHandler)
 			protected.GET("/cluster/logs/search", SearchLogsHandler)
 			protected.POST("/reports/:id/approve", ApproveRemediationHandler)
@@ -81,6 +82,7 @@ func SetupRouter(aiService *ai.AIService, rootFS http.FileSystem, assetsFS http.
 
 			// Playbooks (Public Read)
 			protected.GET("/playbooks", ListPlaybooksHandler)
+			protected.GET("/recipes", ListRecipesHandler)
 
 			// Admin Routes
 			admin := protected.Group("/")
@@ -92,6 +94,7 @@ func SetupRouter(aiService *ai.AIService, rootFS http.FileSystem, assetsFS http.
 				admin.POST("/playbooks", CreatePlaybookHandler)
 				admin.PUT("/playbooks/:id", UpdatePlaybookHandler)
 				admin.DELETE("/playbooks/:id", DeletePlaybookHandler)
+				admin.POST("/recipes/:id/toggle", ToggleRecipeHandler)
 			}
 		}
 	}

@@ -100,3 +100,15 @@ func (c *Client) QueryVector(ctx context.Context, query string) (float64, error)
 	}
 	return 0, nil // No data
 }
+
+// QueryVectorRaw returns the raw model.Value (Vector)
+func (c *Client) QueryVectorRaw(ctx context.Context, query string) (model.Value, error) {
+	result, warnings, err := c.api.Query(ctx, query, time.Now())
+	if err != nil {
+		return nil, fmt.Errorf("prometheus query error: %v", err)
+	}
+	if len(warnings) > 0 {
+		fmt.Printf("Prometheus Warnings: %v\n", warnings)
+	}
+	return result, nil
+}

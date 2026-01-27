@@ -2,11 +2,13 @@ package api
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 	"time"
 
 	"github.com/aavishay/kubetriage/backend/internal/auth"
 	"github.com/aavishay/kubetriage/backend/internal/db"
+	"github.com/aavishay/kubetriage/backend/internal/integrations"
 	"github.com/gin-gonic/gin"
 	"github.com/jung-kurt/gofpdf"
 	"gorm.io/gorm"
@@ -125,4 +127,37 @@ func GenerateComplianceReportHandler(c *gin.Context) {
 		// If we already wrote headers, we can't do much but log
 		fmt.Printf("Error generating PDF: %v\n", err)
 	}
+}
+
+func ExportReportHandler(c *gin.Context) {
+	id := c.Param("id")
+	target := c.Query("target") // "slack" or "jira"
+
+	var report db.TriageReport
+	if err := db.DB.First(&report, id).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Report not found"})
+		return
+	}
+
+	if target == "slack" {
+		// Call slack integration
+		title := fmt.Sprintf("KubeTriage Alert: %s (%s)", report.WorkloadName, report.IncidentType)
+		message := report.Analysis
+
+		// Integration call
+		go integrations.SendSlackAlert(title, message, report.Severity, nil)
+
+		log.Printf("Exporting Report %s to Slack\n", id)
+		c.JSON(http.StatusOK, gin.H{"status": "ok", "message": "Exported to Slack"})
+		return
+	}
+
+	if target == "jira" {
+		// Mock Jira export
+		fmt.Printf("MOCK: Exporting Report %s to Jira\n", id)
+		c.JSON(http.StatusOK, gin.H{"status": "ok", "message": "Jira ticket created: KT-1234 (Mocked)"})
+		return
+	}
+
+	c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid export target"})
 }

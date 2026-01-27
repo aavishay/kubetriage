@@ -60,15 +60,80 @@ func InitDB(dsn string) (*gorm.DB, error) {
 	}
 
 	// Auto-Migrate Schemas
-	err = DB.AutoMigrate(&User{}, &Session{}, &Playbook{}, &TriageReport{}, &AuditLog{}, &Project{}, &ClusterProject{}, &Comment{})
+	err = DB.AutoMigrate(&User{}, &Session{}, &Playbook{}, &TriageReport{}, &AuditLog{}, &Project{}, &ClusterProject{}, &Comment{}, &Recipe{})
 	if err != nil {
 		log.Printf("Warning: AutoMigrate failed: %v", err)
 	}
 
 	// Seed Default Project
 	go seedDefaultProject(DB)
+	go seedDefaultRecipes(DB)
 
 	return DB, nil
+}
+
+func seedDefaultRecipes(db *gorm.DB) {
+	var count int64
+	db.Model(&Recipe{}).Count(&count)
+	if count > 0 {
+		return
+	}
+
+	recipes := []Recipe{
+		{
+			Name:          "Rapid CrashLoop Detection",
+			Description:   "Detects pods with high restart counts (>5) and flags for remediation.",
+			TriggerType:   "PodStatus",
+			TriggerConfig: `{"restart_threshold": 5}`,
+			ActionType:    "Report",
+			IsEnabled:     true,
+		},
+		{
+			Name:          "Privileged Container Check",
+			Description:   "Scans for containers running in privileged mode (CIS Benchmark).",
+			TriggerType:   "Security",
+			TriggerConfig: `{"check": "privileged"}`,
+			ActionType:    "Report",
+			IsEnabled:     true,
+		},
+		{
+			Name:          "Root User Execution",
+			Description:   "Checks if workloads are allowed to run as root.",
+			TriggerType:   "Security",
+			TriggerConfig: `{"check": "runAsRoot"}`,
+			ActionType:    "Report",
+			IsEnabled:     true,
+		},
+		{
+			Name:          "Stalled Deployment",
+			Description:   "Identifies deployments where available replicas < requested replicas.",
+			TriggerType:   "PodStatus",
+			TriggerConfig: `{"check": "availability"}`,
+			ActionType:    "Report",
+			IsEnabled:     true,
+		},
+		{
+			Name:          "High CPU Saturation",
+			Description:   "Alerts when a Pod consumes more than 1.0 CPU core (cluster-wide).",
+			TriggerType:   "Metric",
+			TriggerConfig: `sum(rate(container_cpu_usage_seconds_total{container!=""}[5m])) by (namespace, pod) > 1.0`,
+			ActionType:    "Report",
+			IsEnabled:     true,
+		},
+		{
+			Name:          "High Memory Usage",
+			Description:   "Alerts when a Pod consumes more than 1GB of RAM.",
+			TriggerType:   "Metric",
+			TriggerConfig: `sum(container_memory_working_set_bytes{container!=""}) by (namespace, pod) > 1000000000`,
+			ActionType:    "Report",
+			IsEnabled:     true,
+		},
+	}
+
+	for _, r := range recipes {
+		db.Create(&r)
+	}
+	log.Println("Seeded default automation recipes")
 }
 
 func seedDefaultProject(db *gorm.DB) {

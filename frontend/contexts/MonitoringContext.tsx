@@ -101,6 +101,7 @@ export const MonitoringProvider: React.FC<MonitoringProviderProps> = ({ children
   const [isWorkloadsLoading, setIsWorkloadsLoading] = useState(false);
   const [clusters, setClusters] = useState<Cluster[]>([]);
   const [selectedCluster, setSelectedCluster] = useState<Cluster | null>(() => {
+    if (typeof localStorage === 'undefined' || !localStorage.getItem) return null;
     const saved = localStorage.getItem('selected_cluster');
     return saved ? JSON.parse(saved) : null;
   });
@@ -171,7 +172,7 @@ export const MonitoringProvider: React.FC<MonitoringProviderProps> = ({ children
       // Clear current workloads when switching clusters to prevent stale data visibility
       // SWR: Load from cache first
       const cacheKey = `cache_workloads_${selectedCluster?.id || ''}_${metricsWindow}`;
-      const cached = localStorage.getItem(cacheKey);
+      const cached = (typeof localStorage !== 'undefined' && localStorage.getItem) ? localStorage.getItem(cacheKey) : null;
       if (cached) {
         setWorkloads(JSON.parse(cached));
       } else {
@@ -231,16 +232,19 @@ export const MonitoringProvider: React.FC<MonitoringProviderProps> = ({ children
   // --- Notifications & Alerting State ---
   // --- Notifications & Alerting State ---
   const [notificationChannels, setNotificationChannels] = useState<NotificationChannel[]>(() => {
+    if (typeof localStorage === 'undefined' || !localStorage.getItem) return MOCK_NOTIFICATION_CHANNELS;
     const saved = localStorage.getItem('notification_channels');
     return saved ? JSON.parse(saved) : MOCK_NOTIFICATION_CHANNELS;
   });
 
   const [alertRules, setAlertRules] = useState<AlertRule[]>(() => {
+    if (typeof localStorage === 'undefined' || !localStorage.getItem) return MOCK_ALERT_RULES;
     const saved = localStorage.getItem('alert_rules');
     return saved ? JSON.parse(saved) : MOCK_ALERT_RULES;
   });
 
   const [triggeredAlerts, setTriggeredAlerts] = useState<TriggeredAlert[]>(() => {
+    if (typeof localStorage === 'undefined' || !localStorage.getItem) return [];
     const saved = localStorage.getItem('triggered_alerts_history');
     return saved ? JSON.parse(saved) : [];
   });
@@ -248,12 +252,14 @@ export const MonitoringProvider: React.FC<MonitoringProviderProps> = ({ children
   const [activeNotification, setActiveNotification] = useState<TriggeredAlert | null>(null);
 
   const [notificationSettings, setNotificationSettings] = useState(() => {
+    if (typeof localStorage === 'undefined' || !localStorage.getItem) return { toastEnabled: false, toastFrequency: 5 };
     const saved = localStorage.getItem('notification_settings');
     // Default to false as requested by user
     return saved ? JSON.parse(saved) : { toastEnabled: false, toastFrequency: 5 };
   });
 
   const [aiConfig, setAiConfig] = useState<{ provider: string; model: string }>(() => {
+    if (typeof localStorage === 'undefined' || !localStorage.getItem) return { provider: 'ollama', model: 'llama3' };
     const saved = localStorage.getItem('ai_config');
     return saved ? JSON.parse(saved) : { provider: 'ollama', model: 'llama3' };
   });
