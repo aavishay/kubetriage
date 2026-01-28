@@ -259,9 +259,9 @@ export const MonitoringProvider: React.FC<MonitoringProviderProps> = ({ children
   });
 
   const [aiConfig, setAiConfig] = useState<{ provider: string; model: string }>(() => {
-    if (typeof localStorage === 'undefined' || !localStorage.getItem) return { provider: 'ollama', model: 'llama3' };
+    if (typeof localStorage === 'undefined' || !localStorage.getItem) return { provider: 'ollama', model: 'llama3:latest' };
     const saved = localStorage.getItem('ai_config');
-    return saved ? JSON.parse(saved) : { provider: 'ollama', model: 'llama3' };
+    return saved ? JSON.parse(saved) : { provider: 'ollama', model: 'llama3:latest' };
   });
 
   const [lastToastTime, setLastToastTime] = useState(0);

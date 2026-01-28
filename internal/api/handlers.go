@@ -974,6 +974,12 @@ func WorkloadsHandler(c *gin.Context) {
 		targetNamespace = ""
 	}
 
+	// For Platform Console, we usually want to see all workloads across all namespaces
+	// unless specifically filtered (future feature). For now, let's force "" to see everything.
+	targetNamespace = ""
+
+	log.Printf("WorkloadsHandler: Fetching workloads for cluster %s in namespace '%s'", clusterID, targetNamespace)
+
 	// Step 1: Check Cache
 	cacheKey := fmt.Sprintf("workloads:%s", clusterID)
 	if val, err := cache.Get(c.Request.Context(), cacheKey); err == nil {
@@ -1277,6 +1283,7 @@ func WorkloadsHandler(c *gin.Context) {
 		cache.Set(c.Request.Context(), cacheKey, jsonBytes, cache.TTLWorkloads)
 	}
 
+	log.Printf("WorkloadsHandler: Returning %d workloads for cluster %s", len(workloads), clusterID)
 	c.JSON(http.StatusOK, workloads)
 }
 

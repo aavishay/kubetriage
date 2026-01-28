@@ -188,8 +188,8 @@ func (w *Watcher) performAutoTriage(ctx context.Context, cls *k8s.ClusterConn, p
 
 	suggestion, err := w.aiService.GenerateRemediation(
 		ctx,
-		"gemini",         // Default provider
-		"gemini-1.5-pro", // Default Model
+		"", // Default provider
+		"", // Default Model
 		report.Kind,
 		report.WorkloadName,
 		logs,

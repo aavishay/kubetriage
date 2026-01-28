@@ -15,9 +15,26 @@ COPY . .
 RUN CGO_ENABLED=0 GOOS=linux go build -o server cmd/server/main.go
 
 # Stage 3: Final Runtime
-FROM alpine:latest
+FROM debian:bookworm-slim
 WORKDIR /app
-RUN apk --no-cache add ca-certificates
+
+# Install base dependencies
+RUN apt-get update && apt-get install -y \
+    ca-certificates \
+    curl \
+    gnupg \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# Install Google Cloud SDK & GKE Auth Plugin
+RUN echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] http://packages.cloud.google.com/apt cloud-sdk main" | tee -a /etc/apt/sources.list.d/google-cloud-sdk.list \
+    && curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | gpg --dearmor -o /usr/share/keyrings/cloud.google.gpg \
+    && apt-get update && apt-get install -y \
+    google-cloud-sdk \
+    google-cloud-sdk-gke-gcloud-auth-plugin \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# Install AWS CLI
+RUN apt-get update && apt-get install -y awscli && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Copy Backend Binary
 COPY --from=backend-builder /app/server .
@@ -26,7 +43,7 @@ COPY --from=backend-builder /app/server .
 COPY --from=frontend-builder /app/frontend/dist ./frontend/dist
 
 # Create non-root user and set permissions
-RUN adduser -D -g '' appuser && chown -R appuser:appuser /app
+RUN useradd -m appuser && chown -R appuser:appuser /app
 USER appuser
 
 EXPOSE 3001

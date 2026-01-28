@@ -8,6 +8,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"strings"
 )
 
 type OllamaProvider struct {
@@ -22,8 +23,9 @@ func NewOllamaProvider() *OllamaProvider {
 	}
 	model := os.Getenv("OLLAMA_MODEL")
 	if model == "" {
-		model = "llama3"
+		model = "llama3:latest"
 	}
+	baseURL = strings.TrimSuffix(baseURL, "/")
 	return &OllamaProvider{
 		BaseURL: baseURL,
 		Model:   model,

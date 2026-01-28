@@ -9,8 +9,8 @@ export const SettingsView: React.FC = () => {
     const [fetchError, setFetchError] = useState<string | null>(null);
     const [isSaving, setIsSaving] = useState(false);
 
-    const [provider, setProvider] = useState(aiConfig?.provider || 'gemini');
-    const [model, setModel] = useState(aiConfig?.model || '');
+    const [provider, setProvider] = useState(aiConfig?.provider || 'ollama');
+    const [model, setModel] = useState(aiConfig?.model || 'llama3:latest');
 
     // Sync local state with context on mount
     useEffect(() => {
@@ -32,7 +32,10 @@ export const SettingsView: React.FC = () => {
                         'Authorization': `Bearer ${token}`
                     }
                 });
-                if (!res.ok) throw new Error('Failed to fetch models');
+                if (!res.ok) {
+                    const errorData = await res.json().catch(() => ({}));
+                    throw new Error(errorData.error || `Failed to fetch models (${res.status})`);
+                }
                 const data = await res.json();
                 setFetchedModels(data.models || []);
 

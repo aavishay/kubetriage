@@ -13,9 +13,13 @@ services:
       - PROMETHEUS_URL=${PROMETHEUS_URL:-http://prometheus:9090}
       - JWT_SECRET=${JWT_SECRET:-change-me-please}
       - MOCK_OIDC=${MOCK_OIDC:-true}
+      - OLLAMA_HOST=${OLLAMA_HOST:-http://host.docker.internal:11434}
+      - OLLAMA_MODEL=${OLLAMA_MODEL:-llama3:latest}
     volumes:
       - ./kubetriage.db:/app/kubetriage.db
       - ${HOME}/.kube/config:/home/appuser/.kube/config:ro
+      - ${HOME}/.aws:/home/appuser/.aws
+      - ${HOME}/.config/gcloud:/home/appuser/.config/gcloud
     depends_on:
       - redis
       - prometheus
