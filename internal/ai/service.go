@@ -119,6 +119,10 @@ func (s *AIService) GetAvailableModels(ctx context.Context, providerName string)
 }
 
 func (s *AIService) AnalyzeWorkload(ctx context.Context, req AnalyzeWorkloadRequest) (string, error) {
+	// Add timeout to prevent hanging indefinitely
+	ctx, cancel := context.WithTimeout(ctx, 120*time.Second)
+	defer cancel()
+
 	provider, err := s.getProvider(req.Provider)
 	if err != nil {
 		return "", err

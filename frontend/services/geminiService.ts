@@ -11,7 +11,7 @@ const createClient = () => {
 export const analyzeWorkload = async (
     workload: Workload,
     playbook: DiagnosticPlaybook = 'General Health',
-    provider: string = 'gemini',
+    provider: string = 'ollama',
     model: string = ''
 ): Promise<{ analysis: string, reportId?: number, context?: any }> => {
     let playbookInstructions = "";
@@ -35,6 +35,10 @@ export const analyzeWorkload = async (
             playbookInstructions = "Perform a holistic root cause analysis covering all aspects of reliability including CPU, RAM, and Disk storage.";
     }
 
+    // Setup timeout for frontend request (2 minutes)
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 120000);
+
     try {
         const response = await fetch('/api/ai/analyze', {
             method: 'POST',
@@ -42,6 +46,7 @@ export const analyzeWorkload = async (
                 'Content-Type': 'application/json',
                 // Add Authorization header if needed, managed by AuthContext usually
             },
+            signal: controller.signal,
             body: JSON.stringify({
                 provider, // Added
                 model, // Added
@@ -69,6 +74,8 @@ export const analyzeWorkload = async (
             })
         });
 
+        clearTimeout(timeoutId);
+
         if (!response.ok) {
             const errData = await response.json().catch(() => ({}));
             throw new Error(errData.error || `Backend API Error: ${response.statusText}`);
@@ -81,7 +88,11 @@ export const analyzeWorkload = async (
             context: data.context
         };
     } catch (error) {
+        clearTimeout(timeoutId);
         console.error("Gemini API Error (Backend):", error);
+        if (error instanceof DOMException && error.name === 'AbortError') {
+            return { analysis: "Error: Analysis request timed out after 2 minutes. Please try again." };
+        }
         return { analysis: `Error generating analysis: ${error instanceof Error ? error.message : String(error)}` };
     }
 };

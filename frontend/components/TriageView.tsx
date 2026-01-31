@@ -483,7 +483,7 @@ export const TriageView: React.FC<TriageViewProps> = ({ workloads, isDarkMode = 
               <div className="p-3 bg-primary-600 rounded-2xl shadow-lg shadow-primary-500/20">
                 <ActivitySquare className="w-6 h-6 text-white" />
               </div>
-              <h3 className="font-black text-gray-900 dark:text-white uppercase tracking-tighter text-base hidden sm:block font-display">Neural Fleet</h3>
+              <h3 className="font-black text-gray-900 dark:text-white uppercase tracking-tighter text-base hidden sm:block font-display">Fleet Triage</h3>
             </div>
           )}
           <button
@@ -580,7 +580,7 @@ export const TriageView: React.FC<TriageViewProps> = ({ workloads, isDarkMode = 
                 <div className="flex items-center gap-4 bg-gray-50 dark:bg-dark-card border border-gray-100 dark:border-white/5 px-6 py-4 rounded-3xl shadow-sm glass">
                   <div className="p-2.5 bg-primary-500/10 rounded-xl"><ActivitySquare className="w-5 h-5 text-primary-500" /></div>
                   <div className="flex flex-col">
-                    <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1.5 font-display">Core Playbook</span>
+                    <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1.5 font-display">Runbook</span>
                     <select value={selectedPlaybook} onChange={(e) => { setSelectedPlaybook(e.target.value as DiagnosticPlaybook); setAnalysis(null); }} className="bg-transparent text-sm font-black uppercase text-gray-900 dark:text-white cursor-pointer pr-8 border-none focus:ring-0">
                       <option value="General Health">General Health</option>
                       <option value="Network Connectivity">Network Connectivity</option>
@@ -591,7 +591,7 @@ export const TriageView: React.FC<TriageViewProps> = ({ workloads, isDarkMode = 
                 </div>
                 <button onClick={handleAnalyzeLogs} disabled={isAnalyzing} className="flex-1 xl:flex-none bg-primary-600 hover:bg-primary-500 text-white px-12 py-5 rounded-3xl text-[11px] font-black uppercase tracking-[0.2em] shadow-2xl shadow-primary-500/20 transition-all active:scale-95 disabled:opacity-50 flex items-center justify-center gap-3 border-b-4 border-primary-800">
                   {isAnalyzing ? <Loader2 className="w-5 h-5 animate-spin" /> : <Sparkles className="w-5 h-5 fill-white" />}
-                  Init AI Diagnostic
+                  Initialize Diagnosis
                 </button>
               </div>
             </header>
@@ -771,8 +771,7 @@ export const TriageView: React.FC<TriageViewProps> = ({ workloads, isDarkMode = 
                           <Loader2 className="w-16 h-16 text-primary-500 animate-spin relative z-10" />
                         </div>
                         <div className="space-y-4">
-                          <h4 className="text-2xl font-black text-gray-900 dark:text-white uppercase tracking-tighter font-display">Scanning Vector Space...</h4>
-                          <p className="text-[10px] font-black text-gray-500 uppercase tracking-[0.5em] animate-pulse">Analyzing manifest & telemetry logs</p>
+                          <h4 className="text-2xl font-black text-gray-900 dark:text-white uppercase tracking-tighter font-display">AI SRE Analysis...</h4>
                         </div>
                       </div>
                     ) : analysis ? (
