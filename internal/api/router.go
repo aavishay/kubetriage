@@ -44,7 +44,6 @@ func SetupRouter(aiService *ai.AIService, rootFS http.FileSystem, assetsFS http.
 		api.GET("/status/db", DBHealthHandler)
 		api.GET("/auth/login", func(c *gin.Context) { auth.LoginHandler(c) })
 		api.POST("/auth/logout", func(c *gin.Context) { auth.LogoutHandler(c) })
-		api.GET("/auth/logout", func(c *gin.Context) { auth.LogoutHandler(c) }) // Support GET for easier testing/links
 		api.GET("/auth/google/callback", func(c *gin.Context) { auth.CallbackHandler(c) })
 
 		// Protected Routes

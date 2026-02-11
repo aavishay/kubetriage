@@ -388,7 +388,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = tr
                            let live = 0, avg = 0, p95 = 0, p99 = 0;
 
                            if (saturationTab === 'CPU') {
-                              base = ((Number(metrics.cpuLimit) || Number(metrics.cpuRequest)) || 0) * 1000;
+                              base = (Number(metrics.cpuLimit) || 0) * 1000;
                               live = (Number(metrics.cpuUsage) || 0) * 1000;
                               avg = (Number(metrics.cpuAvg) || 0) * 1000;
                               p95 = (Number(metrics.cpuP95) || 0) * 1000;
@@ -396,7 +396,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = tr
                               unit = 'm';
                               label = `CPU ${saturationSort === 'Live' ? 'Saturation' : saturationSort}`;
                            } else if (saturationTab === 'Memory') {
-                              base = (Number(metrics.memoryLimit) || Number(metrics.memoryRequest)) || 0;
+                              base = (Number(metrics.memoryLimit) || 0);
                               live = Number(metrics.memoryUsage) || 0;
                               avg = Number(metrics.memoryAvg) || 0;
                               p95 = Number(metrics.memoryP95) || 0;
@@ -404,7 +404,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = tr
                               unit = 'MiB';
                               label = `Memory ${saturationSort === 'Live' ? 'Saturation' : saturationSort}`;
                            } else if (saturationTab === 'Storage') {
-                              base = (Number(metrics.storageLimit) || Number(metrics.storageRequest)) || 0;
+                              base = (Number(metrics.storageLimit) || 0);
                               live = Number(metrics.storageUsage) || 0;
                               unit = 'GiB';
                               label = 'Disk Saturation';
@@ -590,7 +590,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = tr
                   <div>
                      <h4 className="text-[13px] font-black uppercase tracking-widest text-gray-900 dark:text-white mb-4">Policy Compliance</h4>
                      <p className="text-[12px] text-gray-500 dark:text-gray-400 font-medium leading-relaxed mb-8">
-                        Current resource distribution is within 15% of the <span className="text-primary-500 font-bold">"Balanced Production"</span> template. No immediate re-balancing required.
+                        Current resource distribution is within 15% of the <span className="text-primary-500 font-bold">&quot;Balanced Production&quot;</span> template. No immediate re-balancing required.
                      </p>
                   </div>
                   <button
