@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"sync"
 
 	"k8s.io/client-go/dynamic"
@@ -34,6 +35,26 @@ var (
 	Manager *ClusterManager
 	onceMgr sync.Once
 )
+
+// rewriteLoopback replaces 127.0.0.1/localhost server addresses with
+// host.docker.internal so the container can reach services on the host
+// (e.g. minikube, kind). The original hostname is preserved as TLSClientConfig.ServerName
+// so certificate verification still passes against the original cert SANs.
+func rewriteLoopback(cfg *rest.Config) {
+	if strings.Contains(cfg.Host, "127.0.0.1") || strings.Contains(cfg.Host, "localhost") {
+		original := cfg.Host
+		cfg.Host = strings.NewReplacer(
+			"127.0.0.1", "host.docker.internal",
+			"localhost", "host.docker.internal",
+		).Replace(cfg.Host)
+		// Keep TLS verification against the original hostname so minikube/kind
+		// certs (which are signed for 127.0.0.1) continue to validate correctly.
+		if cfg.TLSClientConfig.ServerName == "" {
+			cfg.TLSClientConfig.ServerName = "127.0.0.1"
+		}
+		fmt.Printf("Rewriting loopback address: %s -> %s\n", original, cfg.Host)
+	}
+}
 
 // InitManager initializes the global ClusterManager
 func InitManager() *ClusterManager {
@@ -84,6 +105,7 @@ func (m *ClusterManager) LoadClustersFromKubeconfig() error {
 			fmt.Printf("Warning: Failed to create config for context %s: %v\n", contextName, err)
 			continue
 		}
+		rewriteLoopback(restConfig)
 
 		clientset, err := kubernetes.NewForConfig(restConfig)
 		if err != nil {
@@ -187,6 +209,7 @@ func (m *ClusterManager) AddClusterFromKubeconfig(rawConfig []byte) (*ClusterCon
 	if err != nil {
 		return nil, fmt.Errorf("failed to create rest config: %v", err)
 	}
+	rewriteLoopback(restConfig)
 
 	// 2. Create Clients
 	clientset, err := kubernetes.NewForConfig(restConfig)
