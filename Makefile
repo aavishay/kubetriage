@@ -4,9 +4,11 @@
 all: build
 
 # Build the final binary
-build: 
+build:
 	@echo "🏗️  Building Frontend..."
 	cd frontend && npm install --legacy-peer-deps && npm run build
+	@echo "📦 Copying frontend dist for embedding..."
+	rm -rf internal/ui/dist && cp -r frontend/dist internal/ui/dist
 	@echo "🏗️  Building Go binary..."
 	go build -o kubetriage cmd/server/main.go
 	@echo "✅ Build complete! Run ./kubetriage to start."

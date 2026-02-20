@@ -18,6 +18,7 @@ services:
     volumes:
       - ./kubetriage.db:/app/kubetriage.db
       - ${HOME}/.kube/config:/home/appuser/.kube/config:ro
+      - ${HOME}/.minikube:${HOME}/.minikube:ro
       - ${HOME}/.aws:/home/appuser/.aws
       - ${HOME}/.config/gcloud:/home/appuser/.config/gcloud
     depends_on:

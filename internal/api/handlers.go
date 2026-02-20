@@ -1306,7 +1306,12 @@ func RegisterClusterHandler(c *gin.Context) {
 	// 1. Add to Manager (In-Memory)
 	cluster, err := k8s.Manager.AddClusterFromKubeconfig([]byte(req.Kubeconfig))
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("Failed to register cluster: %v", err)})
+		errMsg := err.Error()
+		if strings.Contains(errMsg, "unable to read") || strings.Contains(errMsg, "no such file") {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Your kubeconfig references certificate files on your local filesystem (e.g. minikube). These paths are not accessible inside the server container. Use an inline/flattened kubeconfig instead:\n\nkubectl config view --minify --flatten --context=<context-name>\n\nThis embeds the certificates as base64 data directly in the YAML."})
+		} else {
+			c.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("Failed to register cluster: %v", err)})
+		}
 		return
 	}
 

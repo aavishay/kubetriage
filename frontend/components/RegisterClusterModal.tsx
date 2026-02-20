@@ -101,6 +101,15 @@ export const RegisterClusterModal: React.FC<RegisterClusterModalProps> = ({ isOp
                             spellCheck={false}
                             required
                         />
+                        <div className="p-3 bg-amber-500/5 border border-amber-500/15 rounded-lg space-y-1">
+                            <p className="text-[10px] font-bold text-amber-400/80 uppercase tracking-wider">Local clusters (minikube, kind)</p>
+                            <p className="text-[10px] text-zinc-500 font-mono">
+                                Kubeconfigs that reference cert files on disk won't work. Use the flattened version:
+                            </p>
+                            <p className="text-[10px] text-zinc-300 font-mono bg-black/40 px-2 py-1 rounded mt-1 select-all">
+                                kubectl config view --minify --flatten --context=&lt;name&gt;
+                            </p>
+                        </div>
                         <p className="text-[10px] text-zinc-600 font-mono flex items-center gap-1.5">
                             <span className="w-1 h-1 rounded-full bg-indigo-500"></span> Configuration is stored in transient memory. Ensure API reachability.
                         </p>

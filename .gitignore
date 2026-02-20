@@ -1,5 +1,6 @@
 node_modules
 dist
+!internal/ui/dist/
 .DS_Store
 .env
 coverage
@@ -7,6 +8,6 @@ coverage
 tmp
 kubetriage
 kubetriage.db*
-server
+/server
 request.json
 main_tmp.go
