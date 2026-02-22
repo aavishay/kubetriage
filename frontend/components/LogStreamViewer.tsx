@@ -2,13 +2,14 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Terminal, Wifi, WifiOff, XCircle, Play, Pause, Download, ChevronDown } from 'lucide-react';
 
 interface LogStreamViewerProps {
+    clusterId: string;
     namespace: string;
     podNames: string[];
     container?: string;
     onClose?: () => void;
 }
 
-export const LogStreamViewer: React.FC<LogStreamViewerProps> = ({ namespace, podNames, container, onClose }) => {
+export const LogStreamViewer: React.FC<LogStreamViewerProps> = ({ clusterId, namespace, podNames, container, onClose }) => {
     const [selectedPod, setSelectedPod] = useState<string>(podNames[0] || '');
     const [logs, setLogs] = useState<string[]>([]);
     const [status, setStatus] = useState<'connecting' | 'connected' | 'disconnected' | 'error'>('disconnected');
@@ -41,7 +42,7 @@ export const LogStreamViewer: React.FC<LogStreamViewerProps> = ({ namespace, pod
 
         const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
         const host = window.location.host;
-        const url = `${protocol}//${host}/api/ws/logs?namespace=${namespace}&podName=${selectedPod}${container ? `&container=${container}` : ''}`;
+        const url = `${protocol}//${host}/api/ws/logs?clusterId=${clusterId}&namespace=${namespace}&podName=${selectedPod}${container ? `&container=${container}` : ''}`;
 
         const ws = new WebSocket(url);
         wsRef.current = ws;

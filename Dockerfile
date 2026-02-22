@@ -25,6 +25,8 @@ RUN apt-get update && apt-get install -y \
     ca-certificates \
     curl \
     gnupg \
+    wget \
+    unzip \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Install Google Cloud SDK & GKE Auth Plugin
@@ -37,6 +39,13 @@ RUN echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] http://packages.c
 
 # Install AWS CLI
 RUN apt-get update && apt-get install -y awscli && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# Install Azure kubelogin
+RUN wget -qO kubelogin.zip https://github.com/Azure/kubelogin/releases/download/v0.1.3/kubelogin-linux-amd64.zip \
+    && unzip kubelogin.zip \
+    && mv bin/linux_amd64/kubelogin /usr/local/bin/ \
+    && chmod +x /usr/local/bin/kubelogin \
+    && rm -rf kubelogin.zip bin/
 
 # Copy Backend Binary
 COPY --from=backend-builder /app/server .

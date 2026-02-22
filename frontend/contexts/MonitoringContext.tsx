@@ -1,14 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
 import { Workload, Cluster, Organization, User, NotificationChannel, AlertRule, TriggeredAlert } from '../types';
 import { useAuth } from './AuthContext';
-import {
-  MOCK_WORKLOADS,
-  MOCK_CLUSTERS,
-  MOCK_ORGANIZATIONS,
-  MOCK_USERS,
-  MOCK_NOTIFICATION_CHANNELS,
-  MOCK_ALERT_RULES
-} from '../constants';
+
 
 interface MonitoringContextType {
   workloads: Workload[];
@@ -113,7 +106,7 @@ export const MonitoringProvider: React.FC<MonitoringProviderProps> = ({ children
     }
   }, [selectedCluster]);
   const [organizations, setOrganizations] = useState<Organization[]>([]);
-  const [users, setUsers] = useState<User[]>(MOCK_USERS);
+  const [users, setUsers] = useState<User[]>([]);
   const [unreadReports, setUnreadReports] = useState<number>(0);
 
   // Fetch Workloads
@@ -232,15 +225,15 @@ export const MonitoringProvider: React.FC<MonitoringProviderProps> = ({ children
   // --- Notifications & Alerting State ---
   // --- Notifications & Alerting State ---
   const [notificationChannels, setNotificationChannels] = useState<NotificationChannel[]>(() => {
-    if (typeof localStorage === 'undefined' || !localStorage.getItem) return MOCK_NOTIFICATION_CHANNELS;
+    if (typeof localStorage === 'undefined' || !localStorage.getItem) return [];
     const saved = localStorage.getItem('notification_channels');
-    return saved ? JSON.parse(saved) : MOCK_NOTIFICATION_CHANNELS;
+    return saved ? JSON.parse(saved) : [];
   });
 
   const [alertRules, setAlertRules] = useState<AlertRule[]>(() => {
-    if (typeof localStorage === 'undefined' || !localStorage.getItem) return MOCK_ALERT_RULES;
+    if (typeof localStorage === 'undefined' || !localStorage.getItem) return [];
     const saved = localStorage.getItem('alert_rules');
-    return saved ? JSON.parse(saved) : MOCK_ALERT_RULES;
+    return saved ? JSON.parse(saved) : [];
   });
 
   const [triggeredAlerts, setTriggeredAlerts] = useState<TriggeredAlert[]>(() => {

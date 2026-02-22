@@ -121,7 +121,7 @@ export const TriageView: React.FC<TriageViewProps> = ({ workloads, isDarkMode = 
   const [selectedWorkload, setSelectedWorkload] = useState<Workload | null>(null);
   const [analysis, setAnalysis] = useState<string | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const { aiConfig } = useMonitoring();
+  const { aiConfig, selectedCluster } = useMonitoring();
   const [selectedPlaybook, setSelectedPlaybook] = useState<DiagnosticPlaybook>(
     (targetTemplate as DiagnosticPlaybook) || 'General Health'
   );
@@ -536,7 +536,7 @@ export const TriageView: React.FC<TriageViewProps> = ({ workloads, isDarkMode = 
       <main className={`${!selectedWorkload || isSidebarOpen ? 'hidden' : 'flex'} lg:flex flex-1 min-w-0 bg-white dark:bg-dark-bg rounded-5xl overflow-hidden flex flex-col border border-gray-100 dark:border-white/5 shadow-sm`}>
         {selectedWorkload ? (
           <div className="flex flex-col h-full overflow-hidden relative">
-            <header className="p-6 md:p-10 border-b border-gray-100 dark:border-white/5 flex flex-col xl:flex-row justify-between items-start xl:items-center gap-8 bg-white/60 dark:bg-dark-bg/60 backdrop-blur-2xl sticky top-0 z-20">
+            <header className="p-6 md:p-10 border-b border-gray-100 dark:border-white/5 flex flex-wrap xl:flex-row justify-between items-start xl:items-center gap-8 bg-white/60 dark:bg-dark-bg/60 backdrop-blur-2xl sticky top-0 z-20">
               <div className="flex items-center gap-8">
                 <div className="p-6 bg-dark-bg/80 rounded-4xl shadow-2xl border border-white/5 flex items-center justify-center ring-1 ring-primary-500/20"><Terminal className="w-8 h-8 text-primary-400" /></div>
                 <div className="min-w-0">
@@ -576,7 +576,7 @@ export const TriageView: React.FC<TriageViewProps> = ({ workloads, isDarkMode = 
                 })}
               </div>
 
-              <div className="flex flex-1 items-center gap-6 w-full xl:w-auto">
+              <div className="flex flex-wrap xl:flex-nowrap flex-1 justify-end items-center gap-6 w-full lg:w-auto">
                 <div className="flex items-center gap-4 bg-gray-50 dark:bg-dark-card border border-gray-100 dark:border-white/5 px-6 py-4 rounded-3xl shadow-sm glass">
                   <div className="p-2.5 bg-primary-500/10 rounded-xl"><ActivitySquare className="w-5 h-5 text-primary-500" /></div>
                   <div className="flex flex-col">
@@ -589,7 +589,7 @@ export const TriageView: React.FC<TriageViewProps> = ({ workloads, isDarkMode = 
                     </select>
                   </div>
                 </div>
-                <button onClick={handleAnalyzeLogs} disabled={isAnalyzing} className="flex-1 xl:flex-none bg-primary-600 hover:bg-primary-500 text-white px-12 py-5 rounded-3xl text-[11px] font-black uppercase tracking-[0.2em] shadow-2xl shadow-primary-500/20 transition-all active:scale-95 disabled:opacity-50 flex items-center justify-center gap-3 border-b-4 border-primary-800">
+                <button onClick={handleAnalyzeLogs} disabled={isAnalyzing} className="flex-1 shrink sm:flex-none xl:flex-none bg-primary-600 hover:bg-primary-500 text-white px-8 md:px-12 py-5 rounded-3xl text-[11px] font-black uppercase tracking-[0.2em] shadow-2xl shadow-primary-500/20 transition-all active:scale-95 disabled:opacity-50 flex items-center justify-center gap-3 border-b-4 border-primary-800">
                   {isAnalyzing ? <Loader2 className="w-5 h-5 animate-spin" /> : <Sparkles className="w-5 h-5 fill-white" />}
                   Initialize Diagnosis
                 </button>
@@ -858,6 +858,7 @@ export const TriageView: React.FC<TriageViewProps> = ({ workloads, isDarkMode = 
                 <section className="bg-dark-bg/90 rounded-5xl border border-white/5 shadow-2xl overflow-hidden flex flex-col min-h-[600px] cyber-card">
                   {selectedWorkload.podNames && selectedWorkload.podNames.length > 0 ? (
                     <LogStreamViewer
+                      clusterId={selectedCluster?.id || 'default'}
                       namespace={selectedWorkload.namespace}
                       podNames={selectedWorkload.podNames}
                     />
@@ -960,7 +961,7 @@ export const TriageView: React.FC<TriageViewProps> = ({ workloads, isDarkMode = 
                 <ActivitySquare className="w-16 h-16 text-primary-500 animate-pulse" />
               </div>
             </div>
-            <h3 className="text-4xl font-black text-gray-900 dark:text-white tracking-tighter mb-6 uppercase font-display">Neural Command Center</h3>
+            <h3 className="text-4xl font-black text-gray-900 dark:text-white tracking-tighter mb-6 uppercase font-display">KubeTriage Command Center</h3>
             <p className="text-base text-gray-500 dark:text-gray-400 max-w-sm font-medium leading-relaxed opacity-70">
               Synchronize with the fleet by selecting a target vector from the triage matrix on the left.
             </p>

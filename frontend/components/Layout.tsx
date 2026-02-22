@@ -135,12 +135,12 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
           {/* Logo Neon Glow */}
           <div className="absolute top-1/2 left-8 w-10 h-10 bg-primary-500/20 blur-xl rounded-full -translate-y-1/2 pointer-events-none"></div>
 
-          <div className="shrink-0 p-3 bg-gradient-to-br from-primary-600 to-indigo-600 rounded-xl shadow-lg shadow-primary-500/20 ring-1 ring-white/10 relative z-10">
-            <img src={logo} alt="Logo" className="w-5 h-5 object-contain brightness-0 invert" />
+          <div className="shrink-0 p-1 bg-transparent rounded-xl shadow-lg ring-1 ring-white/10 relative z-10 w-11 h-11 flex justify-center items-center">
+            <img src={logo} alt="Logo" className="w-8 h-8 object-contain" />
           </div>
           {(!isCollapsed || isMobileMenuOpen) && (
             <div className="animate-in fade-in slide-in-from-left-6 duration-700">
-              <h1 className="font-black text-white tracking-widest leading-none text-lg font-display uppercase drop-shadow-md">Neural<span className="text-primary-500">Ops</span></h1>
+              <h1 className="font-black text-white tracking-widest leading-none text-lg font-display uppercase drop-shadow-md">Kube<span className="text-primary-500">Triage</span></h1>
               <div className="flex items-center gap-2 mt-1.5 bg-white/5 px-2 py-0.5 rounded-full w-fit border border-white/5">
                 <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse shadow-[0_0_5px_#10b981]"></span>
                 <p className="text-[9px] font-bold text-zinc-400 uppercase tracking-[0.2em]">Online</p>
@@ -328,6 +328,18 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
                 title="Refresh Telemetry"
               >
                 <RefreshCw className={`w-5 h-5 ${isWorkloadsLoading ? 'animate-spin text-primary-500' : ''}`} />
+              </button>
+
+              <button
+                onClick={toggleTheme}
+                className="p-3 rounded-xl bg-white/5 border border-white/5 text-zinc-400 hover:text-white hover:bg-white/10 hover:border-white/10 transition-all active:scale-95 group"
+                title={isDarkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
+              >
+                {isDarkMode ? (
+                  <Sun className="w-5 h-5 group-hover:text-amber-400 transition-colors" />
+                ) : (
+                  <Moon className="w-5 h-5 group-hover:text-blue-400 transition-colors" />
+                )}
               </button>
 
               <div className="relative" ref={userMenuRef}>

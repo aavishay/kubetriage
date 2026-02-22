@@ -43,7 +43,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLogin }) => {
               <img src={logo} alt="Logo" className="w-10 h-10 object-contain" />
             </div>
             <h1 className="text-3xl font-black text-white tracking-widest uppercase mb-2 font-display text-center drop-shadow-lg">
-              Neural<span className="text-primary-500">Ops</span>
+              Kube<span className="text-primary-500">Triage</span>
             </h1>
             <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-[0.3em] text-center border-b border-white/5 pb-4 w-full">
               KubeTriage Access Terminal
@@ -132,7 +132,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLogin }) => {
       </div>
 
       <div className="absolute bottom-8 text-[10px] text-zinc-600 font-mono tracking-widest uppercase opacity-50">
-        &copy; 2026 Neural Ops Inc. Secure Terminal.
+        &copy; 2026 KubeTriage. Secure Terminal.
       </div>
     </div>
   );
