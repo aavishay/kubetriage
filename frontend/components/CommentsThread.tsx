@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Send, Trash2, MessageSquare, Loader2 } from 'lucide-react';
+import { Send, Trash2, Loader2 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { Comment } from '../types';
 
@@ -87,11 +87,6 @@ export const CommentsThread: React.FC<CommentsThreadProps> = ({
 
     return (
         <div className={`flex flex-col h-full bg-black/20 rounded-2xl border border-white/5 overflow-hidden ${isDarkMode ? 'dark' : ''}`}>
-            {/* Header */}
-            <div className="p-4 bg-white/5 border-b border-white/5 flex items-center gap-2">
-                <MessageSquare className="w-4 h-4 text-zinc-400" />
-                <h3 className="text-xs font-black uppercase tracking-widest text-zinc-300">Internal Notes</h3>
-            </div>
 
             {/* List */}
             <div className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar min-h-[200px] max-h-[400px]">
