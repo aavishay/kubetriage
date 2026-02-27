@@ -40,6 +40,9 @@ RUN echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] http://packages.c
 # Install AWS CLI
 RUN apt-get update && apt-get install -y awscli && apt-get clean && rm -rf /var/lib/apt/lists/*
 
+# Install Azure CLI from Microsoft's official repo (avoids outdated Debian package)
+RUN curl -sL https://aka.ms/InstallAzureCLIDeb | bash
+
 # Install Azure kubelogin
 RUN wget -qO kubelogin.zip https://github.com/Azure/kubelogin/releases/download/v0.1.3/kubelogin-linux-amd64.zip \
     && unzip kubelogin.zip \

@@ -21,6 +21,7 @@ services:
       - ${HOME}/.minikube:${HOME}/.minikube:ro
       - ${HOME}/.aws:/home/appuser/.aws
       - ${HOME}/.config/gcloud:/home/appuser/.config/gcloud
+      - ${HOME}/.azure:/home/appuser/.azure
     depends_on:
       - redis
       - prometheus
