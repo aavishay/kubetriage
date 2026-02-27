@@ -8,6 +8,7 @@ import (
 	"github.com/aavishay/kubetriage/backend/internal/auth"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"go.opentelemetry.io/contrib/instrumentation/github.com/gin-gonic/gin/otelgin"
 )
 
@@ -112,6 +113,9 @@ func SetupRouter(aiService *ai.AIService, rootFS http.FileSystem, assetsFS http.
 	r.GET("/favicon.svg", func(c *gin.Context) {
 		c.FileFromFS("favicon.svg", rootFS)
 	})
+
+	// Expose Prometheus metrics
+	r.GET("/metrics", gin.WrapH(promhttp.Handler()))
 
 	// SPA Handler: any route not handled by API or static files returns index.html
 	r.NoRoute(func(c *gin.Context) {
