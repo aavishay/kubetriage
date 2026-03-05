@@ -119,8 +119,8 @@ func (s *AIService) GetAvailableModels(ctx context.Context, providerName string)
 }
 
 func (s *AIService) AnalyzeWorkload(ctx context.Context, req AnalyzeWorkloadRequest) (string, error) {
-	// Add timeout to prevent hanging indefinitely
-	ctx, cancel := context.WithTimeout(ctx, 120*time.Second)
+	// Add timeout to prevent hanging indefinitely (10 minutes for local CPU-based Ollama)
+	ctx, cancel := context.WithTimeout(ctx, 600*time.Second)
 	defer cancel()
 
 	provider, err := s.getProvider(req.Provider)
@@ -174,6 +174,20 @@ func (s *AIService) AnalyzeWorkload(ctx context.Context, req AnalyzeWorkloadRequ
 		}
 	}
 
+	// Truncate logs and events to avoid massive context size
+	safeLogs := req.Logs
+	if len(safeLogs) > 20 {
+		safeLogs = safeLogs[len(safeLogs)-20:]
+	}
+	safeEvents := req.Events
+	if len(safeEvents) > 20 {
+		safeEvents = safeEvents[len(safeEvents)-20:]
+	}
+	safeSchedulerLogs := req.SchedulerLogs
+	if len(safeSchedulerLogs) > 20 {
+		safeSchedulerLogs = safeSchedulerLogs[len(safeSchedulerLogs)-20:]
+	}
+
 	prompt := fmt.Sprintf(`
     You are a Senior Site Reliability Engineer (SRE) performing a deep-dive diagnostic analysis of the Kubernetes workload "%s".
     
@@ -214,7 +228,6 @@ func (s *AIService) AnalyzeWorkload(ctx context.Context, req AnalyzeWorkloadRequ
     Logs:
     %s
     
-    Events:
     Events:
     %s
     
@@ -265,9 +278,9 @@ func (s *AIService) AnalyzeWorkload(ctx context.Context, req AnalyzeWorkloadRequ
 		scalingEnabled, scalingMin, scalingMax, scalingCurrent, scalingReady,
 		scalingActive, scalingFallback, scalingPaused, scalingTriggers, scalingMisconfigs,
 		provEnabled, provNodePools, provNodeClaims, provMisconfigs,
-		strings.Join(req.Logs, "\n"),
-		strings.Join(req.Events, "\n"),
-		strings.Join(req.SchedulerLogs, "\n"),
+		strings.Join(safeLogs, "\n"),
+		strings.Join(safeEvents, "\n"),
+		strings.Join(safeSchedulerLogs, "\n"),
 	)
 
 	return provider.GenerateContent(ctx, prompt, req.Model)

@@ -520,17 +520,6 @@ export const TriageView: React.FC<TriageViewProps> = ({ workloads, isDarkMode = 
           ))}
         </div>
 
-        {/* Comments Section in Sidebar */}
-        {selectedWorkload && (
-          <div className="p-4 border-t border-gray-100 dark:border-white/5 bg-gray-50/50 dark:bg-black/20">
-            <CommentsThread
-              clusterID="default" // MVP assumption
-              namespace={selectedWorkload.namespace}
-              workloadName={selectedWorkload.name}
-              isDarkMode={isDarkMode}
-            />
-          </div>
-        )}
       </aside>
 
       <main className={`${!selectedWorkload || isSidebarOpen ? 'hidden' : 'flex'} lg:flex flex-1 min-w-0 bg-white dark:bg-dark-bg rounded-5xl overflow-hidden flex flex-col border border-gray-100 dark:border-white/5 shadow-sm`}>

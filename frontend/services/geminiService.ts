@@ -35,9 +35,9 @@ export const analyzeWorkload = async (
             playbookInstructions = "Perform a holistic root cause analysis covering all aspects of reliability including CPU, RAM, and Disk storage.";
     }
 
-    // Setup timeout for frontend request (2 minutes)
+    // Setup timeout for frontend request (10 minutes for local CPU-based Ollama)
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 120000);
+    const timeoutId = setTimeout(() => controller.abort(), 600000);
 
     try {
         const response = await fetch('/api/ai/analyze', {

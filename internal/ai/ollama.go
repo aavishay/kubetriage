@@ -59,7 +59,7 @@ func (p *OllamaProvider) GenerateContent(ctx context.Context, prompt string, mod
 		Prompt: prompt,
 		Stream: false,
 		Options: map[string]interface{}{
-			"num_predict": 16384, // Increase context window for large diagrams
+			"num_predict": 1024, // Reduced from 16384 to fix massive CPU inference hangs
 			"temperature": 0.2,
 		},
 	}
