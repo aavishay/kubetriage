@@ -1,20 +1,14 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
-import { Workload, Cluster, Organization, User, NotificationChannel, AlertRule, TriggeredAlert } from '../types';
-import { useAuth } from './AuthContext';
-
+import { Workload, Cluster, NotificationChannel, AlertRule, TriggeredAlert } from '../types';
 
 interface MonitoringContextType {
   workloads: Workload[];
   clusters: Cluster[];
   selectedCluster: Cluster | null;
-  organizations: Organization[];
-  users: User[];
   notificationChannels: NotificationChannel[];
   alertRules: AlertRule[];
   triggeredAlerts: TriggeredAlert[];
-  isAuthenticated: boolean;
-  isAuthLoading: boolean; // Added loading state
-  isWorkloadsLoading: boolean; // Added
+  isWorkloadsLoading: boolean;
   hasApiKey: boolean;
   isCheckingKey: boolean;
   activeNotification: TriggeredAlert | null;
@@ -33,8 +27,6 @@ interface MonitoringContextType {
   updateAIConfig: (config: { provider: string; model: string }) => void;
 
   // Actions
-  login: () => void;
-  logout: () => void;
   selectApiKey: () => Promise<void>;
   setSelectedCluster: (cluster: Cluster) => void;
   addCluster: (cluster: Cluster) => void;
@@ -67,15 +59,9 @@ interface MonitoringProviderProps {
 }
 
 export const MonitoringProvider: React.FC<MonitoringProviderProps> = ({ children }) => {
-  // --- Auth & Config State ---
-  // Consume AuthContext for source of truth
-  const { isAuthenticated, isLoading: isAuthLoading, login: authLogin, logout: authLogout } = useAuth();
-
   const [hasApiKey, setHasApiKey] = useState(false);
   const [isCheckingKey, setIsCheckingKey] = useState(true);
 
-  // --- Theme State ---
-  // --- Theme State ---
   const [isDarkMode, setIsDarkMode] = useState(false);
 
   useEffect(() => {
@@ -105,29 +91,25 @@ export const MonitoringProvider: React.FC<MonitoringProviderProps> = ({ children
       localStorage.setItem('selected_cluster', JSON.stringify(selectedCluster));
     }
   }, [selectedCluster]);
-  const [organizations, setOrganizations] = useState<Organization[]>([]);
-  const [users, setUsers] = useState<User[]>([]);
+
   const [unreadReports, setUnreadReports] = useState<number>(0);
 
-  // Fetch Workloads
-  // Fetch Data
+  // Fetch Clusters
   const refreshClusters = useCallback(async () => {
     try {
       const response = await fetch('/api/clusters');
       if (response.ok) {
         const data = await response.json();
-        // Map backend response to frontend Cluster type
         const mappedClusters = data.map((c: any) => ({
           id: c.id,
           name: c.name,
           provider: c.provider || 'On-Prem',
           status: c.status || 'Active',
-          region: 'local', // Default for now
+          region: 'local',
         }));
 
         if (mappedClusters.length > 0) {
           setClusters(mappedClusters);
-          // If we had a saved cluster, ensure it's still in the list, otherwise fallback to first
           setSelectedCluster(prev => {
             const stillExists = mappedClusters.find((c: any) => c.id === prev?.id);
             if (stillExists) return stillExists;
@@ -156,14 +138,12 @@ export const MonitoringProvider: React.FC<MonitoringProviderProps> = ({ children
       } catch (e) { console.error(e); }
     };
     fetchReports();
-    const interval = setInterval(fetchReports, 60000); // Check every minute
+    const interval = setInterval(fetchReports, 60000);
     return () => clearInterval(interval);
   }, []);
 
   useEffect(() => {
     const fetchWorkloads = async () => {
-      // Clear current workloads when switching clusters to prevent stale data visibility
-      // SWR: Load from cache first
       const cacheKey = `cache_workloads_${selectedCluster?.id || ''}_${metricsWindow}`;
       const cached = (typeof localStorage !== 'undefined' && localStorage.getItem) ? localStorage.getItem(cacheKey) : null;
       if (cached) {
@@ -172,12 +152,9 @@ export const MonitoringProvider: React.FC<MonitoringProviderProps> = ({ children
         setWorkloads([]);
       }
 
-      if (!selectedCluster) {
-        return;
-      }
+      if (!selectedCluster) return;
 
       setIsWorkloadsLoading(true);
-
       try {
         const response = await fetch(`/api/cluster/workloads?cluster=${selectedCluster.id}&window=${metricsWindow}`);
         if (response.ok) {
@@ -187,10 +164,7 @@ export const MonitoringProvider: React.FC<MonitoringProviderProps> = ({ children
             events: w.events || []
           })) : [];
           setWorkloads(workloadsWithEvents);
-          // Cache successful response
           localStorage.setItem(cacheKey, JSON.stringify(workloadsWithEvents));
-        } else {
-          console.error("Failed to fetch workloads");
         }
       } catch (err) {
         console.error("Error fetching workloads", err);
@@ -220,9 +194,8 @@ export const MonitoringProvider: React.FC<MonitoringProviderProps> = ({ children
     } finally {
       setIsWorkloadsLoading(false);
     }
-  }, [selectedCluster]);
+  }, [selectedCluster, metricsWindow]);
 
-  // --- Notifications & Alerting State ---
   // --- Notifications & Alerting State ---
   const [notificationChannels, setNotificationChannels] = useState<NotificationChannel[]>(() => {
     if (typeof localStorage === 'undefined' || !localStorage.getItem) return [];
@@ -247,7 +220,6 @@ export const MonitoringProvider: React.FC<MonitoringProviderProps> = ({ children
   const [notificationSettings, setNotificationSettings] = useState(() => {
     if (typeof localStorage === 'undefined' || !localStorage.getItem) return { toastEnabled: false, toastFrequency: 5 };
     const saved = localStorage.getItem('notification_settings');
-    // Default to false as requested by user
     return saved ? JSON.parse(saved) : { toastEnabled: false, toastFrequency: 5 };
   });
 
@@ -259,7 +231,6 @@ export const MonitoringProvider: React.FC<MonitoringProviderProps> = ({ children
 
   const [lastToastTime, setLastToastTime] = useState(0);
 
-  // Persistence Effects
   useEffect(() => {
     localStorage.setItem('notification_channels', JSON.stringify(notificationChannels));
   }, [notificationChannels]);
@@ -276,33 +247,16 @@ export const MonitoringProvider: React.FC<MonitoringProviderProps> = ({ children
     localStorage.setItem('notification_settings', JSON.stringify(notificationSettings));
   }, [notificationSettings]);
 
+  useEffect(() => {
+    localStorage.setItem('ai_config', JSON.stringify(aiConfig));
+  }, [aiConfig]);
 
   const updateNotificationSettings = (settings: { toastEnabled: boolean; toastFrequency: number }) => {
     setNotificationSettings(settings);
   };
 
-  useEffect(() => {
-    localStorage.setItem('ai_config', JSON.stringify(aiConfig));
-  }, [aiConfig]);
-
-  // FIXME: Migration for users with broken Gemini default
-  useEffect(() => {
-    if (aiConfig.provider === 'gemini' && aiConfig.model === '') {
-      setAiConfig({ provider: 'ollama', model: 'llama3' });
-    }
-  }, []);
-
   const updateAIConfig = (config: { provider: string; model: string }) => {
     setAiConfig(config);
-  };
-
-  // --- Helpers ---
-  const login = async () => {
-    await authLogin("user", "pass");
-  };
-
-  const logout = () => {
-    authLogout();
   };
 
   const selectApiKey = async () => {
@@ -337,12 +291,11 @@ export const MonitoringProvider: React.FC<MonitoringProviderProps> = ({ children
       if (res.ok) {
         setClusters(prev => prev.filter(c => c.id !== id));
         if (selectedCluster?.id === id) {
-          // Switch to another cluster or clear selection
           const remaining = clusters.filter(c => c.id !== id);
           if (remaining.length > 0) {
             setSelectedCluster(remaining[0]);
           } else {
-            setSelectedCluster(null as any); // Force clear or handle empty state
+            setSelectedCluster(null);
           }
         }
       }
@@ -351,54 +304,35 @@ export const MonitoringProvider: React.FC<MonitoringProviderProps> = ({ children
     }
   };
 
-  // --- Monitoring Engine Logic (Simulation) ---
   const checkAlertRules = useCallback((currentWorkloads: Workload[]) => {
     const newAlerts: TriggeredAlert[] = [];
-
     alertRules.forEach(rule => {
       if (!rule.enabled) return;
-
       currentWorkloads.forEach(workload => {
-        let value = 0;
-        let saturatedValue = 0; // percentage
-
+        let saturationValue = 0;
         if (rule.metric === 'CPU') {
-          value = workload.metrics.cpuUsage;
           const base = (workload.metrics.cpuLimit > 0) ? workload.metrics.cpuLimit : workload.metrics.cpuRequest;
-          saturatedValue = base > 0 ? (value / base) * 100 : 0;
+          saturationValue = base > 0 ? (workload.metrics.cpuUsage / base) * 100 : 0;
         } else if (rule.metric === 'Memory') {
-          value = workload.metrics.memoryUsage;
           const base = (workload.metrics.memoryLimit > 0) ? workload.metrics.memoryLimit : workload.metrics.memoryRequest;
-          saturatedValue = base > 0 ? (value / base) * 100 : 0;
-        } else if (rule.metric === 'Storage') {
-          value = workload.metrics.storageUsage;
-          const base = (workload.metrics.storageLimit > 0) ? workload.metrics.storageLimit : workload.metrics.storageRequest;
-          saturatedValue = base > 0 ? (value / base) * 100 : 0;
+          saturationValue = base > 0 ? (workload.metrics.memoryUsage / base) * 100 : 0;
         }
-
-        const isBreached = rule.operator === '>'
-          ? saturatedValue > rule.threshold
-          : saturatedValue < rule.threshold;
-
-        if (isBreached) {
+        if (rule.operator === '>' ? saturationValue > rule.threshold : saturationValue < rule.threshold) {
           const lastAlert = triggeredAlerts.find(a => a.ruleId === rule.id && a.workloadName === workload.name);
-          const isSpam = lastAlert && (Date.now() - lastAlert.timestamp < 30000); // 30s cooldown
-
-          if (!isSpam) {
-            const alert: TriggeredAlert = {
+          if (!lastAlert || (Date.now() - lastAlert.timestamp > 30000)) {
+            newAlerts.push({
               id: `alert-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
               ruleId: rule.id,
               ruleName: rule.name,
               workloadName: workload.name,
               workloadId: workload.id,
               metric: rule.metric,
-              value: parseFloat(saturatedValue.toFixed(1)),
+              value: parseFloat(saturationValue.toFixed(1)),
               threshold: rule.threshold,
               timestamp: Date.now(),
               severity: rule.severity,
               channelsNotified: rule.channels
-            };
-            newAlerts.push(alert);
+            });
           }
         }
       });
@@ -406,14 +340,10 @@ export const MonitoringProvider: React.FC<MonitoringProviderProps> = ({ children
 
     if (newAlerts.length > 0) {
       setTriggeredAlerts(prev => [...newAlerts, ...prev].slice(0, 50));
-
-      // Check Global Notification Settings
       if (notificationSettings.toastEnabled) {
         const now = Date.now();
-        const timeSinceLast = (now - lastToastTime) / 1000;
-
-        if (timeSinceLast >= notificationSettings.toastFrequency) {
-          setActiveNotification(newAlerts[newAlerts.length - 1]); // Show latest
+        if ((now - lastToastTime) / 1000 >= notificationSettings.toastFrequency) {
+          setActiveNotification(newAlerts[newAlerts.length - 1]);
           setLastToastTime(now);
           setTimeout(() => setActiveNotification(null), 8000);
         }
@@ -423,33 +353,29 @@ export const MonitoringProvider: React.FC<MonitoringProviderProps> = ({ children
 
   // Simulate real-time metric updates
   useEffect(() => {
-    if (!isAuthenticated) return;
-
     const interval = setInterval(() => {
       setWorkloads(prev => {
         const updated = prev.map(w => {
-          const cpuVar = (Math.random() * 0.2) - 0.1;
-          const memVar = (Math.random() * 0.05) - 0.025;
-
+          const baseCpu = (w.metrics?.cpuLimit > 0 ? w.metrics.cpuLimit : (w.metrics?.cpuRequest > 0 ? w.metrics.cpuRequest : 1));
+          const baseMem = (w.metrics?.memoryLimit > 0 ? w.metrics.memoryLimit : (w.metrics?.memoryRequest > 0 ? w.metrics.memoryRequest : 100));
+          const cpuVar = (Math.random() * 0.1 - 0.05) * baseCpu;
+          const memVar = (Math.random() * 0.04 - 0.02) * baseMem;
+          
           return {
             ...w,
             metrics: {
-              ...(w.metrics || {
-                cpuUsage: 0, memoryUsage: 0, cpuLimit: 1, memoryLimit: 1,
-                cpuRequest: 0, memoryRequest: 0, storageRequest: 0,
-                storageLimit: 0, storageUsage: 0, networkIn: 0,
-                networkOut: 0, diskIo: 0,
-                cpuAvg: 0, cpuP95: 0, cpuP99: 0,
-                memoryAvg: 0, memoryP95: 0, memoryP99: 0
-              }),
-              cpuUsage: Math.min(w.metrics?.cpuLimit || 0, Math.max(0, (w.metrics?.cpuUsage || 0) + cpuVar)),
-              memoryUsage: Math.max(0, (w.metrics?.memoryUsage || 0) + (Math.random() > 0.5 ? 10 : -10)),
-              cpuAvg: (w.metrics?.cpuUsage || 0) * 0.8,
-              cpuP95: (w.metrics?.cpuUsage || 0) * 1.2,
-              cpuP99: (w.metrics?.cpuUsage || 0) * 1.5,
-              memoryAvg: (w.metrics?.memoryUsage || 0) * 0.9,
-              memoryP95: (w.metrics?.memoryUsage || 0) * 1.1,
-              memoryP99: (w.metrics?.memoryUsage || 0) * 1.3
+              cpuUsage: Math.max(0, (w.metrics?.cpuUsage || 0) + cpuVar),
+              memoryUsage: Math.max(0, (w.metrics?.memoryUsage || 0) + memVar),
+              cpuRequest: w.metrics?.cpuRequest || 0,
+              cpuLimit: w.metrics?.cpuLimit || 0,
+              memoryRequest: w.metrics?.memoryRequest || 0,
+              memoryLimit: w.metrics?.memoryLimit || 0,
+              storageRequest: w.metrics?.storageRequest || 0,
+              storageLimit: w.metrics?.storageLimit || 0,
+              storageUsage: w.metrics?.storageUsage || 0,
+              networkIn: w.metrics?.networkIn || 0,
+              networkOut: w.metrics?.networkOut || 0,
+              diskIo: w.metrics?.diskIo || 0,
             }
           };
         });
@@ -457,23 +383,19 @@ export const MonitoringProvider: React.FC<MonitoringProviderProps> = ({ children
         return updated;
       });
     }, 2000);
-
     return () => clearInterval(interval);
-  }, [isAuthenticated, checkAlertRules]);
+  }, [checkAlertRules]);
 
-  // Check API Key
   useEffect(() => {
     const checkKey = async () => {
       setIsCheckingKey(true);
       try {
         if ((window as any).aistudio && (window as any).aistudio.hasSelectedApiKey) {
-          const hasKey = await (window as any).aistudio.hasSelectedApiKey();
-          setHasApiKey(hasKey);
+          setHasApiKey(await (window as any).aistudio.hasSelectedApiKey());
         } else {
           setHasApiKey(true);
         }
       } catch (e) {
-        console.error("Error checking API key status", e);
         setHasApiKey(false);
       } finally {
         setIsCheckingKey(false);
@@ -487,19 +409,13 @@ export const MonitoringProvider: React.FC<MonitoringProviderProps> = ({ children
       workloads,
       clusters,
       selectedCluster,
-      organizations,
-      users,
       notificationChannels,
       alertRules,
       triggeredAlerts,
-      isAuthenticated,
-      isAuthLoading, // Added
       isWorkloadsLoading,
       hasApiKey,
       isCheckingKey,
       activeNotification,
-      login,
-      logout,
       selectApiKey,
       setSelectedCluster,
       addCluster,
@@ -521,7 +437,7 @@ export const MonitoringProvider: React.FC<MonitoringProviderProps> = ({ children
       updateNotificationSettings,
       aiConfig,
       updateAIConfig,
-      removeCluster, // Exported
+      removeCluster,
     }}>
       {children}
     </MonitoringContext.Provider>

@@ -85,25 +85,6 @@ export interface Cluster {
   connectionToken?: string;
 }
 
-export interface Organization {
-  id: string;
-  name: string;
-  slug: string;
-  plan: 'Free' | 'Team' | 'Enterprise';
-  status: 'Active' | 'Suspended';
-  createdAt: string;
-  region: string;
-}
-
-export interface User {
-  id: string;
-  name: string;
-  email: string;
-  role: 'Admin' | 'Editor' | 'Viewer';
-  status: 'Active' | 'Inactive';
-  lastActive: string;
-  avatarUrl?: string;
-}
 
 export type NotificationType = 'Slack' | 'Webhook' | 'GoogleChat' | 'PagerDuty' | 'Email' | 'MicrosoftTeams';
 
@@ -183,16 +164,10 @@ export interface Recipe {
   CreatedAt: string;
 }
 
-export interface CommentUser {
-  ID: string;
-  Email: string;
-  AvatarURL?: string;
-}
-
 export interface Comment {
   ID: string;
-  UserID: string;
-  User?: CommentUser;
+  Author: string;
+  AuthorAvatar?: string;
   Content: string;
   ReportID?: number;
   ClusterID?: string;

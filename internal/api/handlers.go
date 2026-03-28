@@ -15,13 +15,11 @@ import (
 
 	"golang.org/x/sync/errgroup"
 
-	"github.com/aavishay/kubetriage/backend/internal/auth"
 	"github.com/aavishay/kubetriage/backend/internal/cache"
 	"github.com/aavishay/kubetriage/backend/internal/db"
 	"github.com/aavishay/kubetriage/backend/internal/k8s"
 	"github.com/aavishay/kubetriage/backend/internal/prometheus"
 	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
 	autoscalingv2 "k8s.io/api/autoscaling/v2"
 	corev1 "k8s.io/api/core/v1"
 	v1 "k8s.io/api/core/v1"
@@ -861,41 +859,7 @@ func ClustersHandler(c *gin.Context) {
 	clusters := k8s.Manager.ListClusters()
 	response := make([]ClusterResponse, 0, len(clusters))
 
-	// Multi-Tenancy Filtering
-	userInfo := c.MustGet("user").(auth.UserInfo) // Use string key "user" matching middleware
-	var allowedClusterIDs []string
-
-	if userInfo.Role == auth.RoleAdmin {
-		// Admin sees all? Or just their project?
-		// For MVP: Admin sees all (e.g. Platform Admin)
-		// Or: allow all for now if ProjectID is empty
-	}
-
-	// Fetch allowed IDs for this project
-	if userInfo.ProjectID != "" {
-		db.DB.Model(&db.ClusterProject{}).Where("project_id = ?", userInfo.ProjectID).Pluck("cluster_id", &allowedClusterIDs)
-	}
-
 	for _, cls := range clusters {
-		// Filter: Only show if in allowed list (unless Admin/NoProject logic)
-		// Strict mode: Must be in list
-		isAllowed := false
-		if userInfo.ProjectID != "" {
-			for _, id := range allowedClusterIDs {
-				if id == cls.ID {
-					isAllowed = true
-					break
-				}
-			}
-		} else {
-			// Backward compatibility for users without project (shouldn't happen with seeding)
-			isAllowed = true
-		}
-
-		if !isAllowed && userInfo.Role != auth.RoleAdmin {
-			continue
-		}
-
 		// Simple heuristic for provider based on name
 		provider := "Unknown"
 		if cls.Name == "minikube" {
@@ -1315,39 +1279,6 @@ func RegisterClusterHandler(c *gin.Context) {
 		return
 	}
 
-	// 2. Associate with Project (Multi-Tenancy)
-	// For MVP, we associate with the user's current project (or Default)
-	userInfo := c.MustGet("user").(auth.UserInfo)
-	var projUUID uuid.UUID
-	var errUUID error
-
-	if userInfo.ProjectID != "" {
-		projUUID, errUUID = uuid.Parse(userInfo.ProjectID)
-		if errUUID != nil {
-			fmt.Printf("Warning: Invalid project ID in user token: %v\n", errUUID)
-		}
-	}
-
-	// If user has no project (shouldn't happen) or invalid, try to find/use Default
-	if projUUID == uuid.Nil {
-		var defaultProj db.Project
-		if err := db.DB.Where("name = ?", "Default").First(&defaultProj).Error; err == nil {
-			projUUID = defaultProj.ID
-		}
-	}
-
-	if projUUID != uuid.Nil {
-		// Check if mapping exists
-		var count int64
-		db.DB.Model(&db.ClusterProject{}).Where("cluster_id = ? AND project_id = ?", cluster.ID, projUUID).Count(&count)
-		if count == 0 {
-			db.DB.Create(&db.ClusterProject{
-				ClusterID: cluster.ID, // String
-				ProjectID: projUUID,   // UUID
-			})
-		}
-	}
-
 	c.JSON(http.StatusOK, gin.H{
 		"message": "Cluster registered successfully",
 		"id":      cluster.ID,
@@ -1369,11 +1300,6 @@ func DeleteClusterHandler(c *gin.Context) {
 
 	// 1. Remove from in-memory manager
 	k8s.Manager.RemoveCluster(id)
-
-	// 2. Remove persisted project association
-	if err := db.DB.Where("cluster_id = ?", id).Delete(&db.ClusterProject{}).Error; err != nil {
-		log.Printf("Warning: Failed to delete cluster project mapping: %v", err)
-	}
 
 	c.Status(http.StatusNoContent)
 }

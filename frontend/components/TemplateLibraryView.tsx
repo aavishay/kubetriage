@@ -107,74 +107,65 @@ export const TemplateLibraryView: React.FC<TemplateLibraryViewProps> = ({ onAppl
    };
 
    return (
-      <div className="space-y-12 pb-20 font-sans">
-         {/* ... existing code ... */}
-         {/* Hero Header is at 91+ */}
+      <div className="space-y-8 pb-20">
          {/* Hero Header */}
-         <div className="bg-white dark:bg-dark-card rounded-[3.5rem] p-10 md:p-14 text-gray-900 dark:text-white relative overflow-hidden shadow-2xl border border-gray-100 dark:border-white/5">
-            <div className="relative z-10 max-w-2xl">
-               <div className="inline-flex items-center gap-2 bg-primary-500/10 text-primary-500 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest mb-6 border border-primary-500/20">
-                  <Sparkles className="w-4 h-4" /> Generative AI Integrated
+         <div className="bg-dark-card border border-white/10 rounded-xl p-6 md:p-8">
+            <div className="max-w-2xl">
+               <div className="inline-flex items-center gap-1.5 bg-primary-500/10 text-primary-400 px-3 py-1 rounded-full text-xs font-medium mb-4">
+                  <Sparkles className="w-3.5 h-3.5" /> AI Integrated
                </div>
-               <h1 className="text-5xl font-black mb-4 tracking-tighter leading-none uppercase">SRE Runbooks &<br />Optimization Templates</h1>
-               <p className="text-gray-500 dark:text-gray-400 text-lg mb-10 leading-relaxed font-bold uppercase tracking-tight opacity-80">
-                  Deploy specialized AI diagnostic models and resource strategies with a single click. Tuning for Kubernetes-native signals.
+               <h1 className="text-2xl font-semibold text-white mb-2">SRE Runbooks & Templates</h1>
+               <p className="text-sm text-zinc-500 mb-6">
+                  Deploy specialized AI diagnostic models and resource strategies with a single click.
                </p>
-               <div className="flex flex-wrap gap-4">
-                  <div className="flex items-center gap-3 bg-gray-50 dark:bg-dark-bg p-4 rounded-2xl border border-gray-100 dark:border-white/5 shadow-sm">
-                     <Activity className="w-6 h-6 text-primary-500" />
+               <div className="flex flex-wrap gap-3">
+                  <div className="flex items-center gap-2 bg-dark-bg p-3 rounded-lg border border-white/5">
+                     <Activity className="w-5 h-5 text-primary-500" />
                      <div className="text-left">
-                        <p className="text-[9px] font-black uppercase text-gray-400 leading-none mb-1">Triage Models</p>
-                        <p className="text-sm font-black uppercase tracking-tighter">13 Active</p>
+                        <p className="text-xs text-zinc-500">Triage Models</p>
+                        <p className="text-sm font-medium text-white">13 Active</p>
                      </div>
                   </div>
-                  <div className="flex items-center gap-3 bg-gray-50 dark:bg-dark-bg p-4 rounded-2xl border border-gray-100 dark:border-white/5 shadow-sm">
-                     <Scale className="w-6 h-6 text-emerald-500" />
+                  <div className="flex items-center gap-2 bg-dark-bg p-3 rounded-lg border border-white/5">
+                     <Scale className="w-5 h-5 text-emerald-500" />
                      <div className="text-left">
-                        <p className="text-[9px] font-black uppercase text-zinc-500 leading-none mb-1">Sizing Profiles</p>
-                        <p className="text-xs font-bold">8 Active</p>
+                        <p className="text-xs text-zinc-500">Sizing Profiles</p>
+                        <p className="text-sm font-medium text-white">8 Active</p>
                      </div>
                   </div>
-                  <div className="flex items-center gap-3 bg-gray-50 dark:bg-dark-bg p-4 rounded-2xl border border-gray-100 dark:border-white/5 shadow-sm">
-                     <Zap className="w-6 h-6 text-amber-500" />
+                  <div className="flex items-center gap-2 bg-dark-bg p-3 rounded-lg border border-white/5">
+                     <Zap className="w-5 h-5 text-amber-500" />
                      <div className="text-left">
-                        <p className="text-[9px] font-black uppercase text-zinc-500 leading-none mb-1">Automation</p>
-                        <p className="text-xs font-bold">4 Rules</p>
+                        <p className="text-xs text-zinc-500">Automation</p>
+                        <p className="text-sm font-medium text-white">4 Rules</p>
                      </div>
                   </div>
                </div>
             </div>
-            {/* Background Decor */}
-            <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-indigo-600/10 rounded-full -mr-48 -mt-48 blur-[100px]" />
-            <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-purple-600/5 rounded-full -ml-48 -mb-48 blur-[100px]" />
          </div>
 
          {/* Triage Section */}
          <section>
-            <div className="flex items-center justify-between mb-8">
-               <div>
-                  <h2 className="text-3xl font-black text-gray-900 dark:text-white flex items-center gap-4 tracking-tighter uppercase leading-none">
-                     <AlertCircle className="w-8 h-8 text-primary-500" /> Diagnostic Triage
-                  </h2>
-                  <p className="text-[11px] text-gray-400 font-bold uppercase tracking-[0.2em] mt-2 ml-12 opacity-80">AI-driven root cause identification runbooks</p>
-               </div>
+            <div className="flex items-center gap-2 mb-4">
+               <AlertCircle className="w-5 h-5 text-primary-500" />
+               <h2 className="text-lg font-medium text-white">Diagnostic Triage</h2>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+            <p className="text-xs text-zinc-500 mb-4">AI-driven root cause identification runbooks</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
                {triageTemplates.map(pb => (
-                  <div key={pb.id} className="bg-white dark:bg-dark-card border border-gray-100 dark:border-white/5 rounded-[2.5rem] p-8 flex flex-col hover:shadow-2xl transition-all group relative overflow-hidden">
-                     <div className={`absolute top-0 right-0 w-32 h-32 -mr-16 -mt-16 blur-3xl opacity-5 rounded-full ${pb.bgColor}`} />
-                     <div className={`p-4 rounded-2xl w-fit mb-8 shadow-xl ${pb.bgColor} ${pb.color} group-hover:scale-110 transition-transform`}>
-                        <pb.icon className="w-7 h-7" />
+                  <div key={pb.id} className="bg-dark-card border border-white/10 rounded-xl p-5 flex flex-col hover:border-white/20 transition-colors group">
+                     <div className={`p-2.5 rounded-lg w-fit mb-4 ${pb.bgColor} ${pb.color}`}>
+                        <pb.icon className="w-5 h-5" />
                      </div>
-                     <h3 className="text-lg font-black text-zinc-900 dark:text-white mb-3 tracking-tight">{pb.title}</h3>
-                     <p className="text-xs text-zinc-500 dark:text-zinc-400 mb-8 flex-1 leading-relaxed font-medium">
+                     <h3 className="text-sm font-medium text-white mb-2">{pb.title}</h3>
+                     <p className="text-xs text-zinc-500 mb-4 flex-1 leading-relaxed">
                         {pb.description}
                      </p>
-                     <div className="space-y-4 mb-8">
-                        <p className="text-[9px] font-black text-zinc-400 uppercase tracking-[0.2em]">Diagnostic Depth</p>
-                        <div className="flex flex-wrap gap-2">
+                     <div className="space-y-2 mb-4">
+                        <p className="text-xs text-zinc-600 uppercase">Focus Areas</p>
+                        <div className="flex flex-wrap gap-1.5">
                            {pb.focus.map(f => (
-                              <span key={f} className="text-[9px] bg-zinc-50 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 px-3 py-1 rounded-lg font-black uppercase tracking-widest border border-zinc-100 dark:border-zinc-700">
+                              <span key={f} className="text-[10px] bg-white/5 text-zinc-400 px-2 py-0.5 rounded border border-white/5">
                                  {f}
                               </span>
                            ))}
@@ -182,9 +173,9 @@ export const TemplateLibraryView: React.FC<TemplateLibraryViewProps> = ({ onAppl
                      </div>
                      <button
                         onClick={() => onApplyTemplate(pb.view, pb.id)}
-                        className="w-full flex items-center justify-center gap-3 py-5 bg-primary-600 text-white text-[10px] font-black uppercase tracking-[0.2em] rounded-2xl transition-all shadow-xl shadow-primary-500/30 hover:bg-primary-700 active:scale-95"
+                        className="w-full flex items-center justify-center gap-2 py-2.5 bg-primary-600 hover:bg-primary-500 text-white text-xs font-medium rounded-lg transition-colors"
                      >
-                        Apply Model <ArrowRight className="w-4 h-4 group-hover:translate-x-2 transition-transform" />
+                        Apply Model <ArrowRight className="w-3.5 h-3.5" />
                      </button>
                   </div>
                ))}
@@ -193,74 +184,69 @@ export const TemplateLibraryView: React.FC<TemplateLibraryViewProps> = ({ onAppl
 
          {/* Sizing Section */}
          <section>
-            <div className="flex items-center justify-between mb-8">
-               <div>
-                  <h2 className="text-2xl font-black text-zinc-900 dark:text-white flex items-center gap-3 tracking-tighter uppercase">
-                     <Scale className="w-6 h-6 text-emerald-500" /> Right Sizing Strategies
-                  </h2>
-                  <p className="text-sm text-zinc-500 font-semibold mt-1">Resource allocation and capacity planning profiles</p>
-               </div>
+            <div className="flex items-center gap-2 mb-4">
+               <Scale className="w-5 h-5 text-emerald-500" />
+               <h2 className="text-lg font-medium text-white">Right Sizing Strategies</h2>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <p className="text-xs text-zinc-500 mb-4">Resource allocation and capacity planning profiles</p>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                {sizingTemplates.map(pr => (
-                  <div key={pr.id} className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-[2rem] p-6 flex flex-col hover:shadow-2xl hover:border-emerald-500/50 transition-all group">
-                     <div className={`p-4 rounded-2xl w-fit mb-6 ${pr.bgColor} ${pr.color}`}>
-                        <pr.icon className="w-7 h-7" />
+                  <div key={pr.id} className="bg-dark-card border border-white/10 rounded-xl p-5 flex flex-col hover:border-white/20 transition-colors group">
+                     <div className={`p-2.5 rounded-lg w-fit mb-4 ${pr.bgColor} ${pr.color}`}>
+                        <pr.icon className="w-5 h-5" />
                      </div>
-                     <h3 className="text-lg font-black text-zinc-900 dark:text-white mb-3 tracking-tight">{pr.title}</h3>
-                     <p className="text-xs text-zinc-500 dark:text-zinc-400 mb-8 flex-1 leading-relaxed font-medium">
+                     <h3 className="text-sm font-medium text-white mb-2">{pr.title}</h3>
+                     <p className="text-xs text-zinc-500 mb-4 flex-1 leading-relaxed">
                         {pr.description}
                      </p>
-                     <div className="mb-8 p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-100 dark:border-zinc-700">
-                        <div className="flex justify-between items-center mb-3">
-                           <p className="text-[9px] font-black uppercase tracking-widest text-zinc-400">Target Efficiency</p>
-                           <span className="text-xs font-black text-zinc-900 dark:text-white">{pr.id === 'Cost-Saver' ? '92%' : pr.id === 'Balanced' ? '78%' : '55%'}</span>
+                     <div className="mb-4 p-3 rounded-lg bg-dark-bg border border-white/5">
+                        <div className="flex justify-between items-center mb-2">
+                           <p className="text-xs text-zinc-500">Target Efficiency</p>
+                           <span className="text-xs font-medium text-white">{pr.id === 'Cost-Saver' ? '92%' : pr.id === 'Balanced' ? '78%' : '55%'}</span>
                         </div>
-                        <div className="w-full bg-zinc-200 dark:bg-zinc-700 h-1.5 rounded-full overflow-hidden flex">
-                           <div className={`h-full ${pr.id === 'Cost-Saver' ? 'w-11/12 bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]' : pr.id === 'Balanced' ? 'w-8/12 bg-blue-500' : 'w-4/12 bg-purple-500'}`}></div>
+                        <div className="w-full bg-zinc-800 h-1.5 rounded-full overflow-hidden">
+                           <div className={`h-full ${pr.id === 'Cost-Saver' ? 'w-[92%] bg-emerald-500' : pr.id === 'Balanced' ? 'w-[78%] bg-blue-500' : 'w-[55%] bg-purple-500'}`}></div>
                         </div>
                      </div>
                      <button
                         onClick={() => onApplyTemplate(pr.view, pr.id)}
-                        className="w-full flex items-center justify-center gap-3 py-4 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 text-[10px] font-black uppercase tracking-[0.2em] rounded-2xl transition-all shadow-xl hover:scale-[1.03] active:scale-95"
+                        className="w-full flex items-center justify-center gap-2 py-2.5 bg-white/10 hover:bg-white/20 text-white text-xs font-medium rounded-lg transition-colors"
                      >
-                        Apply Strategy <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                        Apply Strategy <ArrowRight className="w-3.5 h-3.5" />
                      </button>
                   </div>
                ))}
             </div>
          </section>
+
          {/* Automation & Security Recipes */}
          <section>
-            <div className="flex items-center justify-between mb-8">
-               <div>
-                  <h2 className="text-3xl font-black text-gray-900 dark:text-white flex items-center gap-4 tracking-tighter uppercase leading-none">
-                     <ShieldCheck className="w-8 h-8 text-amber-500" /> Automation & Security
-                  </h2>
-                  <p className="text-[11px] text-gray-400 font-bold uppercase tracking-[0.2em] mt-2 ml-12 opacity-80">Proactive background guardrails & automated fixes</p>
-               </div>
+            <div className="flex items-center gap-2 mb-4">
+               <ShieldCheck className="w-5 h-5 text-amber-500" />
+               <h2 className="text-lg font-medium text-white">Automation & Security</h2>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <p className="text-xs text-zinc-500 mb-4">Proactive background guardrails & automated fixes</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                {recipes.map(recipe => (
-                  <div key={recipe.ID} className={`bg-white dark:bg-dark-card border rounded-[2.5rem] p-8 flex items-center justify-between group transition-all ${recipe.IsEnabled ? 'border-amber-500/30' : 'border-gray-100 dark:border-white/5 opacity-60'}`}>
-                     <div className="flex items-center gap-6">
-                        <div className={`p-4 rounded-2xl ${recipe.TriggerType === 'Security' ? 'bg-rose-500/10 text-rose-500' : 'bg-amber-500/10 text-amber-500'}`}>
-                           {recipe.TriggerType === 'Security' ? <Shield className="w-6 h-6" /> : <Zap className="w-6 h-6" />}
+                  <div key={recipe.ID} className={`bg-dark-card border rounded-xl p-5 flex items-center justify-between group transition-all ${recipe.IsEnabled ? 'border-amber-500/30' : 'border-white/10 opacity-60'}`}>
+                     <div className="flex items-center gap-4">
+                        <div className={`p-2.5 rounded-lg ${recipe.TriggerType === 'Security' ? 'bg-rose-500/10 text-rose-500' : 'bg-amber-500/10 text-amber-500'}`}>
+                           {recipe.TriggerType === 'Security' ? <Shield className="w-5 h-5" /> : <Zap className="w-5 h-5" />}
                         </div>
                         <div>
-                           <h3 className="text-lg font-black text-zinc-900 dark:text-white tracking-tight">{recipe.Name}</h3>
-                           <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1 font-medium">{recipe.Description}</p>
+                           <h3 className="text-sm font-medium text-white">{recipe.Name}</h3>
+                           <p className="text-xs text-zinc-500 mt-0.5">{recipe.Description}</p>
                         </div>
                      </div>
-                     <div className="flex items-center gap-4">
-                        <div className={`px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest ${recipe.IsEnabled ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20' : 'bg-gray-500/10 text-gray-500 border border-gray-500/20'}`}>
+                     <div className="flex items-center gap-3">
+                        <div className={`px-2.5 py-1 rounded-full text-[10px] font-medium ${recipe.IsEnabled ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-zinc-800 text-zinc-500 border border-zinc-700'}`}>
                            {recipe.IsEnabled ? 'Active' : 'Paused'}
                         </div>
                         <button
                            onClick={() => handleToggleRecipe(recipe.ID)}
-                           className="p-3 hover:bg-gray-100 dark:hover:bg-white/5 rounded-2xl transition-all"
+                           className="p-2 hover:bg-white/5 rounded-lg transition-colors"
                         >
-                           {recipe.IsEnabled ? <Pause className="w-5 h-5 text-zinc-400" /> : <Play className="w-5 h-5 text-indigo-500" />}
+                           {recipe.IsEnabled ? <Pause className="w-4 h-4 text-zinc-400" /> : <Play className="w-4 h-4 text-primary-500" />}
                         </button>
                      </div>
                   </div>

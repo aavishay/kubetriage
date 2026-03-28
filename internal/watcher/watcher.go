@@ -146,12 +146,6 @@ func (w *Watcher) analyzePod(ctx context.Context, cls *k8s.ClusterConn, pod core
 		report.Kind = pod.OwnerReferences[0].Kind
 	}
 
-	// Assign to Default Project (MVP)
-	var defaultProject db.Project
-	if err := db.DB.Where("name = ?", "Default").First(&defaultProject).Error; err == nil {
-		uid := defaultProject.ID
-		report.ProjectID = &uid
-	}
 
 	if err := db.DB.Create(&report).Error; err != nil {
 		log.Printf("Watcher: Failed to create report: %v", err)

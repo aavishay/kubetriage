@@ -2,10 +2,10 @@ package api
 
 import (
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/aavishay/kubetriage/backend/internal/ai"
-	"github.com/aavishay/kubetriage/backend/internal/auth"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -21,20 +21,13 @@ func SetupRouter(aiService *ai.AIService, rootFS http.FileSystem, assetsFS http.
 		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
 		AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization"},
 		ExposeHeaders:    []string{"Content-Length"},
-		AllowCredentials: true,
+		AllowCredentials: false,
 		MaxAge:           12 * time.Hour,
 	}))
 
 	// OpenTelemetry Middleware
 	r.Use(otelgin.Middleware("kubetriage-backend"))
 
-	// Auth Middleware
-	// r.Use(auth.AuthMiddleware()) // Removed global middleware, apply only to protected
-
-	// Init OAuth
-	auth.InitOAuth()
-
-	// Init Handlers
 	// Init Handlers
 	aiHandler := NewAIHandler(aiService)
 
@@ -43,85 +36,65 @@ func SetupRouter(aiService *ai.AIService, rootFS http.FileSystem, assetsFS http.
 		// Public Routes
 		api.GET("/health", HealthHandler)
 		api.GET("/status/db", DBHealthHandler)
-		api.GET("/auth/login", func(c *gin.Context) { auth.LoginHandler(c) })
-		api.POST("/auth/logout", func(c *gin.Context) { auth.LogoutHandler(c) })
-		api.GET("/auth/google/callback", func(c *gin.Context) { auth.CallbackHandler(c) })
 
-		// Protected Routes
-		protected := api.Group("/")
-		protected.Use(auth.AuthMiddleware())
-		protected.Use(auth.AuditMiddleware())
-		{
-			protected.GET("/me", MeHandler)
-			protected.GET("/clusters", ClustersHandler)
-			protected.POST("/clusters/register", RegisterClusterHandler)
-			protected.DELETE("/clusters/:id", DeleteClusterHandler)
-			protected.GET("/cluster/workloads", WorkloadsHandler)
-			protected.GET("/cluster/nodes", NodesHandler)
-			protected.GET("/cluster/events", ClusterEventsHandler)
-			protected.GET("/cluster/metrics", ClusterMetricsHandler)
-			protected.GET("/reports", ListReportsHandler)
-			protected.GET("/comments", ListCommentsHandler)
-			protected.POST("/comments", CreateCommentHandler)
-			protected.DELETE("/comments/:id", DeleteCommentHandler)
-			protected.DELETE("/reports", auth.RequireRole(auth.RoleAdmin), DeleteAllReportsHandler)
-			protected.GET("/reports/compliance", GenerateComplianceReportHandler)
-			protected.POST("/reports/:id/read", MarkReportReadHandler)
-			protected.POST("/reports/:id/export", ExportReportHandler)
-			protected.GET("/ws/logs", StreamLogsHandler)
-			protected.GET("/cluster/logs/search", SearchLogsHandler)
-			protected.POST("/reports/:id/approve", ApproveRemediationHandler)
-			protected.POST("/reports/:id/reject", RejectRemediationHandler)
+		// Clusters
+		api.GET("/clusters", ClustersHandler)
+		api.POST("/clusters/register", RegisterClusterHandler)
+		api.DELETE("/clusters/:id", DeleteClusterHandler)
+		api.GET("/cluster/workloads", WorkloadsHandler)
+		api.GET("/cluster/nodes", NodesHandler)
+		api.GET("/cluster/events", ClusterEventsHandler)
+		api.GET("/cluster/metrics", ClusterMetricsHandler)
 
-			// AI / Remediation
-			protected.GET("/ai/models", aiHandler.GetModels)
-			protected.POST("/ai/analyze", aiHandler.AnalyzeWorkload)
-			protected.POST("/ai/topology", aiHandler.GenerateTopology)
-			protected.POST("/ai/chat", aiHandler.Chat)
-			protected.POST("/remediate/generate", aiHandler.GenerateRemediation)
+		// Reports
+		api.GET("/reports", ListReportsHandler)
+		api.DELETE("/reports", DeleteAllReportsHandler)
+		api.GET("/reports/compliance", GenerateComplianceReportHandler)
+		api.POST("/reports/:id/read", MarkReportReadHandler)
+		api.POST("/reports/:id/export", ExportReportHandler)
+		api.POST("/reports/:id/approve", ApproveRemediationHandler)
+		api.POST("/reports/:id/reject", RejectRemediationHandler)
 
-			// Playbooks (Public Read)
-			protected.GET("/playbooks", ListPlaybooksHandler)
-			protected.GET("/recipes", ListRecipesHandler)
+		// Comments
+		api.GET("/comments", ListCommentsHandler)
+		api.POST("/comments", CreateCommentHandler)
+		api.DELETE("/comments/:id", DeleteCommentHandler)
 
-			// Admin Routes
-			admin := protected.Group("/")
-			admin.Use(auth.RequireRole(auth.RoleAdmin))
-			{
-				admin.POST("/remediate/apply", ApplyRemediationHandler)
+		// AI / Remediation
+		api.GET("/ai/models", aiHandler.GetModels)
+		api.POST("/ai/analyze", aiHandler.AnalyzeWorkload)
+		api.POST("/ai/topology", aiHandler.GenerateTopology)
+		api.POST("/ai/chat", aiHandler.Chat)
+		api.POST("/remediate/generate", aiHandler.GenerateRemediation)
+		api.POST("/remediate/apply", ApplyRemediationHandler)
 
-				// Playbooks (Admin Write)
-				admin.POST("/playbooks", CreatePlaybookHandler)
-				admin.PUT("/playbooks/:id", UpdatePlaybookHandler)
-				admin.DELETE("/playbooks/:id", DeletePlaybookHandler)
-				admin.POST("/recipes/:id/toggle", ToggleRecipeHandler)
-			}
-		}
+		// Playbooks & Recipes
+		api.GET("/playbooks", ListPlaybooksHandler)
+		api.POST("/playbooks", CreatePlaybookHandler)
+		api.PUT("/playbooks/:id", UpdatePlaybookHandler)
+		api.DELETE("/playbooks/:id", DeletePlaybookHandler)
+		api.GET("/recipes", ListRecipesHandler)
+		api.POST("/recipes/:id/toggle", ToggleRecipeHandler)
+
+		// WebSocket Logs
+		api.GET("/ws/logs", StreamLogsHandler)
+		api.GET("/cluster/logs/search", SearchLogsHandler)
 	}
 	// Serve Frontend Static Files
-	// Use the embedded filesystem
-	r.StaticFS("/assets", assetsFS) // This will serve from dist/assets -> dist/assets (mapped correctly)
+	r.StaticFS("/assets", assetsFS)
 
-	// Because StaticFS servers /assets/*, we can't easily map /favicon.ico directly unless we check for it in NoRoute or have it in root of FS.
-	// Since we subbed "dist", if favicon.ico is in dist/favicon.ico, we can serve it manually.
-	r.GET("/favicon.ico", func(c *gin.Context) {
-		c.FileFromFS("favicon.ico", rootFS)
-	})
-	r.GET("/favicon.png", func(c *gin.Context) {
-		c.FileFromFS("favicon.png", rootFS)
-	})
-	r.GET("/favicon.svg", func(c *gin.Context) {
-		c.FileFromFS("favicon.svg", rootFS)
-	})
+	// Favicon handlers
+	r.GET("/favicon.ico", func(c *gin.Context) { c.FileFromFS("/favicon.ico", rootFS) })
+	r.GET("/favicon.png", func(c *gin.Context) { c.FileFromFS("/favicon.png", rootFS) })
+	r.GET("/favicon.svg", func(c *gin.Context) { c.FileFromFS("/favicon.svg", rootFS) })
 
 	// Expose Prometheus metrics
 	r.GET("/metrics", gin.WrapH(promhttp.Handler()))
 
 	// SPA Handler: any route not handled by API or static files returns index.html
 	r.NoRoute(func(c *gin.Context) {
-		// Avoid intercepting API 404s
 		path := c.Request.URL.Path
-		if len(path) >= 4 && path[0:4] == "/api" {
+		if strings.HasPrefix(path, "/api") {
 			c.JSON(404, gin.H{"code": 404, "message": "API endpoint not found"})
 			return
 		}

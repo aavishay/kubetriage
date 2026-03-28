@@ -1,4 +1,4 @@
-.PHONY: all build run test clean docker-up docker-down
+.PHONY: all build run test clean
 
 # Default target
 all: build
@@ -18,21 +18,11 @@ run:
 	@echo "🚀 Starting KubeTriage..."
 	go run ./cmd/server
 
-# Docker Compose Operations
-docker-up:
-	@echo "🐳 Starting Docker Compose..."
-	docker compose up -d --build
-
-docker-down:
-	@echo "🛑 Stopping Docker Compose..."
-	docker compose down
-
-docker-logs:
-	@echo "📜 Streaming Logs..."
-	docker compose logs -f
-
 # Clean artifacts
 clean:
 	@echo "🧹 Cleaning..."
-	rm -f kubetriage
+	rm -f kubetriage cli kubetriage_bin
+	rm -f server.log test_output.txt
+	rm -f kubetriage.db*
+	rm -rf internal/ui/dist
 	rm -rf frontend/dist

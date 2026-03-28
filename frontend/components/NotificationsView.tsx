@@ -1,9 +1,10 @@
 
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useMonitoring } from '../contexts/MonitoringContext';
 import { NotificationChannel, NotificationType, AlertRule, TriggeredAlert } from '../types';
 import { Bell, Plus, Search, MoreHorizontal, Slack, Mail, Webhook, Trash2, Edit2, X, Activity, Loader2, Play, Pause, Settings2, ShieldAlert, Cpu, MemoryStick, Zap, DollarSign, Filter, CheckCircle2, AlertCircle, MessageSquare, History, Clock, ArrowRight, BellRing, ChevronDown, ChevronUp } from 'lucide-react';
+import { useEscapeKey } from '../utils/useEscapeKey';
 
 interface NotificationsViewProps {
    channels: NotificationChannel[];
@@ -30,6 +31,11 @@ export const NotificationsView: React.FC<NotificationsViewProps> = ({
    const [isRuleModalOpen, setIsRuleModalOpen] = useState(false);
    const [searchTerm, setSearchTerm] = useState('');
    const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
+
+   const closeChannelModal = useCallback(() => setIsChannelModalOpen(false), []);
+   const closeRuleModal = useCallback(() => setIsRuleModalOpen(false), []);
+   useEscapeKey(isChannelModalOpen, closeChannelModal);
+   useEscapeKey(isRuleModalOpen, closeRuleModal);
 
    const toggleGroup = (groupName: string) => {
       const newExpanded = new Set(expandedGroups);

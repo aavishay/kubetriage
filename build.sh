@@ -1,23 +1,21 @@
-#!/bin/bash
+#!/usr/bin/env bash
 set -e
 
-echo "Note: Using your existing environment variables for database connections."
+echo "Building KubeTriage..."
 
-# 1. Build Frontend
-echo "Building frontend..."
+# Build Frontend
+echo "Building React frontend..."
 cd frontend
-npm install
+npm ci --ignore-scripts || npm install --ignore-scripts
 npm run build
+echo "Updating frontend assets in backend..."
+rm -rf ../internal/ui/dist
+cp -r dist ../internal/ui/dist
 cd ..
 
-# 2. Prepare Embedding
-echo "Copying frontend assets..."
-rm -rf internal/ui/dist
-cp -r frontend/dist internal/ui/dist
-
-# 3. Build Backend Binary
-echo "Building kubetriage binary..."
-export CGO_ENABLED=0
+# Build Backend
+echo "Building Go backend..."
+go mod download
 go build -o kubetriage cmd/server/main.go
 
-echo "Build complete! You can now run ./kubetriage"
+echo "Build complete! Binary located at ./kubetriage"

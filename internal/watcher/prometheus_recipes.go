@@ -92,12 +92,6 @@ func (w *Watcher) reportMetricViolation(ctx context.Context, ns, name, incidentT
 		AutoRemediationPayload: "", // Metrics usually require manual rightsizing, no auto-patch unless we have VPA logic
 	}
 
-	// Assign Project
-	var defaultProject db.Project
-	if err := db.DB.Where("name = ?", "Default").First(&defaultProject).Error; err == nil {
-		uid := defaultProject.ID
-		report.ProjectID = &uid
-	}
 
 	if err := db.DB.Create(&report).Error; err != nil {
 		log.Printf("Watcher: Failed to create metric report: %v", err)

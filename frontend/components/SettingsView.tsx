@@ -26,12 +26,7 @@ export const SettingsView: React.FC = () => {
             setIsLoadingModels(true);
             setFetchError(null);
             try {
-                const token = localStorage.getItem('mock_token') || 'mock-token';
-                const res = await fetch(`/api/ai/models?provider=${provider}`, {
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
-                });
+                const res = await fetch(`/api/ai/models?provider=${provider}`);
                 if (!res.ok) {
                     const errorData = await res.json().catch(() => ({}));
                     throw new Error(errorData.error || `Failed to fetch models (${res.status})`);
@@ -66,183 +61,174 @@ export const SettingsView: React.FC = () => {
     };
 
     return (
-        <div className="w-full h-full p-8 overflow-y-auto custom-scrollbar">
-            <div className="max-w-4xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-20">
-                <div className="flex flex-col gap-2">
-                    <h1 className="text-4xl font-black text-white tracking-widest font-display uppercase drop-shadow-lg">
-                        System Configuration
+        <div className="w-full h-full p-6 overflow-y-auto custom-scrollbar">
+            <div className="max-w-3xl mx-auto space-y-6 pb-20">
+                <div className="flex flex-col gap-1">
+                    <h1 className="text-2xl font-semibold text-white">
+                        Settings
                     </h1>
-                    <p className="text-zinc-400 font-light tracking-wide border-l-2 border-primary-500 pl-4">
-                        Manage global parameters for the Neural Operations Center.
+                    <p className="text-sm text-zinc-500">
+                        Manage AI provider and notification preferences.
                     </p>
                 </div>
 
-                <div className="relative overflow-hidden rounded-[2.5rem] p-[1px]">
-                    <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent rounded-[2.5rem]"></div>
-                    <div className="bg-dark-card/80 backdrop-blur-xl rounded-[2.5rem] relative z-10 overflow-hidden shadow-2xl">
-
-                        {/* Header Section */}
-                        <div className="p-8 border-b border-white/5 flex items-center gap-6 relative overflow-hidden">
-                            <div className="absolute inset-0 bg-gradient-to-r from-primary-500/10 to-transparent opacity-50"></div>
-
-                            <div className="relative p-4 bg-gradient-to-br from-zinc-800 to-black rounded-2xl border border-white/10 shadow-xl">
-                                <Bot className="w-8 h-8 text-primary-400" />
-                            </div>
-                            <div className="relative">
-                                <h2 className="text-xl font-bold text-white tracking-wide">Artificial Intelligence Engine</h2>
-                                <p className="text-sm text-zinc-400 mt-1">Configure the Neural LLM backbone for triage analysis.</p>
-                            </div>
+                <div className="bg-dark-card border border-white/10 rounded-xl overflow-hidden shadow-sm">
+                    {/* Header Section */}
+                    <div className="p-5 border-b border-white/5 flex items-center gap-4">
+                        <div className="p-2.5 bg-primary-500/10 rounded-lg">
+                            <Bot className="w-5 h-5 text-primary-400" />
                         </div>
+                        <div>
+                            <h2 className="text-base font-medium text-white">AI Provider</h2>
+                            <p className="text-xs text-zinc-500">Configure the LLM backend for analysis.</p>
+                        </div>
+                    </div>
 
-                        <div className="p-8 space-y-10">
-                            {/* Provider Selection */}
-                            <div className="space-y-6">
-                                <label className="text-xs font-bold text-primary-400 uppercase tracking-[0.2em] flex items-center gap-2">
-                                    <Cpu className="w-4 h-4" /> Inference Provider
-                                </label>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    <button
-                                        onClick={() => { setProvider('gemini'); setModel(''); }}
-                                        className={`relative group p-6 rounded-3xl border transition-all duration-300 text-left overflow-hidden ${provider === 'gemini'
-                                            ? 'border-primary-500 bg-primary-500/10 shadow-[0_0_30px_rgba(14,165,233,0.15)] scale-[1.02]'
-                                            : 'border-white/5 hover:border-white/20 hover:bg-white/5'}`}
-                                    >
-                                        <div className="relative z-10 flex flex-col h-full">
-                                            <div className="flex items-center justify-between mb-3">
-                                                <div className="font-black text-lg text-white tracking-wide">Google Gemini</div>
-                                                <span className={`px-2 py-0.5 rounded-full text-[10px] uppercase tracking-wider font-bold border ${provider === 'gemini' ? 'bg-primary-500 text-white border-primary-400' : 'bg-zinc-800 text-zinc-500 border-zinc-700'}`}>Cloud</span>
-                                            </div>
-                                            <div className="text-sm text-zinc-400 leading-relaxed flex-1">
-                                                High-performance cloud inference. Requires valid API Key. Optimized for complex reasoning.
-                                            </div>
-                                            {provider === 'gemini' && (
-                                                <div className="absolute top-4 right-4 text-primary-400">
-                                                    <div className="p-1 rounded-full bg-primary-500/20 border border-primary-500/50"><Check className="w-4 h-4" /></div>
-                                                </div>
-                                            )}
-                                        </div>
-                                    </button>
-
-                                    <button
-                                        onClick={() => { setProvider('ollama'); setModel(''); }}
-                                        className={`relative group p-6 rounded-3xl border transition-all duration-300 text-left overflow-hidden ${provider === 'ollama'
-                                            ? 'border-emerald-500 bg-emerald-500/10 shadow-[0_0_30px_rgba(16,185,129,0.15)] scale-[1.02]'
-                                            : 'border-white/5 hover:border-white/20 hover:bg-white/5'}`}
-                                    >
-                                        <div className="relative z-10 flex flex-col h-full">
-                                            <div className="flex items-center justify-between mb-3">
-                                                <div className="font-black text-lg text-white tracking-wide">Ollama</div>
-                                                <span className={`px-2 py-0.5 rounded-full text-[10px] uppercase tracking-wider font-bold border ${provider === 'ollama' ? 'bg-emerald-500 text-white border-emerald-400' : 'bg-zinc-800 text-zinc-500 border-zinc-700'}`}>Local</span>
-                                            </div>
-                                            <div className="text-sm text-zinc-400 leading-relaxed flex-1">
-                                                Private, local inference running on your machine. Best for air-gapped security.
-                                            </div>
-                                            {provider === 'ollama' && (
-                                                <div className="absolute top-4 right-4 text-emerald-400">
-                                                    <div className="p-1 rounded-full bg-emerald-500/20 border border-emerald-500/50"><Check className="w-4 h-4" /></div>
-                                                </div>
-                                            )}
-                                        </div>
-                                    </button>
-                                </div>
-                            </div>
-
-                            {/* Model Selection */}
-                            <div className="space-y-4">
-                                <label className="text-xs font-bold text-zinc-400 uppercase tracking-[0.2em]">
-                                    Target Model Variant
-                                </label>
-
-                                {isLoadingModels ? (
-                                    <div className="flex items-center gap-3 text-zinc-400 text-sm p-4 bg-white/5 rounded-xl border border-white/5 border-dashed">
-                                        <Loader2 className="w-5 h-5 animate-spin text-primary-500" />
-                                        <span>Querying model registry...</span>
+                    <div className="p-5 space-y-6">
+                        {/* Provider Selection */}
+                        <div className="space-y-3">
+                            <label className="text-xs font-medium text-zinc-400 uppercase flex items-center gap-1.5">
+                                <Cpu className="w-3.5 h-3.5" /> Provider
+                            </label>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                <button
+                                    onClick={() => { setProvider('gemini'); setModel(''); }}
+                                    className={`relative p-4 rounded-lg border text-left transition-all ${provider === 'gemini'
+                                        ? 'border-primary-500 bg-primary-500/10'
+                                        : 'border-white/10 hover:border-white/20 hover:bg-white/5'}`}
+                                >
+                                    <div className="flex items-center justify-between mb-2">
+                                        <span className="font-medium text-white">Google Gemini</span>
+                                        <span className={`px-2 py-0.5 rounded text-[10px] font-medium ${provider === 'gemini' ? 'bg-primary-500 text-white' : 'bg-zinc-800 text-zinc-500'}`}>Cloud</span>
                                     </div>
-                                ) : fetchError ? (
-                                    <div className="p-4 bg-red-500/10 border border-red-500/20 text-red-300 text-sm rounded-xl flex items-center gap-3">
-                                        <AlertCircle className="w-5 h-5 shrink-0" />
-                                        <span>{fetchError}</span>
-                                    </div>
-                                ) : (
-                                    <div className="relative group">
-                                        <select
-                                            value={model}
-                                            onChange={(e) => setModel(e.target.value)}
-                                            className="w-full appearance-none bg-black/20 border border-white/10 rounded-xl px-5 py-4 text-white font-mono text-sm focus:ring-1 focus:ring-primary-500 focus:border-primary-500 transition-all hover:bg-black/40 cursor-pointer"
-                                        >
-                                            <option value="" disabled>Select neural model...</option>
-                                            {fetchedModels.map(m => (
-                                                <option key={m} value={m} className="bg-zinc-900">{m}</option>
-                                            ))}
-                                        </select>
-                                        <div className="absolute right-5 top-1/2 -translate-y-1/2 pointer-events-none text-zinc-500 group-hover:text-primary-400 transition-colors">
-                                            <Cpu className="w-4 h-4" />
-                                        </div>
-                                    </div>
-                                )}
-                                <p className="text-[10px] text-zinc-500 font-mono pl-1">
-                                    {provider === 'ollama' ? 'NOTE: Models must be pulled via `ollama pull <model>` to appear here.' : 'Select the optimal model for latency vs accuracy balance.'}
-                                </p>
-                            </div>
-
-                            {/* Divider */}
-                            <div className="h-px w-full bg-gradient-to-r from-transparent via-white/10 to-transparent"></div>
-
-                            {/* Notification Settings */}
-                            <div className="space-y-6">
-                                <label className="text-xs font-bold text-zinc-400 uppercase tracking-[0.2em] flex items-center gap-2">
-                                    <AlertCircle className="w-4 h-4" /> Alert Protocols
-                                </label>
-                                <div className="bg-black/20 rounded-2xl p-6 border border-white/5 space-y-6 hover:border-white/10 transition-colors">
-                                    <div className="flex items-center justify-between">
-                                        <div>
-                                            <h3 className="text-sm font-bold text-white">Heads-Up Notifications</h3>
-                                            <p className="text-xs text-zinc-500 mt-1">Display toast alerts when anomaly thresholds are breached.</p>
-                                        </div>
-                                        <button
-                                            onClick={() => updateNotificationSettings({ ...notificationSettings, toastEnabled: !notificationSettings.toastEnabled })}
-                                            className={`w-14 h-7 rounded-full transition-all duration-300 relative border ${notificationSettings.toastEnabled ? 'bg-primary-900/50 border-primary-500' : 'bg-zinc-800 border-zinc-700'}`}
-                                        >
-                                            <div className={`absolute top-1 left-1 w-4 h-4 rounded-full shadow-md transition-all duration-300 ${notificationSettings.toastEnabled ? 'translate-x-7 bg-primary-400 shadow-[0_0_10px_rgba(56,189,248,0.5)]' : 'translate-x-0 bg-zinc-500'}`} />
-                                        </button>
-                                    </div>
-
-                                    {notificationSettings.toastEnabled && (
-                                        <div className="space-y-4 animate-in fade-in slide-in-from-top-2 pt-4 border-t border-white/5">
-                                            <div className="flex justify-between items-center text-xs">
-                                                <span className="font-medium text-zinc-400">Cooldown Period</span>
-                                                <span className="font-mono font-bold text-primary-400 bg-primary-900/30 px-2 py-0.5 rounded border border-primary-500/20">{notificationSettings.toastFrequency}s</span>
-                                            </div>
-                                            <input
-                                                type="range"
-                                                min="2"
-                                                max="60"
-                                                step="1"
-                                                value={notificationSettings.toastFrequency}
-                                                onChange={(e) => updateNotificationSettings({ ...notificationSettings, toastFrequency: parseInt(e.target.value) })}
-                                                className="w-full h-1.5 bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-primary-500 hover:accent-primary-400"
-                                            />
+                                    <p className="text-xs text-zinc-500 leading-relaxed">
+                                        High-performance cloud inference. Requires API key.
+                                    </p>
+                                    {provider === 'gemini' && (
+                                        <div className="absolute top-3 right-3">
+                                            <div className="p-1 rounded-full bg-primary-500/20"><Check className="w-3 h-3 text-primary-400" /></div>
                                         </div>
                                     )}
-                                </div>
+                                </button>
+
+                                <button
+                                    onClick={() => { setProvider('ollama'); setModel(''); }}
+                                    className={`relative p-4 rounded-lg border text-left transition-all ${provider === 'ollama'
+                                        ? 'border-emerald-500 bg-emerald-500/10'
+                                        : 'border-white/10 hover:border-white/20 hover:bg-white/5'}`}
+                                >
+                                    <div className="flex items-center justify-between mb-2">
+                                        <span className="font-medium text-white">Ollama</span>
+                                        <span className={`px-2 py-0.5 rounded text-[10px] font-medium ${provider === 'ollama' ? 'bg-emerald-500 text-white' : 'bg-zinc-800 text-zinc-500'}`}>Local</span>
+                                    </div>
+                                    <p className="text-xs text-zinc-500 leading-relaxed">
+                                        Private, local inference. Best for air-gapped environments.
+                                    </p>
+                                    {provider === 'ollama' && (
+                                        <div className="absolute top-3 right-3">
+                                            <div className="p-1 rounded-full bg-emerald-500/20"><Check className="w-3 h-3 text-emerald-400" /></div>
+                                        </div>
+                                    )}
+                                </button>
                             </div>
                         </div>
 
-                        {/* Footer Action */}
-                        <div className="p-6 bg-black/20 border-t border-white/5 flex justify-end">
-                            <button
-                                onClick={handleSave}
-                                disabled={isSaving}
-                                className="relative overflow-hidden bg-primary-600 hover:bg-primary-500 text-white font-bold py-3 px-8 rounded-xl transition-all shadow-[0_4px_20px_rgba(2,132,199,0.3)] hover:shadow-[0_4px_25px_rgba(2,132,199,0.5)] text-sm uppercase tracking-wider active:scale-95 disabled:opacity-70 disabled:active:scale-100 group"
-                            >
-                                <span className={isSaving ? "opacity-0" : "relative z-10"}>Apply Configuration</span>
-                                {isSaving && (
-                                    <div className="absolute inset-0 flex items-center justify-center z-20">
-                                        <Loader2 className="w-5 h-5 animate-spin text-white" />
+                        {/* Model Selection */}
+                        <div className="space-y-2">
+                            <label className="text-xs font-medium text-zinc-400 uppercase">
+                                Model
+                            </label>
+
+                            {isLoadingModels ? (
+                                <div className="flex items-center gap-2 text-zinc-400 text-sm p-3 bg-white/5 rounded-lg border border-white/5">
+                                    <Loader2 className="w-4 h-4 animate-spin text-primary-500" />
+                                    <span>Loading models...</span>
+                                </div>
+                            ) : fetchError ? (
+                                <div className="p-3 bg-rose-500/10 border border-rose-500/20 text-rose-300 text-sm rounded-lg flex items-center gap-2">
+                                    <AlertCircle className="w-4 h-4 shrink-0" />
+                                    <span>{fetchError}</span>
+                                </div>
+                            ) : (
+                                <div className="relative">
+                                    <select
+                                        value={model}
+                                        onChange={(e) => setModel(e.target.value)}
+                                        className="w-full appearance-none bg-dark-bg border border-white/10 rounded-lg px-4 py-3 text-white text-sm focus:outline-none focus:border-primary-500/50 transition-colors cursor-pointer"
+                                    >
+                                        <option value="" disabled>Select model...</option>
+                                        {fetchedModels.map(m => (
+                                            <option key={m} value={m} className="bg-zinc-900">{m}</option>
+                                        ))}
+                                    </select>
+                                    <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-zinc-500">
+                                        <Cpu className="w-4 h-4" />
+                                    </div>
+                                </div>
+                            )}
+                            <p className="text-xs text-zinc-600">
+                                {provider === 'ollama' ? 'Models must be pulled via `ollama pull <model>` to appear here.' : 'Select the optimal model for your use case.'}
+                            </p>
+                        </div>
+
+                        {/* Divider */}
+                        <div className="h-px w-full bg-white/5"></div>
+
+                        {/* Notification Settings */}
+                        <div className="space-y-3">
+                            <label className="text-xs font-medium text-zinc-400 uppercase flex items-center gap-1.5">
+                                <AlertCircle className="w-3.5 h-3.5" /> Notifications
+                            </label>
+                            <div className="bg-dark-bg rounded-lg p-4 border border-white/5 space-y-4">
+                                <div className="flex items-center justify-between">
+                                    <div>
+                                        <h3 className="text-sm font-medium text-white">Toast Notifications</h3>
+                                        <p className="text-xs text-zinc-500 mt-0.5">Display alerts when thresholds are breached.</p>
+                                    </div>
+                                    <button
+                                        onClick={() => updateNotificationSettings({ ...notificationSettings, toastEnabled: !notificationSettings.toastEnabled })}
+                                        className={`w-11 h-6 rounded-full transition-colors relative ${notificationSettings.toastEnabled ? 'bg-primary-600' : 'bg-zinc-700'}`}
+                                    >
+                                        <div className={`absolute top-1 left-1 w-4 h-4 rounded-full bg-white transition-transform ${notificationSettings.toastEnabled ? 'translate-x-5' : 'translate-x-0'}`} />
+                                    </button>
+                                </div>
+
+                                {notificationSettings.toastEnabled && (
+                                    <div className="space-y-2 pt-3 border-t border-white/5">
+                                        <div className="flex justify-between items-center text-xs">
+                                            <span className="text-zinc-400">Cooldown</span>
+                                            <span className="font-mono text-primary-400">{notificationSettings.toastFrequency}s</span>
+                                        </div>
+                                        <input
+                                            type="range"
+                                            min="2"
+                                            max="60"
+                                            step="1"
+                                            value={notificationSettings.toastFrequency}
+                                            onChange={(e) => updateNotificationSettings({ ...notificationSettings, toastFrequency: parseInt(e.target.value) })}
+                                            className="w-full h-1.5 bg-zinc-700 rounded-lg appearance-none cursor-pointer accent-primary-500"
+                                        />
                                     </div>
                                 )}
-                            </button>
+                            </div>
                         </div>
+                    </div>
+
+                    {/* Footer Action */}
+                    <div className="p-4 bg-white/5 border-t border-white/5 flex justify-end">
+                        <button
+                            onClick={handleSave}
+                            disabled={isSaving}
+                            className="bg-primary-600 hover:bg-primary-500 disabled:opacity-70 text-white font-medium py-2 px-6 rounded-lg transition-colors text-sm flex items-center gap-2"
+                        >
+                            {isSaving ? (
+                                <>
+                                    <Loader2 className="w-4 h-4 animate-spin" /> Saving...
+                                </>
+                            ) : (
+                                'Save Changes'
+                            )}
+                        </button>
                     </div>
                 </div>
             </div>

@@ -1,7 +1,6 @@
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Send, Trash2, Loader2 } from 'lucide-react';
-import { useAuth } from '../contexts/AuthContext';
+import { Send, Loader2 } from 'lucide-react';
 import { Comment } from '../types';
 
 interface CommentsThreadProps {
@@ -15,7 +14,12 @@ interface CommentsThreadProps {
 export const CommentsThread: React.FC<CommentsThreadProps> = ({
     reportID, clusterID, namespace, workloadName, isDarkMode = true
 }) => {
-    const { user } = useAuth();
+    const user = {
+        id: 'local-user',
+        name: 'Local Admin',
+        email: 'local@kubetriage',
+        avatarUrl: `https://api.dicebear.com/7.x/avataaars/svg?seed=local-user`
+    };
     const [comments, setComments] = useState<Comment[]>([]);
     const [newComment, setNewComment] = useState('');
     const [isLoading, setIsLoading] = useState(true);
@@ -103,14 +107,14 @@ export const CommentsThread: React.FC<CommentsThreadProps> = ({
                         <div key={c.ID} className="group flex gap-3 animate-in fade-in slide-in-from-bottom-2">
                             <div className="shrink-0 mt-0.5">
                                 <img
-                                    src={c.User?.AvatarURL || `https://api.dicebear.com/7.x/avataaars/svg?seed=${c.UserID}`}
+                                    src={c.AuthorAvatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${c.Author || 'local-user'}`}
                                     className="w-6 h-6 rounded-full border border-white/10 bg-zinc-800"
                                     alt="avatar"
                                 />
                             </div>
                             <div className="flex-1">
                                 <div className="flex items-center gap-2 mb-1">
-                                    <span className="text-[10px] font-bold text-zinc-300">{c.User?.Email?.split('@')[0] || 'Unknown'}</span>
+                                    <span className="text-[10px] font-bold text-zinc-300">{c.Author || 'Local Admin'}</span>
                                     <span className="text-[9px] text-zinc-600">{new Date(c.CreatedAt).toLocaleString()}</span>
                                 </div>
                                 <div className="p-3 bg-white/5 rounded-r-xl rounded-bl-xl text-xs text-zinc-300 leading-relaxed break-words border border-white/5">

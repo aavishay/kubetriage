@@ -28,6 +28,6 @@ describe('App', () => {
         // Based on App.tsx, initial state !hasApiKey -> "API Key Required"
 
         // We can just check that the wrapper exists or some text
-        expect(screen.getByText(/Neural Boot Sequence/i)).toBeInTheDocument();
+        expect(screen.getByText(/Loading/i)).toBeInTheDocument();
     });
 });

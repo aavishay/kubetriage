@@ -1,8 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { LayoutDashboard, AlertCircle, Scale, Settings, Box, ChevronLeft, ChevronRight, Sun, Moon, ChevronsUpDown, Check, Server, LogOut, Plus, X, Globe, Cloud, Bell, BookOpen, Menu, Key, Zap, FileText, RefreshCw, Trash2 } from 'lucide-react';
+import { LayoutDashboard, AlertCircle, Scale, Settings, Box, ChevronLeft, ChevronRight, Sun, Moon, ChevronsUpDown, Check, Server, Plus, X, Globe, Cloud, Bell, BookOpen, Menu, Key, Zap, FileText, RefreshCw, Trash2 } from 'lucide-react';
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useMonitoring } from '../contexts/MonitoringContext';
-import { useAuth } from '../contexts/AuthContext';
 import { Cluster } from '../types';
 import logo from '../src/assets/kubetriage_logo.svg';
 
@@ -29,10 +28,6 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
     selectedCluster,
     clusters,
     setSelectedCluster,
-    isAuthenticated,
-    logout,
-    selectApiKey,
-    users,
     unreadReports,
     isWorkloadsLoading,
     refreshWorkloads,
@@ -47,12 +42,10 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
   const [apiLatency, setApiLatency] = useState(24);
   const [apiStatus, setApiStatus] = useState<'Connected' | 'Degraded'>('Connected');
   const [isClusterMenuOpen, setIsClusterMenuOpen] = useState(false);
-  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [isRegisterModalOpen, setIsRegisterModalOpen] = useState(false);
   const [clusterToDelete, setClusterToDelete] = useState<Cluster | null>(null);
 
   const clusterMenuRef = useRef<HTMLDivElement>(null);
-  const userMenuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -65,7 +58,6 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (clusterMenuRef.current && !clusterMenuRef.current.contains(event.target as Node)) setIsClusterMenuOpen(false);
-      if (userMenuRef.current && !userMenuRef.current.contains(event.target as Node)) setIsUserMenuOpen(false);
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
@@ -88,18 +80,24 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'Active': return 'bg-emerald-500 shadow-[0_0_10px_#10b981]';
-      case 'Degraded': return 'bg-amber-500 shadow-[0_0_10px_#f59e0b]';
-      default: return 'bg-red-500 shadow-[0_0_10px_#ef4444]';
+      case 'Active': return 'bg-emerald-500';
+      case 'Degraded': return 'bg-amber-500';
+      default: return 'bg-red-500';
     }
   };
 
-  const { user } = useAuth();
+  const getStatusGlow = (status: string) => {
+    switch (status) {
+      case 'Active': return 'shadow-[0_0_8px_rgba(16,185,129,0.5)]';
+      case 'Degraded': return 'shadow-[0_0_8px_rgba(245,158,11,0.5)]';
+      default: return 'shadow-[0_0_8px_rgba(244,63,94,0.5)]';
+    }
+  };
 
   return (
-    <div className="flex h-screen bg-black text-zinc-300 overflow-hidden flex-col md:flex-row font-sans selection:bg-primary-500/30">
-      {/* Dynamic Background Noise */}
-      <div className="fixed inset-0 pointer-events-none opacity-[0.03] z-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')]"></div>
+    <div className="flex h-screen bg-dark-bg text-zinc-300 overflow-hidden flex-col md:flex-row font-sans selection:bg-primary-500/30">
+      {/* Subtle Background Pattern */}
+      <div className="fixed inset-0 pointer-events-none opacity-[0.02] z-0 bg-mesh"></div>
 
       <RegisterClusterModal isOpen={isRegisterModalOpen} onClose={() => setIsRegisterModalOpen(false)} />
       <DeleteClusterModal
@@ -118,7 +116,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
       {/* Mobile Sidebar Overlay */}
       {isMobileMenuOpen && (
         <div
-          className="fixed inset-0 bg-black/80 backdrop-blur-sm z-40 md:hidden animate-in fade-in"
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 md:hidden animate-fade-in"
           onClick={() => setIsMobileMenuOpen(false)}
         />
       )}
@@ -126,54 +124,77 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
       {/* Desktop & Mobile Sidebar */}
       <aside className={`
         fixed md:static inset-y-0 left-0 z-50 md:z-auto
-        flex flex-col bg-dark-card/90 backdrop-blur-xl border-r border-white/5 
-        transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] shadow-[10px_0_30px_rgba(0,0,0,0.5)] md:shadow-none
+        flex flex-col bg-dark-card border-r border-white/5
+        transition-all duration-300 ease-out
+        shadow-[10px_0_30px_rgba(0,0,0,0.3)] md:shadow-none
         ${isMobileMenuOpen ? 'translate-x-0 w-72' : '-translate-x-full md:translate-x-0'}
-        ${isCollapsed ? 'md:w-[88px]' : 'md:w-72'}
+        ${isCollapsed ? 'md:w-20' : 'md:w-72'}
       `}>
-        <div className={`flex p-8 items-center ${isCollapsed ? 'md:justify-center' : 'gap-4'} h-24 border-b border-white/5 overflow-hidden shrink-0 relative`}>
-          {/* Logo Neon Glow */}
-          <div className="absolute top-1/2 left-8 w-10 h-10 bg-primary-500/20 blur-xl rounded-full -translate-y-1/2 pointer-events-none"></div>
+        {/* Logo Section */}
+        <div className={`flex items-center h-20 border-b border-white/5 overflow-hidden shrink-0 relative
+          ${isCollapsed ? 'md:justify-center md:px-0' : 'gap-3 px-6'}
+        `}>
+          {/* Subtle glow behind logo */}
+          <div className="absolute top-1/2 left-6 w-8 h-8 bg-primary-500/10 blur-xl rounded-full -translate-y-1/2 pointer-events-none
+            transition-opacity duration-300 ${isCollapsed ? 'md:opacity-100' : 'md:opacity-0'}"></div>
 
-          <div className="shrink-0 p-1 bg-transparent rounded-xl shadow-lg ring-1 ring-white/10 relative z-10 w-11 h-11 flex justify-center items-center">
-            <img src={logo} alt="Logo" className="w-8 h-8 object-contain" />
+          <div className="shrink-0 p-2 rounded-xl bg-dark-lighter/50 ring-1 ring-white/10 relative z-10">
+            <img src={logo} alt="Logo" className="w-7 h-7 object-contain" />
           </div>
+
           {(!isCollapsed || isMobileMenuOpen) && (
-            <div className="animate-in fade-in slide-in-from-left-6 duration-700">
-              <h1 className="font-black text-white tracking-widest leading-none text-lg font-display uppercase drop-shadow-md">Kube<span className="text-primary-500">Triage</span></h1>
-              <div className="flex items-center gap-2 mt-1.5 bg-white/5 px-2 py-0.5 rounded-full w-fit border border-white/5">
-                <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse shadow-[0_0_5px_#10b981]"></span>
-                <p className="text-[9px] font-bold text-zinc-400 uppercase tracking-[0.2em]">Online</p>
+            <div className="animate-slide-up">
+              <h1 className="font-display font-black text-white tracking-tight text-lg uppercase">
+                Kube<span className="text-primary-500">Triage</span>
+              </h1>
+              <div className="flex items-center gap-1.5 mt-1">
+                <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse-soft"></span>
+                <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-wider">Online</p>
               </div>
             </div>
           )}
-          <button className="ml-auto md:hidden p-2 text-zinc-400 hover:text-white transition-colors" onClick={() => setIsMobileMenuOpen(false)}>
+
+          <button className="ml-auto md:hidden p-2 text-zinc-400 hover:text-white transition-colors rounded-lg hover:bg-white/5"
+            onClick={() => setIsMobileMenuOpen(false)}>
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        <nav className="flex-1 px-4 py-8 space-y-2 overflow-y-auto custom-scrollbar">
-          {navItems.map((item) => (
+        {/* Navigation */}
+        <nav className="flex-1 px-3 py-6 space-y-1 overflow-y-auto custom-scrollbar">
+          {navItems.map((item, index) => (
             <NavLink
               key={item.path}
               to={item.path}
               className={({ isActive }) => `
-                flex items-center w-full p-4 rounded-2xl transition-all duration-300 group relative overflow-hidden
+                flex items-center w-full px-3 py-3 rounded-xl transition-all duration-200 group relative overflow-hidden
                 ${isActive
-                  ? 'text-white shadow-[inset_0_0_20px_rgba(14,165,233,0.1)] border border-primary-500/30'
-                  : 'text-zinc-500 hover:text-zinc-200 hover:bg-white/5 border border-transparent'}
+                  ? 'bg-primary-500/10 text-white border border-primary-500/20'
+                  : 'text-zinc-500 hover:text-zinc-200 hover:bg-white/[0.03] border border-transparent'}
               `}
               title={isCollapsed ? item.label : undefined}
+              style={{ animationDelay: `${index * 50}ms` }}
             >
               {({ isActive }) => (
                 <>
-                  {isActive && <div className="absolute inset-0 bg-primary-500/5 z-0" />}
-                  {isActive && <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-primary-500 rounded-r-full shadow-[0_0_10px_#0ea5e9]" />}
+                  {/* Active indicator line */}
+                  {isActive && (
+                    <div className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 bg-primary-500 rounded-r-full" />
+                  )}
 
-                  <item.icon className={`w-5 h-5 shrink-0 transition-transform duration-300 relative z-10 ${isActive ? 'text-primary-400 scale-110 drop-shadow-[0_0_8px_rgba(56,189,248,0.5)]' : 'group-hover:scale-110'} ${isCollapsed && !isMobileMenuOpen ? 'mx-auto' : 'mr-4'}`} />
+                  <item.icon className={`
+                    w-5 h-5 shrink-0 transition-all duration-200 relative z-10
+                    ${isActive
+                      ? 'text-primary-400'
+                      : 'group-hover:text-zinc-300'}
+                    ${isCollapsed && !isMobileMenuOpen ? 'mx-auto' : 'mr-3'}
+                  `} />
 
                   {(!isCollapsed || isMobileMenuOpen) && (
-                    <span className={`font-bold text-xs uppercase tracking-wide relative z-10 ${isActive ? 'text-primary-100' : ''}`}>
+                    <span className={`
+                      font-medium text-sm relative z-10 transition-colors
+                      ${isActive ? 'text-white' : 'text-zinc-400 group-hover:text-zinc-200'}
+                    `}>
                       {item.label}
                     </span>
                   )}
@@ -183,9 +204,18 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
           ))}
         </nav>
 
-        <div className="p-4 border-t border-white/5 hidden md:block">
-          <button onClick={() => setIsCollapsed(!isCollapsed)} className="flex items-center justify-center w-full p-3 rounded-xl hover:bg-white/5 text-zinc-500 hover:text-white transition-all active:scale-95 group">
-            {isCollapsed ? <ChevronRight className="w-5 h-5 group-hover:translate-x-0.5 transition-transform" /> : <ChevronLeft className="w-5 h-5 group-hover:-translate-x-0.5 transition-transform" />}
+        {/* Collapse Toggle */}
+        <div className="p-3 border-t border-white/5 hidden md:block">
+          <button
+            onClick={() => setIsCollapsed(!isCollapsed)}
+            className="flex items-center justify-center w-full p-2.5 rounded-lg hover:bg-white/[0.03] text-zinc-500 hover:text-white transition-all duration-200 group"
+            title={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+          >
+            {isCollapsed ? (
+              <ChevronRight className="w-5 h-5 group-hover:translate-x-0.5 transition-transform" />
+            ) : (
+              <ChevronLeft className="w-5 h-5 group-hover:-translate-x-0.5 transition-transform" />
+            )}
           </button>
         </div>
       </aside>
@@ -194,32 +224,34 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
       <div className="flex-1 flex flex-col overflow-hidden relative">
 
         {/* Header */}
-        <header className="h-20 border-b border-white/5 bg-dark-bg/80 backdrop-blur-xl flex items-center justify-between px-6 md:px-8 z-30 shrink-0 sticky top-0 md:bg-transparent">
-          <div className="flex items-center gap-4 md:gap-6 w-full">
+        <header className="h-16 border-b border-white/5 bg-dark-bg/50 backdrop-blur-xl flex items-center justify-between px-4 md:px-6 z-30 shrink-0">
+          <div className="flex items-center gap-4 w-full">
             {/* Mobile Toggle */}
             <button
-              className="p-2 md:hidden text-zinc-400 hover:text-white transition-colors"
+              className="p-2 md:hidden text-zinc-400 hover:text-white transition-colors rounded-lg hover:bg-white/5"
               onClick={() => setIsMobileMenuOpen(true)}
             >
-              <Menu className="w-6 h-6" />
+              <Menu className="w-5 h-5" />
             </button>
 
-            {/* Cluster Switcher Dropdown */}
+            {/* Cluster Switcher */}
             <div className="relative" ref={clusterMenuRef}>
               <button
                 onClick={() => setIsClusterMenuOpen(!isClusterMenuOpen)}
-                className="flex items-center gap-3 px-1 md:px-5 py-2.5 bg-black/40 border border-white/10 rounded-2xl hover:border-primary-500/40 hover:bg-black/60 transition-all shadow-lg active:scale-[0.98] group min-w-[50px] md:min-w-[240px]"
+                className="flex items-center gap-2.5 px-3 py-2 bg-dark-card/80 border border-white/10 rounded-xl hover:border-primary-500/30 hover:bg-dark-lighter/50 transition-all duration-200 group min-w-[44px] md:min-w-[200px]"
               >
                 {selectedCluster ? (
                   <>
-                    <div className="p-1.5 rounded-lg bg-white/5 border border-white/5 group-hover:border-primary-500/20 transition-colors">
-                      <ProviderIcon provider={selectedCluster.provider} className="w-4 h-4 text-zinc-300" />
+                    <div className="p-1.5 rounded-lg bg-white/5 group-hover:bg-primary-500/10 transition-colors">
+                      <ProviderIcon provider={selectedCluster.provider} className="w-4 h-4 text-zinc-400 group-hover:text-primary-400" />
                     </div>
                     <div className="hidden sm:block text-left flex-1 min-w-0">
-                      <div className="text-[9px] font-black uppercase text-zinc-500 leading-none mb-1.5 font-display tracking-widest group-hover:text-primary-400 transition-colors">Target Cluster</div>
-                      <div className="text-sm font-bold text-white leading-none flex items-center gap-2 tracking-wide font-display truncate">
+                      <div className="text-[10px] font-semibold text-zinc-500 uppercase tracking-wider group-hover:text-primary-400 transition-colors">
+                        Target Cluster
+                      </div>
+                      <div className="text-sm font-semibold text-white truncate flex items-center gap-2">
                         {selectedCluster.name}
-                        <div className={`w-1.5 h-1.5 rounded-full ${getStatusColor(selectedCluster?.status || 'Active')}`} />
+                        <span className={`w-1.5 h-1.5 rounded-full ${getStatusColor(selectedCluster?.status || 'Active')} ${getStatusGlow(selectedCluster?.status || 'Active')}`} />
                       </div>
                     </div>
                   </>
@@ -227,38 +259,48 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
                   <>
                     <Cloud className="w-5 h-5 text-zinc-400" />
                     <div className="hidden sm:block text-left">
-                      <div className="text-[9px] font-black uppercase text-zinc-500 leading-none mb-1 font-display tracking-widest">Target Cluster</div>
-                      <div className="text-xs font-bold text-zinc-300 leading-none tracking-wide">Select active system...</div>
+                      <div className="text-[10px] font-semibold text-zinc-500 uppercase tracking-wider">Target Cluster</div>
+                      <div className="text-xs font-medium text-zinc-400">Select cluster...</div>
                     </div>
                   </>
                 )}
-                <ChevronsUpDown className="w-4 h-4 text-zinc-500 ml-auto group-hover:text-primary-400" />
+                <ChevronsUpDown className="w-4 h-4 text-zinc-500 ml-auto group-hover:text-primary-400 transition-colors" />
               </button>
 
+              {/* Cluster Dropdown */}
               {isClusterMenuOpen && (
-                <div className="absolute top-full left-0 mt-4 w-80 bg-zinc-900/95 backdrop-blur-2xl border border-white/10 rounded-[1.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.5)] py-2 animate-in fade-in zoom-in-95 duration-200 origin-top-left z-50 overflow-hidden">
-                  <div className="px-5 py-4 border-b border-white/5 bg-white/[0.02]">
-                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500 flex items-center gap-2">
-                      <Server className="w-3 h-3" /> Control Plane Fleet
+                <div className="absolute top-full left-0 mt-2 w-80 bg-dark-card border border-white/10 rounded-2xl shadow-2xl py-2 animate-slide-up z-50 overflow-hidden">
+                  <div className="px-4 py-3 border-b border-white/5 bg-white/[0.02]">
+                    <p className="text-[11px] font-semibold text-zinc-500 uppercase tracking-wider flex items-center gap-2">
+                      <Server className="w-3.5 h-3.5" /> Control Plane Fleet
                     </p>
                   </div>
-                  <div className="max-h-[300px] overflow-y-auto custom-scrollbar p-2 space-y-1">
+                  <div className="max-h-[280px] overflow-y-auto custom-scrollbar p-1.5 space-y-0.5">
                     {clusters.map(cluster => (
                       <button
                         key={cluster.id}
                         onClick={() => { setSelectedCluster(cluster); setIsClusterMenuOpen(false); }}
-                        className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-left relative overflow-hidden group/item ${selectedCluster?.id === cluster.id ? 'bg-primary-500/10 border border-primary-500/20' : 'hover:bg-white/5 border border-transparent'}`}
+                        className={`
+                          w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all text-left relative overflow-hidden group/item
+                          ${selectedCluster?.id === cluster.id
+                            ? 'bg-primary-500/10 border border-primary-500/20'
+                            : 'hover:bg-white/[0.03] border border-transparent'}
+                        `}
                       >
-                        {selectedCluster?.id === cluster.id && <div className="absolute left-0 top-1/2 -translate-y-1/2 h-8 w-1 bg-primary-500 rounded-r-full shadow-[0_0_10px_#0ea5e9]"></div>}
+                        {selectedCluster?.id === cluster.id && (
+                          <div className="absolute left-0 top-1/2 -translate-y-1/2 h-6 w-0.5 bg-primary-500 rounded-r-full" />
+                        )}
 
-                        <div className="p-2 rounded-lg bg-black/20 text-zinc-400 group-hover/item:text-white transition-colors">
+                        <div className="p-1.5 rounded-lg bg-white/5 text-zinc-400 group-hover/item:text-white transition-colors">
                           <ProviderIcon provider={cluster.provider} className="w-4 h-4 shrink-0" />
                         </div>
 
                         <div className="flex-1 min-w-0">
-                          <p className={`text-sm font-bold truncate ${selectedCluster?.id === cluster.id ? 'text-primary-400' : 'text-zinc-300 group-hover/item:text-white'}`}>{cluster.name}</p>
+                          <p className={`text-sm font-semibold truncate ${selectedCluster?.id === cluster.id ? 'text-primary-400' : 'text-zinc-300 group-hover/item:text-white'}`}>
+                            {cluster.name}
+                          </p>
                           <div className="flex items-center gap-2 mt-0.5">
-                            <span className={`w-1.5 h-1.5 rounded-full ${getStatusColor(cluster.status)}`}></span>
+                            <span className={`w-1.5 h-1.5 rounded-full ${getStatusColor(cluster.status)} ${getStatusGlow(cluster.status)}`}></span>
                             <p className="text-[10px] text-zinc-500 font-mono uppercase">{cluster.region} :: {cluster.provider}</p>
                           </div>
                         </div>
@@ -268,7 +310,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
                             e.stopPropagation();
                             setClusterToDelete(cluster);
                           }}
-                          className="p-2 hover:bg-rose-500/20 rounded-lg transition-colors opacity-0 group-hover/item:opacity-100"
+                          className="p-1.5 hover:bg-rose-500/10 rounded-lg transition-colors opacity-0 group-hover/item:opacity-100"
                           title="Remove Cluster"
                         >
                           <Trash2 className="w-3.5 h-3.5 text-zinc-500 hover:text-rose-500 transition-colors" />
@@ -276,11 +318,11 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
                       </button>
                     ))}
                   </div>
-                  <div className="h-px bg-white/5 mx-4 my-1" />
-                  <div className="p-2">
+                  <div className="h-px bg-white/5 mx-3 my-1.5" />
+                  <div className="p-1.5">
                     <button
                       onClick={() => { setIsRegisterModalOpen(true); setIsClusterMenuOpen(false); }}
-                      className="w-full flex items-center justify-center gap-2 px-4 py-3 text-xs font-bold text-white bg-primary-600 hover:bg-primary-500 rounded-xl transition-all shadow-lg shadow-primary-900/20"
+                      className="w-full flex items-center justify-center gap-2 px-4 py-2.5 text-xs font-semibold text-white bg-primary-600 hover:bg-primary-500 rounded-xl transition-all"
                     >
                       <Plus className="w-4 h-4" /> Provision New Cluster
                     </button>
@@ -289,50 +331,53 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
               )}
             </div>
 
-            <div className="hidden lg:flex items-center gap-4 ml-auto">
-              {/* System Status Indicators */}
-              <div className="flex items-center gap-6 px-6 py-2 bg-black/20 rounded-full border border-white/5 backdrop-blur-sm">
-                <div className="flex flex-col items-end">
-                  <span className="text-[9px] font-black text-zinc-500 uppercase tracking-widest mb-0.5">API Latency</span>
+            {/* System Status - Desktop */}
+            <div className="hidden lg:flex items-center gap-3 ml-auto">
+              <div className="flex items-center gap-4 px-4 py-2 bg-dark-card/50 rounded-xl border border-white/5">
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] font-semibold text-zinc-500 uppercase tracking-wider">Latency</span>
                   <span className="text-xs font-mono text-emerald-400 tabular-nums">{apiLatency}ms</span>
                 </div>
-                <div className="w-px h-6 bg-white/10"></div>
-                <div className="flex flex-col items-start">
-                  <span className="text-[9px] font-black text-zinc-500 uppercase tracking-widest mb-0.5">Uptime Status</span>
-                  <div className="flex items-center gap-1.5">
-                    <span className={`w-1.5 h-1.5 rounded-full ${apiStatus === 'Connected' ? 'bg-emerald-500 shadow-[0_0_8px_#10b981]' : 'bg-amber-500 shadow-[0_0_8px_#f59e0b]'}`}></span>
-                    <span className={`text-xs font-bold ${apiStatus === 'Connected' ? 'text-emerald-500' : 'text-amber-500'}`}>{apiStatus}</span>
-                  </div>
+                <div className="w-px h-4 bg-white/10"></div>
+                <div className="flex items-center gap-2">
+                  <span className={`w-1.5 h-1.5 rounded-full ${getStatusColor(apiStatus)} ${getStatusGlow(apiStatus)}`}></span>
+                  <span className={`text-xs font-medium ${apiStatus === 'Connected' ? 'text-emerald-400' : 'text-amber-400'}`}>
+                    {apiStatus}
+                  </span>
                 </div>
               </div>
             </div>
 
-            <div className="flex items-center gap-3 md:gap-4 ml-auto lg:ml-0">
+            {/* Action Buttons */}
+            <div className="flex items-center gap-2 ml-auto lg:ml-0">
+              {/* Notifications */}
               <button
                 onClick={() => navigate('/notifications')}
-                className="relative p-3 rounded-xl bg-white/5 border border-white/5 text-zinc-400 hover:text-white hover:bg-white/10 hover:border-white/10 transition-all group"
+                className="relative p-2.5 rounded-xl bg-white/5 border border-white/5 text-zinc-400 hover:text-white hover:bg-white/10 hover:border-white/10 transition-all duration-200 group"
               >
                 <Bell className="w-5 h-5 group-hover:scale-110 transition-transform" />
                 {unreadReports > 0 && (
-                  <span className="absolute top-2 right-2 flex h-3 w-3">
+                  <span className="absolute top-1.5 right-1.5 flex h-2 w-2">
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-3 w-3 bg-rose-500 text-[8px] font-bold text-white items-center justify-center border border-black">{unreadReports}</span>
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-rose-500"></span>
                   </span>
                 )}
               </button>
 
+              {/* Refresh */}
               <button
                 onClick={refreshWorkloads}
                 disabled={isWorkloadsLoading}
-                className={`p-3 rounded-xl bg-white/5 border border-white/5 text-zinc-400 hover:text-white hover:bg-white/10 hover:border-white/10 transition-all ${isWorkloadsLoading ? 'opacity-50' : 'active:scale-95'}`}
+                className={`p-2.5 rounded-xl bg-white/5 border border-white/5 text-zinc-400 hover:text-white hover:bg-white/10 hover:border-white/10 transition-all duration-200 ${isWorkloadsLoading ? 'opacity-50' : 'active:scale-95'}`}
                 title="Refresh Telemetry"
               >
                 <RefreshCw className={`w-5 h-5 ${isWorkloadsLoading ? 'animate-spin text-primary-500' : ''}`} />
               </button>
 
+              {/* Theme Toggle */}
               <button
                 onClick={toggleTheme}
-                className="p-3 rounded-xl bg-white/5 border border-white/5 text-zinc-400 hover:text-white hover:bg-white/10 hover:border-white/10 transition-all active:scale-95 group"
+                className="p-2.5 rounded-xl bg-white/5 border border-white/5 text-zinc-400 hover:text-white hover:bg-white/10 hover:border-white/10 transition-all duration-200 active:scale-95 group"
                 title={isDarkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
               >
                 {isDarkMode ? (
@@ -341,39 +386,6 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
                   <Moon className="w-5 h-5 group-hover:text-blue-400 transition-colors" />
                 )}
               </button>
-
-              <div className="relative" ref={userMenuRef}>
-                <button
-                  onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-                  className="flex items-center gap-3 pl-1 pr-4 py-1 rounded-full bg-white/5 border border-white/5 hover:bg-white/10 hover:border-white/20 transition-all group"
-                >
-                  <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-600 p-[2px] shadow-lg">
-                    <div className="w-full h-full rounded-full bg-zinc-900 flex items-center justify-center font-bold text-white text-xs font-display">
-                      {(user?.email || "AU").substring(0, 2).toUpperCase()}
-                    </div>
-                  </div>
-                  <div className="hidden md:block text-left">
-                    <div className="text-xs font-bold text-white leading-none">{user?.email?.split('@')[0] || "Admin"}</div>
-                    <div className="text-[9px] text-zinc-500 uppercase tracking-wider font-bold mt-0.5">Operator</div>
-                  </div>
-                  <ChevronLeft className={`w-3 h-3 text-zinc-500 transition-transform ${isUserMenuOpen ? '-rotate-90' : 'rotate-0'}`} />
-                </button>
-
-                {isUserMenuOpen && (
-                  <div className="absolute right-0 mt-4 w-60 bg-zinc-900/95 backdrop-blur-2xl border border-white/10 rounded-2xl shadow-2xl py-2 animate-in fade-in zoom-in-95 duration-150 origin-top-right z-50 overflow-hidden">
-                    <div className="px-5 py-4 border-b border-white/5 bg-white/[0.02]">
-                      <p className="font-bold text-sm text-white">{user?.email || "Admin User"}</p>
-                      <p className="text-[10px] text-primary-500 uppercase tracking-widest font-black mt-1 flex items-center gap-1.5">
-                        <Key className="w-3 h-3" /> {user?.role || "SRE Lead"}
-                      </p>
-                    </div>
-                    <div className="p-2 space-y-1">
-                      <button onClick={() => navigate('/settings')} className="w-full flex items-center gap-3 px-4 py-2.5 text-xs font-bold text-zinc-300 hover:bg-white/5 hover:text-white rounded-xl transition-colors"><Settings className="w-4 h-4" /> Preferences</button>
-                      <button onClick={logout} className="w-full flex items-center gap-3 px-4 py-2.5 text-xs font-bold text-rose-500 hover:bg-rose-500/10 rounded-xl transition-colors"><LogOut className="w-4 h-4" /> Terminate Session</button>
-                    </div>
-                  </div>
-                )}
-              </div>
             </div>
           </div>
         </header>
@@ -381,14 +393,13 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
         {/* Loading Progress Bar */}
         {isWorkloadsLoading && (
           <div className="absolute top-0 left-0 right-0 h-[2px] z-50 overflow-hidden bg-transparent">
-            <div className="h-full bg-gradient-to-r from-transparent via-primary-500 to-transparent w-[200%] animate-loading-bar shadow-[0_0_10px_#0ea5e9]"></div>
+            <div className="h-full bg-gradient-to-r from-transparent via-primary-500 to-transparent w-[200%] animate-loading-bar"></div>
           </div>
         )}
 
         {/* Content Container */}
-        <div className="flex-1 overflow-y-auto px-4 md:px-8 py-8 custom-scrollbar">
+        <div className="flex-1 overflow-y-auto px-4 md:px-6 py-6 custom-scrollbar">
           <div className="mx-auto max-w-[1600px] h-full">
-            {/* Router Outlet for Page Content */}
             {children || <Outlet />}
           </div>
         </div>

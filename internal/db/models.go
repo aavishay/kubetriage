@@ -7,33 +7,10 @@ import (
 	"gorm.io/gorm"
 )
 
-// User model
-type User struct {
-	ID          uuid.UUID `gorm:"type:uuid;primaryKey"`
-	Email       string    `gorm:"uniqueIndex;not null"`
-	Provider    string    `gorm:"default:'local'"`
-	ProviderID  string    `gorm:"index"`
-	AvatarURL   string
-	Role        string     `gorm:"default:'viewer'"`
-	ProjectID   *uuid.UUID `gorm:"type:uuid"`
-	Preferences []byte     `gorm:"type:jsonb"` // Stores JSON data for theme, etc.
-	CreatedAt   time.Time
-	UpdatedAt   time.Time
-	DeletedAt   gorm.DeletedAt `gorm:"index"`
-}
-
-func (u *User) BeforeCreate(tx *gorm.DB) (err error) {
-	if u.ID == uuid.Nil {
-		u.ID = uuid.New()
-	}
-	return
-}
-
 // Session model for chat history
 type Session struct {
-	ID        uuid.UUID  `gorm:"type:uuid;primaryKey"`
-	UserID    *uuid.UUID `gorm:"type:uuid"` // Optional FK
-	Messages  []byte     `gorm:"type:jsonb"`
+	ID        uuid.UUID `gorm:"type:uuid;primaryKey"`
+	Messages  []byte    `gorm:"type:jsonb"`
 	CreatedAt time.Time
 	UpdatedAt time.Time
 	DeletedAt gorm.DeletedAt `gorm:"index"`
@@ -70,39 +47,18 @@ type TriageReport struct {
 	Namespace              string
 	WorkloadName           string
 	Kind                   string
-	Analysis               string     // Markdown analysis
-	Severity               string     // Low, Medium, High, Critical
-	IsRead                 bool       `gorm:"default:false"`
-	ProjectID              *uuid.UUID `gorm:"type:uuid"`
-	IncidentType           string     // e.g., "CrashLoopBackOff", "OOMKilled"
-	AutoRemediationPayload string     `gorm:"type:text"`      // JSON/YAML patch
-	ApprovalStatus         string     `gorm:"default:'None'"` // Pending, Approved, Rejected, None
-	ApproverID             *uuid.UUID `gorm:"type:uuid"`
-}
-
-type AuditLog struct {
-	ID        uuid.UUID  `gorm:"type:uuid;primaryKey"`
-	UserID    *uuid.UUID `gorm:"type:uuid"`
-	UserEmail string
-	Action    string
-	Resource  string
-	Details   string `gorm:"type:text"`
-	IPAddress string
-	CreatedAt time.Time
-}
-
-func (a *AuditLog) BeforeCreate(tx *gorm.DB) (err error) {
-	if a.ID == uuid.Nil {
-		a.ID = uuid.New()
-	}
-	return
+	Analysis               string // Markdown analysis
+	Severity               string // Low, Medium, High, Critical
+	IsRead                 bool   `gorm:"default:false"`
+	IncidentType           string // e.g., "CrashLoopBackOff", "OOMKilled"
+	AutoRemediationPayload string `gorm:"type:text"`      // JSON/YAML patch
+	ApprovalStatus         string `gorm:"default:'None'"` // Pending, Approved, Rejected, None
 }
 
 // Comment model for Incident Comments
 type Comment struct {
 	ID           uuid.UUID `gorm:"type:uuid;primaryKey"`
-	UserID       uuid.UUID `gorm:"type:uuid;not null"`
-	User         User      `gorm:"foreignKey:UserID"`
+	Author       string    `gorm:"type:varchar(100);not null"` // Replaces User relationship
 	Content      string    `gorm:"type:text;not null"`
 	ReportID     *uint     `gorm:"index"` // Link to TriageReport (uint ID from gorm.Model)
 	ClusterID    string    `gorm:"index"` // Link to Workload (Cluster)
@@ -116,37 +72,6 @@ type Comment struct {
 func (c *Comment) BeforeCreate(tx *gorm.DB) (err error) {
 	if c.ID == uuid.Nil {
 		c.ID = uuid.New()
-	}
-	return
-}
-
-// Multi-Tenancy Models
-
-type Project struct {
-	ID        uuid.UUID `gorm:"type:uuid;primaryKey"`
-	Name      string    `gorm:"not null"`
-	CreatedAt time.Time
-	UpdatedAt time.Time
-	DeletedAt gorm.DeletedAt `gorm:"index"`
-}
-
-func (p *Project) BeforeCreate(tx *gorm.DB) (err error) {
-	if p.ID == uuid.Nil {
-		p.ID = uuid.New()
-	}
-	return
-}
-
-type ClusterProject struct {
-	ID        uuid.UUID `gorm:"type:uuid;primaryKey"`
-	ClusterID string    `gorm:"uniqueIndex;not null"`
-	ProjectID uuid.UUID `gorm:"not null"`
-	CreatedAt time.Time
-}
-
-func (cp *ClusterProject) BeforeCreate(tx *gorm.DB) (err error) {
-	if cp.ID == uuid.Nil {
-		cp.ID = uuid.New()
 	}
 	return
 }

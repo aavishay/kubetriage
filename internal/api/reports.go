@@ -4,13 +4,10 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"time"
 
-	"github.com/aavishay/kubetriage/backend/internal/auth"
 	"github.com/aavishay/kubetriage/backend/internal/db"
 	"github.com/aavishay/kubetriage/backend/internal/integrations"
 	"github.com/gin-gonic/gin"
-	"github.com/jung-kurt/gofpdf"
 	"gorm.io/gorm"
 )
 
@@ -18,8 +15,13 @@ func ListReportsHandler(c *gin.Context) {
 	var reports []db.TriageReport
 	// Only fetch unread by default, or all if ?all=true
 	query := db.DB.Order("created_at desc")
-	if c.Query("all") != "true" {
+	if c.Query("all") != "true" && c.Query("workloadName") == "" {
 		query = query.Where("is_read = ?", false)
+	}
+
+	workloadName := c.Query("workloadName")
+	if workloadName != "" {
+		query = query.Where("workload_name = ?", workloadName)
 	}
 
 	if err := query.Find(&reports).Error; err != nil {
@@ -40,8 +42,6 @@ func MarkReportReadHandler(c *gin.Context) {
 }
 
 func DeleteAllReportsHandler(c *gin.Context) {
-	// Unscoped() allows hard-deleting records if gorm.Model is used (which includes DeletedAt)
-	// If the user wants to "clean" the archive, they likely want them gone from the list entirely.
 	if err := db.DB.Session(&gorm.Session{AllowGlobalUpdate: true}).Unscoped().Delete(&db.TriageReport{}).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete reports archive"})
 		return
@@ -50,83 +50,8 @@ func DeleteAllReportsHandler(c *gin.Context) {
 }
 
 func GenerateComplianceReportHandler(c *gin.Context) {
-	// 1. Get Context
-	userInfo := c.MustGet("user").(auth.UserInfo)
-	projectID := c.Query("project_id")
-
-	// Security: User can only request report for their own project (unless Admin)
-	if userInfo.Role != auth.RoleAdmin {
-		if projectID != "" && projectID != userInfo.ProjectID {
-			c.JSON(http.StatusForbidden, gin.H{"error": "Forbidden: Cannot access other project's reports"})
-			return
-		}
-		// Default to user's project
-		projectID = userInfo.ProjectID
-	}
-
-	if projectID == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Project ID is required"})
-		return
-	}
-
-	// 2. Fetch Data (Audit Logs for Users in this Project)
-	var logs []db.AuditLog
-	// Join with Users to filter by ProjectID
-	err := db.DB.Joins("JOIN users ON users.id = audit_logs.user_id").
-		Where("users.project_id = ?", projectID).
-		Order("audit_logs.created_at DESC").
-		Limit(100). // Cap for performance for now
-		Find(&logs).Error
-
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch audit logs"})
-		return
-	}
-
-	// 3. Generate PDF
-	pdf := gofpdf.New("P", "mm", "A4", "")
-	pdf.AddPage()
-	pdf.SetFont("Arial", "B", 16)
-	pdf.Cell(40, 10, "Compliance Report: Audit Logs")
-	pdf.Ln(12)
-
-	pdf.SetFont("Arial", "", 12)
-	pdf.Cell(0, 10, fmt.Sprintf("Project ID: %s", projectID))
-	pdf.Ln(8)
-	pdf.Cell(0, 10, fmt.Sprintf("Generated At: %s", time.Now().Format(time.RFC3339)))
-	pdf.Ln(20)
-
-	// Table Header
-	pdf.SetFont("Arial", "B", 10)
-	pdf.CellFormat(50, 8, "Timestamp", "1", 0, "", false, 0, "")
-	pdf.CellFormat(40, 8, "User", "1", 0, "", false, 0, "")
-	pdf.CellFormat(30, 8, "Action", "1", 0, "", false, 0, "")
-	pdf.CellFormat(70, 8, "Details", "1", 0, "", false, 0, "")
-	pdf.Ln(-1)
-
-	// Table Body
-	pdf.SetFont("Arial", "", 9)
-	for _, l := range logs {
-		pdf.CellFormat(50, 8, l.CreatedAt.Format("2006-01-02 15:04:05"), "1", 0, "", false, 0, "")
-		pdf.CellFormat(40, 8, l.UserEmail, "1", 0, "", false, 0, "")
-		pdf.CellFormat(30, 8, l.Action, "1", 0, "", false, 0, "")
-
-		// Truncate details details to fit
-		details := l.Details
-		if len(details) > 40 {
-			details = details[:37] + "..."
-		}
-		pdf.CellFormat(70, 8, details, "1", 0, "", false, 0, "")
-		pdf.Ln(-1)
-	}
-
-	// 4. Return PDF
-	c.Header("Content-Disposition", "attachment; filename=compliance_report.pdf")
-	c.Header("Content-Type", "application/pdf")
-	if err := pdf.Output(c.Writer); err != nil {
-		// If we already wrote headers, we can't do much but log
-		fmt.Printf("Error generating PDF: %v\n", err)
-	}
+	// Simplified: Return error as single-user compliance logging is TBD
+	c.JSON(http.StatusNotImplemented, gin.H{"error": "Compliance reports are disabled in single-user mode"})
 }
 
 func ExportReportHandler(c *gin.Context) {

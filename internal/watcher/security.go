@@ -120,12 +120,6 @@ func (w *Watcher) reportSecurityViolation(ctx context.Context, cls *k8s.ClusterC
 		AutoRemediationPayload: remediation,
 	}
 
-	// Assign Project
-	var defaultProject db.Project
-	if err := db.DB.Where("name = ?", "Default").First(&defaultProject).Error; err == nil {
-		uid := defaultProject.ID
-		report.ProjectID = &uid
-	}
 
 	if err := db.DB.Create(&report).Error; err != nil {
 		log.Printf("Watcher: Failed to create security report: %v", err)

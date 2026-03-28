@@ -11,3 +11,7 @@ kubetriage.db*
 /server
 request.json
 main_tmp.go
+/server.log
+/test_output.txt
+/cli
+/kubetriage_bin

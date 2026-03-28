@@ -116,12 +116,6 @@ func (w *Watcher) reportAutomationIssue(ctx context.Context, cls *k8s.ClusterCon
 		AutoRemediationPayload: remediation,
 	}
 
-	// Assign Project (same as security)
-	var defaultProject db.Project
-	if err := db.DB.Where("name = ?", "Default").First(&defaultProject).Error; err == nil {
-		uid := defaultProject.ID
-		report.ProjectID = &uid
-	}
 
 	if err := db.DB.Create(&report).Error; err != nil {
 		log.Printf("Watcher: Failed to create automation report: %v", err)

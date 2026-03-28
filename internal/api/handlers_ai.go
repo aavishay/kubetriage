@@ -7,12 +7,10 @@ import (
 	"strings"
 
 	"github.com/aavishay/kubetriage/backend/internal/ai"
-	"github.com/aavishay/kubetriage/backend/internal/auth"
 	"github.com/aavishay/kubetriage/backend/internal/db"
 	"github.com/aavishay/kubetriage/backend/internal/k8s"
 	"github.com/aavishay/kubetriage/backend/internal/triage"
 	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 )
@@ -66,15 +64,6 @@ func (h *AIHandler) AnalyzeWorkload(c *gin.Context) {
 		severity = "Warning"
 	}
 
-	var projectID *uuid.UUID
-	if val, exists := c.Get("user"); exists {
-		if userInfo, ok := val.(auth.UserInfo); ok {
-			if uid, err := uuid.Parse(userInfo.ProjectID); err == nil {
-				projectID = &uid
-			}
-		}
-	}
-
 	reportClusterID := "local-cluster"
 	report := db.TriageReport{
 		ClusterID:    reportClusterID,
@@ -83,7 +72,6 @@ func (h *AIHandler) AnalyzeWorkload(c *gin.Context) {
 		Kind:         req.Kind,
 		Analysis:     analysis,
 		Severity:     severity,
-		ProjectID:    projectID,
 		IsRead:       false,
 	}
 

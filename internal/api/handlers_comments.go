@@ -1,11 +1,9 @@
 package api
 
 import (
-	"log"
 	"net/http"
 	"strconv"
 
-	"github.com/aavishay/kubetriage/backend/internal/auth"
 	"github.com/aavishay/kubetriage/backend/internal/db"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -18,7 +16,7 @@ func ListCommentsHandler(c *gin.Context) {
 	namespace := c.Query("namespace")
 	workload := c.Query("workload")
 
-	query := db.DB.Preload("User").Order("created_at asc")
+	query := db.DB.Order("created_at asc")
 
 	if reportID != "" {
 		id, err := strconv.Atoi(reportID)
@@ -40,7 +38,6 @@ func ListCommentsHandler(c *gin.Context) {
 		return
 	}
 
-	// Sanitize user info (remove email/PII if strictly robust, but internal tool is fine)
 	c.JSON(http.StatusOK, comments)
 }
 
@@ -60,12 +57,8 @@ func CreateCommentHandler(c *gin.Context) {
 		return
 	}
 
-	// userInfo := c.MustGet("user").(auth.UserInfo)
-	userIDStr := c.MustGet("userID").(string)
-	userID, _ := uuid.Parse(userIDStr)
-
 	comment := db.Comment{
-		UserID:       userID,
+		Author:       "local",
 		Content:      req.Content,
 		ReportID:     req.ReportID,
 		ClusterID:    req.ClusterID,
@@ -78,20 +71,10 @@ func CreateCommentHandler(c *gin.Context) {
 		return
 	}
 
-	// Load User relationship for response
-	db.DB.Model(&comment).Association("User").Find(&comment.User)
-
-	// Ensure User struct fields are populated if standard eager load didn't work on create response (GORM quirk)
-	if comment.User.Email == "" {
-		// Manual fallback if needed, but Preload usually works on fetch not create return.
-		// Doing a quick refetch to be safe for Frontend UI
-		db.DB.Preload("User").First(&comment, comment.ID)
-	}
-
 	c.JSON(http.StatusOK, comment)
 }
 
-// DeleteCommentHandler deletes a comment if owner or admin
+// DeleteCommentHandler deletes a comment
 func DeleteCommentHandler(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := uuid.Parse(idStr)
@@ -100,23 +83,10 @@ func DeleteCommentHandler(c *gin.Context) {
 		return
 	}
 
-	userIDStr := c.MustGet("userID").(string)
-	userInfo := c.MustGet("user").(auth.UserInfo)
-
 	var comment db.Comment
 	if err := db.DB.First(&comment, id).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Comment not found"})
 		return
-	}
-
-	// Auth Check
-	if comment.UserID.String() != userIDStr {
-		// Check Admin
-		if userInfo.Role != "admin" {
-			log.Printf("Unauthorized delete attempt by %s on comment %s", userIDStr, idStr)
-			c.JSON(http.StatusForbidden, gin.H{"error": "Not authorized"})
-			return
-		}
 	}
 
 	db.DB.Delete(&comment)

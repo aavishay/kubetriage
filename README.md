@@ -32,12 +32,13 @@ KubeTriage follows a modern cloud-native architecture:
 -   **Frontend**: React 19, Vite, TailwindCSS (Premium Dark Mode Design).
 -   **Backend**: Go (Gin), client-go (Dynamic Client), Prometheus Client.
 -   **Database**: PostgreSQL (User prefs, Chat history, Playbooks).
--   **Infrastructure**: Helm Charts, Docker Compose, GitHub Actions CI/CD.
+-   **Infrastructure**: Helm Charts, GitHub Actions CI/CD.
 
 ## 🏁 Getting Started
 
 ### Prerequisites
--   Docker & Docker Compose
+-   Go 1.22+
+-   Node.js 18+ & npm
 -   A running Kubernetes cluster (or Minikube/Docker Desktop)
 -   `kubectl` configured locally
 
@@ -49,15 +50,18 @@ KubeTriage follows a modern cloud-native architecture:
     cd kubetriage
     ```
 
-2.  **Start the stack**
+2.  **Build the application**
     ```bash
-    docker-compose up --build
+    make build
     ```
 
-3.  **Access the Dashboard**
-    Open [http://localhost:8080](http://localhost:8080) in your browser.
-    *   **Login**: `admin@kubetriage.com`
-    *   **Password**: `password` (default)
+3.  **Run the application**
+    ```bash
+    ./kubetriage
+    ```
+
+4.  **Access the Dashboard**
+    Open [http://localhost:3001](http://localhost:3001) in your browser.
 
 ### Production Deployment
 

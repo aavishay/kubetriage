@@ -1,0 +1,440 @@
+/* KubeTriage Design System v2.0 */
+/* Centralized tokens for consistent styling across the application */
+
+@import "tailwindcss";
+
+/* ============================================
+   TAILWIND v4 THEME - Custom Tokens
+   ============================================ */
+@theme {
+  /* Primary Brand Colors */
+  --color-primary-50: #f0faff;
+  --color-primary-100: #e0f2fe;
+  --color-primary-200: #bae6fd;
+  --color-primary-300: #7dd3fc;
+  --color-primary-400: #38bdf8;
+  --color-primary-500: #0ea5e9;
+  --color-primary-600: #0284c7;
+  --color-primary-700: #0369a1;
+  --color-primary-800: #075985;
+  --color-primary-900: #0c4a6e;
+
+  /* Dark Theme Surface Colors */
+  --color-dark-bg: #0B0D11;
+  --color-dark-card: #12151B;
+  --color-dark-border: #1E232B;
+  --color-dark-lighter: #1A1E26;
+  --color-dark-hover: #252a33;
+
+  /* Light Theme Surface Colors */
+  --color-light-bg: #fafafa;
+  --color-light-card: #ffffff;
+  --color-light-border: #e4e4e7;
+  --color-light-hover: #f4f4f5;
+
+  /* Font Families */
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-display: 'Space Grotesk', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+}
+
+/* ============================================
+   COLOR TOKENS
+   ============================================ */
+:root {
+  /* Primary Brand Colors */
+  --kt-primary-50: #f0faff;
+  --kt-primary-100: #e0f2fe;
+  --kt-primary-200: #bae6fd;
+  --kt-primary-300: #7dd3fc;
+  --kt-primary-400: #38bdf8;
+  --kt-primary-500: #0ea5e9;
+  --kt-primary-600: #0284c7;
+  --kt-primary-700: #0369a1;
+  --kt-primary-800: #075985;
+  --kt-primary-900: #0c4a6e;
+
+  /* Semantic Colors */
+  --kt-success: #10b981;
+  --kt-success-light: rgba(16, 185, 129, 0.1);
+  --kt-warning: #f59e0b;
+  --kt-warning-light: rgba(245, 158, 11, 0.1);
+  --kt-danger: #f43f5e;
+  --kt-danger-light: rgba(244, 63, 94, 0.1);
+  --kt-info: #8b5cf6;
+  --kt-info-light: rgba(139, 92, 246, 0.1);
+
+  /* Accent Colors */
+  --kt-accent-cyan: #22d3ee;
+  --kt-accent-violet: #8b5cf6;
+  --kt-accent-rose: #f43f5e;
+
+  /* Dark Theme Surface Colors */
+  --kt-dark-bg: #0B0D11;
+  --kt-dark-card: #12151B;
+  --kt-dark-border: #1E232B;
+  --kt-dark-lighter: #1A1E26;
+  --kt-dark-hover: #252a33;
+
+  /* Text Colors (Dark Theme) */
+  --kt-text-primary: #ffffff;
+  --kt-text-secondary: #a1a1aa;
+  --kt-text-tertiary: #71717a;
+  --kt-text-muted: #52525b;
+
+  /* Light Theme Surface Colors */
+  --kt-light-bg: #fafafa;
+  --kt-light-card: #ffffff;
+  --kt-light-border: #e4e4e7;
+  --kt-light-hover: #f4f4f5;
+
+  /* Text Colors (Light Theme) */
+  --kt-light-text-primary: #18181b;
+  --kt-light-text-secondary: #52525b;
+  --kt-light-text-tertiary: #71717a;
+  --kt-light-text-muted: #a1a1aa;
+}
+
+/* ============================================
+   SPACING SCALE (8px base)
+   ============================================ */
+:root {
+  --kt-space-0: 0;
+  --kt-space-1: 4px;
+  --kt-space-2: 8px;
+  --kt-space-3: 12px;
+  --kt-space-4: 16px;
+  --kt-space-5: 20px;
+  --kt-space-6: 24px;
+  --kt-space-8: 32px;
+  --kt-space-10: 40px;
+  --kt-space-12: 48px;
+  --kt-space-16: 64px;
+  --kt-space-20: 80px;
+  --kt-space-24: 96px;
+}
+
+/* ============================================
+   BORDER RADIUS SCALE
+   ============================================ */
+:root {
+  --kt-radius-none: 0;
+  --kt-radius-sm: 6px;
+  --kt-radius-md: 10px;
+  --kt-radius-lg: 16px;
+  --kt-radius-xl: 24px;
+  --kt-radius-2xl: 32px;
+  --kt-radius-full: 9999px;
+}
+
+/* ============================================
+   SHADOW SCALE
+   ============================================ */
+:root {
+  /* Dark Theme Shadows */
+  --kt-shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+  --kt-shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -2px rgba(0, 0, 0, 0.3);
+  --kt-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.5), 0 4px 6px -4px rgba(0, 0, 0, 0.4);
+  --kt-shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.4);
+  --kt-shadow-glow-primary: 0 0 20px rgba(14, 165, 233, 0.15);
+  --kt-shadow-glow-success: 0 0 20px rgba(16, 185, 129, 0.15);
+  --kt-shadow-glow-danger: 0 0 20px rgba(244, 63, 94, 0.15);
+
+  /* Light Theme Shadows */
+  --kt-shadow-sm-light: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --kt-shadow-md-light: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+  --kt-shadow-lg-light: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.05);
+}
+
+/* ============================================
+   TYPOGRAPHY SCALE
+   ============================================ */
+:root {
+  /* Font Families */
+  --kt-font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  --kt-font-display: 'Space Grotesk', sans-serif;
+  --kt-font-mono: 'JetBrains Mono', monospace;
+
+  /* Font Sizes */
+  --kt-text-xs: 12px;
+  --kt-text-sm: 14px;
+  --kt-text-base: 16px;
+  --kt-text-lg: 18px;
+  --kt-text-xl: 20px;
+  --kt-text-2xl: 24px;
+  --kt-text-3xl: 30px;
+  --kt-text-4xl: 36px;
+
+  /* Font Weights */
+  --kt-font-normal: 400;
+  --kt-font-medium: 500;
+  --kt-font-semibold: 600;
+  --kt-font-bold: 700;
+  --kt-font-black: 800;
+
+  /* Line Heights */
+  --kt-leading-tight: 1.25;
+  --kt-leading-snug: 1.375;
+  --kt-leading-normal: 1.5;
+  --kt-leading-relaxed: 1.625;
+
+  /* Letter Spacing */
+  --kt-tracking-tight: -0.025em;
+  --kt-tracking-normal: 0;
+  --kt-tracking-wide: 0.025em;
+  --kt-tracking-wider: 0.05em;
+  --kt-tracking-widest: 0.1em;
+}
+
+/* ============================================
+   ANIMATION TOKENS
+   ============================================ */
+:root {
+  /* Durations */
+  --kt-duration-fast: 150ms;
+  --kt-duration-normal: 250ms;
+  --kt-duration-slow: 350ms;
+  --kt-duration-slower: 500ms;
+
+  /* Easings */
+  --kt-ease-default: cubic-bezier(0.4, 0, 0.2, 1);
+  --kt-ease-in: cubic-bezier(0.4, 0, 1, 1);
+  --kt-ease-out: cubic-bezier(0, 0, 0.2, 1);
+  --kt-ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --kt-ease-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+/* ============================================
+   COMPONENT TOKENS
+   ============================================ */
+:root {
+  /* Card */
+  --kt-card-padding: var(--kt-space-6);
+  --kt-card-padding-lg: var(--kt-space-8);
+  --kt-card-radius: var(--kt-radius-xl);
+  --kt-card-border: 1px solid var(--kt-dark-border);
+  --kt-card-bg: var(--kt-dark-card);
+
+  /* Button */
+  --kt-button-height-sm: 32px;
+  --kt-button-height-md: 40px;
+  --kt-button-height-lg: 48px;
+  --kt-button-radius: var(--kt-radius-lg);
+  --kt-button-padding-x: var(--kt-space-4);
+
+  /* Input */
+  --kt-input-height: 40px;
+  --kt-input-radius: var(--kt-radius-md);
+  --kt-input-border: 1px solid var(--kt-dark-border);
+
+  /* Focus Ring */
+  --kt-focus-ring: 0 0 0 2px var(--kt-dark-bg), 0 0 0 4px var(--kt-primary-500);
+}
+
+/* ============================================
+   UTILITY CLASSES
+   ============================================ */
+
+/* Card Variants */
+.kt-card {
+  background: var(--kt-card-bg);
+  border: var(--kt-card-border);
+  border-radius: var(--kt-card-radius);
+  padding: var(--kt-card-padding);
+  transition: all var(--kt-duration-normal) var(--kt-ease-default);
+}
+
+.kt-card-hover:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--kt-shadow-lg);
+}
+
+.kt-card-glow:hover {
+  box-shadow: var(--kt-shadow-glow-primary);
+  border-color: rgba(14, 165, 233, 0.3);
+}
+
+/* Button Base */
+.kt-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--kt-space-2);
+  font-family: var(--kt-font-sans);
+  font-weight: var(--kt-font-semibold);
+  font-size: var(--kt-text-sm);
+  border-radius: var(--kt-button-radius);
+  transition: all var(--kt-duration-fast) var(--kt-ease-default);
+  cursor: pointer;
+  border: none;
+  outline: none;
+}
+
+.kt-button:focus-visible {
+  box-shadow: var(--kt-focus-ring);
+}
+
+.kt-button:active {
+  transform: scale(0.98);
+}
+
+/* Button Variants */
+.kt-button-primary {
+  background: var(--kt-primary-600);
+  color: white;
+}
+
+.kt-button-primary:hover {
+  background: var(--kt-primary-500);
+  box-shadow: var(--kt-shadow-glow-primary);
+}
+
+.kt-button-secondary {
+  background: var(--kt-dark-lighter);
+  color: var(--kt-text-primary);
+  border: 1px solid var(--kt-dark-border);
+}
+
+.kt-button-secondary:hover {
+  background: var(--kt-dark-hover);
+  border-color: var(--kt-primary-500);
+}
+
+.kt-button-ghost {
+  background: transparent;
+  color: var(--kt-text-secondary);
+}
+
+.kt-button-ghost:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--kt-text-primary);
+}
+
+/* Status Badges */
+.kt-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--kt-space-1);
+  padding: var(--kt-space-1) var(--kt-space-3);
+  font-size: var(--kt-text-xs);
+  font-weight: var(--kt-font-bold);
+  text-transform: uppercase;
+  letter-spacing: var(--kt-tracking-wider);
+  border-radius: var(--kt-radius-md);
+}
+
+.kt-badge-success {
+  background: var(--kt-success-light);
+  color: var(--kt-success);
+  border: 1px solid rgba(16, 185, 129, 0.2);
+}
+
+.kt-badge-warning {
+  background: var(--kt-warning-light);
+  color: var(--kt-warning);
+  border: 1px solid rgba(245, 158, 11, 0.2);
+}
+
+.kt-badge-danger {
+  background: var(--kt-danger-light);
+  color: var(--kt-danger);
+  border: 1px solid rgba(244, 63, 94, 0.2);
+}
+
+.kt-badge-info {
+  background: var(--kt-info-light);
+  color: var(--kt-info);
+  border: 1px solid rgba(139, 92, 246, 0.2);
+}
+
+/* Typography Utilities */
+.kt-text-display {
+  font-family: var(--kt-font-display);
+  font-weight: var(--kt-font-black);
+  letter-spacing: var(--kt-tracking-tight);
+}
+
+.kt-text-label {
+  font-size: var(--kt-text-xs);
+  font-weight: var(--kt-font-bold);
+  text-transform: uppercase;
+  letter-spacing: var(--kt-tracking-wider);
+  color: var(--kt-text-tertiary);
+}
+
+.kt-text-mono {
+  font-family: var(--kt-font-mono);
+  font-size: var(--kt-text-sm);
+}
+
+/* Glass Effect */
+.kt-glass {
+  background: rgba(18, 21, 27, 0.8);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.kt-glass-strong {
+  background: rgba(18, 21, 27, 0.95);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+/* Scrollbar */
+.kt-scrollbar::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.kt-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.kt-scrollbar::-webkit-scrollbar-thumb {
+  background: var(--kt-dark-border);
+  border-radius: var(--kt-radius-full);
+}
+
+.kt-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: var(--kt-text-muted);
+}
+
+/* Animation Utilities */
+@keyframes kt-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes kt-slide-up {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes kt-pulse-soft {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+.kt-animate-fade-in {
+  animation: kt-fade-in var(--kt-duration-normal) var(--kt-ease-out);
+}
+
+.kt-animate-slide-up {
+  animation: kt-slide-up var(--kt-duration-normal) var(--kt-ease-out);
+}
+
+.kt-animate-pulse-soft {
+  animation: kt-pulse-soft 2s var(--kt-ease-default) infinite;
+}
+
+/* Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

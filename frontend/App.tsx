@@ -1,32 +1,27 @@
 import React, { useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { MonitoringProvider, useMonitoring } from './contexts/MonitoringContext';
-import { AuthProvider } from './contexts/AuthContext';
 import { Layout } from './components/Layout';
 import { Dashboard } from './components/Dashboard';
 import { TriageView } from './components/TriageView';
 import { RightSizingView } from './components/RightSizingView';
 import { TopologyView } from './components/TopologyView';
-import { OrganizationView } from './components/OrganizationView';
-import { UserView } from './components/UserView';
 import { NotificationsView } from './components/NotificationsView';
 import { TemplateLibraryView } from './components/TemplateLibraryView';
-import { LoginView } from './components/LoginView';
 import { AIChatWidget } from './components/AIChatWidget';
 import { NotFound } from './components/NotFound';
 import { SettingsView } from './components/SettingsView';
 import { ReportsView } from './components/ReportsView';
+import { PageTransition } from './components/PageTransition';
 import { BellRing, X, Loader2, Key, ExternalLink, Settings2 } from 'lucide-react';
 import { DiagnosticPlaybook } from './types';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { PresenceProvider } from './contexts/PresenceContext';
 
-// Wrapper component to consume Context and enforce Auth
+// Wrapper component to consume Context
 const AppContent: React.FC = () => {
   const {
-    isAuthenticated,
-    isAuthLoading,
-    isWorkloadsLoading, // Added
+    isWorkloadsLoading,
     hasApiKey,
     isCheckingKey,
     isDarkMode,
@@ -34,8 +29,6 @@ const AppContent: React.FC = () => {
     dismissNotification,
     selectApiKey,
     workloads,
-    organizations,
-    users,
     notificationChannels,
     alertRules,
     triggeredAlerts,
@@ -45,7 +38,6 @@ const AppContent: React.FC = () => {
     addAlertRule,
     updateAlertRule,
     deleteAlertRule,
-    login,
     refreshWorkloads,
     metricsWindow,
     setMetricsWindow
@@ -61,7 +53,6 @@ const AppContent: React.FC = () => {
   };
 
   const handleApplyTemplate = (template: string) => {
-    // Navigation logic for templates usually goes to Triage or RightSizing
     navigate('/triage', { state: { template } });
   };
 
@@ -69,18 +60,18 @@ const AppContent: React.FC = () => {
     navigate('/triage', { state: { workloadId, playbook } });
   };
 
-  if (isCheckingKey || isAuthLoading) {
+  if (isCheckingKey) {
     return (
-      <div className={`min-h-screen w-full flex flex-col items-center justify-center bg-dark-bg text-white ${isDarkMode ? 'dark' : ''} bg-mesh`}>
-        <div className="relative mb-12">
-          <div className="absolute inset-0 bg-primary-500 rounded-full blur-[100px] opacity-20 animate-pulse"></div>
-          <div className="p-8 bg-dark-card rounded-full border border-white/5 relative z-10 shadow-2xl">
-            <Loader2 className="w-16 h-16 text-primary-500 animate-spin" />
+      <div className={`min-h-screen w-full flex flex-col items-center justify-center bg-dark-bg text-white ${isDarkMode ? 'dark' : ''}`}>
+        <div className="relative mb-8">
+          <div className="absolute inset-0 bg-primary-500 rounded-full blur-3xl opacity-20"></div>
+          <div className="p-6 bg-dark-card rounded-2xl border border-white/10 relative z-10 shadow-xl">
+            <Loader2 className="w-12 h-12 text-primary-500 animate-spin" />
           </div>
         </div>
-        <div className="space-y-4 text-center">
-          <h1 className="text-2xl font-black uppercase tracking-[0.5em] font-display neon-text">Neural Boot Sequence</h1>
-          <p className="text-[10px] font-black text-gray-500 uppercase tracking-[0.3em] animate-pulse">Synchronizing cluster telemetry...</p>
+        <div className="space-y-2 text-center">
+          <h1 className="text-xl font-semibold text-white">Loading</h1>
+          <p className="text-sm text-zinc-500">Initializing cluster telemetry...</p>
         </div>
       </div>
     );
@@ -89,28 +80,29 @@ const AppContent: React.FC = () => {
   if (!hasApiKey) {
     return (
       <div className={`${isDarkMode ? 'dark' : ''} font-sans`}>
-        <div className="min-h-screen w-full flex items-center justify-center bg-dark-bg p-6 bg-mesh">
-          <div className="w-full max-w-xl bg-dark-card border border-white/5 rounded-[4rem] shadow-2xl p-16 text-center animate-in zoom-in-95 backdrop-blur-3xl glass cyber-card overflow-hidden">
-            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-primary-500 to-transparent opacity-50"></div>
-            <div className="w-24 h-24 bg-primary-500/10 rounded-4xl flex items-center justify-center mx-auto mb-10 text-primary-500 ring-1 ring-primary-500/30 shadow-[0_0_30px_rgba(14,165,233,0.2)]">
-              <Key className="w-10 h-10" />
+        <div className="min-h-screen w-full flex items-center justify-center bg-dark-bg p-6">
+          <div className="w-full max-w-md bg-dark-card border border-white/10 rounded-2xl shadow-xl p-10 text-center">
+            <div className="w-16 h-16 bg-primary-500/10 rounded-xl flex items-center justify-center mx-auto mb-6 text-primary-500">
+              <Key className="w-8 h-8" />
             </div>
-            <h1 className="text-4xl font-black text-white mb-4 uppercase tracking-tighter font-display">Auth Protocol Required</h1>
-            <p className="text-gray-400 mb-12 text-sm font-medium leading-relaxed max-w-xs mx-auto">Gemini-1.5-Pro cryptographic identity missing. Initialize neural vectoring to continue.</p>
-            <div className="space-y-6">
+            <h1 className="text-2xl font-semibold text-white mb-3">API Key Required</h1>
+            <p className="text-zinc-400 mb-8 text-sm leading-relaxed max-w-xs mx-auto">
+              A Gemini API key is required to use AI-powered features. Please configure your API key to continue.
+            </p>
+            <div className="space-y-4">
               <button
                 onClick={selectApiKey}
-                className="w-full bg-primary-600 hover:bg-primary-500 text-white font-black py-5 rounded-3xl transition-all shadow-2xl shadow-primary-500/20 flex items-center justify-center gap-4 text-xs uppercase tracking-[0.2em] border-b-4 border-primary-800 active:scale-95"
+                className="w-full bg-primary-600 hover:bg-primary-500 text-white font-medium py-3 rounded-lg transition-colors flex items-center justify-center gap-2 text-sm"
               >
-                <Key className="w-5 h-5" /> Initialize API Key
+                <Key className="w-4 h-4" /> Configure API Key
               </button>
               <a
                 href="https://ai.google.dev/gemini-api/docs/billing"
                 target="_blank"
                 rel="noreferrer"
-                className="inline-flex items-center gap-2 text-[10px] font-black text-gray-500 hover:text-primary-400 uppercase tracking-widest transition-colors"
+                className="inline-flex items-center gap-1.5 text-xs text-zinc-500 hover:text-primary-400 transition-colors"
               >
-                Gemini Ledger Status <ExternalLink className="w-3.5 h-3.5" />
+                View Gemini API documentation <ExternalLink className="w-3.5 h-3.5" />
               </a>
             </div>
           </div>
@@ -119,96 +111,116 @@ const AppContent: React.FC = () => {
     );
   }
 
-  if (!isAuthenticated) {
-    return (
-      <div className={isDarkMode ? 'dark' : ''}>
-        <LoginView onLogin={login} />
-      </div>
-    );
-  }
-
   return (
     <div className={isDarkMode ? 'dark' : ''}>
       <Layout>
         <Routes>
-          <Route path="/" element={<Dashboard workloads={workloads} isLoading={isWorkloadsLoading} isDarkMode={isDarkMode} onTriageRequest={handleNavigateToTriage} onRefresh={refreshWorkloads} metricsWindow={metricsWindow} setMetricsWindow={setMetricsWindow} />} />
+          <Route path="/" element={
+            <PageTransition>
+              <Dashboard workloads={workloads} isLoading={isWorkloadsLoading} isDarkMode={isDarkMode} onTriageRequest={handleNavigateToTriage} onRefresh={refreshWorkloads} metricsWindow={metricsWindow} setMetricsWindow={setMetricsWindow} />
+            </PageTransition>
+          } />
           <Route path="/dashboard" element={<Navigate to="/" replace />} />
-          <Route path="/login" element={<Navigate to="/" replace />} />
-          <Route path="/templates" element={<TemplateLibraryView onApplyTemplate={(view, tmpl) => handleApplyTemplate(tmpl)} isDarkMode={isDarkMode} />} />
+          <Route path="/templates" element={
+            <PageTransition>
+              <TemplateLibraryView onApplyTemplate={(view, tmpl) => handleApplyTemplate(tmpl)} isDarkMode={isDarkMode} />
+            </PageTransition>
+          } />
           <Route path="/triage" element={
-            <TriageView
-              workloads={workloads}
-              isDarkMode={isDarkMode}
-              onOpenChat={handleOpenChat}
-            // State passing handled by useLocation in component usually, but for now we rely on internal state if not full rewrite of TriageView
-            />
+            <PageTransition>
+              <TriageView
+                workloads={workloads}
+                isDarkMode={isDarkMode}
+                onOpenChat={handleOpenChat}
+              />
+            </PageTransition>
           } />
           <Route path="/rightsizing" element={
-            <RightSizingView
-              workloads={workloads}
-              isDarkMode={isDarkMode}
-              onOpenChat={handleOpenChat}
-              onTriageRequest={handleNavigateToTriage}
-              onRefresh={refreshWorkloads}
-            />
+            <PageTransition>
+              <RightSizingView
+                workloads={workloads}
+                isDarkMode={isDarkMode}
+                onOpenChat={handleOpenChat}
+                onTriageRequest={handleNavigateToTriage}
+                onRefresh={refreshWorkloads}
+              />
+            </PageTransition>
           } />
-          <Route path="/topology" element={<TopologyView workloads={workloads} isDarkMode={isDarkMode} />} />
-          <Route path="/organizations" element={<OrganizationView organizations={organizations} onAddOrganization={() => { }} isDarkMode={isDarkMode} />} />
-          <Route path="/users" element={<UserView users={users} onAddUser={() => { }} onUpdateUser={() => { }} onDeleteUser={() => { }} isDarkMode={isDarkMode} />} />
-          <Route path="/reports" element={<ReportsView isDarkMode={isDarkMode} />} />
+          <Route path="/topology" element={
+            <PageTransition>
+              <TopologyView workloads={workloads} isDarkMode={isDarkMode} />
+            </PageTransition>
+          } />
+          <Route path="/reports" element={
+            <PageTransition>
+              <ReportsView isDarkMode={isDarkMode} />
+            </PageTransition>
+          } />
           <Route path="/notifications" element={
-            <NotificationsView
-              channels={notificationChannels}
-              onAddChannel={addChannel}
-              onUpdateChannel={updateChannel}
-              onDeleteChannel={deleteChannel}
-              alertRules={alertRules}
-              onAddAlertRule={addAlertRule}
-              onUpdateAlertRule={updateAlertRule}
-              onDeleteAlertRule={deleteAlertRule}
-              triggeredAlerts={triggeredAlerts}
-              isDarkMode={isDarkMode}
-            />
+            <PageTransition>
+              <NotificationsView
+                channels={notificationChannels}
+                onAddChannel={addChannel}
+                onUpdateChannel={updateChannel}
+                onDeleteChannel={deleteChannel}
+                alertRules={alertRules}
+                onAddAlertRule={addAlertRule}
+                onUpdateAlertRule={updateAlertRule}
+                onDeleteAlertRule={deleteAlertRule}
+                triggeredAlerts={triggeredAlerts}
+                isDarkMode={isDarkMode}
+              />
+            </PageTransition>
           } />
-          <Route path="/settings" element={<SettingsView />} />
-          <Route path="*" element={<NotFound />} />
+          <Route path="/settings" element={
+            <PageTransition>
+              <SettingsView />
+            </PageTransition>
+          } />
+          <Route path="*" element={
+            <PageTransition>
+              <NotFound />
+            </PageTransition>
+          } />
         </Routes>
       </Layout>
 
       {/* Alert Notification Toast */}
       {activeNotification && (
-        <div className="fixed bottom-10 left-1/2 -translate-x-1/2 z-[100] w-full max-w-lg p-4 animate-in slide-in-from-bottom-12 fade-in duration-700">
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[100] w-full max-w-md p-4 animate-in slide-in-from-bottom-4 fade-in duration-300">
           <div
             onClick={() => navigate('/triage')}
-            className={`cursor-pointer hover:bg-zinc-50 dark:hover:bg-dark-lighter/50 transition-all p-6 rounded-4xl border-2 shadow-2xl flex items-center gap-6 bg-white dark:bg-dark-card group ${activeNotification.severity === 'Critical' ? 'border-accent-rose shadow-accent-rose/10' : 'border-amber-400 shadow-amber-400/10'}`}
+            className={`cursor-pointer hover:bg-zinc-50 dark:hover:bg-dark-lighter/50 transition-all p-4 rounded-xl border shadow-lg flex items-center gap-4 bg-white dark:bg-dark-card group ${activeNotification.severity === 'Critical' ? 'border-rose-500/50 shadow-rose-500/10' : 'border-amber-400/50 shadow-amber-400/10'}`}
           >
-            <div className={`p-4 rounded-3xl shrink-0 ${activeNotification.severity === 'Critical' ? 'bg-accent-rose text-white animate-pulse shadow-[0_0_20px_rgba(244,63,94,0.5)]' : 'bg-amber-500 text-white'}`}>
-              <BellRing className="w-8 h-8" />
+            <div className={`p-3 rounded-lg shrink-0 ${activeNotification.severity === 'Critical' ? 'bg-rose-500 text-white' : 'bg-amber-500 text-white'}`}>
+              <BellRing className="w-5 h-5" />
             </div>
             <div className="flex-1 min-w-0">
-              <h4 className="font-black text-xs uppercase tracking-[0.1em] text-gray-900 dark:text-white leading-none mb-2 font-display">System Breach Detected</h4>
-              <p className="text-[11px] text-gray-500 dark:text-gray-400 font-bold truncate">
-                {activeNotification.workloadName}: <span className="text-primary-500">{activeNotification.metric}</span> at <span className="text-accent-rose">{activeNotification.value}%</span>
+              <h4 className="font-medium text-sm text-gray-900 dark:text-white mb-1">
+                {activeNotification.severity === 'Critical' ? 'Critical Alert' : 'Warning'}
+              </h4>
+              <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
+                {activeNotification.workloadName}: <span className="text-primary-500">{activeNotification.metric}</span> at <span className={activeNotification.severity === 'Critical' ? 'text-rose-500' : 'text-amber-500'}>{activeNotification.value}%</span>
               </p>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1">
               <button
                 onClick={(e) => {
                   e.stopPropagation();
                   navigate('/notifications', { state: { editRuleId: activeNotification.ruleId } });
                 }}
-                className="p-3 hover:bg-gray-100 dark:hover:bg-white/5 rounded-2xl text-gray-400 hover:text-primary-500 transition-all"
+                className="p-2 hover:bg-gray-100 dark:hover:bg-white/5 rounded-lg text-gray-400 hover:text-primary-500 transition-colors"
               >
-                <Settings2 className="w-5 h-5" />
+                <Settings2 className="w-4 h-4" />
               </button>
               <button
                 onClick={(e) => {
                   e.stopPropagation();
                   dismissNotification();
                 }}
-                className="p-3 hover:bg-gray-100 dark:hover:bg-white/5 rounded-2xl text-gray-400 hover:text-accent-rose transition-all"
+                className="p-2 hover:bg-gray-100 dark:hover:bg-white/5 rounded-lg text-gray-400 hover:text-rose-500 transition-colors"
               >
-                <X className="w-5 h-5" />
+                <X className="w-4 h-4" />
               </button>
             </div>
           </div>
@@ -219,19 +231,18 @@ const AppContent: React.FC = () => {
     </div>
   );
 };
+
 const App: React.FC = () => {
   return (
-    <AuthProvider>
-      <MonitoringProvider>
-        <PresenceProvider>
-          <BrowserRouter>
-            <ErrorBoundary>
-              <AppContent />
-            </ErrorBoundary>
-          </BrowserRouter>
-        </PresenceProvider>
-      </MonitoringProvider>
-    </AuthProvider>
+    <MonitoringProvider>
+      <PresenceProvider>
+        <BrowserRouter>
+          <ErrorBoundary>
+            <AppContent />
+          </ErrorBoundary>
+        </BrowserRouter>
+      </PresenceProvider>
+    </MonitoringProvider>
   );
 };
 
