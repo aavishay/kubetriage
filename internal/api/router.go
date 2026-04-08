@@ -6,13 +6,43 @@ import (
 	"time"
 
 	"github.com/aavishay/kubetriage/backend/internal/ai"
+	"github.com/aavishay/kubetriage/backend/internal/ml"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"go.opentelemetry.io/contrib/instrumentation/github.com/gin-gonic/gin/otelgin"
 )
 
-func SetupRouter(aiService *ai.AIService, rootFS http.FileSystem, assetsFS http.FileSystem, indexHTML []byte) *gin.Engine {
+// RouterConfig holds all dependencies for setting up the router.
+type RouterConfig struct {
+	AIService *ai.AIService
+	MLService *ml.Service
+	RootFS    http.FileSystem
+	AssetsFS  http.FileSystem
+	IndexHTML []byte
+}
+
+// ginHandler wraps an http.Handler to work with gin
+func ginHandler(h http.Handler) gin.HandlerFunc {
+	return func(c *gin.Context) { h.ServeHTTP(c.Writer, c.Request) }
+}
+
+// ginHandlerFunc wraps an http.HandlerFunc to work with gin
+func ginHandlerFunc(h func(http.ResponseWriter, *http.Request)) gin.HandlerFunc {
+	return func(c *gin.Context) { h(c.Writer, c.Request) }
+}
+
+// GinHandler is the interface for handlers that use gin.Context
+type GinHandler interface {
+	ServeHTTP(*gin.Context)
+}
+
+// wrapGinHandler wraps a GinHandler for use in gin router
+func wrapGinHandler(h GinHandler) gin.HandlerFunc {
+	return h.ServeHTTP
+}
+
+func SetupRouter(cfg RouterConfig) *gin.Engine {
 	r := gin.Default()
 
 	// CORS Config
@@ -29,7 +59,8 @@ func SetupRouter(aiService *ai.AIService, rootFS http.FileSystem, assetsFS http.
 	r.Use(otelgin.Middleware("kubetriage-backend"))
 
 	// Init Handlers
-	aiHandler := NewAIHandler(aiService)
+	aiHandler := NewAIHandler(cfg.AIService)
+	mlHandler := NewMLHandler(cfg.MLService)
 
 	api := r.Group("/api")
 	{
@@ -45,6 +76,9 @@ func SetupRouter(aiService *ai.AIService, rootFS http.FileSystem, assetsFS http.
 		api.GET("/cluster/nodes", NodesHandler)
 		api.GET("/cluster/events", ClusterEventsHandler)
 		api.GET("/cluster/metrics", ClusterMetricsHandler)
+		api.GET("/cluster/scaling-efficiency", ScalingEfficiencyHandler)
+		api.GET("/clusters/aggregate", MultiClusterHandler)
+		api.GET("/clusters/:id/health", ClusterHealthCheckHandler)
 
 		// Reports
 		api.GET("/reports", ListReportsHandler)
@@ -79,14 +113,68 @@ func SetupRouter(aiService *ai.AIService, rootFS http.FileSystem, assetsFS http.
 		// WebSocket Logs
 		api.GET("/ws/logs", StreamLogsHandler)
 		api.GET("/cluster/logs/search", SearchLogsHandler)
+
+		// ML Intelligence
+		api.GET("/ml/intelligence", mlHandler.GetMLIntelligence)
+		api.GET("/ml/anomalies", mlHandler.GetAnomalies)
+		api.GET("/ml/patterns", mlHandler.GetPatterns)
+		api.GET("/ml/stats", mlHandler.GetMLStats)
+		api.GET("/ml/forecast", mlHandler.GetForecast)
+		api.POST("/ml/metrics", mlHandler.IngestMetrics)
+		api.GET("/ml/predict/:id", mlHandler.PredictRootCause)
+
+		// Developer Experience
+		api.GET("/developer/portal", DeveloperPortalHandler)
+		api.GET("/developer/teams", TeamListHandler)
+		api.GET("/developer/costs", CostAttributionHandler)
+		api.POST("/developer/pre-deploy", PreDeployCheckHandler)
+		api.POST("/developer/resolve/:id", ResolveIncidentHandler)
+
+		// Autonomous Remediation - Auto-Fix with Approval
+		api.GET("/autofix/proposals", wrapGinHandler(&ListAutoFixProposalsHandler{}))
+		api.GET("/autofix/proposals/:id", wrapGinHandler(&GetAutoFixProposalHandler{}))
+		api.POST("/autofix/proposals", wrapGinHandler(&CreateAutoFixProposalHandler{}))
+		api.POST("/autofix/proposals/:id/approve", wrapGinHandler(&ApproveAutoFixHandler{}))
+		api.POST("/autofix/proposals/:id/apply", wrapGinHandler(&ApplyAutoFixHandler{}))
+		api.POST("/autofix/proposals/:id/rollback", wrapGinHandler(&RollbackAutoFixHandler{}))
+
+		// Runbook Automation
+		api.GET("/runbooks", ListRunbooksHandler)
+		api.GET("/runbooks/:id", GetRunbookHandler)
+		api.POST("/runbooks", CreateRunbookHandler)
+		api.PUT("/runbooks/:id", UpdateRunbookHandler)
+		api.DELETE("/runbooks/:id", DeleteRunbookHandler)
+		api.POST("/runbooks/:id/execute", ExecuteRunbookHandler)
+		api.POST("/runbooks/executions/:id/steps/:stepId/approve", ApproveRunbookStepHandler)
+		api.GET("/runbooks/executions/:id", GetRunbookExecutionHandler)
+		api.POST("/reports/:id/runbook", ConvertTriageToRunbookHandler)
+
+		// Scheduled Remediation
+		api.GET("/scheduled-fixes", ListScheduledFixesHandler)
+		api.POST("/scheduled-fixes", wrapGinHandler(&CreateScheduledFixHandler{}))
+		api.POST("/scheduled-fixes/:id/approve", wrapGinHandler(&ApproveScheduledFixHandler{}))
+		api.POST("/scheduled-fixes/:id/cancel", wrapGinHandler(&CancelScheduledFixHandler{}))
+
+		// External Metrics API
+		api.GET("/metrics/sources", ListMetricSourcesHandler)
+		api.GET("/metrics/sources/:id", GetMetricSourceHandler)
+		api.POST("/metrics/sources", CreateMetricSourceHandler)
+		api.PUT("/metrics/sources/:id", UpdateMetricSourceHandler)
+		api.DELETE("/metrics/sources/:id", DeleteMetricSourceHandler)
+		api.POST("/metrics/sources/:id/test", TestMetricSourceHandler)
+		api.POST("/metrics/sources/:id/sync", SyncMetricsHandler)
+		api.GET("/metrics/providers", GetMetricProvidersHandler)
+		api.POST("/metrics/ingest", IngestMetricsHandler)
+		api.GET("/metrics/query", QueryMetricsHandler)
+		api.GET("/metrics/stats", GetMetricsStatsHandler)
 	}
 	// Serve Frontend Static Files
-	r.StaticFS("/assets", assetsFS)
+	r.StaticFS("/assets", cfg.AssetsFS)
 
 	// Favicon handlers
-	r.GET("/favicon.ico", func(c *gin.Context) { c.FileFromFS("/favicon.ico", rootFS) })
-	r.GET("/favicon.png", func(c *gin.Context) { c.FileFromFS("/favicon.png", rootFS) })
-	r.GET("/favicon.svg", func(c *gin.Context) { c.FileFromFS("/favicon.svg", rootFS) })
+	r.GET("/favicon.ico", func(c *gin.Context) { c.FileFromFS("/favicon.ico", cfg.RootFS) })
+	r.GET("/favicon.png", func(c *gin.Context) { c.FileFromFS("/favicon.png", cfg.RootFS) })
+	r.GET("/favicon.svg", func(c *gin.Context) { c.FileFromFS("/favicon.svg", cfg.RootFS) })
 
 	// Expose Prometheus metrics
 	r.GET("/metrics", gin.WrapH(promhttp.Handler()))
@@ -104,11 +192,11 @@ func SetupRouter(aiService *ai.AIService, rootFS http.FileSystem, assetsFS http.
 		c.Header("Pragma", "no-cache")
 		c.Header("Expires", "0")
 
-		if len(indexHTML) > 0 {
-			c.Data(200, "text/html; charset=utf-8", indexHTML)
+		if len(cfg.IndexHTML) > 0 {
+			c.Data(200, "text/html; charset=utf-8", cfg.IndexHTML)
 		} else {
 			// Fallback if bytes missing (shouldn't happen in prod)
-			c.FileFromFS("index.html", rootFS)
+			c.FileFromFS("index.html", cfg.RootFS)
 		}
 	})
 

@@ -35,9 +35,9 @@ export const analyzeWorkload = async (
             playbookInstructions = "Perform a holistic root cause analysis covering all aspects of reliability including CPU, RAM, and Disk storage.";
     }
 
-    // Setup timeout for frontend request (1 minute to prevent eternal UI loading if overwhelmed)
+    // Setup timeout for frontend request (10 minutes to match backend timeout for local AI)
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 60000);
+    const timeoutId = setTimeout(() => controller.abort(), 600000);
 
     try {
         const response = await fetch('/api/ai/analyze', {
@@ -48,8 +48,9 @@ export const analyzeWorkload = async (
             },
             signal: controller.signal,
             body: JSON.stringify({
-                provider, // Added
-                model, // Added
+                provider,
+                model,
+                clusterId: workload.clusterId,
                 workloadName: workload.name,
                 namespace: workload.namespace,
                 kind: workload.kind,
@@ -91,7 +92,7 @@ export const analyzeWorkload = async (
         clearTimeout(timeoutId);
         console.error("Gemini API Error (Backend):", error);
         if (error instanceof DOMException && error.name === 'AbortError') {
-            return { analysis: "Error: Analysis request timed out after 1 minute. The local AI might be overwhelmed. Please try again." };
+            return { analysis: "Error: Analysis request timed out after 10 minutes. The local AI might be overwhelmed. Please try again." };
         }
         return { analysis: `Error generating analysis: ${error instanceof Error ? error.message : String(error)}` };
     }

@@ -24,8 +24,8 @@ export const TemplateLibraryView: React.FC<TemplateLibraryViewProps> = ({ onAppl
          id: 'Scheduling & Affinity' as DiagnosticPlaybook,
          title: 'Scheduling & Affinity',
          icon: Anchor,
-         color: 'text-indigo-500',
-         bgColor: 'bg-indigo-500/10',
+         color: 'text-primary-500',
+         bgColor: 'bg-primary-500/10',
          description: 'Targets taints, tolerations, and node affinity mismatches. Use this when pods are stuck in Pending or not scheduling on specific hardware.',
          focus: ['Node Taints', 'Affinity Rules', 'Resource Shortage'],
          view: 'triage' as ViewState
@@ -109,35 +109,35 @@ export const TemplateLibraryView: React.FC<TemplateLibraryViewProps> = ({ onAppl
    return (
       <div className="space-y-8 pb-20">
          {/* Hero Header */}
-         <div className="bg-dark-card border border-white/10 rounded-xl p-6 md:p-8">
+         <div className="bg-bg-card border border-border-main rounded-xl p-6 md:p-8">
             <div className="max-w-2xl">
                <div className="inline-flex items-center gap-1.5 bg-primary-500/10 text-primary-400 px-3 py-1 rounded-full text-xs font-medium mb-4">
                   <Sparkles className="w-3.5 h-3.5" /> AI Integrated
                </div>
-               <h1 className="text-2xl font-semibold text-white mb-2">SRE Runbooks & Templates</h1>
-               <p className="text-sm text-zinc-500 mb-6">
+               <h1 className="text-2xl font-semibold text-text-primary mb-2">SRE Runbooks & Templates</h1>
+               <p className="text-sm text-text-secondary mb-6">
                   Deploy specialized AI diagnostic models and resource strategies with a single click.
                </p>
                <div className="flex flex-wrap gap-3">
-                  <div className="flex items-center gap-2 bg-dark-bg p-3 rounded-lg border border-white/5">
+                  <div className="flex items-center gap-2 bg-bg-main p-3 rounded-lg border border-border-main">
                      <Activity className="w-5 h-5 text-primary-500" />
                      <div className="text-left">
-                        <p className="text-xs text-zinc-500">Triage Models</p>
-                        <p className="text-sm font-medium text-white">13 Active</p>
+                        <p className="text-xs text-text-secondary">Triage Models</p>
+                        <p className="text-sm font-medium text-text-primary">13 Active</p>
                      </div>
                   </div>
-                  <div className="flex items-center gap-2 bg-dark-bg p-3 rounded-lg border border-white/5">
+                  <div className="flex items-center gap-2 bg-bg-main p-3 rounded-lg border border-border-main">
                      <Scale className="w-5 h-5 text-emerald-500" />
                      <div className="text-left">
-                        <p className="text-xs text-zinc-500">Sizing Profiles</p>
-                        <p className="text-sm font-medium text-white">8 Active</p>
+                        <p className="text-xs text-text-secondary">Sizing Profiles</p>
+                        <p className="text-sm font-medium text-text-primary">8 Active</p>
                      </div>
                   </div>
-                  <div className="flex items-center gap-2 bg-dark-bg p-3 rounded-lg border border-white/5">
+                  <div className="flex items-center gap-2 bg-bg-main p-3 rounded-lg border border-border-main">
                      <Zap className="w-5 h-5 text-amber-500" />
                      <div className="text-left">
-                        <p className="text-xs text-zinc-500">Automation</p>
-                        <p className="text-sm font-medium text-white">4 Rules</p>
+                        <p className="text-xs text-text-secondary">Automation</p>
+                        <p className="text-sm font-medium text-text-primary">4 Rules</p>
                      </div>
                   </div>
                </div>
@@ -148,24 +148,24 @@ export const TemplateLibraryView: React.FC<TemplateLibraryViewProps> = ({ onAppl
          <section>
             <div className="flex items-center gap-2 mb-4">
                <AlertCircle className="w-5 h-5 text-primary-500" />
-               <h2 className="text-lg font-medium text-white">Diagnostic Triage</h2>
+               <h2 className="text-lg font-medium text-text-primary">Diagnostic Triage</h2>
             </div>
-            <p className="text-xs text-zinc-500 mb-4">AI-driven root cause identification runbooks</p>
+            <p className="text-xs text-text-secondary mb-4">AI-driven root cause identification runbooks</p>
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
                {triageTemplates.map(pb => (
-                  <div key={pb.id} className="bg-dark-card border border-white/10 rounded-xl p-5 flex flex-col hover:border-white/20 transition-colors group">
+                  <div key={pb.id} className="bg-bg-card border border-border-main rounded-xl p-5 flex flex-col hover:border-primary-500/30 transition-colors group">
                      <div className={`p-2.5 rounded-lg w-fit mb-4 ${pb.bgColor} ${pb.color}`}>
                         <pb.icon className="w-5 h-5" />
                      </div>
-                     <h3 className="text-sm font-medium text-white mb-2">{pb.title}</h3>
-                     <p className="text-xs text-zinc-500 mb-4 flex-1 leading-relaxed">
+                     <h3 className="text-sm font-medium text-text-primary mb-2">{pb.title}</h3>
+                     <p className="text-xs text-text-secondary mb-4 flex-1 leading-relaxed">
                         {pb.description}
                      </p>
                      <div className="space-y-2 mb-4">
-                        <p className="text-xs text-zinc-600 uppercase">Focus Areas</p>
+                        <p className="text-xs text-text-tertiary uppercase">Focus Areas</p>
                         <div className="flex flex-wrap gap-1.5">
                            {pb.focus.map(f => (
-                              <span key={f} className="text-[10px] bg-white/5 text-zinc-400 px-2 py-0.5 rounded border border-white/5">
+                              <span key={f} className="text-[10px] bg-bg-hover text-text-secondary px-2 py-0.5 rounded border border-border-main">
                                  {f}
                               </span>
                            ))}
@@ -186,31 +186,31 @@ export const TemplateLibraryView: React.FC<TemplateLibraryViewProps> = ({ onAppl
          <section>
             <div className="flex items-center gap-2 mb-4">
                <Scale className="w-5 h-5 text-emerald-500" />
-               <h2 className="text-lg font-medium text-white">Right Sizing Strategies</h2>
+               <h2 className="text-lg font-medium text-text-primary">Right Sizing Strategies</h2>
             </div>
-            <p className="text-xs text-zinc-500 mb-4">Resource allocation and capacity planning profiles</p>
+            <p className="text-xs text-text-secondary mb-4">Resource allocation and capacity planning profiles</p>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                {sizingTemplates.map(pr => (
-                  <div key={pr.id} className="bg-dark-card border border-white/10 rounded-xl p-5 flex flex-col hover:border-white/20 transition-colors group">
+                  <div key={pr.id} className="bg-bg-card border border-border-main rounded-xl p-5 flex flex-col hover:border-primary-500/30 transition-colors group">
                      <div className={`p-2.5 rounded-lg w-fit mb-4 ${pr.bgColor} ${pr.color}`}>
                         <pr.icon className="w-5 h-5" />
                      </div>
-                     <h3 className="text-sm font-medium text-white mb-2">{pr.title}</h3>
-                     <p className="text-xs text-zinc-500 mb-4 flex-1 leading-relaxed">
+                     <h3 className="text-sm font-medium text-text-primary mb-2">{pr.title}</h3>
+                     <p className="text-xs text-text-secondary mb-4 flex-1 leading-relaxed">
                         {pr.description}
                      </p>
-                     <div className="mb-4 p-3 rounded-lg bg-dark-bg border border-white/5">
+                     <div className="mb-4 p-3 rounded-lg bg-bg-main border border-border-main">
                         <div className="flex justify-between items-center mb-2">
-                           <p className="text-xs text-zinc-500">Target Efficiency</p>
-                           <span className="text-xs font-medium text-white">{pr.id === 'Cost-Saver' ? '92%' : pr.id === 'Balanced' ? '78%' : '55%'}</span>
+                           <p className="text-xs text-text-secondary">Target Efficiency</p>
+                           <span className="text-xs font-medium text-text-primary">{pr.id === 'Cost-Saver' ? '92%' : pr.id === 'Balanced' ? '78%' : '55%'}</span>
                         </div>
-                        <div className="w-full bg-zinc-800 h-1.5 rounded-full overflow-hidden">
+                        <div className="w-full bg-bg-hover h-1.5 rounded-full overflow-hidden">
                            <div className={`h-full ${pr.id === 'Cost-Saver' ? 'w-[92%] bg-emerald-500' : pr.id === 'Balanced' ? 'w-[78%] bg-blue-500' : 'w-[55%] bg-purple-500'}`}></div>
                         </div>
                      </div>
                      <button
                         onClick={() => onApplyTemplate(pr.view, pr.id)}
-                        className="w-full flex items-center justify-center gap-2 py-2.5 bg-white/10 hover:bg-white/20 text-white text-xs font-medium rounded-lg transition-colors"
+                        className="w-full flex items-center justify-center gap-2 py-2.5 bg-primary-600 hover:bg-primary-500 text-white text-xs font-medium rounded-lg transition-colors"
                      >
                         Apply Strategy <ArrowRight className="w-3.5 h-3.5" />
                      </button>
@@ -223,30 +223,30 @@ export const TemplateLibraryView: React.FC<TemplateLibraryViewProps> = ({ onAppl
          <section>
             <div className="flex items-center gap-2 mb-4">
                <ShieldCheck className="w-5 h-5 text-amber-500" />
-               <h2 className="text-lg font-medium text-white">Automation & Security</h2>
+               <h2 className="text-lg font-medium text-text-primary">Automation & Security</h2>
             </div>
-            <p className="text-xs text-zinc-500 mb-4">Proactive background guardrails & automated fixes</p>
+            <p className="text-xs text-text-secondary mb-4">Proactive background guardrails & automated fixes</p>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                {recipes.map(recipe => (
-                  <div key={recipe.ID} className={`bg-dark-card border rounded-xl p-5 flex items-center justify-between group transition-all ${recipe.IsEnabled ? 'border-amber-500/30' : 'border-white/10 opacity-60'}`}>
+                  <div key={recipe.ID} className={`bg-bg-card border rounded-xl p-5 flex items-center justify-between group transition-all ${recipe.IsEnabled ? 'border-warning/30' : 'border-border-main opacity-60'}`}>
                      <div className="flex items-center gap-4">
-                        <div className={`p-2.5 rounded-lg ${recipe.TriggerType === 'Security' ? 'bg-rose-500/10 text-rose-500' : 'bg-amber-500/10 text-amber-500'}`}>
+                        <div className={`p-2.5 rounded-lg ${recipe.TriggerType === 'Security' ? 'bg-danger-light text-danger' : 'bg-warning-light text-warning'}`}>
                            {recipe.TriggerType === 'Security' ? <Shield className="w-5 h-5" /> : <Zap className="w-5 h-5" />}
                         </div>
                         <div>
-                           <h3 className="text-sm font-medium text-white">{recipe.Name}</h3>
-                           <p className="text-xs text-zinc-500 mt-0.5">{recipe.Description}</p>
+                           <h3 className="text-sm font-medium text-text-primary">{recipe.Name}</h3>
+                           <p className="text-xs text-text-secondary mt-0.5">{recipe.Description}</p>
                         </div>
                      </div>
                      <div className="flex items-center gap-3">
-                        <div className={`px-2.5 py-1 rounded-full text-[10px] font-medium ${recipe.IsEnabled ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-zinc-800 text-zinc-500 border border-zinc-700'}`}>
+                        <div className={`px-2.5 py-1 rounded-full text-[10px] font-medium ${recipe.IsEnabled ? 'bg-success-light text-success border border-success/20' : 'bg-bg-hover text-text-tertiary border border-border-main'}`}>
                            {recipe.IsEnabled ? 'Active' : 'Paused'}
                         </div>
                         <button
                            onClick={() => handleToggleRecipe(recipe.ID)}
-                           className="p-2 hover:bg-white/5 rounded-lg transition-colors"
+                           className="p-2 hover:bg-bg-hover rounded-lg transition-colors"
                         >
-                           {recipe.IsEnabled ? <Pause className="w-4 h-4 text-zinc-400" /> : <Play className="w-4 h-4 text-primary-500" />}
+                           {recipe.IsEnabled ? <Pause className="w-4 h-4 text-text-secondary" /> : <Play className="w-4 h-4 text-primary-500" />}
                         </button>
                      </div>
                   </div>

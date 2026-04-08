@@ -110,21 +110,21 @@ const CustomTooltip = ({ active, payload, isDarkMode, type }: any) => {
     const unit = type === 'cpu' ? 'c' : type === 'memory' ? 'Mi' : 'Gi';
     const valKey = type === 'cpu' ? 'cpuUsage' : type === 'memory' ? 'memoryUsage' : 'storageUsage';
     const limitKey = type === 'cpu' ? 'cpuLimit' : type === 'memory' ? 'memoryLimit' : 'storageLimit';
-    const color = type === 'cpu' ? 'text-indigo-500' : type === 'memory' ? 'text-emerald-500' : 'text-amber-500';
+    const color = type === 'cpu' ? 'text-primary-500' : type === 'memory' ? 'text-emerald-500' : 'text-amber-500';
 
     return (
-      <div className={`p-4 rounded-2xl border shadow-2xl text-[12px] min-w-[220px] font-mono backdrop-blur-md ${isDarkMode ? 'bg-[#16191E]/95 border-white/10 text-gray-300' : 'bg-white/95 border-gray-200 text-gray-700'}`}>
-        <div className="font-black border-b border-gray-100 dark:border-white/5 pb-2 mb-3 uppercase tracking-widest text-gray-500">
+      <div className={`p-4 rounded-2xl border shadow-2xl text-xs min-w-[220px] backdrop-blur-md bg-bg-card border-border-main text-text-secondary font-sans`}>
+        <div className="font-semibold border-b border-border-main pb-2 mb-3 uppercase tracking-widest text-[10px] text-text-tertiary">
           Frame: {data.time}
         </div>
         <div className="space-y-2">
           <div className="flex justify-between gap-4 items-center">
-            <span className="font-bold opacity-60 uppercase tracking-tighter">Demand</span>
-            <span className={`font-black ${color}`}>{data[valKey].toFixed(2)}{unit}</span>
+            <span className="font-medium text-text-tertiary uppercase tracking-tight text-[10px]">Demand</span>
+            <span className={`font-bold ${color}`}>{data[valKey].toFixed(2)}{unit}</span>
           </div>
           <div className="flex justify-between gap-4 items-center">
-            <span className="font-bold opacity-60 uppercase tracking-tighter">Sim Limit</span>
-            <span className="font-black text-zinc-500">{data[limitKey].toFixed(2)}{unit}</span>
+            <span className="font-medium text-text-tertiary uppercase tracking-tight text-[10px]">Sim Limit</span>
+            <span className="font-bold text-text-muted">{data[limitKey].toFixed(2)}{unit}</span>
           </div>
         </div>
       </div>
@@ -147,17 +147,17 @@ export const RightSizingView: React.FC<RightSizingViewProps> = ({ workloads, isD
   if (!workloads || workloads.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[600px] animate-in fade-in duration-500">
-        <div className="p-6 bg-zinc-100 dark:bg-zinc-800 rounded-full mb-6 relative">
-          <Server className="w-12 h-12 text-zinc-400" />
+        <div className="p-6 bg-bg-hover rounded-full mb-6 relative">
+          <Server className="w-12 h-12 text-text-tertiary" />
           <div className="absolute top-0 right-0 w-4 h-4 bg-amber-500 rounded-full animate-ping" />
         </div>
-        <h2 className="text-2xl font-black text-zinc-900 dark:text-white uppercase tracking-tighter mb-2">No Optimization Candidates</h2>
-        <p className="text-zinc-500 max-w-md text-center mb-8">
+        <h2 className="text-2xl font-black text-text-primary uppercase tracking-tighter mb-2">No Optimization Candidates</h2>
+        <p className="text-text-tertiary max-w-md text-center mb-8 text-sm">
           We couldn't detect any workloads to analyze. Please ensure your cluster is connected and has active deployments.
         </p>
         <button
           onClick={() => onRefresh?.()}
-          className="px-6 py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl shadow-lg hover:scale-105 transition-all flex items-center gap-2"
+          className="kt-button kt-button-primary"
         >
           <Activity className="w-4 h-4" /> Refresh Data
         </button>
@@ -284,7 +284,7 @@ export const RightSizingView: React.FC<RightSizingViewProps> = ({ workloads, isD
     switch (status) {
       case 'Running': return { icon: <CheckCircle2 className="w-4 h-4" />, color: 'text-emerald-500', bg: 'bg-emerald-500/10' };
       case 'Pending': return { icon: <Clock className="w-4 h-4 animate-pulse" />, color: 'text-amber-500', bg: 'bg-amber-500/10' };
-      default: return { icon: <Activity className="w-4 h-4" />, color: 'text-zinc-400', bg: 'bg-zinc-400/10' };
+      default: return { icon: <Activity className="w-4 h-4" />, color: 'text-text-tertiary', bg: 'bg-text-tertiary/10' };
     }
   };
 
@@ -295,29 +295,29 @@ export const RightSizingView: React.FC<RightSizingViewProps> = ({ workloads, isD
 
       <aside className={`
         ${selectedId && !isSidebarOpen ? 'hidden' : 'flex'}
-        lg:flex w-full lg:w-80 h-auto lg:h-full shrink-0 bg-white dark:bg-dark-card rounded-[2.5rem] overflow-hidden flex flex-col border border-gray-100 dark:border-white/5 shadow-sm
+        lg:flex w-full lg:w-80 h-auto lg:h-full shrink-0 bg-bg-card rounded-[2.5rem] overflow-hidden flex flex-col border border-border-main shadow-sm
       `}>
-        <div className="p-5 md:p-6 border-b border-zinc-100 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950/50">
-          <h3 className="font-black text-zinc-900 dark:text-white flex items-center gap-2 uppercase tracking-tighter text-base">
-            <Scale className="w-5 h-5 text-indigo-500" /> Infrastructure Fleet
+        <div className="p-5 md:p-6 border-b border-border-main bg-bg-hover/50">
+          <h3 className="font-black text-text-primary flex items-center gap-2 uppercase tracking-tighter text-base">
+            <Scale className="w-5 h-5 text-primary-500" /> Infrastructure Fleet
           </h3>
           <div className="mt-6 relative">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-text-tertiary pointer-events-none" />
             <input
               type="text"
               placeholder="Search services..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-12 pr-4 py-3 bg-white dark:bg-dark-bg border border-gray-100 dark:border-white/5 rounded-2xl text-[11px] font-black uppercase focus:outline-none focus:ring-2 focus:ring-primary-500/50"
+              className="kt-input pl-11 pr-4 text-xs font-medium"
             />
           </div>
         </div>
-        <div className="flex-1 overflow-y-auto p-3 space-y-1.5 bg-zinc-50/30 dark:bg-black/10">
+        <div className="flex-1 overflow-y-auto p-3 space-y-1.5 bg-bg-hover/30">
           {filteredWorkloads.map(w => (
             <div
               key={w.id}
               onClick={() => { setSelectedId(w.id); setRecommendation(null); setIsSidebarOpen(false); }}
-              className={`p-5 rounded-2xl cursor-pointer transition-all border-2 ${selectedId === w.id ? 'bg-primary-600 text-white border-primary-500 shadow-xl shadow-primary-600/20' : 'bg-white dark:bg-dark-card border-transparent hover:bg-gray-100 dark:hover:bg-white/5'}`}
+              className={`p-5 rounded-2xl cursor-pointer transition-all border-2 ${selectedId === w.id ? 'bg-primary-600 text-white border-primary-500 shadow-xl shadow-primary-600/20' : 'bg-bg-card border-border-main hover:bg-bg-hover'}`}
             >
               <div className="flex justify-between items-center mb-1">
                 <span className="text-sm font-black truncate uppercase tracking-tight">{w.name}</span>
@@ -333,23 +333,23 @@ export const RightSizingView: React.FC<RightSizingViewProps> = ({ workloads, isD
 
       <main className={`
         ${!selectedId || isSidebarOpen ? 'hidden' : 'flex'}
-        lg:flex flex-1 min-w-0 bg-white dark:bg-dark-card rounded-[2.5rem] overflow-hidden flex flex-col border border-gray-100 dark:border-white/5 shadow-sm
+        lg:flex flex-1 min-w-0 bg-bg-card rounded-[2.5rem] overflow-hidden flex flex-col border border-border-main shadow-sm
       `}>
         {selectedWorkload ? (
           <div className="flex flex-col h-full min-h-0">
-            <header className="p-5 md:p-6 border-b border-zinc-100 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-950/50 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 shrink-0 relative z-20">
+            <header className="p-5 md:p-6 border-b border-border-main bg-bg-hover/50 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 shrink-0 relative z-20">
               <div className="flex items-center gap-4">
-                <button onClick={() => setIsSidebarOpen(true)} className="lg:hidden p-2.5 rounded-2xl bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700">
-                  <ChevronLeft className="w-5 h-5 text-indigo-500" />
+                <button onClick={() => setIsSidebarOpen(true)} className="lg:hidden p-2.5 rounded-2xl bg-bg-card border border-border-main">
+                  <ChevronLeft className="w-5 h-5 text-primary-500" />
                 </button>
                 <div className="p-4 bg-primary-600 rounded-[1.25rem] shadow-xl shadow-primary-600/20 shrink-0">
                   <Gauge className="w-6 h-6 text-white" />
                 </div>
                 <div className="min-w-0">
-                  <h2 className="text-2xl md:text-3xl font-black text-gray-900 dark:text-white tracking-tighter leading-none">{selectedWorkload.name}</h2>
+                  <h2 className="text-2xl md:text-3xl font-black text-text-primary tracking-tighter leading-none">{selectedWorkload.name}</h2>
                   <div className="flex items-center gap-3 mt-1.5">
-                    <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{selectedWorkload.namespace}</span>
-                    <span className="text-[10px] px-2 py-0.5 rounded-md bg-primary-100 dark:bg-primary-900/40 text-primary-600 dark:text-primary-300 font-black uppercase tracking-widest">{selectedWorkload.kind}</span>
+                    <span className="text-[10px] font-black text-text-tertiary uppercase tracking-widest">{selectedWorkload.namespace}</span>
+                    <span className="text-[10px] px-2 py-0.5 rounded-md bg-primary-100 text-primary-600 font-black uppercase tracking-widest">{selectedWorkload.kind}</span>
                   </div>
                 </div>
               </div>
@@ -361,60 +361,60 @@ export const RightSizingView: React.FC<RightSizingViewProps> = ({ workloads, isD
               </div>
             </header>
 
-            <div className="flex-1 overflow-y-auto p-5 md:p-6 space-y-10 bg-zinc-50/20 dark:bg-black/20 pb-20">
+            <div className="flex-1 overflow-y-auto p-5 md:p-6 space-y-10 bg-bg-hover/20 pb-20">
               {/* Simulation Cockpit */}
-              <section className="bg-white dark:bg-zinc-900 rounded-[3rem] border-2 border-zinc-100 dark:border-zinc-800 shadow-xl overflow-hidden">
-                <div className="p-6 md:p-8 border-b border-zinc-100 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-950/50 flex items-center justify-between">
+              <section className="bg-bg-card rounded-[3rem] border-2 border-border-main shadow-xl overflow-hidden">
+                <div className="p-6 md:p-8 border-b border-border-main bg-bg-hover/50 flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <div className="p-3 bg-primary-600 rounded-2xl shadow-lg shadow-primary-600/20"><Settings2 className="w-5 h-5 text-white" /></div>
                     <div>
-                      <h3 className="text-sm font-black uppercase tracking-widest text-zinc-900 dark:text-white">Right-Sizing Simulation Cockpit</h3>
-                      <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">Simulate resource caps to detect potential DiskPressure or OOM evictions</p>
+                      <h3 className="text-sm font-black uppercase tracking-widest text-text-primary">Right-Sizing Simulation Cockpit</h3>
+                      <p className="text-[10px] font-black text-text-tertiary uppercase tracking-widest">Simulate resource caps to detect potential DiskPressure or OOM evictions</p>
                     </div>
                   </div>
                 </div>
 
                 <div className="p-8 space-y-8">
                   {/* CPU Slider */}
-                  <div className="flex flex-col xl:flex-row gap-8 items-center bg-zinc-50/50 dark:bg-zinc-950/50 p-6 rounded-3xl border border-zinc-100 dark:border-zinc-800">
+                  <div className="flex flex-col xl:flex-row gap-8 items-center bg-bg-hover/50 p-6 rounded-3xl border border-border-main">
                     <div className="flex-[3] w-full space-y-4">
                       <div className="flex justify-between items-end">
                         <div className="flex items-center gap-2"><Cpu className="w-4 h-4 text-primary-500" /><label className="text-[10px] font-black uppercase text-gray-400 tracking-widest">CPU Limit (Simulated)</label></div>
                         <span className="text-2xl font-black font-mono text-primary-500">{adjustedCpuLimit.toFixed(2)}c</span>
                       </div>
-                      <input type="range" min="0.01" max={selectedWorkload.metrics.cpuLimit * 2} step="0.01" value={adjustedCpuLimit} onChange={(e) => setAdjustedCpuLimit(parseFloat(e.target.value))} className="w-full h-3 bg-gray-100 dark:bg-dark-bg rounded-full appearance-none cursor-pointer accent-primary-600" />
+                      <input type="range" min="0.01" max={selectedWorkload.metrics.cpuLimit * 2} step="0.01" value={adjustedCpuLimit} onChange={(e) => setAdjustedCpuLimit(parseFloat(e.target.value))} className="w-full h-3 bg-bg-hover rounded-full appearance-none cursor-pointer accent-primary-600" />
                     </div>
-                    <div className="flex-[1] w-full p-4 rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 text-center">
-                      <p className="text-[8px] font-black uppercase text-zinc-400 mb-1">CPU Load</p>
-                      <div className={`text-xl font-black ${parseFloat(analysis?.cpuEfficiency || '0') > 90 ? 'text-rose-500' : 'text-indigo-500'}`}>{analysis?.cpuEfficiency}%</div>
+                    <div className="flex-[1] w-full p-4 rounded-2xl bg-bg-card border border-border-main text-center">
+                      <p className="text-[8px] font-black uppercase text-text-tertiary mb-1">CPU Load</p>
+                      <div className={`text-xl font-black ${parseFloat(analysis?.cpuEfficiency || '0') > 90 ? 'text-rose-500' : 'text-primary-500'}`}>{analysis?.cpuEfficiency}%</div>
                     </div>
                   </div>
 
                   {/* Memory Slider */}
-                  <div className="flex flex-col xl:flex-row gap-8 items-center bg-zinc-50/50 dark:bg-zinc-950/50 p-6 rounded-3xl border border-zinc-100 dark:border-zinc-800">
+                  <div className="flex flex-col xl:flex-row gap-8 items-center bg-bg-hover/50 p-6 rounded-3xl border border-border-main">
                     <div className="flex-[3] w-full space-y-4">
                       <div className="flex justify-between items-end">
                         <div className="flex items-center gap-2"><MemoryStick className="w-4 h-4 text-emerald-500" /><label className="text-[10px] font-black uppercase text-zinc-400 tracking-widest">Memory Limit (Simulated)</label></div>
                         <span className="text-2xl font-black font-mono text-emerald-500">{adjustedMemoryLimit.toFixed(0)}Mi</span>
                       </div>
-                      <input type="range" min="10" max={selectedWorkload.metrics.memoryLimit * 2} step="10" value={adjustedMemoryLimit} onChange={(e) => setAdjustedMemoryLimit(parseFloat(e.target.value))} className="w-full h-3 bg-zinc-100 dark:bg-zinc-800 rounded-full appearance-none cursor-pointer accent-emerald-500" />
+                      <input type="range" min="10" max={selectedWorkload.metrics.memoryLimit * 2} step="10" value={adjustedMemoryLimit} onChange={(e) => setAdjustedMemoryLimit(parseFloat(e.target.value))} className="w-full h-3 bg-bg-hover rounded-full appearance-none cursor-pointer accent-emerald-500" />
                     </div>
-                    <div className="flex-[1] w-full p-4 rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 text-center">
-                      <p className="text-[8px] font-black uppercase text-zinc-400 mb-1">RAM Load</p>
+                    <div className="flex-[1] w-full p-4 rounded-2xl bg-bg-card border border-border-main text-center">
+                      <p className="text-[8px] font-black uppercase text-text-tertiary mb-1">RAM Load</p>
                       <div className={`text-xl font-black ${parseFloat(analysis?.memEfficiency || '0') > 90 ? 'text-rose-500' : 'text-emerald-500'}`}>{analysis?.memEfficiency}%</div>
                     </div>
                   </div>
 
                   {/* Storage Slider */}
-                  <div className="flex flex-col xl:flex-row gap-8 items-center bg-zinc-50/50 dark:bg-zinc-950/50 p-6 rounded-3xl border border-zinc-100 dark:border-zinc-800">
+                  <div className="flex flex-col xl:flex-row gap-8 items-center bg-bg-hover/50 p-6 rounded-3xl border border-border-main">
                     <div className="flex-[3] w-full space-y-4">
                       <div className="flex justify-between items-end">
                         <div className="flex items-center gap-2"><HardDrive className="w-4 h-4 text-amber-500" /><label className="text-[10px] font-black uppercase text-zinc-400 tracking-widest">Ephemeral Storage Limit</label></div>
                         <span className="text-2xl font-black font-mono text-amber-500">{adjustedStorageLimit.toFixed(1)}Gi</span>
                       </div>
-                      <input type="range" min="0.1" max={(selectedWorkload.metrics.storageLimit || 5) * 2} step="0.1" value={adjustedStorageLimit} onChange={(e) => setAdjustedStorageLimit(parseFloat(e.target.value))} className="w-full h-3 bg-zinc-100 dark:bg-zinc-800 rounded-full appearance-none cursor-pointer accent-amber-500" />
+                      <input type="range" min="0.1" max={(selectedWorkload.metrics.storageLimit || 5) * 2} step="0.1" value={adjustedStorageLimit} onChange={(e) => setAdjustedStorageLimit(parseFloat(e.target.value))} className="w-full h-3 bg-bg-hover rounded-full appearance-none cursor-pointer accent-amber-500" />
                     </div>
-                    <div className="flex-[1] w-full p-4 rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 text-center">
+                    <div className="flex-[1] w-full p-4 rounded-2xl bg-bg-card border border-border-main text-center">
                       <p className="text-[8px] font-black uppercase text-zinc-400 mb-1">Disk Load</p>
                       <div className={`text-xl font-black ${parseFloat(analysis?.storageEfficiency || '0') > 90 ? 'text-rose-500' : 'text-amber-500'}`}>{analysis?.storageEfficiency}%</div>
                     </div>
@@ -425,9 +425,9 @@ export const RightSizingView: React.FC<RightSizingViewProps> = ({ workloads, isD
               {/* Telemetry Grid */}
               <div className="grid grid-cols-1 gap-8">
                 {/* CPU Chart */}
-                <div className="bg-white dark:bg-zinc-900 rounded-[2.5rem] border border-zinc-100 dark:border-zinc-800 p-8 shadow-sm">
+                <div className="bg-bg-card rounded-[2.5rem] border border-border-main p-8 shadow-sm">
                   <h3 className="text-[10px] font-black uppercase tracking-widest text-zinc-400 mb-8 flex items-center gap-2">
-                    <Cpu className="w-4 h-4 text-indigo-500" /> CPU Demand Simulation
+                    <Cpu className="w-4 h-4 text-primary-500" /> CPU Demand Simulation
                   </h3>
                   <div className="h-[240px] w-full relative">
                     <ResponsiveContainer width="100%" height="100%">
@@ -444,7 +444,7 @@ export const RightSizingView: React.FC<RightSizingViewProps> = ({ workloads, isD
                 </div>
 
                 {/* RAM Chart */}
-                <div className="bg-white dark:bg-zinc-900 rounded-[2.5rem] border border-zinc-100 dark:border-zinc-800 p-8 shadow-sm">
+                <div className="bg-bg-card rounded-[2.5rem] border border-border-main p-8 shadow-sm">
                   <h3 className="text-[10px] font-black uppercase tracking-widest text-zinc-400 mb-8 flex items-center gap-2">
                     <MemoryStick className="w-4 h-4 text-emerald-500" /> Memory Pressure Simulation
                   </h3>
@@ -463,7 +463,7 @@ export const RightSizingView: React.FC<RightSizingViewProps> = ({ workloads, isD
                 </div>
 
                 {/* Storage Chart */}
-                <div className="bg-white dark:bg-zinc-900 rounded-[2.5rem] border border-zinc-100 dark:border-zinc-800 p-8 shadow-sm">
+                <div className="bg-bg-card rounded-[2.5rem] border border-border-main p-8 shadow-sm">
                   <h3 className="text-[10px] font-black uppercase tracking-widest text-zinc-400 mb-8 flex items-center gap-2">
                     <HardDrive className="w-4 h-4 text-amber-500" /> Ephemeral Storage Demand
                   </h3>
@@ -491,13 +491,13 @@ export const RightSizingView: React.FC<RightSizingViewProps> = ({ workloads, isD
               {/* Recommendation Section */}
               {recommendation && (
                 <section className="animate-in fade-in slide-in-from-bottom-8 duration-700 pb-20">
-                  <div className="bg-white dark:bg-zinc-900 border-2 border-indigo-500/30 rounded-[3.5rem] overflow-hidden shadow-2xl relative">
-                    <div className="p-8 border-b border-zinc-100 dark:border-zinc-800 bg-zinc-50/80 dark:bg-zinc-950/80 backdrop-blur-md flex justify-between items-center sticky top-0 z-10">
-                      <h3 className="text-xl font-black text-zinc-900 dark:text-white flex items-center gap-3 uppercase tracking-tighter">
-                        <Sparkles className="w-6 h-6 text-indigo-500" /> AI Capacity Intelligence
+                  <div className="bg-bg-card border-2 border-primary-500/30 rounded-[3.5rem] overflow-hidden shadow-2xl relative">
+                    <div className="p-8 border-b border-border-main bg-bg-hover/80 backdrop-blur-md flex justify-between items-center sticky top-0 z-10">
+                      <h3 className="text-xl font-black text-text-primary flex items-center gap-3 uppercase tracking-tighter">
+                        <Sparkles className="w-6 h-6 text-primary-500" /> AI Capacity Intelligence
                       </h3>
                     </div>
-                    <div className="p-10 md:p-14 prose prose-indigo max-w-none dark:prose-invert">
+                    <div className="p-10 md:p-14 prose prose-primary max-w-none prose-invert">
                       <ReactMarkdown
                         components={{
                           code({ node, inline, className, children, ...props }: any) {
@@ -509,7 +509,7 @@ export const RightSizingView: React.FC<RightSizingViewProps> = ({ workloads, isD
                                 </SyntaxHighlighter>
                               </div>
                             ) : (
-                              <code className="bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 px-2 py-0.5 rounded-lg font-mono text-xs font-bold" {...props}>{children}</code>
+                              <code className="bg-primary-500/10 text-primary-600 px-2 py-0.5 rounded-lg font-mono text-xs font-bold" {...props}>{children}</code>
                             )
                           }
                         }}
@@ -524,9 +524,9 @@ export const RightSizingView: React.FC<RightSizingViewProps> = ({ workloads, isD
           </div>
         ) : (
           <div className="flex-1 flex flex-col items-center justify-center p-12 text-center h-full">
-            <Scale className="w-12 h-12 text-indigo-500 mb-8 animate-bounce" />
-            <h3 className="text-2xl font-black text-zinc-900 dark:text-white tracking-tighter mb-4 uppercase">Capacity Simulation Workspace</h3>
-            <p className="text-sm text-zinc-500 dark:text-zinc-400 max-w-sm font-semibold">Select a workload from the infrastructure fleet to initiate multi-dimensional capacity simulation.</p>
+            <Scale className="w-12 h-12 text-primary-500 mb-8 animate-bounce" />
+            <h3 className="text-2xl font-black text-text-primary tracking-tighter mb-4 uppercase">Capacity Simulation Workspace</h3>
+            <p className="text-sm text-text-tertiary max-w-sm font-semibold">Select a workload from the infrastructure fleet to initiate multi-dimensional capacity simulation.</p>
           </div>
         )}
       </main>

@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { Bot, Cpu, Check, AlertCircle, Loader2 } from 'lucide-react';
+import { Bot, Cpu, Check, AlertCircle, Loader2, RefreshCw, Clock } from 'lucide-react';
 import { useMonitoring } from '../contexts/MonitoringContext';
 
 export const SettingsView: React.FC = () => {
-    const { aiConfig, updateAIConfig, notificationSettings, updateNotificationSettings } = useMonitoring();
+    const { aiConfig, updateAIConfig, notificationSettings, updateNotificationSettings, isDarkMode, refreshInterval, setRefreshInterval } = useMonitoring();
     const [fetchedModels, setFetchedModels] = useState<string[]>([]);
     const [isLoadingModels, setIsLoadingModels] = useState(false);
     const [fetchError, setFetchError] = useState<string | null>(null);
@@ -61,72 +61,72 @@ export const SettingsView: React.FC = () => {
     };
 
     return (
-        <div className="w-full h-full p-6 overflow-y-auto custom-scrollbar">
+        <div className="w-full h-full p-6 overflow-y-auto custom-scrollbar bg-bg-main animate-fade-in">
             <div className="max-w-3xl mx-auto space-y-6 pb-20">
                 <div className="flex flex-col gap-1">
-                    <h1 className="text-2xl font-semibold text-white">
+                    <h1 className="text-2xl font-bold text-text-primary tracking-tight">
                         Settings
                     </h1>
-                    <p className="text-sm text-zinc-500">
+                    <p className="text-sm text-text-tertiary">
                         Manage AI provider and notification preferences.
                     </p>
                 </div>
 
-                <div className="bg-dark-card border border-white/10 rounded-xl overflow-hidden shadow-sm">
+                <div className="bg-bg-card border border-border-main rounded-2xl overflow-hidden shadow-sm shadow-black/5">
                     {/* Header Section */}
-                    <div className="p-5 border-b border-white/5 flex items-center gap-4">
-                        <div className="p-2.5 bg-primary-500/10 rounded-lg">
-                            <Bot className="w-5 h-5 text-primary-400" />
+                    <div className="p-5 border-b border-border-main flex items-center gap-4 bg-bg-hover/30">
+                        <div className="p-2.5 bg-primary-500/10 rounded-xl">
+                            <Bot className="w-5 h-5 text-primary-500 dark:text-primary-400" />
                         </div>
                         <div>
-                            <h2 className="text-base font-medium text-white">AI Provider</h2>
-                            <p className="text-xs text-zinc-500">Configure the LLM backend for analysis.</p>
+                            <h2 className="text-base font-semibold text-text-primary">AI Provider</h2>
+                            <p className="text-xs text-text-tertiary">Configure the LLM backend for analysis.</p>
                         </div>
                     </div>
 
                     <div className="p-5 space-y-6">
                         {/* Provider Selection */}
                         <div className="space-y-3">
-                            <label className="text-xs font-medium text-zinc-400 uppercase flex items-center gap-1.5">
+                            <label className="text-[10px] font-bold text-text-tertiary uppercase tracking-wider flex items-center gap-1.5 opacity-70">
                                 <Cpu className="w-3.5 h-3.5" /> Provider
                             </label>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                                 <button
                                     onClick={() => { setProvider('gemini'); setModel(''); }}
-                                    className={`relative p-4 rounded-lg border text-left transition-all ${provider === 'gemini'
-                                        ? 'border-primary-500 bg-primary-500/10'
-                                        : 'border-white/10 hover:border-white/20 hover:bg-white/5'}`}
+                                    className={`relative p-5 rounded-xl border text-left transition-all duration-200 group ${provider === 'gemini'
+                                        ? 'border-primary-500 bg-primary-500/5 ring-1 ring-primary-500/50'
+                                        : 'border-border-main hover:border-primary-500/30 hover:bg-bg-hover active:scale-[0.98]'}`}
                                 >
                                     <div className="flex items-center justify-between mb-2">
-                                        <span className="font-medium text-white">Google Gemini</span>
-                                        <span className={`px-2 py-0.5 rounded text-[10px] font-medium ${provider === 'gemini' ? 'bg-primary-500 text-white' : 'bg-zinc-800 text-zinc-500'}`}>Cloud</span>
+                                        <span className={`font-semibold transition-colors ${provider === 'gemini' ? 'text-primary-500 dark:text-primary-400' : 'text-text-primary'}`}>Google Gemini</span>
+                                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${provider === 'gemini' ? 'bg-primary-500 text-white' : 'bg-bg-hover text-text-tertiary border border-border-main'}`}>Cloud</span>
                                     </div>
-                                    <p className="text-xs text-zinc-500 leading-relaxed">
+                                    <p className="text-xs text-text-tertiary leading-relaxed">
                                         High-performance cloud inference. Requires API key.
                                     </p>
                                     {provider === 'gemini' && (
-                                        <div className="absolute top-3 right-3">
-                                            <div className="p-1 rounded-full bg-primary-500/20"><Check className="w-3 h-3 text-primary-400" /></div>
+                                        <div className="absolute top-4 right-4">
+                                            <div className="p-1 rounded-full bg-primary-500/20"><Check className="w-3 h-3 text-primary-500 dark:text-primary-400" /></div>
                                         </div>
                                     )}
                                 </button>
 
                                 <button
                                     onClick={() => { setProvider('ollama'); setModel(''); }}
-                                    className={`relative p-4 rounded-lg border text-left transition-all ${provider === 'ollama'
-                                        ? 'border-emerald-500 bg-emerald-500/10'
-                                        : 'border-white/10 hover:border-white/20 hover:bg-white/5'}`}
+                                    className={`relative p-5 rounded-xl border text-left transition-all duration-200 group ${provider === 'ollama'
+                                        ? 'border-emerald-500 bg-emerald-500/5 ring-1 ring-emerald-500/50'
+                                        : 'border-border-main hover:border-emerald-500/30 hover:bg-bg-hover active:scale-[0.98]'}`}
                                 >
                                     <div className="flex items-center justify-between mb-2">
-                                        <span className="font-medium text-white">Ollama</span>
-                                        <span className={`px-2 py-0.5 rounded text-[10px] font-medium ${provider === 'ollama' ? 'bg-emerald-500 text-white' : 'bg-zinc-800 text-zinc-500'}`}>Local</span>
+                                        <span className={`font-semibold transition-colors ${provider === 'ollama' ? 'text-emerald-500 dark:text-emerald-400' : 'text-text-primary'}`}>Ollama</span>
+                                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${provider === 'ollama' ? 'bg-emerald-500 text-white' : 'bg-bg-hover text-text-tertiary border border-border-main'}`}>Local</span>
                                     </div>
-                                    <p className="text-xs text-zinc-500 leading-relaxed">
+                                    <p className="text-xs text-text-tertiary leading-relaxed">
                                         Private, local inference. Best for air-gapped environments.
                                     </p>
                                     {provider === 'ollama' && (
-                                        <div className="absolute top-3 right-3">
-                                            <div className="p-1 rounded-full bg-emerald-500/20"><Check className="w-3 h-3 text-emerald-400" /></div>
+                                        <div className="absolute top-4 right-4">
+                                            <div className="p-1 rounded-full bg-emerald-500/20"><Check className="w-3 h-3 text-emerald-500 dark:text-emerald-400" /></div>
                                         </div>
                                     )}
                                 </button>
@@ -135,69 +135,114 @@ export const SettingsView: React.FC = () => {
 
                         {/* Model Selection */}
                         <div className="space-y-2">
-                            <label className="text-xs font-medium text-zinc-400 uppercase">
-                                Model
+                            <label className="text-[10px] font-bold text-text-tertiary uppercase tracking-wider opacity-70">
+                                ModelSelection
                             </label>
 
                             {isLoadingModels ? (
-                                <div className="flex items-center gap-2 text-zinc-400 text-sm p-3 bg-white/5 rounded-lg border border-white/5">
+                                <div className="flex items-center gap-2 text-text-tertiary text-sm p-4 bg-bg-hover rounded-xl border border-border-main animate-pulse">
                                     <Loader2 className="w-4 h-4 animate-spin text-primary-500" />
-                                    <span>Loading models...</span>
+                                    <span className="font-medium">Fetching models...</span>
                                 </div>
                             ) : fetchError ? (
-                                <div className="p-3 bg-rose-500/10 border border-rose-500/20 text-rose-300 text-sm rounded-lg flex items-center gap-2">
+                                <div className="p-4 bg-rose-500/5 border border-rose-500/20 text-rose-600 dark:text-rose-400 text-sm rounded-xl flex items-center gap-2 shadow-sm">
                                     <AlertCircle className="w-4 h-4 shrink-0" />
-                                    <span>{fetchError}</span>
+                                    <span className="font-medium">{fetchError}</span>
                                 </div>
                             ) : (
-                                <div className="relative">
+                                <div className="relative group">
                                     <select
                                         value={model}
                                         onChange={(e) => setModel(e.target.value)}
-                                        className="w-full appearance-none bg-dark-bg border border-white/10 rounded-lg px-4 py-3 text-white text-sm focus:outline-none focus:border-primary-500/50 transition-colors cursor-pointer"
+                                        className="kt-input appearance-none cursor-pointer"
                                     >
-                                        <option value="" disabled>Select model...</option>
+                                        <option value="" disabled>Select a model...</option>
                                         {fetchedModels.map(m => (
-                                            <option key={m} value={m} className="bg-zinc-900">{m}</option>
+                                            <option key={m} value={m} className={isDarkMode ? 'bg-zinc-900' : 'bg-white'}>{m}</option>
                                         ))}
                                     </select>
-                                    <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-zinc-500">
-                                        <Cpu className="w-4 h-4" />
+                                    <div className="absolute right-5 top-1/2 -translate-y-1/2 pointer-events-none text-text-tertiary group-hover:text-primary-500 transition-colors">
+                                        <Cpu className="w-5 h-5 opacity-50" />
                                     </div>
                                 </div>
                             )}
-                            <p className="text-xs text-zinc-600">
-                                {provider === 'ollama' ? 'Models must be pulled via `ollama pull <model>` to appear here.' : 'Select the optimal model for your use case.'}
-                            </p>
+                            <div className="flex items-start gap-1.5 px-1">
+                                <div className="mt-1 w-1 h-1 rounded-full bg-primary-500/50" />
+                                <p className="text-[11px] text-text-tertiary leading-normal">
+                                    {provider === 'ollama' ? 'Models must be pulled via `ollama pull <model>` to appear here.' : 'Select the optimal model for your use case.'}
+                                </p>
+                            </div>
                         </div>
 
                         {/* Divider */}
-                        <div className="h-px w-full bg-white/5"></div>
+                        <div className="h-px w-full bg-border-main/50"></div>
+
+                        {/* Refresh Interval Settings */}
+                        <div className="space-y-3">
+                            <label className="text-[10px] font-bold text-text-tertiary uppercase tracking-wider opacity-70 flex items-center gap-1.5">
+                                <RefreshCw className="w-3.5 h-3.5" /> Auto Refresh
+                            </label>
+                            <div className="bg-bg-hover/20 rounded-xl p-5 border border-border-main space-y-4 shadow-inner">
+                                <div className="flex items-center justify-between">
+                                    <div>
+                                        <h3 className="text-sm font-semibold text-text-primary">Resource Refresh Interval</h3>
+                                        <p className="text-xs text-text-tertiary mt-1">How often to update workload and resource data.</p>
+                                    </div>
+                                    <div className="flex items-center gap-2 text-xs font-medium">
+                                        <Clock className="w-3.5 h-3.5 text-primary-500" />
+                                        <span className="font-bold text-primary-600 dark:text-primary-400 bg-primary-500/10 px-2 py-0.5 rounded-md min-w-[3rem] text-center">{refreshInterval}s</span>
+                                    </div>
+                                </div>
+                                <div className="flex flex-wrap gap-2 pt-2">
+                                    {[10, 30, 60].map((interval) => (
+                                        <button
+                                            key={interval}
+                                            onClick={() => setRefreshInterval(interval)}
+                                            className={`px-4 py-2 rounded-lg text-xs font-medium transition-all ${refreshInterval === interval
+                                                ? 'bg-primary-500 text-white shadow-lg shadow-primary-500/20'
+                                                : 'bg-bg-card border border-border-main text-text-secondary hover:text-text-primary hover:border-primary-500/30'
+                                                }`}
+                                        >
+                                            {interval}s
+                                        </button>
+                                    ))}
+                                </div>
+                                <div className="flex items-start gap-1.5 px-1 pt-2">
+                                    <div className="mt-1 w-1 h-1 rounded-full bg-primary-500/50" />
+                                    <p className="text-[11px] text-text-tertiary leading-normal">
+                                        Shorter intervals provide more real-time data but increase API load. 30s is recommended for most use cases.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Divider */}
+                        <div className="h-px w-full bg-border-main/50"></div>
 
                         {/* Notification Settings */}
                         <div className="space-y-3">
-                            <label className="text-xs font-medium text-zinc-400 uppercase flex items-center gap-1.5">
+                            <label className="text-[10px] font-bold text-text-tertiary uppercase tracking-wider opacity-70 flex items-center gap-1.5">
                                 <AlertCircle className="w-3.5 h-3.5" /> Notifications
                             </label>
-                            <div className="bg-dark-bg rounded-lg p-4 border border-white/5 space-y-4">
+                            <div className="bg-bg-hover/20 rounded-xl p-5 border border-border-main space-y-4 shadow-inner">
                                 <div className="flex items-center justify-between">
                                     <div>
-                                        <h3 className="text-sm font-medium text-white">Toast Notifications</h3>
-                                        <p className="text-xs text-zinc-500 mt-0.5">Display alerts when thresholds are breached.</p>
+                                        <h3 className="text-sm font-semibold text-text-primary">Toast Notifications</h3>
+                                        <p className="text-xs text-text-tertiary mt-1">Display alerts when thresholds are breached.</p>
                                     </div>
                                     <button
                                         onClick={() => updateNotificationSettings({ ...notificationSettings, toastEnabled: !notificationSettings.toastEnabled })}
-                                        className={`w-11 h-6 rounded-full transition-colors relative ${notificationSettings.toastEnabled ? 'bg-primary-600' : 'bg-zinc-700'}`}
+                                        className={`w-12 h-6.5 rounded-full transition-all relative border border-transparent shadow-sm ${notificationSettings.toastEnabled ? 'bg-primary-600 shadow-primary-500/30' : 'bg-bg-card border-border-main'}`}
                                     >
-                                        <div className={`absolute top-1 left-1 w-4 h-4 rounded-full bg-white transition-transform ${notificationSettings.toastEnabled ? 'translate-x-5' : 'translate-x-0'}`} />
+                                        <div className={`absolute top-1 left-1 w-4.5 h-4.5 rounded-full bg-white shadow-sm transition-transform duration-200 ${notificationSettings.toastEnabled ? 'translate-x-[22px]' : 'translate-x-0'}`} />
                                     </button>
                                 </div>
 
                                 {notificationSettings.toastEnabled && (
-                                    <div className="space-y-2 pt-3 border-t border-white/5">
+                                    <div className="space-y-3 pt-4 border-t border-border-main animate-fade-in">
                                         <div className="flex justify-between items-center text-xs">
-                                            <span className="text-zinc-400">Cooldown</span>
-                                            <span className="font-mono text-primary-400">{notificationSettings.toastFrequency}s</span>
+                                            <span className="text-text-secondary font-medium uppercase tracking-tight opacity-80">Cooldown Frequency</span>
+                                            <span className="font-bold text-primary-600 dark:text-primary-400 bg-primary-500/10 px-2 py-0.5 rounded-md min-w-[3rem] text-center">{notificationSettings.toastFrequency}s</span>
                                         </div>
                                         <input
                                             type="range"
@@ -206,7 +251,7 @@ export const SettingsView: React.FC = () => {
                                             step="1"
                                             value={notificationSettings.toastFrequency}
                                             onChange={(e) => updateNotificationSettings({ ...notificationSettings, toastFrequency: parseInt(e.target.value) })}
-                                            className="w-full h-1.5 bg-zinc-700 rounded-lg appearance-none cursor-pointer accent-primary-500"
+                                            className="w-full h-1.5 bg-bg-card border border-border-main rounded-lg appearance-none cursor-pointer accent-primary-500 shadow-sm"
                                         />
                                     </div>
                                 )}
@@ -215,18 +260,20 @@ export const SettingsView: React.FC = () => {
                     </div>
 
                     {/* Footer Action */}
-                    <div className="p-4 bg-white/5 border-t border-white/5 flex justify-end">
+                    <div className="p-4 bg-bg-hover/20 border-t border-border-main flex justify-end">
                         <button
                             onClick={handleSave}
                             disabled={isSaving}
-                            className="bg-primary-600 hover:bg-primary-500 disabled:opacity-70 text-white font-medium py-2 px-6 rounded-lg transition-colors text-sm flex items-center gap-2"
+                            className={`bg-primary-600 hover:bg-primary-500 disabled:opacity-70 text-white font-bold py-2.5 px-8 rounded-xl transition-all text-sm flex items-center gap-2 shadow-lg shadow-primary-500/20 active:scale-[0.98] ${isSaving ? 'animate-pulse' : ''}`}
                         >
                             {isSaving ? (
                                 <>
-                                    <Loader2 className="w-4 h-4 animate-spin" /> Saving...
+                                    <Loader2 className="w-4 h-4 animate-spin" /> saving...
                                 </>
                             ) : (
-                                'Save Changes'
+                                <>
+                                    <Check className="w-4 h-4" /> Save Configuration
+                                </>
                             )}
                         </button>
                     </div>

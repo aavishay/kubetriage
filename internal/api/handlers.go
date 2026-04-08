@@ -63,6 +63,7 @@ type K8sEvent struct {
 // Workload struct mapping to frontend
 type Workload struct {
 	ID                 string            `json:"id"`
+	ClusterID          string            `json:"clusterId"`
 	Name               string            `json:"name"`
 	Namespace          string            `json:"namespace"`
 	Kind               string            `json:"kind"`
@@ -975,6 +976,7 @@ func WorkloadsHandler(c *gin.Context) {
 				defer cancel()
 				w := Workload{
 					ID:                string(d.UID),
+					ClusterID:         clusterID,
 					Name:              d.Name,
 					Namespace:         d.Namespace,
 					Kind:              "Deployment",
@@ -1009,6 +1011,7 @@ func WorkloadsHandler(c *gin.Context) {
 				defer cancel()
 				w := Workload{
 					ID:                string(s.UID),
+					ClusterID:         clusterID,
 					Name:              s.Name,
 					Namespace:         s.Namespace,
 					Kind:              "StatefulSet",
@@ -1043,6 +1046,7 @@ func WorkloadsHandler(c *gin.Context) {
 				defer cancel()
 				w := Workload{
 					ID:                string(ds.UID),
+					ClusterID:         clusterID,
 					Name:              ds.Name,
 					Namespace:         ds.Namespace,
 					Kind:              "DaemonSet",
@@ -1170,7 +1174,7 @@ func WorkloadsHandler(c *gin.Context) {
 					}
 
 					w := Workload{
-						ID: string(uid), Name: name, Namespace: namespace, Kind: "ScaledJob",
+						ID: string(uid), ClusterID: clusterID, Name: name, Namespace: namespace, Kind: "ScaledJob",
 						Replicas: int32(childCount), AvailableReplicas: int32(running), Status: status,
 						Metrics:      getRealMetrics(enrichCtx, namespace, name, "Job", v1.PodSpec{}, window, jobLabels, int32(childCount)),
 						CostPerMonth: rand.Intn(100) + 10,

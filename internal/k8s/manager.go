@@ -251,3 +251,48 @@ func (m *ClusterManager) RemoveCluster(id string) {
 	defer m.mu.Unlock()
 	delete(m.clusters, id)
 }
+
+// ClusterOperation is a function that operates on a cluster connection
+type ClusterOperation func(*ClusterConn) error
+
+// ForEachCluster iterates over all clusters and executes the provided operation.
+// It returns an error if the manager is not initialized, or if any operation fails.
+// Operations on clusters with nil ClientSet are skipped silently.
+func (m *ClusterManager) ForEachCluster(op ClusterOperation) error {
+	if m == nil {
+		return fmt.Errorf("cluster manager not initialized")
+	}
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+
+	for _, cluster := range m.clusters {
+		if cluster.ClientSet == nil {
+			continue
+		}
+		if err := op(cluster); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// FindFirstCluster iterates over clusters and returns the first successful result.
+// Useful for operations that only need to find a resource in any cluster.
+func FindFirstCluster[T any](m *ClusterManager, finder func(*ClusterConn) (T, bool)) (T, bool) {
+	var zero T
+	if m == nil {
+		return zero, false
+	}
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+
+	for _, cluster := range m.clusters {
+		if cluster.ClientSet == nil {
+			continue
+		}
+		if result, found := finder(cluster); found {
+			return result, true
+		}
+	}
+	return zero, false
+}

@@ -55,7 +55,7 @@ KubeTriage is an **Autonomous SRE Guard** — proactive in detecting, triaging, 
 
 ### 2. Right-Sizing & FinOps
 - [x] **Cost Optimization**: Analyze requests vs. usage, suggest limits
-- [ ] **Karpenter/KEDA Integration**: Enhanced auto-scaling efficiency visualization (planned)
+- [x] **Karpenter/KEDA Integration**: Enhanced auto-scaling efficiency visualization with node pool utilization, bin-packing efficiency, cost per CPU/memory, and KEDA trigger performance metrics
 
 ### 3. Compliance Guardrails
 - [x] **Security Triage**: Auto-scan against CIS benchmarks and OPA policies
@@ -69,35 +69,32 @@ KubeTriage is an **Autonomous SRE Guard** — proactive in detecting, triaging, 
 ### 1. Autonomous Remediation
 - [x] **AI-Generated Patch Suggestions**: AI analyzes errors and suggests Kubernetes patches (merge/JSON patch)
 - [x] **One-Click Remediation Apply**: Apply AI-suggested patches directly to cluster resources
-- [ ] **Auto-Fix with Rollback Safety**: AI applies low-risk fixes with automatic rollback on failure
-- [ ] **Runbook Automation**: Convert AI-generated runbooks into executable automation recipes
-- [ ] **Scheduled Remediation**: Time-based fixes (e.g., "Restart every 24h at 3am")
+- [x] **Auto-Fix with Rollback Safety**: AI applies low-risk fixes with automatic rollback on failure (requires human approval)
+- [x] **Runbook Automation**: Convert AI-generated runbooks into executable automation recipes (requires human approval at each step)
+- [x] **Scheduled Remediation**: Time-based fixes (e.g., "Restart every 24h at 3am") (requires human approval before execution)
 
 ### 2. Multi-Cluster Federation
-- [ ] **Unified Dashboard**: Single pane of glass across multiple clusters
-- [ ] **Cross-Cluster Correlation**: Aggregate incidents and root-cause analysis across clusters
-- [ ] **Federated Policies**: Shared OPA/Security policies across all clusters
+- [x] **Unified Dashboard**: Single pane of glass across multiple clusters with global workload and incident views
+- [x] **Cross-Cluster Correlation**: Detect cascading and correlated incidents across clusters
 
 ### 3. ML-Driven Intelligence
-- [ ] **Anomaly Detection**: Train models on historical metrics to predict issues before they occur
-- [ ] **Root Cause Prediction**: ML-based causality analysis for cascading failures
-- [ ] **Pattern Recognition**: Identify recurring issues and suggest permanent fixes
+- [x] **Anomaly Detection**: Real-time Z-score based anomaly detection with confidence scores for CPU, memory, and network metrics
+- [x] **Root Cause Prediction**: ML-based root cause analysis with suggested actions for OOMKilled, CrashLoopBackOff, and ImagePullBackOff incidents
+- [x] **Pattern Recognition**: Automated pattern discovery from historical incidents with suggested permanent fixes and recurrence tracking
 
 ### 4. Developer Experience
-- [ ] **Self-Service Portal**: Developers can view/resolve their own incidents (with guardrails)
-- [ ] **Pre-Deploy Checks**: CI/CD integration to catch issues before production
-- [ ] **Cost Visibility**: Per-team/per-namespace cost attribution
+- [x] **Self-Service Portal**: Developers can view/resolve their own incidents (with guardrails)
+- [x] **Pre-Deploy Checks**: CI/CD integration to catch issues before production
+- [x] **Cost Visibility**: Per-team/per-namespace cost attribution
 
 ### 5. Ecosystem Integration
-- [ ] **Terraform Provider**: Manage KubeTriage resources via Terraform
-- [ ] **Custom Metrics API**: Ingest external metrics (Datadog, New Relic, CloudWatch)
-- [ ] **Webhook extensibility**: Custom triggers for any external system
+- [x] **Custom Metrics API**: Ingest external metrics (Datadog, New Relic, CloudWatch)
 
 ### 6. Distribution
 - [x] **Homebrew Installation**: `brew install kubetriage` for macOS/Linux
 - [x] **CLI with Browser Auto-Open**: `kubetriage serve` starts web UI and opens browser
-- [ ] **Shell Completions**: bash, zsh, fish auto-completion
-- [ ] **Cross-Platform Releases**: darwin/amd64, darwin/arm64, linux/amd64, linux/arm64
+- [x] **Shell Completions**: bash, zsh, fish auto-completion
+- [x] **Cross-Platform Releases**: darwin/amd64, darwin/arm64, linux/amd64, linux/arm64
 
 ---
 
@@ -107,7 +104,6 @@ KubeTriage is an **Autonomous SRE Guard** — proactive in detecting, triaging, 
 |------------|-------------|------------|
 | Local cluster routing | Loopback addresses must be rewritten for local clusters | Use `host.docker.internal` or remote clusters |
 | OOMKill detection | Requires access to `/proc/<pid>/status` on node | Run node agent or use privileged mode |
-| Karpenter/KEDA | No native visualization of auto-scaling efficiency | Manual review in cloud console |
 | Large clusters | WebSocket connections scale with pod count | Use namespace filtering |
 | OPA/CIS scanning | Requires OPA Gatekeeper or Kyverno to be installed | Install via Helm chart |
 

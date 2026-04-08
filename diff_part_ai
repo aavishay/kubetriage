@@ -1,0 +1,1000 @@
+       "dev": true,
+       "license": "MIT",
+       "dependencies": {
+-        "@vitest/expect": "4.0.16",
+-        "@vitest/mocker": "4.0.16",
+-        "@vitest/pretty-format": "4.0.16",
+-        "@vitest/runner": "4.0.16",
+-        "@vitest/snapshot": "4.0.16",
+-        "@vitest/spy": "4.0.16",
+-        "@vitest/utils": "4.0.16",
+-        "es-module-lexer": "^1.7.0",
+-        "expect-type": "^1.2.2",
++        "@vitest/expect": "4.1.2",
++        "@vitest/mocker": "4.1.2",
++        "@vitest/pretty-format": "4.1.2",
++        "@vitest/runner": "4.1.2",
++        "@vitest/snapshot": "4.1.2",
++        "@vitest/spy": "4.1.2",
++        "@vitest/utils": "4.1.2",
++        "es-module-lexer": "^2.0.0",
++        "expect-type": "^1.3.0",
+         "magic-string": "^0.30.21",
+         "obug": "^2.1.1",
+         "pathe": "^2.0.3",
+         "picomatch": "^4.0.3",
+-        "std-env": "^3.10.0",
++        "std-env": "^4.0.0-rc.1",
+         "tinybench": "^2.9.0",
+         "tinyexec": "^1.0.2",
+         "tinyglobby": "^0.2.15",
+-        "tinyrainbow": "^3.0.3",
+-        "vite": "^6.0.0 || ^7.0.0",
++        "tinyrainbow": "^3.1.0",
++        "vite": "^6.0.0 || ^7.0.0 || ^8.0.0",
+         "why-is-node-running": "^2.3.0"
+       },
+       "bin": {
+@@ -9299,12 +11126,13 @@
+         "@edge-runtime/vm": "*",
+         "@opentelemetry/api": "^1.9.0",
+         "@types/node": "^20.0.0 || ^22.0.0 || >=24.0.0",
+-        "@vitest/browser-playwright": "4.0.16",
+-        "@vitest/browser-preview": "4.0.16",
+-        "@vitest/browser-webdriverio": "4.0.16",
+-        "@vitest/ui": "4.0.16",
++        "@vitest/browser-playwright": "4.1.2",
++        "@vitest/browser-preview": "4.1.2",
++        "@vitest/browser-webdriverio": "4.1.2",
++        "@vitest/ui": "4.1.2",
+         "happy-dom": "*",
+-        "jsdom": "*"
++        "jsdom": "*",
++        "vite": "^6.0.0 || ^7.0.0 || ^8.0.0"
+       },
+       "peerDependenciesMeta": {
+         "@edge-runtime/vm": {
+@@ -9333,9 +11161,61 @@
+         },
+         "jsdom": {
+           "optional": true
++        },
++        "vite": {
++          "optional": false
+         }
+       }
+     },
++    "node_modules/vscode-jsonrpc": {
++      "version": "8.2.0",
++      "resolved": "https://registry.npmjs.org/vscode-jsonrpc/-/vscode-jsonrpc-8.2.0.tgz",
++      "integrity": "sha512-C+r0eKJUIfiDIfwJhria30+TYWPtuHJXHtI7J0YlOmKAo7ogxP20T0zxB7HZQIFhIyvoBPwWskjxrvAtfjyZfA==",
++      "license": "MIT",
++      "engines": {
++        "node": ">=14.0.0"
++      }
++    },
++    "node_modules/vscode-languageserver": {
++      "version": "9.0.1",
++      "resolved": "https://registry.npmjs.org/vscode-languageserver/-/vscode-languageserver-9.0.1.tgz",
++      "integrity": "sha512-woByF3PDpkHFUreUa7Hos7+pUWdeWMXRd26+ZX2A8cFx6v/JPTtd4/uN0/jB6XQHYaOlHbio03NTHCqrgG5n7g==",
++      "license": "MIT",
++      "dependencies": {
++        "vscode-languageserver-protocol": "3.17.5"
++      },
++      "bin": {
++        "installServerIntoExtension": "bin/installServerIntoExtension"
++      }
++    },
++    "node_modules/vscode-languageserver-protocol": {
++      "version": "3.17.5",
++      "resolved": "https://registry.npmjs.org/vscode-languageserver-protocol/-/vscode-languageserver-protocol-3.17.5.tgz",
++      "integrity": "sha512-mb1bvRJN8SVznADSGWM9u/b07H7Ecg0I3OgXDuLdn307rl/J3A9YD6/eYOssqhecL27hK1IPZAsaqh00i/Jljg==",
++      "license": "MIT",
++      "dependencies": {
++        "vscode-jsonrpc": "8.2.0",
++        "vscode-languageserver-types": "3.17.5"
++      }
++    },
++    "node_modules/vscode-languageserver-textdocument": {
++      "version": "1.0.12",
++      "resolved": "https://registry.npmjs.org/vscode-languageserver-textdocument/-/vscode-languageserver-textdocument-1.0.12.tgz",
++      "integrity": "sha512-cxWNPesCnQCcMPeenjKKsOCKQZ/L6Tv19DTRIGuLWe32lyzWhihGVJ/rcckZXJxfdKCFvRLS3fpBIsV/ZGX4zA==",
++      "license": "MIT"
++    },
++    "node_modules/vscode-languageserver-types": {
++      "version": "3.17.5",
++      "resolved": "https://registry.npmjs.org/vscode-languageserver-types/-/vscode-languageserver-types-3.17.5.tgz",
++      "integrity": "sha512-Ld1VelNuX9pdF39h2Hgaeb5hEZM2Z3jUrrMgWQAu82jMtZp7p3vJT3BzToKtZI7NgQssZje5o0zryOrhQvzQAg==",
++      "license": "MIT"
++    },
++    "node_modules/vscode-uri": {
++      "version": "3.1.0",
++      "resolved": "https://registry.npmjs.org/vscode-uri/-/vscode-uri-3.1.0.tgz",
++      "integrity": "sha512-/BpdSx+yCQGnCvecbyXdxHDkuk55/G3xwnC0GqY4gmQ3j+A+g8kzzgB4Nk/SINjqn6+waqw3EgbVF2QKExkRxQ==",
++      "license": "MIT"
++    },
+     "node_modules/w3c-xmlserializer": {
+       "version": "5.0.0",
+       "resolved": "https://registry.npmjs.org/w3c-xmlserializer/-/w3c-xmlserializer-5.0.0.tgz",
+diff --git a/frontend/services/geminiService.ts b/frontend/services/geminiService.ts
+index 24ba989..aa1b83d 100644
+--- a/frontend/services/geminiService.ts
++++ b/frontend/services/geminiService.ts
+@@ -35,9 +35,9 @@ export const analyzeWorkload = async (
+             playbookInstructions = "Perform a holistic root cause analysis covering all aspects of reliability including CPU, RAM, and Disk storage.";
+     }
+ 
+-    // Setup timeout for frontend request (1 minute to prevent eternal UI loading if overwhelmed)
++    // Setup timeout for frontend request (10 minutes to match backend timeout for local AI)
+     const controller = new AbortController();
+-    const timeoutId = setTimeout(() => controller.abort(), 60000);
++    const timeoutId = setTimeout(() => controller.abort(), 600000);
+ 
+     try {
+         const response = await fetch('/api/ai/analyze', {
+@@ -50,6 +50,7 @@ export const analyzeWorkload = async (
+             body: JSON.stringify({
+                 provider, // Added
+                 model, // Added
++                clusterId: workload.clusterId,
+                 workloadName: workload.name,
+                 namespace: workload.namespace,
+                 kind: workload.kind,
+@@ -91,7 +92,7 @@ export const analyzeWorkload = async (
+         clearTimeout(timeoutId);
+         console.error("Gemini API Error (Backend):", error);
+         if (error instanceof DOMException && error.name === 'AbortError') {
+-            return { analysis: "Error: Analysis request timed out after 1 minute. The local AI might be overwhelmed. Please try again." };
++            return { analysis: "Error: Analysis request timed out after 10 minutes. The local AI might be overwhelmed. Please try again." };
+         }
+         return { analysis: `Error generating analysis: ${error instanceof Error ? error.message : String(error)}` };
+     }
+diff --git a/frontend/styles/design-system.css b/frontend/styles/design-system.css
+index 4e69707..a7dd911 100644
+--- a/frontend/styles/design-system.css
++++ b/frontend/styles/design-system.css
+@@ -19,42 +19,55 @@
+   --color-primary-800: #075985;
+   --color-primary-900: #0c4a6e;
+ 
+-  /* Dark Theme Surface Colors */
+-  --color-dark-bg: #0B0D11;
+-  --color-dark-card: #12151B;
+-  --color-dark-border: #1E232B;
+-  --color-dark-lighter: #1A1E26;
+-  --color-dark-hover: #252a33;
+-
+-  /* Light Theme Surface Colors */
+-  --color-light-bg: #fafafa;
+-  --color-light-card: #ffffff;
+-  --color-light-border: #e4e4e7;
+-  --color-light-hover: #f4f4f5;
++  /* Themed Surface Colors (Dynamic) */
++  --color-bg-main: var(--kt-bg-main);
++  --color-bg-card: var(--kt-bg-card);
++  --color-border-main: var(--kt-border-main);
++  --color-bg-hover: var(--kt-bg-hover);
++  --color-text-primary: var(--kt-fg-primary);
++  --color-text-secondary: var(--kt-fg-secondary);
++
++  /* Semantic Feedback Colors */
++  --color-success: var(--kt-success);
++  --color-success-light: var(--kt-success-light);
++  --color-warning: var(--kt-warning);
++  --color-warning-light: var(--kt-warning-light);
++  --color-danger: var(--kt-danger);
++  --color-danger-light: var(--kt-danger-light);
++  --color-info: var(--kt-info);
++  --color-info-light: var(--kt-info-light);
+ 
+   /* Font Families */
+-  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+-  --font-display: 'Space Grotesk', sans-serif;
++  --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
++  --font-display: 'Bricolage Grotesque', sans-serif;
+   --font-mono: 'JetBrains Mono', monospace;
+ }
+ 
+ /* ============================================
+-   COLOR TOKENS
++   COLOR TOKENS & SEMANTIC SCALES
+    ============================================ */
+ :root {
+-  /* Primary Brand Colors */
++  /* Brand Constants */
+   --kt-primary-50: #f0faff;
+-  --kt-primary-100: #e0f2fe;
+-  --kt-primary-200: #bae6fd;
+-  --kt-primary-300: #7dd3fc;
+-  --kt-primary-400: #38bdf8;
+   --kt-primary-500: #0ea5e9;
+   --kt-primary-600: #0284c7;
+-  --kt-primary-700: #0369a1;
+-  --kt-primary-800: #075985;
+-  --kt-primary-900: #0c4a6e;
+ 
+-  /* Semantic Colors */
++  /* Base Light Theme (Default) */
++  --kt-bg-main: #f9fafb;
++  --kt-bg-card: #ffffff;
++  --kt-bg-hover: #f3f4f6;
++  --kt-border-main: #e5e7eb;
++
++  --kt-fg-primary: #111827;
++  --kt-fg-secondary: #4b5563;
++  --kt-fg-tertiary: #9ca3af;
++  --kt-fg-muted: #d1d5db;
++
++  /* Semantic Overlay (Glass) */
++  --kt-glass-bg: rgba(255, 255, 255, 0.7);
++  --kt-glass-border: rgba(0, 0, 0, 0.05);
++
++  /* Semantic Feedback */
+   --kt-success: #10b981;
+   --kt-success-light: rgba(16, 185, 129, 0.1);
+   --kt-warning: #f59e0b;
+@@ -64,171 +77,116 @@
+   --kt-info: #8b5cf6;
+   --kt-info-light: rgba(139, 92, 246, 0.1);
+ 
+-  /* Accent Colors */
+-  --kt-accent-cyan: #22d3ee;
+-  --kt-accent-violet: #8b5cf6;
+-  --kt-accent-rose: #f43f5e;
+-
+-  /* Dark Theme Surface Colors */
+-  --kt-dark-bg: #0B0D11;
+-  --kt-dark-card: #12151B;
+-  --kt-dark-border: #1E232B;
+-  --kt-dark-lighter: #1A1E26;
+-  --kt-dark-hover: #252a33;
+-
+-  /* Text Colors (Dark Theme) */
+-  --kt-text-primary: #ffffff;
+-  --kt-text-secondary: #a1a1aa;
+-  --kt-text-tertiary: #71717a;
+-  --kt-text-muted: #52525b;
+-
+-  /* Light Theme Surface Colors */
+-  --kt-light-bg: #fafafa;
+-  --kt-light-card: #ffffff;
+-  --kt-light-border: #e4e4e7;
+-  --kt-light-hover: #f4f4f5;
+-
+-  /* Text Colors (Light Theme) */
+-  --kt-light-text-primary: #18181b;
+-  --kt-light-text-secondary: #52525b;
+-  --kt-light-text-tertiary: #71717a;
+-  --kt-light-text-muted: #a1a1aa;
+-}
+-
+-/* ============================================
+-   SPACING SCALE (8px base)
+-   ============================================ */
+-:root {
+-  --kt-space-0: 0;
+-  --kt-space-1: 4px;
+-  --kt-space-2: 8px;
+-  --kt-space-3: 12px;
+-  --kt-space-4: 16px;
+-  --kt-space-5: 20px;
+-  --kt-space-6: 24px;
+-  --kt-space-8: 32px;
+-  --kt-space-10: 40px;
+-  --kt-space-12: 48px;
+-  --kt-space-16: 64px;
+-  --kt-space-20: 80px;
+-  --kt-space-24: 96px;
+-}
++  /* Shadows */
++  --kt-shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
++  --kt-shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
++  --kt-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.05);
++  --kt-shadow-glow-primary: 0 0 20px rgba(14, 165, 233, 0.3);
+ 
+-/* ============================================
+-   BORDER RADIUS SCALE
+-   ============================================ */
+-:root {
+-  --kt-radius-none: 0;
+-  --kt-radius-sm: 6px;
+-  --kt-radius-md: 10px;
+-  --kt-radius-lg: 16px;
+-  --kt-radius-xl: 24px;
+-  --kt-radius-2xl: 32px;
+-  --kt-radius-full: 9999px;
+-}
+-
+-/* ============================================
+-   SHADOW SCALE
+-   ============================================ */
+-:root {
+-  /* Dark Theme Shadows */
+-  --kt-shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+-  --kt-shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -2px rgba(0, 0, 0, 0.3);
+-  --kt-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.5), 0 4px 6px -4px rgba(0, 0, 0, 0.4);
+-  --kt-shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.4);
+-  --kt-shadow-glow-primary: 0 0 20px rgba(14, 165, 233, 0.15);
+-  --kt-shadow-glow-success: 0 0 20px rgba(16, 185, 129, 0.15);
+-  --kt-shadow-glow-danger: 0 0 20px rgba(244, 63, 94, 0.15);
+-
+-  /* Light Theme Shadows */
+-  --kt-shadow-sm-light: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+-  --kt-shadow-md-light: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+-  --kt-shadow-lg-light: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.05);
+-}
+-
+-/* ============================================
+-   TYPOGRAPHY SCALE
+-   ============================================ */
+-:root {
+-  /* Font Families */
+-  --kt-font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+-  --kt-font-display: 'Space Grotesk', sans-serif;
+-  --kt-font-mono: 'JetBrains Mono', monospace;
+-
+-  /* Font Sizes */
+-  --kt-text-xs: 12px;
+-  --kt-text-sm: 14px;
+-  --kt-text-base: 16px;
+-  --kt-text-lg: 18px;
+-  --kt-text-xl: 20px;
+-  --kt-text-2xl: 24px;
+-  --kt-text-3xl: 30px;
+-  --kt-text-4xl: 36px;
++  /* Darker overlay variants (for dropdowns, modals, etc.) */
++  --kt-dark-lighter: #1a1e26;
++  --kt-dark-hover: #262b35;
++  --kt-dark-border: rgba(255, 255, 255, 0.08);
+ 
+   /* Font Weights */
+   --kt-font-normal: 400;
+   --kt-font-medium: 500;
+   --kt-font-semibold: 600;
+   --kt-font-bold: 700;
+-  --kt-font-black: 800;
+-
+-  /* Line Heights */
+-  --kt-leading-tight: 1.25;
+-  --kt-leading-snug: 1.375;
+-  --kt-leading-normal: 1.5;
+-  --kt-leading-relaxed: 1.625;
++  --kt-font-black: 900;
+ 
+-  /* Letter Spacing */
++  /* Font Sizes */
++  --kt-text-xs: 0.75rem;
++  --kt-text-sm: 0.875rem;
++  --kt-text-base: 1rem;
++  --kt-text-lg: 1.125rem;
++  --kt-text-xl: 1.25rem;
++  --kt-text-2xl: 1.5rem;
++
++  /* Tracking */
+   --kt-tracking-tight: -0.025em;
+-  --kt-tracking-normal: 0;
++  --kt-tracking-normal: 0em;
+   --kt-tracking-wide: 0.025em;
+   --kt-tracking-wider: 0.05em;
+-  --kt-tracking-widest: 0.1em;
++
++  /* Transitions */
++  --kt-duration-fast: 150ms;
++  --kt-duration-normal: 200ms;
++  --kt-duration-slow: 300ms;
++  --kt-ease-default: ease-in-out;
++  --kt-ease-out: cubic-bezier(0.33, 1, 0.68, 1);
++}
++
++.dark {
++  /* Base Dark Theme (Override) */
++  --kt-bg-main: #0B0D11;
++  --kt-bg-card: #12151B;
++  --kt-bg-hover: #1A1E26;
++  --kt-border-main: #1E232B;
++
++  --kt-fg-primary: #ffffff;
++  --kt-fg-secondary: #a1a1aa;
++  --kt-fg-tertiary: #71717a;
++  --kt-fg-muted: #52525b;
++
++  /* Semantic Overlay (Glass) */
++  --kt-glass-bg: rgba(18, 21, 27, 0.8);
++  --kt-glass-border: rgba(255, 255, 255, 0.05);
++
++  /* Semantic Feedback - Light variants for dark mode */
++  --kt-success-light: rgba(16, 185, 129, 0.15);
++  --kt-warning-light: rgba(245, 158, 11, 0.15);
++  --kt-danger-light: rgba(244, 63, 94, 0.15);
++  --kt-info-light: rgba(139, 92, 246, 0.15);
++
++  /* Shadows */
++  --kt-shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
++  --kt-shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -2px rgba(0, 0, 0, 0.3);
++  --kt-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.5), 0 4px 6px -4px rgba(0, 0, 0, 0.4);
++  --kt-shadow-glow-primary: 0 0 20px rgba(14, 165, 233, 0.4);
++
++  /* Darker overlay variants (for dropdowns, modals, buttons) */
++  --kt-dark-lighter: #1a1e26;
++  --kt-dark-hover: #262b35;
++  --kt-dark-border: rgba(255, 255, 255, 0.08);
+ }
+ 
+ /* ============================================
+-   ANIMATION TOKENS
++   SPACING & RADIUS SCALES (Constants)
+    ============================================ */
+ :root {
+-  /* Durations */
+-  --kt-duration-fast: 150ms;
+-  --kt-duration-normal: 250ms;
+-  --kt-duration-slow: 350ms;
+-  --kt-duration-slower: 500ms;
++  --kt-space-1: 4px;
++  --kt-space-2: 8px;
++  --kt-space-3: 12px;
++  --kt-space-4: 16px;
++  --kt-space-6: 24px;
++  --kt-space-8: 32px;
+ 
+-  /* Easings */
+-  --kt-ease-default: cubic-bezier(0.4, 0, 0.2, 1);
+-  --kt-ease-in: cubic-bezier(0.4, 0, 1, 1);
+-  --kt-ease-out: cubic-bezier(0, 0, 0.2, 1);
+-  --kt-ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+-  --kt-ease-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
++  --kt-radius-md: 10px;
++  --kt-radius-lg: 16px;
++  --kt-radius-xl: 24px;
++  --kt-radius-full: 9999px;
+ }
+ 
+ /* ============================================
+-   COMPONENT TOKENS
++   COMPONENT TOKENS (Themed)
+    ============================================ */
+ :root {
+   /* Card */
+-  --kt-card-padding: var(--kt-space-6);
+-  --kt-card-padding-lg: var(--kt-space-8);
++  --kt-card-bg: var(--kt-bg-card);
++  --kt-card-border: 1px solid var(--kt-border-main);
+   --kt-card-radius: var(--kt-radius-xl);
+-  --kt-card-border: 1px solid var(--kt-dark-border);
+-  --kt-card-bg: var(--kt-dark-card);
++  --kt-card-padding: var(--kt-space-6);
+ 
+   /* Button */
+-  --kt-button-height-sm: 32px;
+-  --kt-button-height-md: 40px;
+-  --kt-button-height-lg: 48px;
+   --kt-button-radius: var(--kt-radius-lg);
+-  --kt-button-padding-x: var(--kt-space-4);
+ 
+   /* Input */
+-  --kt-input-height: 40px;
+   --kt-input-radius: var(--kt-radius-md);
+-  --kt-input-border: 1px solid var(--kt-dark-border);
++  --kt-input-border: 1px solid var(--kt-border-main);
+ 
+   /* Focus Ring */
+-  --kt-focus-ring: 0 0 0 2px var(--kt-dark-bg), 0 0 0 4px var(--kt-primary-500);
++  --kt-focus-ring: 0 0 0 2px var(--kt-bg-main), 0 0 0 4px var(--kt-primary-500);
+ }
+ 
+ /* ============================================
+@@ -254,13 +212,46 @@
+   border-color: rgba(14, 165, 233, 0.3);
+ }
+ 
++/* Form Inputs */
++.kt-input {
++  width: 100%;
++  background: var(--kt-bg-main);
++  border: var(--kt-input-border);
++  border-radius: var(--kt-radius-md);
++  padding: 0.625rem 0.875rem;
++  font-family: var(--font-sans);
++  font-size: var(--kt-text-sm);
++  color: var(--kt-fg-primary);
++  transition: border-color var(--kt-duration-fast) var(--kt-ease-default),
++              box-shadow var(--kt-duration-fast) var(--kt-ease-default);
++  outline: none;
++}
++
++.kt-input::placeholder {
++  color: var(--kt-fg-tertiary);
++}
++
++.kt-input:focus {
++  border-color: var(--kt-primary-500);
++  box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.15);
++}
++
++.kt-input:hover:not(:focus):not(:disabled) {
++  border-color: var(--kt-primary-500);
++}
++
++.kt-input:disabled {
++  opacity: 0.5;
++  cursor: not-allowed;
++}
++
+ /* Button Base */
+ .kt-button {
+   display: inline-flex;
+   align-items: center;
+   justify-content: center;
+   gap: var(--kt-space-2);
+-  font-family: var(--kt-font-sans);
++  font-family: var(--font-sans);
+   font-weight: var(--kt-font-semibold);
+   font-size: var(--kt-text-sm);
+   border-radius: var(--kt-button-radius);
+@@ -278,6 +269,18 @@
+   transform: scale(0.98);
+ }
+ 
++/* Button Size Variants */
++.kt-button-sm {
++  font-size: var(--kt-text-xs);
++  padding: 0.375rem 0.75rem;
++  gap: var(--kt-space-1);
++}
++
++.kt-button-lg {
++  font-size: var(--kt-text-base);
++  padding: 0.75rem 1.5rem;
++}
++
+ /* Button Variants */
+ .kt-button-primary {
+   background: var(--kt-primary-600);
+@@ -306,8 +309,27 @@
+ }
+ 
+ .kt-button-ghost:hover {
+-  background: rgba(255, 255, 255, 0.05);
+-  color: var(--kt-text-primary);
++  background: var(--kt-bg-hover);
++  color: var(--kt-fg-primary);
++}
++
++/* Danger Button Variant */
++.kt-button-danger {
++  background: var(--kt-danger);
++  color: white;
++}
++
++.kt-button-danger:hover {
++  background: var(--kt-danger);
++  opacity: 0.9;
++  box-shadow: 0 0 20px rgba(244, 63, 94, 0.3);
++}
++
++.kt-button-danger:disabled {
++  background: var(--kt-bg-hover);
++  color: var(--kt-fg-tertiary);
++  box-shadow: none;
++  cursor: not-allowed;
+ }
+ 
+ /* Status Badges */
+@@ -369,14 +391,14 @@
+ 
+ /* Glass Effect */
+ .kt-glass {
+-  background: rgba(18, 21, 27, 0.8);
++  background: var(--kt-glass-bg);
+   backdrop-filter: blur(12px);
+   -webkit-backdrop-filter: blur(12px);
+-  border: 1px solid rgba(255, 255, 255, 0.05);
++  border: 1px solid var(--kt-glass-border);
+ }
+ 
+ .kt-glass-strong {
+-  background: rgba(18, 21, 27, 0.95);
++  background: var(--kt-glass-bg);
+   backdrop-filter: blur(20px);
+   -webkit-backdrop-filter: blur(20px);
+ }
+@@ -428,6 +450,38 @@
+   animation: kt-pulse-soft 2s var(--kt-ease-default) infinite;
+ }
+ 
++/* Skeleton Loading */
++@keyframes kt-shimmer {
++  0% { background-position: -200% 0; }
++  100% { background-position: 200% 0; }
++}
++
++.kt-skeleton {
++  background: linear-gradient(
++    90deg,
++    var(--kt-bg-hover) 25%,
++    var(--kt-border-main) 50%,
++    var(--kt-bg-hover) 75%
++  );
++  background-size: 200% 100%;
++  animation: kt-shimmer 1.5s ease-in-out infinite;
++  border-radius: var(--kt-radius-md);
++}
++
++.kt-skeleton-text {
++  height: 0.875rem;
++  border-radius: 4px;
++}
++
++.kt-skeleton-heading {
++  height: 1.5rem;
++  border-radius: 6px;
++}
++
++.kt-skeleton-avatar {
++  border-radius: 50%;
++}
++
+ /* Reduced Motion */
+ @media (prefers-reduced-motion: reduce) {
+   *,
+diff --git a/frontend/types.ts b/frontend/types.ts
+index 93f63ac..a00a1be 100644
+--- a/frontend/types.ts
++++ b/frontend/types.ts
+@@ -18,6 +18,14 @@ export interface ResourceMetrics {
+   memoryAvg?: number;
+   memoryP95?: number;
+   memoryP99?: number;
++  // GPU Metrics
++  gpuRequest?: number; // Number of GPUs requested
++  gpuLimit?: number; // Number of GPUs limited
++  gpuUsage?: number; // Watts
++  gpuMemoryUsage?: number; // MiB
++  gpuMemoryTotal?: number; // MiB
++  gpuUtilization?: number; // Percentage 0-100
++  gpuTemperature?: number; // Celsius
+ }
+ 
+ export interface K8sEvent {
+@@ -37,11 +45,13 @@ export interface ProvisioningInfo {
+ 
+ export interface Workload {
+   id: string;
++  clusterId: string;
+   name: string;
+   namespace: string;
+   kind: 'Deployment' | 'StatefulSet' | 'DaemonSet' | 'ScaledJob';
+   replicas: number;
+   availableReplicas: number;
++  podCount: number; // Actual count of pods matching the selector
+   status: 'Healthy' | 'Warning' | 'Critical';
+   metrics: ResourceMetrics;
+   recentLogs: string[];
+@@ -124,7 +134,251 @@ export interface TriggeredAlert {
+   channelsNotified: string[];
+ }
+ 
+-export type ViewState = 'dashboard' | 'triage' | 'rightsizing' | 'topology' | 'organizations' | 'users' | 'notifications' | 'templates';
++export type ViewState = 'dashboard' | 'triage' | 'rightsizing' | 'scaling' | 'topology' | 'organizations' | 'users' | 'notifications' | 'templates';
++
++// Karpenter/KEDA Efficiency Metrics
++export interface KarpenterEfficiencyMetrics {
++  nodePoolName: string;
++  instanceTypes: string[];
++  totalNodes: number;
++  readyNodes: number;
++  pendingNodeClaims: number;
++  driftedNodes: number;
++  utilizationPercent: number;
++  binPackingEfficiency: number;
++  costPerCPU: number;
++  costPerGBMemory: number;
++  scaleUpLatencyAvg: number; // milliseconds
++  consolidationEnabled: boolean;
++  disruptionBudgets: Record<string, string>;
++  misconfigurations?: string[];
++}
++
++// Unified Provisioner Types (supports AWS Karpenter, Azure NAP, etc.)
++export type ProvisionerType = 'karpenter' | 'azure-nap' | 'cluster-autoscaler';
++export type CloudProvider = 'aws' | 'azure' | 'gcp';
++
++export interface AzureNodePoolDetails {
++  mode?: string; // System, User
++  osDiskType?: string;
++  osDiskSizeGB?: number;
++  maxPods?: number;
++  availabilityZones?: string[];
++  scaleSetPriority?: string;
++  enableAutoScaling?: boolean;
++}
++
++export interface AWSNodePoolDetails {
++  capacityType?: string; // spot, on-demand
++  instanceProfile?: string;
++  subnetSelector?: Record<string, string>;
++}
++
++export interface UnifiedNodePool {
++  name: string;
++  provisionerType: ProvisionerType;
++  provider: CloudProvider;
++  instanceTypes?: string[];
++  vmSizeNames?: string[];
++  totalNodes: number;
++  readyNodes: number;
++  pendingNodes: number;
++  driftedNodes: number;
++  utilizationPercent: number;
++  binPackingEfficiency: number;
++  costPerCPU: number;
++  costPerGBMemory: number;
++  consolidationEnabled: boolean;
++  disruptionBudgets?: Record<string, string>;
++  misconfigurations?: string[];
++  azureConfig?: AzureNodePoolDetails;
++  awsConfig?: AWSNodePoolDetails;
++}
++
++export interface ProvisionerSummary {
++  totalProvisioners: number;
++  totalNodePools: number;
++  totalNodes: number;
++  readyNodes: number;
++  avgUtilization: number;
++  avgBinPackingEfficiency: number;
++  costOptimizedCount: number;
++  issuesFound: number;
++}
++
++export interface UnifiedProvisionerMetrics {
++  provisionerType: ProvisionerType;
++  provider: CloudProvider;
++  nodePools: UnifiedNodePool[];
++  summary: ProvisionerSummary;
++}
++
++export interface KEDATriggerInfo {
++  type: string;
++  metricName: string;
++  targetValue: number;
++  currentValue: number;
++  triggerLatency: number; // milliseconds
++}
++
++// HPA (Horizontal Pod Autoscaler) Metrics
++export interface HPAScaleTargetRef {
++  apiVersion: string;
++  kind: string;
++  name: string;
++}
++
++export interface HPAMetricStatus {
++  currentUtilization: number;
++  targetUtilization: number;
++}
++
++export interface HPACustomMetric {
++  name: string;
++  type: string;
++  currentValue: number;
++  targetValue: number;
++  targetAverage: boolean;
++}
++
++export interface HPAMetrics {
++  name: string;
++  namespace: string;
++  scaleTargetRef: HPAScaleTargetRef;
++  minReplicas: number;
++  maxReplicas: number;
++  currentReplicas: number;
++  desiredReplicas: number;
++  cpuUtilization?: HPAMetricStatus;
++  memoryUtilization?: HPAMetricStatus;
++  customMetrics?: HPACustomMetric[];
++  isActive: boolean;
++  ableToScale: boolean;
++  scalingLimited: boolean;
++  lastScaleTime?: string;
++  misconfigurations?: string[];
++}
++
++export interface KEDAEfficiencyMetrics {
++  workloadName: string;
++  namespace: string;
++  scaleTargetType: string;
++  minReplicas: number;
++  maxReplicas: number;
++  currentReplicas: number;
++  desiredReplicas: number;
++  triggerTypes: KEDATriggerInfo[];
++  efficiencyScore: number; // 0-100
++  timeAtMinPercent: number;
++  timeAtMaxPercent: number;
++  scaleUpLatency: number; // milliseconds
++  cooldownEfficiency: number;
++  eventsPerSecond: number;
++  isReady: boolean;
++  isActive: boolean;
++  isFallback: boolean;
++  misconfigurations?: string[];
++}
++
++export interface EfficiencySummary {
++  totalNodePools: number;
++  totalKedaScalers: number;
++  totalHpaScalers: number;
++  avgNodeUtilization: number;
++  avgBinPackingEfficiency: number;
++  totalCostOptimized: number;
++  issuesFound: number;
++}
++
++// Multi-Cluster Federation Types
++export interface ClusterStatus {
++  id: string;
++  name: string;
++  status: 'Healthy' | 'Degraded' | 'Offline';
++  provider: string;
++  region: string;
++  version: string;
++  lastConnected: string;
++  nodeCount: number;
++  healthyNodeCount: number;
++  workloadCount: number;
++  incidentCount: number;
++  totalCpu: number;
++  totalMemory: number;
++  usedCpu: number;
++  usedMemory: number;
++  labels: Record<string, string>;
++}
++
++export interface AggregatedWorkload {
++  id: string;
++  name: string;
++  namespace: string;
++  kind: string;
++  clusterId: string;
++  clusterName: string;
++  status: 'Healthy' | 'Warning' | 'Critical';
++  replicas: number;
++  availableReplicas: number;
++  cpuUsage: number;
++  memoryUsage: number;
++  costPerMonth: number;
++  hasIncidents: boolean;
++  labels: Record<string, string>;
++}
++
++export interface AffectedWorkload {
++  workloadId: string;
++  name: string;
++  namespace: string;
++  clusterId: string;
++  clusterName: string;
++}
++
++export interface CrossClusterIncident {
++  id: string;
++  title: string;
++  description: string;
++  severity: 'Critical' | 'High' | 'Medium' | 'Low';
++  status: 'Active' | 'Resolved' | 'Investigating';
++  affectedClusters: string[];
++  affectedWorkloads: AffectedWorkload[];
++  startedAt: string;
++  resolvedAt?: string;
++  rootCause?: string;
++  pattern: 'Cascading' | 'Correlated' | 'Isolated';
++}
++
++export interface GlobalSummary {
++  totalClusters: number;
++  healthyClusters: number;
++  degradedClusters: number;
++  offlineClusters: number;
++  totalWorkloads: number;
++  healthyWorkloads: number;
++  warningWorkloads: number;
++  criticalWorkloads: number;
++  activeIncidents: number;
++  criticalIncidents: number;
++  totalCpu: number;
++  totalMemory: number;
++  cpuUtilization: number;
++  memoryUtilization: number;
++  estimatedMonthlyCost: number;
++}
++
++export interface ScalingEfficiencyResponse {
++  clusterId: string;
++  timestamp: string;
++  karpenterMetrics: KarpenterEfficiencyMetrics[];
++  kedaMetrics: KEDAEfficiencyMetrics[];
++  hpaMetrics: HPAMetrics[];
++  summary: EfficiencySummary;
++
++  // Unified provisioner support (new fields for Azure NAP and multi-provider)
++  unifiedProvisioners?: UnifiedProvisionerMetrics[];
++  detectedProvisioners?: string[]; // List of detected provisioner types
++}
+ 
+ export interface ChatMessage {
+   role: 'user' | 'model';
+diff --git a/frontend/vite.config.ts b/frontend/vite.config.ts
+index be782ed..e95e5fa 100644
+--- a/frontend/vite.config.ts
++++ b/frontend/vite.config.ts
+@@ -38,6 +38,7 @@ export default defineConfig(({ mode }) => {
+     },
+     // Build Optimization
+     build: {
++      chunkSizeWarningLimit: 1500,
+       rollupOptions: {
+         output: {
+           manualChunks: {
+@@ -45,7 +46,8 @@ export default defineConfig(({ mode }) => {
+             charts: ['recharts'],
+             icons: ['lucide-react'],
+             ai: ['@google/genai'],
+-            mermaid: ['mermaid']
++            mermaid: ['mermaid'],
++            cytoscape: ['cytoscape']
+           }
+         }
+       }
+diff --git a/go.mod b/go.mod
+index b5e1281..83f3f2d 100644
+--- a/go.mod
++++ b/go.mod
+@@ -18,6 +18,7 @@ require (
+ 	go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc v1.39.0
+ 	go.opentelemetry.io/otel/sdk v1.39.0
+ 	golang.org/x/sync v0.19.0
++	gonum.org/v1/gonum v0.16.0
+ 	google.golang.org/api v0.259.0
+ 	gorm.io/driver/postgres v1.6.0
+ 	gorm.io/gorm v1.31.1
+diff --git a/internal/ai/service.go b/internal/ai/service.go
+index 669d3ad..d5e1a4f 100644
+--- a/internal/ai/service.go
++++ b/internal/ai/service.go
+@@ -69,6 +69,7 @@ type ProvisioningInfo struct {
+ type AnalyzeWorkloadRequest struct {
+ 	Provider      string            `json:"provider"` // "gemini" or "ollama"
+ 	Model         string            `json:"model"`    // specific model like "llama3"
++	ClusterID     string            `json:"clusterId"`
+ 	WorkloadName  string            `json:"workloadName"`
+ 	Namespace     string            `json:"namespace"`
+ 	Kind          string            `json:"kind"`
+diff --git a/internal/api/handlers.go b/internal/api/handlers.go
+index 409627c..b074f0b 100644
+--- a/internal/api/handlers.go
++++ b/internal/api/handlers.go
+@@ -50,6 +50,14 @@ type ResourceMetrics struct {
+ 	MemoryAvg      float64 `json:"memoryAvg"`
+ 	MemoryP95      float64 `json:"memoryP95"`
+ 	MemoryP99      float64 `json:"memoryP99"`
++	// GPU Metrics
++	GpuRequest     float64 `json:"gpuRequest"`     // Number of GPUs requested
++	GpuLimit       float64 `json:"gpuLimit"`       // Number of GPUs limited
++	GpuUsage       float64 `json:"gpuUsage"`       // Power usage in Watts
++	GpuMemoryUsage float64 `json:"gpuMemoryUsage"` // MiB
++	GpuMemoryTotal float64 `json:"gpuMemoryTotal"` // MiB
++	GpuUtilization float64 `json:"gpuUtilization"` // Percentage 0-100
++	GpuTemperature float64 `json:"gpuTemperature"` // Celsius
+ }
+ 
+ type K8sEvent struct {
+@@ -63,11 +71,13 @@ type K8sEvent struct {
+ // Workload struct mapping to frontend
+ type Workload struct {
+ 	ID                 string            `json:"id"`
++	ClusterID          string            `json:"clusterId"`
+ 	Name               string            `json:"name"`
+ 	Namespace          string            `json:"namespace"`
+ 	Kind               string            `json:"kind"`
+ 	Replicas           int32             `json:"replicas"`
+ 	AvailableReplicas  int32             `json:"availableReplicas"`

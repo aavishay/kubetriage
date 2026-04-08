@@ -18,6 +18,7 @@ require (
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc v1.39.0
 	go.opentelemetry.io/otel/sdk v1.39.0
 	golang.org/x/sync v0.19.0
+	gonum.org/v1/gonum v0.16.0
 	google.golang.org/api v0.259.0
 	gorm.io/driver/postgres v1.6.0
 	gorm.io/gorm v1.31.1

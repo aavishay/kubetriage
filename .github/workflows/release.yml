@@ -1,0 +1,146 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build Release Binaries
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - os: darwin
+            arch: amd64
+          - os: darwin
+            arch: arm64
+          - os: linux
+            arch: amd64
+          - os: linux
+            arch: arm64
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Build Frontend
+        run: |
+          cd frontend
+          npm install --legacy-peer-deps
+          npm run build
+
+      - name: Copy Frontend Dist
+        run: |
+          rm -rf internal/ui/dist
+          cp -r frontend/dist internal/ui/dist
+
+      - name: Build Binary
+        env:
+          GOOS: ${{ matrix.os }}
+          GOARCH: ${{ matrix.arch }}
+        run: |
+          VERSION=${GITHUB_REF_NAME}
+          OUTPUT="kubetriage-${{ matrix.os }}-${{ matrix.arch }}"
+          go build -ldflags "-X main.version=$VERSION -s -w" -o $OUTPUT cmd/server/main.go
+
+      - name: Create Archive
+        run: |
+          VERSION=${GITHUB_REF_NAME}
+          FILENAME="kubetriage-${{ matrix.os }}-${{ matrix.arch }}"
+          if [ "${{ matrix.os }}" = "windows" ]; then
+            zip "$FILENAME.zip" "$FILENAME"
+          else
+            tar -czf "$FILENAME.tar.gz" "$FILENAME"
+          fi
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: kubetriage-${{ matrix.os }}-${{ matrix.arch }}
+          path: kubetriage-*
+
+  release:
+    name: Create Release
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download All Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+
+      - name: List Artifacts
+        run: ls -la dist/
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: dist/*
+          draft: false
+          prerelease: false
+          generate_release_notes: true
+          body: |
+            ## KubeTriage ${{ github.ref_name }}
+
+            ### Installation
+
+            #### macOS (Intel)
+            ```bash
+            curl -L -o kubetriage.tar.gz https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/kubetriage-darwin-amd64.tar.gz
+            tar -xzf kubetriage.tar.gz
+            sudo mv kubetriage /usr/local/bin/
+            ```
+
+            #### macOS (Apple Silicon)
+            ```bash
+            curl -L -o kubetriage.tar.gz https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/kubetriage-darwin-arm64.tar.gz
+            tar -xzf kubetriage.tar.gz
+            sudo mv kubetriage /usr/local/bin/
+            ```
+
+            #### Linux (x86_64)
+            ```bash
+            curl -L -o kubetriage.tar.gz https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/kubetriage-linux-amd64.tar.gz
+            tar -xzf kubetriage.tar.gz
+            sudo mv kubetriage /usr/local/bin/
+            ```
+
+            #### Linux (ARM64)
+            ```bash
+            curl -L -o kubetriage.tar.gz https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/kubetriage-linux-arm64.tar.gz
+            tar -xzf kubetriage.tar.gz
+            sudo mv kubetriage /usr/local/bin/
+            ```
+
+            #### Homebrew (macOS/Linux)
+            ```bash
+            brew tap ${{ github.repository_owner }}/kubetriage
+            brew install kubetriage
+            ```
+
+            ### Checksums
+            See release assets for SHA256 checksums.
+
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -38,6 +38,7 @@ export default defineConfig(({ mode }) => {
     },
     // Build Optimization
     build: {
+      chunkSizeWarningLimit: 1500,
       rollupOptions: {
         output: {
           manualChunks: {
@@ -45,7 +46,8 @@ export default defineConfig(({ mode }) => {
             charts: ['recharts'],
             icons: ['lucide-react'],
             ai: ['@google/genai'],
-            mermaid: ['mermaid']
+            mermaid: ['mermaid'],
+            cytoscape: ['cytoscape']
           }
         }
       }

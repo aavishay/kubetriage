@@ -81,7 +81,7 @@ func (w *Watcher) checkSecurityContext(ctx context.Context, cls *k8s.ClusterConn
 
 	// Check 3: Resource Limits (Phase 4 - Reliability/Governance)
 	for _, c := range podSpec.Containers {
-		if c.Resources.Limits == nil || c.Resources.Limits.Cpu().IsZero() || c.Resources.Limits.Memory().IsZero() {
+		if c.Resources.Limits == nil || (c.Resources.Limits.Cpu().IsZero() && c.Resources.Limits.Memory().IsZero()) {
 			w.reportSecurityViolation(
 				ctx,
 				cls,

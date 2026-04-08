@@ -1,4 +1,32 @@
 
+export interface TriageReport {
+  ID: number;
+  ClusterID: string;
+  WorkloadName: string;
+  Analysis: string; // The full markdown content
+  Severity: string;
+  IsRead: boolean;
+  CreatedAt: string;
+  AutoRemediationPayload?: string;
+  ApprovalStatus?: string;
+  IncidentType?: string;
+}
+
+export const isSecurityReport = (report: TriageReport): boolean => {
+  const isSecurityType = report.IncidentType &&
+    (report.IncidentType.includes('Privileged') ||
+     report.IncidentType.includes('Root') ||
+     report.IncidentType.includes('Security'));
+  const isSecurityAnalysis = (report.Analysis || '').includes('Security Violation');
+  return isSecurityType || isSecurityAnalysis;
+};
+
+export const getMetricStatusColor = (value: number) => {
+  if (value > 90) return 'bg-rose-500 shadow-[0_0_8px_var(--kt-status-critical)]';
+  if (value > 70) return 'bg-amber-500 shadow-[0_0_8px_var(--kt-status-warning)]';
+  return 'bg-emerald-500 shadow-[0_0_8px_var(--kt-status-healthy)]';
+};
+
 export interface ResourceMetrics {
   cpuRequest: number; // in cores
   cpuLimit: number;
@@ -18,6 +46,14 @@ export interface ResourceMetrics {
   memoryAvg?: number;
   memoryP95?: number;
   memoryP99?: number;
+  // GPU Metrics
+  gpuRequest?: number; // Number of GPUs requested
+  gpuLimit?: number; // Number of GPUs limited
+  gpuUsage?: number; // Watts
+  gpuMemoryUsage?: number; // MiB
+  gpuMemoryTotal?: number; // MiB
+  gpuUtilization?: number; // Percentage 0-100
+  gpuTemperature?: number; // Celsius
 }
 
 export interface K8sEvent {
@@ -37,11 +73,13 @@ export interface ProvisioningInfo {
 
 export interface Workload {
   id: string;
+  clusterId: string;
   name: string;
   namespace: string;
   kind: 'Deployment' | 'StatefulSet' | 'DaemonSet' | 'ScaledJob';
   replicas: number;
   availableReplicas: number;
+  podCount: number; // Actual count of pods matching the selector
   status: 'Healthy' | 'Warning' | 'Critical';
   metrics: ResourceMetrics;
   recentLogs: string[];
@@ -124,7 +162,254 @@ export interface TriggeredAlert {
   channelsNotified: string[];
 }
 
-export type ViewState = 'dashboard' | 'triage' | 'rightsizing' | 'topology' | 'organizations' | 'users' | 'notifications' | 'templates';
+export type ViewState = 'dashboard' | 'triage' | 'rightsizing' | 'scaling' | 'topology' | 'organizations' | 'users' | 'notifications' | 'templates';
+
+// Karpenter/KEDA Efficiency Metrics
+export interface KarpenterEfficiencyMetrics {
+  nodePoolName: string;
+  instanceTypes: string[];
+  totalNodes: number;
+  readyNodes: number;
+  pendingNodeClaims: number;
+  driftedNodes: number;
+  utilizationPercent: number;
+  binPackingEfficiency: number;
+  costPerCPU: number;
+  costPerGBMemory: number;
+  scaleUpLatencyAvg: number; // milliseconds
+  consolidationEnabled: boolean;
+  disruptionBudgets: Record<string, string>;
+  misconfigurations?: string[];
+}
+
+// Unified Provisioner Types (supports AWS Karpenter, Azure NAP, etc.)
+export type ProvisionerType = 'karpenter' | 'azure-nap' | 'cluster-autoscaler';
+export type CloudProvider = 'aws' | 'azure' | 'gcp';
+
+export interface AzureNodePoolDetails {
+  mode?: string; // System, User
+  osDiskType?: string;
+  osDiskSizeGB?: number;
+  maxPods?: number;
+  availabilityZones?: string[];
+  scaleSetPriority?: string;
+  enableAutoScaling?: boolean;
+}
+
+export interface AWSNodePoolDetails {
+  capacityType?: string; // spot, on-demand
+  instanceProfile?: string;
+  subnetSelector?: Record<string, string>;
+}
+
+export interface UnifiedNodePool {
+  name: string;
+  provisionerType: ProvisionerType;
+  provider: CloudProvider;
+  instanceTypes?: string[];
+  vmSizeNames?: string[];
+  totalNodes: number;
+  readyNodes: number;
+  pendingNodes: number;
+  driftedNodes: number;
+  utilizationPercent: number;
+  binPackingEfficiency: number;
+  costPerCPU: number;
+  costPerGBMemory: number;
+  totalMonthlyCost?: number;
+  totalCPUs?: number;
+  totalMemoryGB?: number;
+  consolidationEnabled: boolean;
+  disruptionBudgets?: Record<string, string>;
+  misconfigurations?: string[];
+  azureConfig?: AzureNodePoolDetails;
+  awsConfig?: AWSNodePoolDetails;
+}
+
+export interface ProvisionerSummary {
+  totalProvisioners: number;
+  totalNodePools: number;
+  totalNodes: number;
+  readyNodes: number;
+  avgUtilization: number;
+  avgBinPackingEfficiency: number;
+  costOptimizedCount: number;
+  issuesFound: number;
+}
+
+export interface UnifiedProvisionerMetrics {
+  provisionerType: ProvisionerType;
+  provider: CloudProvider;
+  nodePools: UnifiedNodePool[];
+  summary: ProvisionerSummary;
+}
+
+export interface KEDATriggerInfo {
+  type: string;
+  metricName: string;
+  targetValue: number;
+  currentValue: number;
+  triggerLatency: number; // milliseconds
+}
+
+// HPA (Horizontal Pod Autoscaler) Metrics
+export interface HPAScaleTargetRef {
+  apiVersion: string;
+  kind: string;
+  name: string;
+}
+
+export interface HPAMetricStatus {
+  currentUtilization: number;
+  targetUtilization: number;
+}
+
+export interface HPACustomMetric {
+  name: string;
+  type: string;
+  currentValue: number;
+  targetValue: number;
+  targetAverage: boolean;
+}
+
+export interface HPAMetrics {
+  name: string;
+  namespace: string;
+  scaleTargetRef: HPAScaleTargetRef;
+  minReplicas: number;
+  maxReplicas: number;
+  currentReplicas: number;
+  desiredReplicas: number;
+  cpuUtilization?: HPAMetricStatus;
+  memoryUtilization?: HPAMetricStatus;
+  customMetrics?: HPACustomMetric[];
+  isActive: boolean;
+  ableToScale: boolean;
+  scalingLimited: boolean;
+  lastScaleTime?: string;
+  misconfigurations?: string[];
+}
+
+export interface KEDAEfficiencyMetrics {
+  workloadName: string;
+  namespace: string;
+  scaleTargetType: string;
+  minReplicas: number;
+  maxReplicas: number;
+  currentReplicas: number;
+  desiredReplicas: number;
+  triggerTypes: KEDATriggerInfo[];
+  efficiencyScore: number; // 0-100
+  timeAtMinPercent: number;
+  timeAtMaxPercent: number;
+  scaleUpLatency: number; // milliseconds
+  cooldownEfficiency: number;
+  eventsPerSecond: number;
+  isReady: boolean;
+  isActive: boolean;
+  isFallback: boolean;
+  misconfigurations?: string[];
+}
+
+export interface EfficiencySummary {
+  totalNodePools: number;
+  totalKedaScalers: number;
+  totalHpaScalers: number;
+  avgNodeUtilization: number;
+  avgBinPackingEfficiency: number;
+  totalCostOptimized: number;
+  issuesFound: number;
+}
+
+// Multi-Cluster Federation Types
+export interface ClusterStatus {
+  id: string;
+  name: string;
+  status: 'Healthy' | 'Degraded' | 'Offline';
+  provider: string;
+  region: string;
+  version: string;
+  lastConnected: string;
+  nodeCount: number;
+  healthyNodeCount: number;
+  workloadCount: number;
+  incidentCount: number;
+  totalCpu: number;
+  totalMemory: number;
+  usedCpu: number;
+  usedMemory: number;
+  labels: Record<string, string>;
+}
+
+export interface AggregatedWorkload {
+  id: string;
+  name: string;
+  namespace: string;
+  kind: string;
+  clusterId: string;
+  clusterName: string;
+  status: 'Healthy' | 'Warning' | 'Critical';
+  replicas: number;
+  availableReplicas: number;
+  cpuUsage: number;
+  memoryUsage: number;
+  costPerMonth: number;
+  hasIncidents: boolean;
+  labels: Record<string, string>;
+}
+
+export interface AffectedWorkload {
+  workloadId: string;
+  name: string;
+  namespace: string;
+  clusterId: string;
+  clusterName: string;
+}
+
+export interface CrossClusterIncident {
+  id: string;
+  title: string;
+  description: string;
+  severity: 'Critical' | 'High' | 'Medium' | 'Low';
+  status: 'Active' | 'Resolved' | 'Investigating';
+  affectedClusters: string[];
+  affectedWorkloads: AffectedWorkload[];
+  startedAt: string;
+  resolvedAt?: string;
+  rootCause?: string;
+  pattern: 'Cascading' | 'Correlated' | 'Isolated';
+}
+
+export interface GlobalSummary {
+  totalClusters: number;
+  healthyClusters: number;
+  degradedClusters: number;
+  offlineClusters: number;
+  totalWorkloads: number;
+  healthyWorkloads: number;
+  warningWorkloads: number;
+  criticalWorkloads: number;
+  activeIncidents: number;
+  criticalIncidents: number;
+  totalCpu: number;
+  totalMemory: number;
+  cpuUtilization: number;
+  memoryUtilization: number;
+  estimatedMonthlyCost: number;
+}
+
+export interface ScalingEfficiencyResponse {
+  clusterId: string;
+  timestamp: string;
+  karpenterMetrics: KarpenterEfficiencyMetrics[];
+  kedaMetrics: KEDAEfficiencyMetrics[];
+  hpaMetrics: HPAMetrics[];
+  summary: EfficiencySummary;
+
+  // Unified provisioner support (new fields for Azure NAP and multi-provider)
+  unifiedProvisioners?: UnifiedProvisionerMetrics[];
+  detectedProvisioners?: string[]; // List of detected provisioner types
+}
 
 export interface ChatMessage {
   role: 'user' | 'model';

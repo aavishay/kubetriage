@@ -17,6 +17,7 @@ import (
 	"github.com/aavishay/kubetriage/backend/internal/cache"
 	"github.com/aavishay/kubetriage/backend/internal/db"
 	"github.com/aavishay/kubetriage/backend/internal/k8s"
+	"github.com/aavishay/kubetriage/backend/internal/ml"
 	"github.com/aavishay/kubetriage/backend/internal/ui"
 	"github.com/aavishay/kubetriage/backend/internal/watcher"
 	"github.com/spf13/cobra"
@@ -91,7 +92,12 @@ func runServe(cmd *cobra.Command, _ []string) error {
 	defer w.Stop()
 	log.Println("Cluster watcher started")
 
-	// 6. Static Frontend Files
+	// 6. ML Service
+	mlService := ml.NewService()
+	mlService.Start(ctx)
+	log.Println("ML service initialized")
+
+	// 7. Static Frontend Files
 	rootFS := ui.GetStaticFS()
 	assetsFS := ui.GetAssetsFS()
 	indexHTML, err := ui.GetIndexHTML()
@@ -99,8 +105,14 @@ func runServe(cmd *cobra.Command, _ []string) error {
 		log.Printf("Warning: frontend index.html not found — serving API only. Run `make build` to embed the frontend. Error: %v", err)
 	}
 
-	// 7. HTTP Router
-	router := api.SetupRouter(aiService, rootFS, assetsFS, indexHTML)
+	// 8. HTTP Router
+	router := api.SetupRouter(api.RouterConfig{
+		AIService: aiService,
+		MLService: mlService,
+		RootFS:    rootFS,
+		AssetsFS:  assetsFS,
+		IndexHTML: indexHTML,
+	})
 
 	// 8. HTTP Server
 	addr := ":" + port

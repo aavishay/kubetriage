@@ -17,6 +17,7 @@ func ClusterMetricsHandler(c *gin.Context) {
 		return
 	}
 
+	clusterID := c.Query("cluster")
 	workload := c.Query("workload")
 	namespace := c.Query("namespace")
 	metric := c.Query("metric")
@@ -28,13 +29,17 @@ func ClusterMetricsHandler(c *gin.Context) {
 	}
 
 	var query string
+	clusterFilter := ""
+	if clusterID != "" {
+		clusterFilter = fmt.Sprintf(",cluster=\"%s\"", clusterID)
+	}
 	switch metric {
 	case "cpu":
 		// Rate of CPU usage over 5m window, summed across all pods of the workload
 		// Heuristic: matching pod name prefix. Ideally we'd match bye owner reference but that's complex in PromQL alone without strict labeling.
-		query = fmt.Sprintf("sum(rate(container_cpu_usage_seconds_total{namespace=\"%s\", pod=~\"%s-.*\", container!=\"POD\"}[5m]))", namespace, workload)
+		query = fmt.Sprintf("sum(rate(container_cpu_usage_seconds_total{namespace=\"%s\", pod=~\"%s-.*\", container!=\"POD\"%s}[5m]))", namespace, workload, clusterFilter)
 	case "memory":
-		query = fmt.Sprintf("sum(container_memory_working_set_bytes{namespace=\"%s\", pod=~\"%s-.*\", container!=\"POD\"})", namespace, workload)
+		query = fmt.Sprintf("sum(container_memory_working_set_bytes{namespace=\"%s\", pod=~\"%s-.*\", container!=\"POD\"%s})", namespace, workload, clusterFilter)
 	default:
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid metric type. Supported: cpu, memory"})
 		return
@@ -57,7 +62,7 @@ func ClusterMetricsHandler(c *gin.Context) {
 	}
 
 	// Step 1: Check Cache
-	cacheKey := fmt.Sprintf("metrics:%s:%s:%s:%s", namespace, workload, metric, durationStr)
+	cacheKey := fmt.Sprintf("metrics:%s:%s:%s:%s:%s", clusterID, namespace, workload, metric, durationStr)
 	if cached, err := cache.Get(c.Request.Context(), cacheKey); err == nil {
 		var points []prometheus.MetricPoint
 		if err := json.Unmarshal([]byte(cached), &points); err == nil {

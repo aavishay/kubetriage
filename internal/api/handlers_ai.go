@@ -64,7 +64,10 @@ func (h *AIHandler) AnalyzeWorkload(c *gin.Context) {
 		severity = "Warning"
 	}
 
-	reportClusterID := "local-cluster"
+	reportClusterID := req.ClusterID
+	if reportClusterID == "" {
+		reportClusterID = "unknown-cluster"
+	}
 	report := db.TriageReport{
 		ClusterID:    reportClusterID,
 		WorkloadName: req.WorkloadName,

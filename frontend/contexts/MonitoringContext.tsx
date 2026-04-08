@@ -22,6 +22,10 @@ interface MonitoringContextType {
   notificationSettings: { toastEnabled: boolean; toastFrequency: number };
   updateNotificationSettings: (settings: { toastEnabled: boolean; toastFrequency: number }) => void;
 
+  // Refresh Config
+  refreshInterval: number; // in seconds
+  setRefreshInterval: (interval: number) => void;
+
   // AI Config
   aiConfig: { provider: string; model: string };
   updateAIConfig: (config: { provider: string; model: string }) => void;
@@ -62,13 +66,18 @@ export const MonitoringProvider: React.FC<MonitoringProviderProps> = ({ children
   const [hasApiKey, setHasApiKey] = useState(false);
   const [isCheckingKey, setIsCheckingKey] = useState(true);
 
-  const [isDarkMode, setIsDarkMode] = useState(false);
+  const [isDarkMode, setIsDarkMode] = useState(() => {
+    const saved = localStorage.getItem('kt_theme');
+    return saved ? saved === 'dark' : true;
+  });
 
   useEffect(() => {
     if (isDarkMode) {
       document.documentElement.classList.add('dark');
+      localStorage.setItem('kt_theme', 'dark');
     } else {
       document.documentElement.classList.remove('dark');
+      localStorage.setItem('kt_theme', 'light');
     }
   }, [isDarkMode]);
 
@@ -78,6 +87,13 @@ export const MonitoringProvider: React.FC<MonitoringProviderProps> = ({ children
   const [workloads, setWorkloads] = useState<Workload[]>([]);
   const [metricsWindow, setMetricsWindow] = useState<string>('1h');
   const [isWorkloadsLoading, setIsWorkloadsLoading] = useState(false);
+
+  // Refresh interval state (must be declared before useEffect that uses it)
+  const [refreshInterval, setRefreshIntervalState] = useState<number>(() => {
+    if (typeof localStorage === 'undefined' || !localStorage.getItem) return 30;
+    const saved = localStorage.getItem('refresh_interval');
+    return saved ? parseInt(saved, 10) : 30;
+  });
   const [clusters, setClusters] = useState<Cluster[]>([]);
   const [selectedCluster, setSelectedCluster] = useState<Cluster | null>(() => {
     if (typeof localStorage === 'undefined' || !localStorage.getItem) return null;
@@ -187,7 +203,7 @@ export const MonitoringProvider: React.FC<MonitoringProviderProps> = ({ children
           events: w.events || []
         })) : [];
         setWorkloads(workloadsWithEvents);
-        localStorage.setItem(`cache_workloads_${selectedCluster.id}`, JSON.stringify(workloadsWithEvents));
+        localStorage.setItem(`cache_workloads_${selectedCluster.id}_${metricsWindow}`, JSON.stringify(workloadsWithEvents));
       }
     } catch (err) {
       console.error("Error refreshing workloads", err);
@@ -195,6 +211,17 @@ export const MonitoringProvider: React.FC<MonitoringProviderProps> = ({ children
       setIsWorkloadsLoading(false);
     }
   }, [selectedCluster, metricsWindow]);
+
+  // Auto-refresh workloads based on refreshInterval
+  useEffect(() => {
+    if (!selectedCluster || refreshInterval <= 0) return;
+
+    const intervalId = setInterval(() => {
+      refreshWorkloads();
+    }, refreshInterval * 1000);
+
+    return () => clearInterval(intervalId);
+  }, [selectedCluster, refreshInterval, refreshWorkloads]);
 
   // --- Notifications & Alerting State ---
   const [notificationChannels, setNotificationChannels] = useState<NotificationChannel[]>(() => {
@@ -250,6 +277,14 @@ export const MonitoringProvider: React.FC<MonitoringProviderProps> = ({ children
   useEffect(() => {
     localStorage.setItem('ai_config', JSON.stringify(aiConfig));
   }, [aiConfig]);
+
+  useEffect(() => {
+    localStorage.setItem('refresh_interval', refreshInterval.toString());
+  }, [refreshInterval]);
+
+  const setRefreshInterval = useCallback((interval: number) => {
+    setRefreshIntervalState(Math.max(10, Math.min(300, interval))); // Clamp between 10s and 300s
+  }, []);
 
   const updateNotificationSettings = (settings: { toastEnabled: boolean; toastFrequency: number }) => {
     setNotificationSettings(settings);
@@ -311,10 +346,10 @@ export const MonitoringProvider: React.FC<MonitoringProviderProps> = ({ children
       currentWorkloads.forEach(workload => {
         let saturationValue = 0;
         if (rule.metric === 'CPU') {
-          const base = (workload.metrics.cpuLimit > 0) ? workload.metrics.cpuLimit : workload.metrics.cpuRequest;
+          const base = workload.metrics.cpuLimit;
           saturationValue = base > 0 ? (workload.metrics.cpuUsage / base) * 100 : 0;
         } else if (rule.metric === 'Memory') {
-          const base = (workload.metrics.memoryLimit > 0) ? workload.metrics.memoryLimit : workload.metrics.memoryRequest;
+          const base = workload.metrics.memoryLimit;
           saturationValue = base > 0 ? (workload.metrics.memoryUsage / base) * 100 : 0;
         }
         if (rule.operator === '>' ? saturationValue > rule.threshold : saturationValue < rule.threshold) {
@@ -352,20 +387,33 @@ export const MonitoringProvider: React.FC<MonitoringProviderProps> = ({ children
   }, [alertRules, triggeredAlerts, notificationSettings, lastToastTime]);
 
   // Simulate real-time metric updates
+  // Only update when CPU/memory changes by more than 0.5% of base to avoid no-op re-renders
+  const METRIC_CHANGE_THRESHOLD = 0.005;
   useEffect(() => {
     const interval = setInterval(() => {
       setWorkloads(prev => {
+        let changed = false;
         const updated = prev.map(w => {
           const baseCpu = (w.metrics?.cpuLimit > 0 ? w.metrics.cpuLimit : (w.metrics?.cpuRequest > 0 ? w.metrics.cpuRequest : 1));
           const baseMem = (w.metrics?.memoryLimit > 0 ? w.metrics.memoryLimit : (w.metrics?.memoryRequest > 0 ? w.metrics.memoryRequest : 100));
           const cpuVar = (Math.random() * 0.1 - 0.05) * baseCpu;
           const memVar = (Math.random() * 0.04 - 0.02) * baseMem;
-          
+          const newCpu = Math.max(0, (w.metrics?.cpuUsage || 0) + cpuVar);
+          const newMem = Math.max(0, (w.metrics?.memoryUsage || 0) + memVar);
+
+          // Skip update if changes are below threshold
+          const cpuDelta = Math.abs(newCpu - (w.metrics?.cpuUsage || 0)) / (baseCpu || 1);
+          const memDelta = Math.abs(newMem - (w.metrics?.memoryUsage || 0)) / (baseMem || 1);
+          if (cpuDelta < METRIC_CHANGE_THRESHOLD && memDelta < METRIC_CHANGE_THRESHOLD) {
+            return w;
+          }
+
+          changed = true;
           return {
             ...w,
             metrics: {
-              cpuUsage: Math.max(0, (w.metrics?.cpuUsage || 0) + cpuVar),
-              memoryUsage: Math.max(0, (w.metrics?.memoryUsage || 0) + memVar),
+              cpuUsage: newCpu,
+              memoryUsage: newMem,
               cpuRequest: w.metrics?.cpuRequest || 0,
               cpuLimit: w.metrics?.cpuLimit || 0,
               memoryRequest: w.metrics?.memoryRequest || 0,
@@ -379,10 +427,13 @@ export const MonitoringProvider: React.FC<MonitoringProviderProps> = ({ children
             }
           };
         });
-        checkAlertRules(updated);
-        return updated;
+        if (changed) {
+          checkAlertRules(updated);
+          return updated;
+        }
+        return prev;
       });
-    }, 2000);
+    }, 5000);
     return () => clearInterval(interval);
   }, [checkAlertRules]);
 
@@ -438,6 +489,8 @@ export const MonitoringProvider: React.FC<MonitoringProviderProps> = ({ children
       aiConfig,
       updateAIConfig,
       removeCluster,
+      refreshInterval,
+      setRefreshInterval,
     }}>
       {children}
     </MonitoringContext.Provider>

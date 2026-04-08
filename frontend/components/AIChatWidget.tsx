@@ -65,24 +65,24 @@ export const AIChatWidget: React.FC<AIChatWidgetProps> = ({ isOpen, onClose, ini
 
   // Container classes based on variant
   const containerClasses = variant === 'floating'
-    ? `fixed right-4 bottom-4 transition-all duration-300 z-50 flex flex-col bg-dark-card border border-white/10 shadow-2xl rounded-2xl overflow-hidden ${
+    ? `fixed right-4 bottom-4 transition-all duration-300 z-50 flex flex-col bg-bg-card border border-border-main shadow-2xl rounded-2xl overflow-hidden ${
         isExpanded ? 'top-4 w-[600px]' : 'w-[400px] h-[500px]'
       }`
-    : `w-full flex flex-col bg-dark-card border border-white/5 rounded-2xl overflow-hidden h-[500px]`;
+    : `w-full flex flex-col bg-bg-card border border-border-main rounded-2xl overflow-hidden h-[500px]`;
 
   return (
     <div className={containerClasses}>
       {/* Header */}
-      <div className="bg-white/[0.02] border-b border-white/5 p-3 flex justify-between items-center shrink-0">
+      <div className="bg-bg-hover border-b border-border-main p-3 flex justify-between items-center shrink-0">
         <div className="flex items-center gap-2.5">
           <div className="p-2 bg-primary-600 rounded-lg">
             <Sparkles className="w-4 h-4 text-white" />
           </div>
           <div>
-            <h3 className="font-semibold text-sm text-white">AI Co-Pilot</h3>
+            <h3 className="font-semibold text-sm text-text-primary">AI Co-Pilot</h3>
             <div className="flex items-center gap-1.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-              <span className="text-[10px] text-emerald-400">Online</span>
+              <span className="w-1.5 h-1.5 rounded-full bg-success"></span>
+              <span className="text-[10px] text-success">Online</span>
             </div>
           </div>
         </div>
@@ -90,7 +90,7 @@ export const AIChatWidget: React.FC<AIChatWidgetProps> = ({ isOpen, onClose, ini
           {variant === 'floating' && (
             <button
               onClick={() => setIsExpanded(!isExpanded)}
-              className="p-1.5 text-zinc-400 hover:text-white hover:bg-white/5 rounded-lg transition-colors"
+              className="p-1.5 text-text-secondary hover:text-text-primary hover:bg-bg-hover rounded-lg transition-colors"
               title={isExpanded ? "Minimize" : "Maximize"}
             >
               {isExpanded ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
@@ -98,7 +98,7 @@ export const AIChatWidget: React.FC<AIChatWidgetProps> = ({ isOpen, onClose, ini
           )}
           <button
             onClick={onClose}
-            className="p-1.5 text-zinc-400 hover:text-rose-400 hover:bg-rose-400/10 rounded-lg transition-colors"
+            className="p-1.5 text-text-tertiary hover:text-danger hover:bg-danger-light rounded-lg transition-colors"
           >
             <X className="w-4 h-4" />
           </button>
@@ -110,18 +110,18 @@ export const AIChatWidget: React.FC<AIChatWidgetProps> = ({ isOpen, onClose, ini
         {messages.map((msg, idx) => (
           <div key={idx} className={`flex gap-3 ${msg.role === 'user' ? 'flex-row-reverse' : 'flex-row'}`}>
             <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 ${
-              msg.role === 'user' ? 'bg-primary-600/20 text-primary-400' : 'bg-white/5 text-emerald-400'
+              msg.role === 'user' ? 'bg-primary-600/20 text-primary-400' : 'bg-bg-hover text-success'
             }`}>
               {msg.role === 'user' ? <User className="w-3.5 h-3.5" /> : <Bot className="w-3.5 h-3.5" />}
             </div>
 
-            <div className={`max-w-[85%] p-3 rounded-xl text-sm ${
+            <div className={`max-w-[85%] p-3 rounded-2xl text-sm ${
               msg.role === 'user'
-                ? 'bg-primary-600 text-white rounded-tr-sm'
-                : 'bg-white/5 text-zinc-300 rounded-tl-sm'
+                ? 'bg-primary-600 text-white rounded-tr-none'
+                : 'bg-bg-hover text-text-secondary rounded-tl-none'
             }`}>
               {msg.role === 'model' ? (
-                <div className="prose prose-sm prose-invert max-w-none">
+                <div className="prose prose-sm max-w-none text-text-primary">
                   <ReactMarkdown
                     components={{
                       code({ node, inline, className, children, ...props }: any) {
@@ -131,13 +131,13 @@ export const AIChatWidget: React.FC<AIChatWidgetProps> = ({ isOpen, onClose, ini
                             style={vscDarkPlus}
                             language={match[1]}
                             PreTag="div"
-                            customStyle={{ margin: 0, borderRadius: '0.5rem', fontSize: '0.75rem', background: 'rgba(0,0,0,0.3)' }}
+                            customStyle={{ margin: 0, borderRadius: '0.75rem', fontSize: '0.75rem', background: '#12151B' }}
                             {...props}
                           >
                             {String(children).replace(/\n$/, '')}
                           </SyntaxHighlighter>
                         ) : (
-                          <code className="bg-white/10 px-1 py-0.5 rounded text-primary-300 text-xs" {...props}>
+                          <code className="bg-bg-hover dark:bg-bg-main px-1.5 py-0.5 rounded text-primary-400 dark:text-primary-300 text-xs font-mono" {...props}>
                             {children}
                           </code>
                         )
@@ -149,7 +149,7 @@ export const AIChatWidget: React.FC<AIChatWidgetProps> = ({ isOpen, onClose, ini
                 </div>
               ) : (
                 msg.content.startsWith('Context for analysis:')
-                  ? <div className="text-white/70 italic text-xs border-l-2 border-white/20 pl-2">Context shared</div>
+                  ? <div className="text-text-tertiary italic text-xs border-l-2 border-border-main pl-2">Context shared</div>
                   : msg.content
               )}
             </div>
@@ -158,23 +158,23 @@ export const AIChatWidget: React.FC<AIChatWidgetProps> = ({ isOpen, onClose, ini
       </div>
 
       {/* Input Area */}
-      <div className="p-3 bg-white/[0.02] border-t border-white/5 shrink-0">
+      <div className="p-3 bg-bg-hover border-t border-border-main shrink-0">
         <form
           onSubmit={(e) => { e.preventDefault(); handleSendMessage(input); }}
-          className="flex items-center gap-2 bg-white/5 p-1.5 pr-2 rounded-xl border border-white/5 focus-within:border-primary-500/30 transition-colors"
+          className="flex items-center gap-2"
         >
           <input
             type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder="Ask about this workload..."
-            className="flex-1 bg-transparent border-none focus:ring-0 text-sm text-white placeholder:text-zinc-500 px-2"
+            className="kt-input flex-1"
             disabled={isTyping}
           />
           <button
             type="submit"
             disabled={!input.trim() || isTyping}
-            className="p-2 bg-primary-600 hover:bg-primary-500 text-white rounded-lg disabled:opacity-50 transition-colors"
+            className="kt-button kt-button-primary p-2.5 disabled:opacity-50 shrink-0"
           >
             {isTyping ? (
               <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
@@ -184,7 +184,7 @@ export const AIChatWidget: React.FC<AIChatWidgetProps> = ({ isOpen, onClose, ini
           </button>
         </form>
         <div className="mt-2 text-center">
-          <p className="text-[10px] text-zinc-600">AI-Generated Insights</p>
+          <p className="text-[10px] text-text-tertiary">AI-Generated Insights</p>
         </div>
       </div>
     </div>

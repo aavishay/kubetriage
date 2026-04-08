@@ -46,36 +46,36 @@ export const DeleteClusterModal: React.FC<DeleteClusterModalProps> = ({ isOpen, 
                 onClick={onClose}
             />
 
-            <div className="relative w-full max-w-md bg-dark-card border border-white/10 rounded-2xl shadow-2xl overflow-hidden animate-slide-up">
-                <div className="flex items-center justify-between px-5 py-4 border-b border-white/5 bg-rose-500/5">
+            <div className="relative w-full max-w-md bg-bg-card border border-border-main rounded-2xl shadow-2xl overflow-hidden animate-slide-up">
+                <div className="flex items-center justify-between px-5 py-4 border-b border-border-main bg-danger-light">
                     <div className="flex items-center gap-2.5">
-                        <div className="p-2 bg-rose-500/10 rounded-lg">
-                            <AlertTriangle className="w-4 h-4 text-rose-400" />
+                        <div className="p-2 bg-bg-card rounded-lg">
+                            <AlertTriangle className="w-4 h-4 text-danger" />
                         </div>
-                        <h3 className="font-semibold text-white">Remove Cluster</h3>
+                        <h3 className="font-semibold text-text-primary">Remove Cluster</h3>
                     </div>
-                    <button onClick={onClose} className="p-1.5 hover:bg-white/5 rounded-lg transition-colors text-zinc-400 hover:text-white">
+                    <button onClick={onClose} className="p-1.5 hover:bg-bg-hover rounded-lg transition-colors text-text-secondary hover:text-text-primary">
                         <X className="w-4 h-4" />
                     </button>
                 </div>
 
                 <div className="p-5 space-y-4">
-                    <p className="text-sm text-zinc-400">
+                    <p className="text-sm text-text-secondary">
                         This will permanently remove the cluster{' '}
-                        <span className="font-medium text-white bg-white/5 px-1.5 py-0.5 rounded">"{clusterName}"</span>
+                        <span className="font-medium text-text-primary bg-bg-hover px-1.5 py-0.5 rounded">"{clusterName}"</span>
                         {' '}and all its associated data. This action cannot be undone.
                     </p>
 
                     <div className="space-y-2">
-                        <label className="text-xs font-medium text-zinc-500">
-                            Type <span className="text-rose-400 font-mono">{clusterName}</span> to confirm
+                        <label className="text-xs font-medium text-text-secondary">
+                            Type <span className="text-danger font-mono">{clusterName}</span> to confirm
                         </label>
                         <input
                             type="text"
                             value={inputValue}
                             onChange={(e) => setInputValue(e.target.value)}
                             placeholder={clusterName}
-                            className="w-full px-3 py-2 bg-dark-bg border border-white/10 rounded-lg focus:border-rose-500/50 outline-none font-mono text-sm text-white placeholder:text-zinc-600 transition-colors"
+                            className="kt-input font-mono text-sm"
                             autoFocus
                         />
                     </div>
@@ -83,14 +83,14 @@ export const DeleteClusterModal: React.FC<DeleteClusterModalProps> = ({ isOpen, 
                     <div className="flex justify-end gap-2 pt-2">
                         <button
                             onClick={onClose}
-                            className="px-4 py-2 text-sm font-medium text-zinc-400 hover:text-white transition-colors"
+                            className="px-4 py-2 text-sm font-medium text-text-secondary hover:text-text-primary transition-colors"
                         >
                             Cancel
                         </button>
                         <button
                             onClick={handleConfirm}
                             disabled={!isMatch || isDeleting}
-                            className="flex items-center gap-2 px-4 py-2 bg-rose-600 hover:bg-rose-500 disabled:bg-white/5 disabled:text-zinc-600 text-white rounded-lg font-medium text-sm transition-all disabled:cursor-not-allowed"
+                            className="kt-button bg-danger hover:bg-danger/90 disabled:bg-bg-hover disabled:text-text-tertiary disabled:cursor-not-allowed"
                         >
                             {isDeleting ? (
                                 <>

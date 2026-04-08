@@ -69,6 +69,7 @@ type ProvisioningInfo struct {
 type AnalyzeWorkloadRequest struct {
 	Provider      string            `json:"provider"` // "gemini" or "ollama"
 	Model         string            `json:"model"`    // specific model like "llama3"
+	ClusterID     string            `json:"clusterId"`
 	WorkloadName  string            `json:"workloadName"`
 	Namespace     string            `json:"namespace"`
 	Kind          string            `json:"kind"`

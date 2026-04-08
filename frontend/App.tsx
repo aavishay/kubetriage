@@ -5,6 +5,12 @@ import { Layout } from './components/Layout';
 import { Dashboard } from './components/Dashboard';
 import { TriageView } from './components/TriageView';
 import { RightSizingView } from './components/RightSizingView';
+import { ScalingEfficiencyView } from './components/ScalingEfficiencyView';
+import { MultiClusterView } from './components/MultiClusterView';
+import { MLIntelligenceView } from './components/MLIntelligenceView';
+import { DeveloperPortalView } from './components/DeveloperPortalView';
+import { AutonomousRemediationView } from './components/AutonomousRemediationView';
+import { ExternalMetricsView } from './components/ExternalMetricsView';
 import { TopologyView } from './components/TopologyView';
 import { NotificationsView } from './components/NotificationsView';
 import { TemplateLibraryView } from './components/TemplateLibraryView';
@@ -40,7 +46,8 @@ const AppContent: React.FC = () => {
     deleteAlertRule,
     refreshWorkloads,
     metricsWindow,
-    setMetricsWindow
+    setMetricsWindow,
+    selectedCluster
   } = useMonitoring();
 
   const [isChatOpen, setIsChatOpen] = useState(false);
@@ -146,14 +153,44 @@ const AppContent: React.FC = () => {
               />
             </PageTransition>
           } />
+          <Route path="/scaling" element={
+            <PageTransition>
+              <ScalingEfficiencyView clusterId={selectedCluster?.id} />
+            </PageTransition>
+          } />
+          <Route path="/multicluster" element={
+            <PageTransition>
+              <MultiClusterView />
+            </PageTransition>
+          } />
+          <Route path="/ml-intelligence" element={
+            <PageTransition>
+              <MLIntelligenceView />
+            </PageTransition>
+          } />
+          <Route path="/developer" element={
+            <PageTransition>
+              <DeveloperPortalView />
+            </PageTransition>
+          } />
+          <Route path="/autonomous" element={
+            <PageTransition>
+              <AutonomousRemediationView />
+            </PageTransition>
+          } />
+          <Route path="/metrics/external" element={
+            <PageTransition>
+              <ExternalMetricsView />
+            </PageTransition>
+          } />
           <Route path="/topology" element={
             <PageTransition>
-              <TopologyView workloads={workloads} isDarkMode={isDarkMode} />
+              <TopologyView workloads={workloads} />
             </PageTransition>
           } />
           <Route path="/reports" element={
             <PageTransition>
-              <ReportsView isDarkMode={isDarkMode} />
+              <ReportsView />
             </PageTransition>
           } />
           <Route path="/notifications" element={
