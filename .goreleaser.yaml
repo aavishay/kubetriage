@@ -40,7 +40,7 @@ brews:
     name: kubetriage
     repository:
       owner: aavishay
-      name: homebrew-tap
+      name: homebrew-kubetriage
       branch: main
     folder: Formula
     homepage: https://github.com/aavishay/kubetriage
