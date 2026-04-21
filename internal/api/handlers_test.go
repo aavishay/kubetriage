@@ -31,7 +31,7 @@ func TestGetRealMetrics_NoFallback(t *testing.T) {
 
 	// Call getRealMetrics
 	// ctx, namespace, name, kind, spec, window, labels, replicas
-	metrics := getRealMetrics(context.Background(), "default", "test-pod", "Pod", podSpec, "1h", nil, 1)
+	metrics := getRealMetrics(context.Background(), "", "default", "test-pod", "Pod", podSpec, "1h", nil, 1)
 
 	// Check Memory Limit
 	if metrics.MemoryLimit != 0 {
@@ -79,7 +79,7 @@ func TestGetRealMetrics_WithLimit(t *testing.T) {
 		},
 	}
 
-	metrics := getRealMetrics(context.Background(), "default", "test-pod", "Pod", podSpec, "1h", nil, 1)
+	metrics := getRealMetrics(context.Background(), "", "default", "test-pod", "Pod", podSpec, "1h", nil, 1)
 
 	if metrics.MemoryLimit != 100 {
 		t.Errorf("Expected MemoryLimit to be 100, got %f", metrics.MemoryLimit)

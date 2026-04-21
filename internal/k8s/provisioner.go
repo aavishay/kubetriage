@@ -533,8 +533,13 @@ func FetchAzureNAPNodePools(ctx context.Context, client *ClusterConn) ([]NodePoo
 
 	// Create NodePool for each agent pool
 	for poolName, poolNodes := range agentPoolMap {
+		// Ensure pool name is never empty
+		displayName := poolName
+		if displayName == "" {
+			displayName = "default"
+		}
 		pool := NodePool{
-			Name:              poolName,
+			Name:              displayName,
 			ProvisionerType:   ProvisionerTypeAzureNAP,
 			DisruptionBudgets: make(map[string]string),
 			Labels:            make(map[string]string),

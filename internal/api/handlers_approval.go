@@ -40,10 +40,13 @@ func ApproveRemediationHandler(c *gin.Context) {
 		return
 	}
 
-	// ApplyPatch Logic
-	cls, err := k8s.Manager.GetCluster(report.ClusterID)
+	// ApplyPatch Logic (VPN MODE: connect on-demand)
+	cls, err := k8s.Manager.GetOrConnectCluster(report.ClusterID)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Cluster not connected"})
+		c.JSON(http.StatusServiceUnavailable, gin.H{
+			"error":   fmt.Sprintf("Cannot connect to cluster %s: %v", report.ClusterID, err),
+			"message": "Cluster may be behind a VPN. Please connect to the VPN and try again.",
+		})
 		return
 	}
 

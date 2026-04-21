@@ -35,8 +35,9 @@ func (h *AIHandler) AnalyzeWorkload(c *gin.Context) {
 	clusterID := c.Query("clusterId")
 	var client *kubernetes.Clientset
 
+	// VPN MODE: Connect to selected cluster on-demand
 	if clusterID != "" && k8s.Manager != nil {
-		if cls, err := k8s.Manager.GetCluster(clusterID); err == nil {
+		if cls, err := k8s.Manager.GetOrConnectCluster(clusterID); err == nil {
 			client = cls.ClientSet
 		}
 	}
@@ -100,8 +101,9 @@ func (h *AIHandler) GenerateRemediation(c *gin.Context) {
 	clusterID := c.Query("clusterId")
 	var client *kubernetes.Clientset
 
+	// VPN MODE: Connect to selected cluster on-demand
 	if clusterID != "" && k8s.Manager != nil {
-		if cls, err := k8s.Manager.GetCluster(clusterID); err == nil {
+		if cls, err := k8s.Manager.GetOrConnectCluster(clusterID); err == nil {
 			client = cls.ClientSet
 		}
 	}

@@ -15,29 +15,30 @@ interface DashboardProps {
 }
 
 export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = true, isLoading = false, onTriageRequest, onRefresh, metricsWindow = '1h', setMetricsWindow }) => {
-  const [saturationTab, setSaturationTab] = React.useState<'CPU' | 'Memory' | 'Storage' | 'Network'>('CPU');
+  const [saturationTab, setSaturationTab] = React.useState<'CPU' | 'Memory' | 'Storage' | 'Network' | 'GPU'>('CPU');
   const [saturationSort, setSaturationSort] = React.useState<'Live' | 'Avg' | 'P95' | 'P99'>('Live');
-  const totalCost = workloads.reduce((acc, w) => acc + (w.costPerMonth || 0), 0);
-  const criticalCount = workloads.filter(w => w.status === 'Critical').length;
-  const warningCount = workloads.filter(w => w.status === 'Warning').length;
+  const safeWorkloads = workloads || [];
+  const totalCost = safeWorkloads.reduce((acc, w) => acc + (w.costPerMonth || 0), 0);
+  const criticalCount = safeWorkloads.filter(w => w.status === 'Critical').length;
+  const warningCount = safeWorkloads.filter(w => w.status === 'Warning').length;
 
-  const potentialSavings = workloads
+  const potentialSavings = safeWorkloads
     .filter(w => w.recommendation && w.recommendation.action === 'Downsize')
     .reduce((acc, w) => acc + (w.costPerMonth * 0.4), 0);
 
   const statusData = [
-    { name: 'Healthy', value: workloads.filter(w => w.status === 'Healthy').length, color: '#10b981' },
+    { name: 'Healthy', value: safeWorkloads.filter(w => w.status === 'Healthy').length, color: '#10b981' },
     { name: 'Warning', value: warningCount, color: '#f59e0b' },
     { name: 'Critical', value: criticalCount, color: '#ef4444' },
   ];
 
   const incidents = useMemo(() => {
-    return workloads.filter(w => w.status !== 'Healthy').sort((a, b) => {
+    return safeWorkloads.filter(w => w.status !== 'Healthy').sort((a, b) => {
       if (a.status === 'Critical' && b.status !== 'Critical') return -1;
       if (a.status !== 'Critical' && b.status === 'Critical') return 1;
       return 0;
     });
-  }, [workloads]);
+  }, [safeWorkloads]);
 
   const reliabilityMetrics = useMemo(() => {
     const slo = 99.9;
@@ -49,7 +50,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = tr
     const dailyConsumption = (
       (criticalCount * criticalWeight) +
       (warningCount * warningWeight) +
-      ((workloads.length - criticalCount - warningCount) * healthyWeight)
+      ((safeWorkloads.length - criticalCount - warningCount) * healthyWeight)
     );
 
     const baselineConsumed = 0.042;
@@ -66,7 +67,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = tr
       uptimeForecast: `${days}d ${hours}h`,
       severity: burnRate > 2.0 ? 'Critical' : burnRate > 1.2 ? 'Warning' : 'Healthy'
     };
-  }, [workloads, criticalCount, warningCount]);
+  }, [safeWorkloads, criticalCount, warningCount]);
 
   const budgetGaugeData = [
     { name: 'Consumed', value: Math.max(0, isFinite(reliabilityMetrics.budgetPercentage) ? 100 - reliabilityMetrics.budgetPercentage : 100), color: reliabilityMetrics.severity === 'Critical' ? '#ef4444' : '#6366f1' },
@@ -97,7 +98,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = tr
   };
 
   // Loading State
-  if (isLoading && workloads.length === 0) {
+  if (isLoading && safeWorkloads.length === 0) {
     return (
       <div className="space-y-6 animate-fade-in">
         {/* Hero skeleton */}
@@ -139,7 +140,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = tr
   }
 
   // Empty State
-  if (workloads.length === 0) {
+  if (safeWorkloads.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[500px] animate-fade-in text-text-primary">
         <div className="relative mb-8">
@@ -254,7 +255,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = tr
               <Activity className="w-5 h-5" />
             </div>
             <span className="text-xs font-medium text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full">
-              {Math.round((1 - (criticalCount / workloads.length)) * 100)}%
+              {Math.round((1 - (criticalCount / (safeWorkloads.length || 1))) * 100)}%
             </span>
           </div>
           <p className="text-xs font-medium text-text-secondary uppercase tracking-wider mb-1">Health Score</p>
@@ -284,7 +285,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = tr
               <Box className="w-5 h-5" />
             </div>
             <span className="text-xs font-medium text-cyan-600 dark:text-cyan-400 bg-cyan-500/10 px-2 py-0.5 rounded-full">
-              {workloads.length}
+              {safeWorkloads.length}
             </span>
           </div>
           <p className="text-xs font-medium text-text-secondary uppercase tracking-wider mb-1">Workloads</p>
@@ -400,7 +401,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = tr
               </div>
               {/* Resource Tab Selector */}
               <div className="flex p-1 bg-bg-hover/50 rounded-lg border border-border-main">
-                {(['CPU', 'Memory', 'Storage', 'Network'] as const).map((type) => (
+                {(['CPU', 'Memory', 'Storage', 'GPU', 'Network'] as const).map((type) => (
                   <button
                     key={type}
                     onClick={() => setSaturationTab(type)}
@@ -435,6 +436,10 @@ export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = tr
                     base = Number(metrics.storageLimit) || 0;
                     used = Number(metrics.storageUsage) || 0;
                     unit = 'GiB';
+                  } else if (saturationTab === 'GPU') {
+                    base = Number(metrics.gpuLimit) || 0;
+                    used = Number(metrics.gpuUsage) || 0;
+                    unit = '%';
                   } else {
                     used = (Number(metrics.networkIn) || 0) + (Number(metrics.networkOut) || 0);
                     unit = 'MB/s';

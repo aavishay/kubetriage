@@ -2,12 +2,12 @@ project_name: kubetriage
 
 before:
   hooks:
-    - make build
+    - make build-frontend
 
 builds:
   - id: kubetriage
     dir: .
-    main: ./cmd/cli
+    main: ./cmd/server
     binary: kubetriage
     env:
       - CGO_ENABLED=0
@@ -17,23 +17,17 @@ builds:
     goarch:
       - amd64
       - arm64
-    darwin:
-      binary: kubetriage
-    linux:
-      binary: kubetriage
-    hooks:
-      post: []
+    ldflags:
+      - -X main.version={{.Version}} -s -w
 
 archives:
   - id: kubetriage
     builds:
       - kubetriage
     format: tar.gz
-    format_overrides:
-      - goos: windows
-        format: zip
     files:
-      - homebrew/kubetriage.rb
+      - LICENSE
+      - README.md
 
 brews:
   - id: kubetriage
@@ -42,13 +36,13 @@ brews:
       owner: aavishay
       name: homebrew-kubetriage
       branch: main
+      token: "{{ .Env.TAP_GITHUB_TOKEN }}"
     folder: Formula
     homepage: https://github.com/aavishay/kubetriage
     description: "KubeTriage - Autonomous SRE Guard for Kubernetes"
     license: "MIT"
     install: |
       bin.install "kubetriage"
-      system "open", "http://localhost:3001"
     test: |
       system "#{bin}/kubetriage", "--help"
 

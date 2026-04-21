@@ -16,7 +16,8 @@ import {
   Zap,
   Globe,
   ExternalLink,
-  MoreHorizontal
+  MoreHorizontal,
+  ChevronRight
 } from 'lucide-react';
 import { PageTransition } from './PageTransition';
 import { MetricsChart } from './MetricsChart';
@@ -24,7 +25,8 @@ import { MetricsChart } from './MetricsChart';
 interface ExternalMetricSource {
   id: string;
   name: string;
-  provider: 'datadog' | 'newrelic' | 'cloudwatch' | 'custom';
+  clusterId?: string;
+  provider: 'datadog' | 'newrelic' | 'cloudwatch' | 'prometheus' | 'custom' | 'victoriametrics';
   region?: string;
   namespace?: string;
   endpoint?: string;
@@ -49,6 +51,8 @@ export const ExternalMetricsView: React.FC = () => {
   const [sources, setSources] = useState<ExternalMetricSource[]>([]);
   const [metrics, setMetrics] = useState<MetricTimeSeries[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [selectedClusterId, setSelectedClusterId] = useState<string>('');
+  const [clusters, setClusters] = useState<Array<{ id: string; name: string }>>([]);
   const [showAddModal, setShowAddModal] = useState(false);
   const [selectedSource, setSelectedSource] = useState<ExternalMetricSource | null>(null);
   const [timeRange, setTimeRange] = useState('1h');
@@ -56,7 +60,12 @@ export const ExternalMetricsView: React.FC = () => {
 
   useEffect(() => {
     fetchSources();
+    fetchClusters();
   }, []);
+
+  useEffect(() => {
+    fetchSources();
+  }, [selectedClusterId]);
 
   useEffect(() => {
     if (activeTab === 'metrics') {
@@ -64,10 +73,25 @@ export const ExternalMetricsView: React.FC = () => {
     }
   }, [activeTab, timeRange]);
 
+  const fetchClusters = async () => {
+    try {
+      const res = await fetch('/api/clusters');
+      if (res.ok) {
+        const data = await res.json();
+        setClusters(data.map((c: any) => ({ id: c.id, name: c.name })));
+      }
+    } catch (error) {
+      console.error('Failed to fetch clusters:', error);
+    }
+  };
+
   const fetchSources = async () => {
     setIsLoading(true);
     try {
-      const res = await fetch('/api/metrics/sources');
+      const url = selectedClusterId
+        ? `/api/metrics/sources?cluster_id=${selectedClusterId}`
+        : '/api/metrics/sources';
+      const res = await fetch(url);
       if (res.ok) {
         const data = await res.json();
         setSources(data.sources || []);
@@ -119,6 +143,30 @@ export const ExternalMetricsView: React.FC = () => {
         syncStatus: 'idle',
         errorMessage: 'API key expired',
         labels: { env: 'staging' }
+      },
+      {
+        id: 'source-prom-001',
+        name: 'Prometheus Production',
+        provider: 'prometheus',
+        endpoint: 'http://prometheus.monitoring.svc.cluster.local:9090',
+        enabled: true,
+        createdAt: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString(),
+        updatedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+        lastSyncAt: new Date(Date.now() - 1 * 60 * 1000).toISOString(),
+        syncStatus: 'idle',
+        labels: { env: 'production', cluster: 'main' }
+      },
+      {
+        id: 'source-vm-001',
+        name: 'VictoriaMetrics Production',
+        provider: 'victoriametrics',
+        endpoint: 'http://vmselect.monitoring.svc.cluster.local:8481',
+        enabled: true,
+        createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
+        updatedAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
+        lastSyncAt: new Date(Date.now() - 2 * 60 * 1000).toISOString(),
+        syncStatus: 'idle',
+        labels: { env: 'production', cluster: 'main' }
       }
     ]);
   };
@@ -172,6 +220,18 @@ export const ExternalMetricsView: React.FC = () => {
         labels: { service: 'cache-service', source: 'datadog' },
         unit: 'bytes',
         values: values.map(v => ({ ...v, value: 1024 * 1024 * 1024 * (0.6 + Math.sin(v.timestamp) * 0.2) }))
+      },
+      {
+        name: 'up',
+        labels: { job: 'kubernetes-nodes', source: 'prometheus' },
+        unit: '',
+        values: values.map(v => ({ ...v, value: 1 }))
+      },
+      {
+        name: 'node_cpu_seconds_total',
+        labels: { cpu: '0', mode: 'user', source: 'prometheus' },
+        unit: 'seconds',
+        values: values.map(v => ({ ...v, value: 12345 + v.timestamp / 1000 }))
       }
     ]);
   };
@@ -191,6 +251,8 @@ export const ExternalMetricsView: React.FC = () => {
       case 'datadog': return <Zap className="w-5 h-5 text-[#632CA6]" />;
       case 'newrelic': return <BarChart3 className="w-5 h-5 text-[#00C74D]" />;
       case 'cloudwatch': return <Cloud className="w-5 h-5 text-[#FF9900]" />;
+      case 'prometheus': return <Database className="w-5 h-5 text-orange-500" />;
+      case 'victoriametrics': return <Database className="w-5 h-5 text-blue-500" />;
       case 'custom': return <Globe className="w-5 h-5 text-zinc-500" />;
       default: return <Database className="w-5 h-5 text-zinc-500" />;
     }
@@ -201,6 +263,8 @@ export const ExternalMetricsView: React.FC = () => {
       case 'datadog': return 'Datadog';
       case 'newrelic': return 'New Relic';
       case 'cloudwatch': return 'AWS CloudWatch';
+      case 'prometheus': return 'Prometheus';
+      case 'victoriametrics': return 'VictoriaMetrics';
       case 'custom': return 'Custom Endpoint';
       default: return provider;
     }
@@ -276,15 +340,28 @@ export const ExternalMetricsView: React.FC = () => {
           <div>
             <h1 className="text-2xl font-bold text-zinc-900 dark:text-white">External Metrics</h1>
             <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-1">
-              Ingest metrics from Datadog, New Relic, CloudWatch, and other sources
+              Ingest metrics from Prometheus, Datadog, New Relic, CloudWatch, VictoriaMetrics, and other sources
             </p>
           </div>
-          <button
-            onClick={() => setShowAddModal(true)}
-            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors"
-          >
-            <Plus className="w-4 h-4" /> Add Source
-          </button>
+          <div className="flex items-center gap-3">
+            {/* Cluster Filter */}
+            <select
+              value={selectedClusterId}
+              onChange={(e) => setSelectedClusterId(e.target.value)}
+              className="px-3 py-2 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-lg text-sm text-zinc-700 dark:text-zinc-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="">All Clusters</option>
+              {clusters.map(cluster => (
+                <option key={cluster.id} value={cluster.id}>{cluster.name}</option>
+              ))}
+            </select>
+            <button
+              onClick={() => setShowAddModal(true)}
+              className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors"
+            >
+              <Plus className="w-4 h-4" /> Add Source
+            </button>
+          </div>
         </div>
 
         {/* Stats */}
@@ -509,6 +586,324 @@ export const ExternalMetricsView: React.FC = () => {
           </div>
         )}
       </div>
+
+      {/* Add Source Modal */}
+      {showAddModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-bg-card rounded-2xl border border-border-main shadow-xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6 border-b border-border-main flex items-center justify-between">
+              <h2 className="text-lg font-bold text-text-primary">Add External Metrics Source</h2>
+              <button
+                onClick={() => setShowAddModal(false)}
+                className="text-text-tertiary hover:text-text-primary"
+              >
+                &times;
+              </button>
+            </div>
+            <AddSourceForm
+              onClose={() => setShowAddModal(false)}
+              onSave={() => {
+                fetchSources();
+                setShowAddModal(false);
+              }}
+              clusters={clusters}
+            />
+          </div>
+        </div>
+      )}
     </PageTransition>
+  );
+};
+
+// Add Source Form Component
+interface AddSourceFormProps {
+  onClose: () => void;
+  onSave: () => void;
+  clusters: Array<{ id: string; name: string }>;
+}
+
+const AddSourceForm: React.FC<AddSourceFormProps> = ({ onClose, onSave, clusters }) => {
+  const [step, setStep] = useState(1);
+  const [provider, setProvider] = useState<ExternalMetricSource['provider']>('prometheus');
+  const [name, setName] = useState('');
+  const [endpoint, setEndpoint] = useState('');
+  const [apiKey, setApiKey] = useState('');
+  const [clusterId, setClusterId] = useState('');
+  const [region, setRegion] = useState('');
+  const [namespace, setNamespace] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState('');
+
+  const providers: { id: ExternalMetricSource['provider']; name: string; icon: React.ReactNode; description: string }[] = [
+    {
+      id: 'prometheus',
+      name: 'Prometheus',
+      icon: <Database className="w-6 h-6 text-orange-500" />,
+      description: 'Connect to Prometheus server for metrics querying via PromQL'
+    },
+    {
+      id: 'victoriametrics',
+      name: 'VictoriaMetrics',
+      icon: <Database className="w-6 h-6 text-blue-500" />,
+      description: 'High-performance metrics storage with PromQL compatibility'
+    },
+    {
+      id: 'datadog',
+      name: 'Datadog',
+      icon: <Zap className="w-6 h-6 text-[#632CA6]" />,
+      description: 'Ingest metrics from Datadog monitoring platform'
+    },
+    {
+      id: 'cloudwatch',
+      name: 'AWS CloudWatch',
+      icon: <Cloud className="w-6 h-6 text-[#FF9900]" />,
+      description: 'Ingest metrics from AWS CloudWatch'
+    },
+    {
+      id: 'newrelic',
+      name: 'New Relic',
+      icon: <BarChart3 className="w-6 h-6 text-[#00C74D]" />,
+      description: 'Ingest metrics from New Relic observability platform'
+    },
+    {
+      id: 'custom',
+      name: 'Custom Endpoint',
+      icon: <Globe className="w-6 h-6 text-zinc-500" />,
+      description: 'Any Prometheus-compatible metrics endpoint'
+    }
+  ];
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    setError('');
+
+    try {
+      const payload: any = {
+        name,
+        provider,
+        clusterId: clusterId || undefined,
+        endpoint: endpoint || undefined,
+        apiKey: apiKey || undefined,
+        region: region || undefined,
+        namespace: namespace || undefined,
+        labels: {}
+      };
+
+      const res = await fetch('/api/metrics/sources', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || 'Failed to create source');
+      }
+
+      onSave();
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  if (step === 1) {
+    return (
+      <div className="p-6">
+        <p className="text-sm text-text-secondary mb-4">Select a metrics provider to connect:</p>
+        <div className="grid grid-cols-1 gap-3">
+          {providers.map((p) => (
+            <button
+              key={p.id}
+              onClick={() => {
+                setProvider(p.id);
+                setName(`${p.name} ${new Date().toLocaleDateString()}`);
+                if (p.id === 'prometheus') {
+                  setEndpoint('http://prometheus.monitoring.svc.cluster.local:9090');
+                } else if (p.id === 'victoriametrics') {
+                  setEndpoint('http://vmselect.monitoring.svc.cluster.local:8481');
+                } else {
+                  setEndpoint('');
+                }
+                setStep(2);
+              }}
+              className="flex items-center gap-4 p-4 rounded-xl border border-border-main hover:border-primary-500/50 hover:bg-bg-hover/50 transition-all text-left"
+            >
+              <div className="p-2 bg-bg-hover rounded-lg">{p.icon}</div>
+              <div className="flex-1">
+                <p className="font-semibold text-text-primary">{p.name}</p>
+                <p className="text-xs text-text-secondary">{p.description}</p>
+              </div>
+              <ChevronRight className="w-5 h-5 text-text-tertiary" />
+            </button>
+          ))}
+        </div>
+        <div className="mt-6 flex justify-end">
+          <button
+            onClick={onClose}
+            className="px-4 py-2 text-sm text-text-secondary hover:text-text-primary"
+          >
+            Cancel
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="p-6 space-y-4">
+      <div className="flex items-center gap-2 mb-6">
+        <button
+          type="button"
+          onClick={() => setStep(1)}
+          className="text-sm text-text-secondary hover:text-text-primary flex items-center gap-1"
+        >
+          &larr; Back
+        </button>
+        <span className="text-text-secondary">|</span>
+        <span className="text-sm font-medium text-text-primary">Configure {providers.find(p => p.id === provider)?.name}</span>
+      </div>
+
+      {error && (
+        <div className="p-3 rounded-lg bg-rose-500/10 border border-rose-500/20 text-rose-500 text-sm">
+          {error}
+        </div>
+      )}
+
+      <div>
+        <label className="block text-sm font-medium text-text-secondary mb-1.5">Source Name *</label>
+        <input
+          type="text"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          placeholder="e.g., Production Prometheus"
+          required
+          className="w-full px-3 py-2 bg-bg-hover border border-border-main rounded-lg text-text-primary text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+        />
+      </div>
+
+      {(provider === 'prometheus' || provider === 'victoriametrics' || provider === 'custom') && (
+        <div>
+          <label className="block text-sm font-medium text-text-secondary mb-1.5">Endpoint URL *</label>
+          <input
+            type="url"
+            value={endpoint}
+            onChange={(e) => setEndpoint(e.target.value)}
+            placeholder={provider === 'prometheus' ? 'http://prometheus:9090' : 'http://vmselect:8481'}
+            required
+            className="w-full px-3 py-2 bg-bg-hover border border-border-main rounded-lg text-text-primary text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+          />
+          <p className="text-xs text-text-tertiary mt-1">
+            The URL must be accessible from the Kubetriage server
+          </p>
+        </div>
+      )}
+
+      {(provider === 'datadog' || provider === 'newrelic') && (
+        <>
+          <div>
+            <label className="block text-sm font-medium text-text-secondary mb-1.5">API Key *</label>
+            <input
+              type="password"
+              value={apiKey}
+              onChange={(e) => setApiKey(e.target.value)}
+              placeholder="Your API key"
+              required
+              className="w-full px-3 py-2 bg-bg-hover border border-border-main rounded-lg text-text-primary text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+            />
+          </div>
+          {provider === 'datadog' && (
+            <div>
+              <label className="block text-sm font-medium text-text-secondary mb-1.5">Endpoint (optional)</label>
+              <input
+                type="url"
+                value={endpoint}
+                onChange={(e) => setEndpoint(e.target.value)}
+                placeholder="https://api.datadoghq.com"
+                className="w-full px-3 py-2 bg-bg-hover border border-border-main rounded-lg text-text-primary text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+              />
+            </div>
+          )}
+        </>
+      )}
+
+      {provider === 'cloudwatch' && (
+        <>
+          <div>
+            <label className="block text-sm font-medium text-text-secondary mb-1.5">Region *</label>
+            <select
+              value={region}
+              onChange={(e) => setRegion(e.target.value)}
+              required
+              className="w-full px-3 py-2 bg-bg-hover border border-border-main rounded-lg text-text-primary text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+            >
+              <option value="">Select region...</option>
+              <option value="us-east-1">US East (N. Virginia)</option>
+              <option value="us-east-2">US East (Ohio)</option>
+              <option value="us-west-1">US West (N. California)</option>
+              <option value="us-west-2">US West (Oregon)</option>
+              <option value="eu-west-1">Europe (Ireland)</option>
+              <option value="eu-central-1">Europe (Frankfurt)</option>
+              <option value="ap-southeast-1">Asia Pacific (Singapore)</option>
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-text-secondary mb-1.5">Namespace (optional)</label>
+            <input
+              type="text"
+              value={namespace}
+              onChange={(e) => setNamespace(e.target.value)}
+              placeholder="e.g., AWS/EKS"
+              className="w-full px-3 py-2 bg-bg-hover border border-border-main rounded-lg text-text-primary text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-text-secondary mb-1.5">API Key *</label>
+            <input
+              type="password"
+              value={apiKey}
+              onChange={(e) => setApiKey(e.target.value)}
+              placeholder="AWS Access Key ID"
+              required
+              className="w-full px-3 py-2 bg-bg-hover border border-border-main rounded-lg text-text-primary text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+            />
+          </div>
+        </>
+      )}
+
+      <div>
+        <label className="block text-sm font-medium text-text-secondary mb-1.5">Cluster (optional)</label>
+        <select
+          value={clusterId}
+          onChange={(e) => setClusterId(e.target.value)}
+          className="w-full px-3 py-2 bg-bg-hover border border-border-main rounded-lg text-text-primary text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+        >
+          <option value="">All clusters</option>
+          {clusters.map(c => (
+            <option key={c.id} value={c.id}>{c.name}</option>
+          ))}
+        </select>
+      </div>
+
+      <div className="flex justify-end gap-3 pt-4">
+        <button
+          type="button"
+          onClick={onClose}
+          className="px-4 py-2 text-sm text-text-secondary hover:text-text-primary"
+          disabled={isSubmitting}
+        >
+          Cancel
+        </button>
+        <button
+          type="submit"
+          disabled={isSubmitting || !name}
+          className="px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white text-sm font-medium rounded-lg transition-colors disabled:opacity-50"
+        >
+          {isSubmitting ? 'Creating...' : 'Add Source'}
+        </button>
+      </div>
+    </form>
   );
 };

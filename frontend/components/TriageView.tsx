@@ -269,10 +269,12 @@ export const TriageView: React.FC<TriageViewProps> = ({ workloads, isDarkMode = 
     }
   }, [selectedWorkload, analysis]);
 
+  const safeWorkloads = workloads || [];
+
   // Selection Logic
   useEffect(() => {
     if (targetWorkloadId) {
-      const workload = workloads.find(w => w.id === targetWorkloadId || w.name === targetWorkloadId);
+      const workload = safeWorkloads.find(w => w.id === targetWorkloadId || w.name === targetWorkloadId);
       if (workload) {
         if (selectedWorkload?.id !== workload.id) {
           if (selectedWorkload) notifyLeave(`workload-${selectedWorkload.id}`);
@@ -303,7 +305,7 @@ export const TriageView: React.FC<TriageViewProps> = ({ workloads, isDarkMode = 
         }
       }
     }
-  }, [targetWorkloadId, workloads, targetTemplate]);
+  }, [targetWorkloadId, safeWorkloads, targetTemplate]);
 
   useEffect(() => {
     return () => {
@@ -312,7 +314,7 @@ export const TriageView: React.FC<TriageViewProps> = ({ workloads, isDarkMode = 
   }, [selectedWorkload]);
 
   useEffect(() => {
-    if (selectedWorkload && !workloads.some(w => w.id === selectedWorkload.id)) {
+    if (selectedWorkload && !safeWorkloads.some(w => w.id === selectedWorkload.id)) {
       setSelectedWorkload(null);
       setAnalysis(null);
     }
@@ -334,7 +336,7 @@ export const TriageView: React.FC<TriageViewProps> = ({ workloads, isDarkMode = 
   };
 
   const filteredWorkloads = useMemo(() => {
-    return workloads.filter(w => {
+    return (workloads || []).filter(w => {
       if (namespaceFilter !== 'all' && w.namespace !== namespaceFilter) return false;
       if (statusFilter !== 'all' && w.status !== statusFilter) return false;
       if (workloadSearchTerm && !w.name.toLowerCase().includes(workloadSearchTerm.toLowerCase())) return false;

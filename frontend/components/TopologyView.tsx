@@ -34,7 +34,7 @@ export const TopologyView: React.FC<TopologyViewProps> = ({ workloads }) => {
     // Group workloads by namespace for Schematic View
     const groupedWorkloads = useMemo<Record<string, Workload[]>>(() => {
         const groups: Record<string, Workload[]> = {};
-        workloads.forEach(w => {
+        (workloads || []).forEach(w => {
             if (!groups[w.namespace]) groups[w.namespace] = [];
             groups[w.namespace].push(w);
         });

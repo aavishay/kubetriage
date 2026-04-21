@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"sort"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -15,7 +16,8 @@ import (
 type ExternalMetricSource struct {
 	ID          string            `json:"id"`
 	Name        string            `json:"name"`
-	Provider    string            `json:"provider"` // datadog, newrelic, cloudwatch, custom
+	ClusterID   string            `json:"clusterId,omitempty"`  // associated cluster (optional)
+	Provider    string            `json:"provider"` // datadog, newrelic, cloudwatch, custom, victoriametrics
 	APIKey      string            `json:"apiKey,omitempty"`
 	APISecret   string            `json:"apiSecret,omitempty"`
 	Region      string            `json:"region,omitempty"`     // for cloudwatch
@@ -79,9 +81,16 @@ var (
 )
 
 // ListMetricSourcesHandler returns all external metric sources
+// Supports filtering by cluster_id query parameter
 func ListMetricSourcesHandler(c *gin.Context) {
+	clusterID := c.Query("cluster_id")
+
 	var sources []ExternalMetricSource
 	for _, s := range metricSources {
+		// If cluster_id specified, filter by it
+		if clusterID != "" && s.ClusterID != clusterID {
+			continue
+		}
 		sources = append(sources, *s)
 	}
 
@@ -112,6 +121,7 @@ func GetMetricSourceHandler(c *gin.Context) {
 func CreateMetricSourceHandler(c *gin.Context) {
 	var request struct {
 		Name      string            `json:"name"`
+		ClusterID string            `json:"clusterId,omitempty"`
 		Provider  string            `json:"provider"`
 		APIKey    string            `json:"apiKey"`
 		APISecret string            `json:"apiSecret"`
@@ -129,6 +139,7 @@ func CreateMetricSourceHandler(c *gin.Context) {
 	source := ExternalMetricSource{
 		ID:         uuid.New().String(),
 		Name:       request.Name,
+		ClusterID:  request.ClusterID,
 		Provider:   request.Provider,
 		APIKey:     request.APIKey,
 		APISecret:  request.APISecret,
@@ -388,6 +399,24 @@ func GetMetricProvidersHandler(c *gin.Context) {
 			"optionalFields": []string{"namespace"},
 		},
 		{
+			"id":          "prometheus",
+			"name":        "Prometheus",
+			"description": "Connect to Prometheus server for metrics querying via PromQL",
+			"authType":    "none_or_basic",
+			"requiredFields": []string{"endpoint"},
+			"optionalFields": []string{"apiKey"},
+			"features": []string{"promql_compatible", "native_prometheus"},
+		},
+		{
+			"id":          "victoriametrics",
+			"name":        "VictoriaMetrics",
+			"description": "Connect to VictoriaMetrics time-series database for high-performance metrics querying",
+			"authType":    "none_or_basic",
+			"requiredFields": []string{"endpoint"},
+			"optionalFields": []string{"apiKey"},
+			"features": []string{"promql_compatible", "high_compression", "fast_queries"},
+		},
+		{
 			"id":          "custom",
 			"name":        "Custom Endpoint",
 			"description": "Ingest metrics from any Prometheus-compatible endpoint",
@@ -438,11 +467,63 @@ func testMetricSourceConnection(source *ExternalMetricSource) {
 		time.Sleep(500 * time.Millisecond)
 	case "cloudwatch":
 		time.Sleep(500 * time.Millisecond)
+	case "prometheus":
+		// Test connection to Prometheus
+		if _, err := testPrometheusConnection(source.Endpoint, source.APIKey); err != nil {
+			source.SyncStatus = "error"
+			source.ErrorMessage = err.Error()
+			return
+		}
+		time.Sleep(300 * time.Millisecond)
+	case "victoriametrics":
+		// Test connection to VictoriaMetrics
+		if _, err := testVictoriaMetricsConnection(source.Endpoint, source.APIKey); err != nil {
+			source.SyncStatus = "error"
+			source.ErrorMessage = err.Error()
+			return
+		}
+		time.Sleep(300 * time.Millisecond)
 	case "custom":
 		time.Sleep(300 * time.Millisecond)
 	}
 
 	source.SyncStatus = "idle"
+}
+
+// testPrometheusConnection attempts to connect to a Prometheus instance
+func testPrometheusConnection(endpoint, apiKey string) (bool, error) {
+	if endpoint == "" {
+		return false, fmt.Errorf("endpoint is required")
+	}
+
+	// Validate the endpoint format
+	if !strings.HasPrefix(endpoint, "http://") && !strings.HasPrefix(endpoint, "https://") {
+		return false, fmt.Errorf("endpoint must start with http:// or https://")
+	}
+
+	// In a real implementation, this would:
+	// 1. Create a Prometheus client
+	// 2. Execute a simple health check query (e.g., "up")
+	// 3. Return success/failure
+	return true, nil
+}
+
+// testVictoriaMetricsConnection attempts to connect to a VictoriaMetrics instance
+func testVictoriaMetricsConnection(endpoint, apiKey string) (bool, error) {
+	if endpoint == "" {
+		return false, fmt.Errorf("endpoint is required")
+	}
+
+	// In a real implementation, this would:
+	// 1. Create a VM client
+	// 2. Execute a simple health check query (e.g., "up")
+	// 3. Return success/failure
+	// For now, we just validate the endpoint format
+	if !strings.HasPrefix(endpoint, "http://") && !strings.HasPrefix(endpoint, "https://") {
+		return false, fmt.Errorf("endpoint must start with http:// or https://")
+	}
+
+	return true, nil
 }
 
 func syncMetricsFromSource(source *ExternalMetricSource) {
@@ -454,12 +535,126 @@ func syncMetricsFromSource(source *ExternalMetricSource) {
 	// 3. Transform to internal format
 	// 4. Store in metricsStore
 
-	// Simulate fetching metrics
-	time.Sleep(2 * time.Second)
+	switch source.Provider {
+	case "prometheus":
+		// Sync metrics from Prometheus
+		if err := syncPrometheus(source); err != nil {
+			source.SyncStatus = "error"
+			source.ErrorMessage = err.Error()
+			return
+		}
+	case "victoriametrics":
+		// Sync metrics from VictoriaMetrics
+		if err := syncVictoriaMetrics(source); err != nil {
+			source.SyncStatus = "error"
+			source.ErrorMessage = err.Error()
+			return
+		}
+	default:
+		// Simulate fetching metrics for other providers
+		time.Sleep(2 * time.Second)
+	}
 
 	now := time.Now()
 	source.LastSyncAt = &now
 	source.SyncStatus = "idle"
+}
+
+// syncPrometheus syncs metrics from a Prometheus instance
+func syncPrometheus(source *ExternalMetricSource) error {
+	// In real implementation, would:
+	// 1. Create Prometheus client from source.Endpoint, source.APIKey
+	// 2. Query available metrics using PromQL (e.g., up, node_exporter metrics)
+	// 3. Store in metricsStore keyed by source.ID
+
+	// For now, simulate some sample Prometheus metrics
+	time.Sleep(1 * time.Second)
+
+	now := time.Now()
+	sampleMetrics := []ExternalMetric{
+		{
+			ID:         fmt.Sprintf("prom-%d", time.Now().Unix()),
+			SourceID:   source.ID,
+			Name:       "up",
+			Value:      1,
+			Timestamp:  now,
+			Unit:       "",
+			MetricType: "gauge",
+			Labels:     map[string]string{"job": "kubernetes-nodes", "instance": "node-001"},
+		},
+		{
+			ID:         fmt.Sprintf("prom-%d", time.Now().Unix()+1),
+			SourceID:   source.ID,
+			Name:       "node_cpu_seconds_total",
+			Value:      12345.67,
+			Timestamp:  now,
+			Unit:       "seconds",
+			MetricType: "counter",
+			Labels:     map[string]string{"cpu": "0", "mode": "user", "instance": "node-001"},
+		},
+		{
+			ID:         fmt.Sprintf("prom-%d", time.Now().Unix()+2),
+			SourceID:   source.ID,
+			Name:       "container_memory_usage_bytes",
+			Value:      536870912,
+			Timestamp:  now,
+			Unit:       "bytes",
+			MetricType: "gauge",
+			Labels:     map[string]string{"container": "app", "pod": "web-001", "namespace": "default"},
+		},
+	}
+
+	// Store metrics
+	for _, metric := range sampleMetrics {
+		key := fmt.Sprintf("source-%s:%s", source.ID, metric.Name)
+		metricsStore[key] = append(metricsStore[key], metric)
+	}
+
+	return nil
+}
+
+// syncVictoriaMetrics syncs metrics from a VictoriaMetrics instance
+func syncVictoriaMetrics(source *ExternalMetricSource) error {
+	// In real implementation, would:
+	// 1. Create VM client from source.Endpoint, source.APIKey
+	// 2. Query available metrics (e.g., node_exporter, kubelet metrics)
+	// 3. Store in metricsStore keyed by source.ID
+
+	// For now, simulate some sample metrics
+	time.Sleep(1 * time.Second)
+
+	// Simulate adding some sample VM metrics to the store
+	now := time.Now()
+	sampleMetrics := []ExternalMetric{
+		{
+			ID:         fmt.Sprintf("vm-%d", time.Now().Unix()),
+			SourceID:   source.ID,
+			Name:       "cpu_usage",
+			Value:      45.5,
+			Timestamp:  now,
+			Unit:       "percent",
+			MetricType: "gauge",
+			Labels:     map[string]string{"cluster": "prod", "instance": "vm-001"},
+		},
+		{
+			ID:         fmt.Sprintf("vm-%d", time.Now().Unix()+1),
+			SourceID:   source.ID,
+			Name:       "memory_usage",
+			Value:      72.3,
+			Timestamp:  now,
+			Unit:       "percent",
+			MetricType: "gauge",
+			Labels:     map[string]string{"cluster": "prod", "instance": "vm-001"},
+		},
+	}
+
+	// Store metrics
+	for _, metric := range sampleMetrics {
+		key := fmt.Sprintf("source-%s:%s", source.ID, metric.Name)
+		metricsStore[key] = append(metricsStore[key], metric)
+	}
+
+	return nil
 }
 
 func matchesLabels(metricLabels, queryLabels map[string]string) bool {

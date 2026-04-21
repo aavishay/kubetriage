@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	"sync"
 	"time"
 
 	"github.com/aavishay/kubetriage/backend/internal/cache"
@@ -115,10 +114,17 @@ type CorrelatedEvent struct {
 	CorrelationScore float64  `json:"correlationScore"` // 0-1 indicating how strongly correlated
 }
 
-// MultiClusterHandler returns aggregated data from all clusters
+// MultiClusterHandler returns aggregated data from clusters
+// In VPN mode, only connects to the selected cluster on-demand
 func MultiClusterHandler(c *gin.Context) {
+	// Support filtering by specific cluster ID (for VPN mode)
+	selectedClusterID := c.Query("cluster")
+
 	// 1. Try Cache
 	cacheKey := "multicluster:aggregate"
+	if selectedClusterID != "" {
+		cacheKey = fmt.Sprintf("multicluster:aggregate:%s", selectedClusterID)
+	}
 	if val, err := cache.Get(c.Request.Context(), cacheKey); err == nil {
 		c.Header("X-Cache", "HIT")
 		c.Data(http.StatusOK, "application/json", []byte(val))
@@ -130,49 +136,54 @@ func MultiClusterHandler(c *gin.Context) {
 		return
 	}
 
-	clusters := k8s.Manager.ListClusters()
-	if len(clusters) == 0 {
-		c.JSON(http.StatusOK, MultiClusterResponse{
-			Timestamp: time.Now(),
-			Clusters:  []ClusterStatus{},
-			Workloads: []AggregatedWorkload{},
-			Incidents: []CrossClusterIncident{},
-			GlobalSummary: GlobalSummary{},
-		})
-		return
-	}
-
 	ctx := c.Request.Context()
 
-	// Fetch data from all clusters concurrently
+	// Fetch data from clusters
 	var (
-		clusterStatuses []ClusterStatus
-		workloads       []AggregatedWorkload
+		clusterStatuses  []ClusterStatus
+		workloads        []AggregatedWorkload
 		clusterIncidents map[string][]db.TriageReport
-		mu              sync.Mutex
-		wg              sync.WaitGroup
 	)
 
 	clusterIncidents = make(map[string][]db.TriageReport)
 
-	for _, cluster := range clusters {
-		wg.Add(1)
-		go func(cls *k8s.ClusterConn) {
-			defer wg.Done()
+	// VPN MODE: If a specific cluster is selected, only connect to that one
+	if selectedClusterID != "" {
+		cluster, err := k8s.Manager.GetOrConnectCluster(selectedClusterID)
+		if err != nil {
+			// Cluster not found or not reachable (behind VPN)
+			c.JSON(http.StatusServiceUnavailable, gin.H{
+				"error":   fmt.Sprintf("Cannot connect to cluster %s: %v", selectedClusterID, err),
+				"message": "Cluster may be behind a VPN. Please connect to the VPN and try again.",
+			})
+			return
+		}
 
-			status := fetchClusterStatus(ctx, cls)
-			clusterWorkloads := fetchClusterWorkloads(ctx, cls)
-			incidents := fetchClusterIncidents(cls.ID)
+		status := fetchClusterStatus(ctx, cluster)
+		clusterWorkloads := fetchClusterWorkloads(ctx, cluster)
+		incidents := fetchClusterIncidents(cluster.ID)
 
-			mu.Lock()
+		clusterStatuses = append(clusterStatuses, status)
+		workloads = append(workloads, clusterWorkloads...)
+		clusterIncidents[cluster.ID] = incidents
+	} else {
+		// No specific cluster selected - list all registered clusters without connecting
+		// This returns basic info without attempting connections (for cluster selection UI)
+		allClusters := k8s.Manager.ListClusters()
+		for _, cluster := range allClusters {
+			// Return basic info - status will be "Offline" until connected
+			status := ClusterStatus{
+				ID:     cluster.ID,
+				Name:   cluster.Name,
+				Status: "Offline",
+			}
+			if cluster.IsConnected() {
+				// Already connected cluster - fetch full status
+				status = fetchClusterStatus(ctx, cluster)
+			}
 			clusterStatuses = append(clusterStatuses, status)
-			workloads = append(workloads, clusterWorkloads...)
-			clusterIncidents[cls.ID] = incidents
-			mu.Unlock()
-		}(cluster)
+		}
 	}
-
-	wg.Wait()
 
 	// Cross-cluster correlation analysis
 	incidents := analyzeCrossClusterIncidents(clusterStatuses, clusterIncidents)
@@ -200,7 +211,8 @@ func fetchClusterStatus(ctx context.Context, cluster *k8s.ClusterConn) ClusterSt
 		Labels:        make(map[string]string),
 	}
 
-	if cluster.ClientSet == nil {
+	// Check if cluster is connected - if not, return Offline status
+	if cluster == nil || !cluster.IsConnected() || cluster.ClientSet == nil {
 		status.Status = "Offline"
 		return status
 	}
@@ -471,12 +483,18 @@ func detectProvider(nodeLabels map[string]string) string {
 }
 
 // ClusterHealthCheckHandler performs a detailed health check on a specific cluster
+// In VPN mode, this will attempt to connect on-demand
 func ClusterHealthCheckHandler(c *gin.Context) {
 	clusterID := c.Param("id")
 
-	cluster, err := k8s.Manager.GetCluster(clusterID)
+	// GetOrConnectCluster will attempt to establish connection if not already connected
+	cluster, err := k8s.Manager.GetOrConnectCluster(clusterID)
 	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+		// Cluster may be behind VPN
+		c.JSON(http.StatusServiceUnavailable, gin.H{
+			"error":   fmt.Sprintf("Cannot connect to cluster: %v", err),
+			"message": "Cluster may be behind a VPN. Please connect to the VPN and try again.",
+		})
 		return
 	}
 

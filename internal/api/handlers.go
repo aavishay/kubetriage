@@ -50,6 +50,14 @@ type ResourceMetrics struct {
 	MemoryAvg      float64 `json:"memoryAvg"`
 	MemoryP95      float64 `json:"memoryP95"`
 	MemoryP99      float64 `json:"memoryP99"`
+	// GPU Metrics
+	GpuRequest     float64 `json:"gpuRequest"`     // Number of GPUs requested
+	GpuLimit       float64 `json:"gpuLimit"`       // Number of GPUs limited
+	GpuUsage       float64 `json:"gpuUsage"`       // GPU utilization in percentage
+	GpuMemoryUsage float64 `json:"gpuMemoryUsage"` // GPU memory usage in MiB
+	GpuMemoryTotal float64 `json:"gpuMemoryTotal"` // GPU memory total in MiB
+	GpuTemperature float64 `json:"gpuTemperature"` // GPU temperature in Celsius
+	GpuPower       float64 `json:"gpuPower"`       // GPU power usage in Watts
 }
 
 type K8sEvent struct {
@@ -148,7 +156,7 @@ func getStatus(available, replicas int32) string {
 	return "Warning"
 }
 
-func getRealMetrics(ctx context.Context, namespace, name, kind string, podSpec v1.PodSpec, window string, matchLabels map[string]string, replicas int32) ResourceMetrics {
+func getRealMetrics(ctx context.Context, clusterID, namespace, name, kind string, podSpec v1.PodSpec, window string, matchLabels map[string]string, replicas int32) ResourceMetrics {
 	metrics := ResourceMetrics{}
 
 	// 1. Calculate Requests/Limits from Pod Spec
@@ -176,6 +184,18 @@ func getRealMetrics(ctx context.Context, namespace, name, kind string, podSpec v
 		if q, ok := container.Resources.Limits[v1.ResourceEphemeralStorage]; ok {
 			metrics.StorageLimit += float64(q.Value()) / (1024 * 1024 * 1024) // GiB
 		}
+
+		// GPU Resources (nvidia.com/gpu, amd.com/gpu, etc.)
+		for resourceName, q := range container.Resources.Requests {
+			if strings.Contains(string(resourceName), "gpu") || strings.Contains(string(resourceName), "nvidia.com") {
+				metrics.GpuRequest += float64(q.Value())
+			}
+		}
+		for resourceName, q := range container.Resources.Limits {
+			if strings.Contains(string(resourceName), "gpu") || strings.Contains(string(resourceName), "nvidia.com") {
+				metrics.GpuLimit += float64(q.Value())
+			}
+		}
 	}
 
 	// 1.5 Scale Limits/Requests by Replicas
@@ -187,6 +207,8 @@ func getRealMetrics(ctx context.Context, namespace, name, kind string, podSpec v
 		metrics.MemoryLimit *= scale
 		metrics.StorageRequest *= scale
 		metrics.StorageLimit *= scale
+		metrics.GpuRequest *= scale
+		metrics.GpuLimit *= scale
 	}
 
 	// 2. Fetch Usage from Prometheus (if avail)
@@ -237,41 +259,100 @@ func getRealMetrics(ctx context.Context, namespace, name, kind string, podSpec v
 		if val, err := prometheus.GlobalClient.QueryVector(ctx, memAvgQuery); err == nil {
 			metrics.MemoryAvg = val / (1024 * 1024)
 		}
+
+		// GPU Metrics (NVIDIA DCGM exporter or similar)
+		// GPU Utilization percentage
+		gpuUtilQuery := fmt.Sprintf(`avg_over_time(sum(dcgm_gpu_utilization{namespace="%s", pod=~"^%s-[a-z0-9]+(-[a-z0-9]+)?$"})[%s:%s])`, namespace, name, window, subStep)
+		if val, err := prometheus.GlobalClient.QueryVector(ctx, gpuUtilQuery); err == nil {
+			metrics.GpuUsage = val
+		} else {
+			// Fallback to nvidia_gpu_utilization
+			gpuUtilQuery = fmt.Sprintf(`avg_over_time(sum(nvidia_gpu_utilization_gpu{namespace="%s", pod=~"^%s-[a-z0-9]+(-[a-z0-9]+)?$"})[%s:%s])`, namespace, name, window, subStep)
+			if val, err := prometheus.GlobalClient.QueryVector(ctx, gpuUtilQuery); err == nil {
+				metrics.GpuUsage = val
+			}
+		}
+
+		// GPU Memory Usage
+		gpuMemQuery := fmt.Sprintf(`avg_over_time(sum(dcgm_fb_used{namespace="%s", pod=~"^%s-[a-z0-9]+(-[a-z0-9]+)?$"})[%s:%s])`, namespace, name, window, subStep)
+		if val, err := prometheus.GlobalClient.QueryVector(ctx, gpuMemQuery); err == nil {
+			metrics.GpuMemoryUsage = val
+		} else {
+			// Fallback to nvidia_gpu_memory_used
+			gpuMemQuery = fmt.Sprintf(`avg_over_time(sum(nvidia_gpu_memory_used_bytes{namespace="%s", pod=~"^%s-[a-z0-9]+(-[a-z0-9]+)?$"})[%s:%s])`, namespace, name, window, subStep)
+			if val, err := prometheus.GlobalClient.QueryVector(ctx, gpuMemQuery); err == nil {
+				metrics.GpuMemoryUsage = val / (1024 * 1024) // Convert to MiB
+			}
+		}
+
+		// GPU Memory Total
+		gpuMemTotalQuery := fmt.Sprintf(`avg_over_time(sum(dcgm_fb_free{namespace="%s", pod=~"^%s-[a-z0-9]+(-[a-z0-9]+)?$"} + dcgm_fb_used{namespace="%s", pod=~"^%s-[a-z0-9]+(-[a-z0-9]+)?$"})[%s:%s])`, namespace, name, namespace, name, window, subStep)
+		if val, err := prometheus.GlobalClient.QueryVector(ctx, gpuMemTotalQuery); err == nil {
+			metrics.GpuMemoryTotal = val
+		} else {
+			// Fallback to nvidia_gpu_memory_total
+			gpuMemTotalQuery = fmt.Sprintf(`avg_over_time(sum(nvidia_gpu_memory_total_bytes{namespace="%s", pod=~"^%s-[a-z0-9]+(-[a-z0-9]+)?$"})[%s:%s])`, namespace, name, window, subStep)
+			if val, err := prometheus.GlobalClient.QueryVector(ctx, gpuMemTotalQuery); err == nil {
+				metrics.GpuMemoryTotal = val / (1024 * 1024) // Convert to MiB
+			}
+		}
+
+		// GPU Temperature
+		gpuTempQuery := fmt.Sprintf(`avg_over_time(sum(dcgm_temperature_gpu{namespace="%s", pod=~"^%s-[a-z0-9]+(-[a-z0-9]+)?$"})[%s:%s])`, namespace, name, window, subStep)
+		if val, err := prometheus.GlobalClient.QueryVector(ctx, gpuTempQuery); err == nil {
+			metrics.GpuTemperature = val
+		} else {
+			// Fallback to nvidia_gpu_temperature
+			gpuTempQuery = fmt.Sprintf(`avg_over_time(sum(nvidia_gpu_temperature_gpu{namespace="%s", pod=~"^%s-[a-z0-9]+(-[a-z0-9]+)?$"})[%s:%s])`, namespace, name, window, subStep)
+			if val, err := prometheus.GlobalClient.QueryVector(ctx, gpuTempQuery); err == nil {
+				metrics.GpuTemperature = val
+			}
+		}
+
+		// GPU Power Usage
+		gpuPowerQuery := fmt.Sprintf(`avg_over_time(sum(dcgm_power_usage{namespace="%s", pod=~"^%s-[a-z0-9]+(-[a-z0-9]+)?$"})[%s:%s])`, namespace, name, window, subStep)
+		if val, err := prometheus.GlobalClient.QueryVector(ctx, gpuPowerQuery); err == nil {
+			metrics.GpuPower = val
+		} else {
+			// Fallback to nvidia_gpu_power
+			gpuPowerQuery = fmt.Sprintf(`avg_over_time(sum(nvidia_gpu_power_usage_milliwatts{namespace="%s", pod=~"^%s-[a-z0-9]+(-[a-z0-9]+)?$"})[%s:%s])`, namespace, name, window, subStep)
+			if val, err := prometheus.GlobalClient.QueryVector(ctx, gpuPowerQuery); err == nil {
+				metrics.GpuPower = val / 1000 // Convert mW to W
+			}
+		}
 	}
 
 	// 4. Fallback: Metrics Server (Real Data)
 	// If usage is still 0 (Prometheus failed or missing), try Kubernetes Metrics API
-	if metrics.CpuUsage == 0 && metrics.MemoryUsage == 0 && len(matchLabels) > 0 {
+	if metrics.CpuUsage == 0 && metrics.MemoryUsage == 0 && len(matchLabels) > 0 && clusterID != "" {
 		mgr := k8s.GetClusterManager()
 		if mgr != nil {
-			selector := ""
-			for k, v := range matchLabels {
-				if selector != "" {
-					selector += ","
+			// VPN MODE: Connect to selected cluster on-demand, then get metrics client
+			cls, err := mgr.GetOrConnectCluster(clusterID)
+			if err == nil && cls != nil && cls.MetricsClient != nil {
+				selector := ""
+				for k, v := range matchLabels {
+					if selector != "" {
+						selector += ","
+					}
+					selector += fmt.Sprintf("%s=%s", k, v)
 				}
-				selector += fmt.Sprintf("%s=%s", k, v)
-			}
 
-			// Try all clusters that have metrics client (usually just local)
-			for _, cls := range mgr.ListClusters() {
-				if cls.MetricsClient != nil {
-					podMetrics, err := cls.MetricsClient.MetricsV1beta1().PodMetricses(namespace).List(ctx, metav1.ListOptions{LabelSelector: selector})
-					if err == nil {
-						var cpuTotal float64
-						var memTotal float64
+				podMetrics, err := cls.MetricsClient.MetricsV1beta1().PodMetricses(namespace).List(ctx, metav1.ListOptions{LabelSelector: selector})
+				if err == nil {
+					var cpuTotal float64
+					var memTotal float64
 
-						for _, pm := range podMetrics.Items {
-							for _, c := range pm.Containers {
-								cpuTotal += float64(c.Usage.Cpu().MilliValue()) / 1000.0      // Cores
-								memTotal += float64(c.Usage.Memory().Value()) / (1024 * 1024) // MiB
-							}
+					for _, pm := range podMetrics.Items {
+						for _, c := range pm.Containers {
+							cpuTotal += float64(c.Usage.Cpu().MilliValue()) / 1000.0      // Cores
+							memTotal += float64(c.Usage.Memory().Value()) / (1024 * 1024) // MiB
 						}
+					}
 
-						if cpuTotal > 0 || memTotal > 0 {
-							metrics.CpuUsage = cpuTotal
-							metrics.MemoryUsage = memTotal
-							break // Found data
-						}
+					if cpuTotal > 0 || memTotal > 0 {
+						metrics.CpuUsage = cpuTotal
+						metrics.MemoryUsage = memTotal
 					}
 				}
 			}
@@ -756,10 +837,11 @@ func fetchHPAScaling(ctx context.Context, client *kubernetes.Clientset, namespac
 }
 
 type ClusterResponse struct {
-	ID       string `json:"id"`
-	Name     string `json:"name"`
-	Provider string `json:"provider"`
-	Status   string `json:"status"`
+	ID          string `json:"id"`
+	Name        string `json:"name"`
+	DisplayName string `json:"displayName"`
+	Provider    string `json:"provider"`
+	Status      string `json:"status"`
 }
 
 func getScalingInfo(ctx context.Context, client *kubernetes.Clientset, dynClient dynamic.Interface, namespace, name string) ScalingInfo {
@@ -871,11 +953,18 @@ func ClustersHandler(c *gin.Context) {
 			provider = "Kubernetes"
 		}
 
+		// Use display name if set, otherwise fall back to cluster name
+		displayName := cls.DisplayName
+		if displayName == "" {
+			displayName = cls.Name
+		}
+
 		response = append(response, ClusterResponse{
-			ID:       cls.ID,
-			Name:     cls.Name,
-			Provider: provider,
-			Status:   "Active", // Mock status for now
+			ID:          cls.ID,
+			Name:        cls.Name,
+			DisplayName: displayName,
+			Provider:    provider,
+			Status:      "Active", // Mock status for now
 		})
 	}
 
@@ -896,10 +985,14 @@ func WorkloadsHandler(c *gin.Context) {
 	}
 	var client *kubernetes.Clientset
 
+	// VPN MODE: Connect to selected cluster on-demand
 	if clusterID != "" && k8s.Manager != nil {
-		cls, err := k8s.Manager.GetCluster(clusterID)
+		cls, err := k8s.Manager.GetOrConnectCluster(clusterID)
 		if err != nil {
-			c.JSON(http.StatusNotFound, gin.H{"error": "Cluster not found"})
+			c.JSON(http.StatusServiceUnavailable, gin.H{
+				"error":   fmt.Sprintf("Cannot connect to cluster: %v", err),
+				"message": "Cluster may be behind a VPN. Please connect to the VPN and try again.",
+			})
 			return
 		}
 		client = cls.ClientSet
@@ -911,16 +1004,23 @@ func WorkloadsHandler(c *gin.Context) {
 	// Get Dynamic Client (safely)
 	var dynClient dynamic.Interface
 	if clusterID != "" && k8s.Manager != nil {
+		// GetOrConnectCluster already connected above, just get the cluster
 		if cls, err := k8s.Manager.GetCluster(clusterID); err == nil {
 			dynClient = cls.DynamicClient
 		}
 	} else if k8s.GlobalManager != nil && len(k8s.GlobalManager.ListClusters()) > 0 {
-		// Default fallback
-		dynClient = k8s.GlobalManager.ListClusters()[0].DynamicClient
+		// Default fallback - try to connect to first available cluster
+		firstCluster := k8s.GlobalManager.ListClusters()[0]
+		if connected, _ := k8s.Manager.GetOrConnectCluster(firstCluster.ID); connected != nil {
+			dynClient = connected.DynamicClient
+		}
 	}
 
 	if client == nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "K8s client not initialized"})
+		c.JSON(http.StatusServiceUnavailable, gin.H{
+			"error":   "Kubernetes client not available",
+			"message": "Please select a cluster and ensure VPN connection if required.",
+		})
 		return
 	}
 
@@ -984,7 +1084,7 @@ func WorkloadsHandler(c *gin.Context) {
 					AvailableReplicas: d.Status.AvailableReplicas,
 					Status:            getStatus(d.Status.AvailableReplicas, *d.Spec.Replicas),
 					CostPerMonth:      rand.Intn(500) + 50,
-					Metrics:           getRealMetrics(enrichCtx, d.Namespace, d.Name, "Deployment", d.Spec.Template.Spec, window, d.Spec.Selector.MatchLabels, *d.Spec.Replicas),
+					Metrics:           getRealMetrics(enrichCtx, clusterID, d.Namespace, d.Name, "Deployment", d.Spec.Template.Spec, window, d.Spec.Selector.MatchLabels, *d.Spec.Replicas),
 					RecentLogs:        fetchRecentLogs(enrichCtx, client, d.Namespace, d.Spec.Selector.MatchLabels),
 					PodNames:          fetchPodNames(enrichCtx, client, d.Namespace, d.Spec.Selector.MatchLabels),
 					Events:            fetchRecentEvents(enrichCtx, client, d.Namespace, d.Name, "Deployment"),
@@ -1019,7 +1119,7 @@ func WorkloadsHandler(c *gin.Context) {
 					AvailableReplicas: s.Status.ReadyReplicas,
 					Status:            getStatus(s.Status.ReadyReplicas, *s.Spec.Replicas),
 					CostPerMonth:      rand.Intn(500) + 100,
-					Metrics:           getRealMetrics(enrichCtx, s.Namespace, s.Name, "StatefulSet", s.Spec.Template.Spec, window, s.Spec.Selector.MatchLabels, *s.Spec.Replicas),
+					Metrics:           getRealMetrics(enrichCtx, clusterID, s.Namespace, s.Name, "StatefulSet", s.Spec.Template.Spec, window, s.Spec.Selector.MatchLabels, *s.Spec.Replicas),
 					RecentLogs:        fetchRecentLogs(enrichCtx, client, s.Namespace, s.Spec.Selector.MatchLabels),
 					PodNames:          fetchPodNames(enrichCtx, client, s.Namespace, s.Spec.Selector.MatchLabels),
 					Events:            fetchRecentEvents(enrichCtx, client, s.Namespace, s.Name, "StatefulSet"),
@@ -1054,7 +1154,7 @@ func WorkloadsHandler(c *gin.Context) {
 					AvailableReplicas: ds.Status.NumberReady,
 					Status:            getStatus(ds.Status.NumberReady, ds.Status.DesiredNumberScheduled),
 					CostPerMonth:      rand.Intn(200) + 50,
-					Metrics:           getRealMetrics(enrichCtx, ds.Namespace, ds.Name, "DaemonSet", ds.Spec.Template.Spec, window, ds.Spec.Selector.MatchLabels, ds.Status.DesiredNumberScheduled),
+					Metrics:           getRealMetrics(enrichCtx, clusterID, ds.Namespace, ds.Name, "DaemonSet", ds.Spec.Template.Spec, window, ds.Spec.Selector.MatchLabels, ds.Status.DesiredNumberScheduled),
 					RecentLogs:        fetchRecentLogs(enrichCtx, client, ds.Namespace, ds.Spec.Selector.MatchLabels),
 					PodNames:          fetchPodNames(enrichCtx, client, ds.Namespace, ds.Spec.Selector.MatchLabels),
 					Events:            fetchRecentEvents(enrichCtx, client, ds.Namespace, ds.Name, "DaemonSet"),
@@ -1176,7 +1276,7 @@ func WorkloadsHandler(c *gin.Context) {
 					w := Workload{
 						ID: string(uid), ClusterID: clusterID, Name: name, Namespace: namespace, Kind: "ScaledJob",
 						Replicas: int32(childCount), AvailableReplicas: int32(running), Status: status,
-						Metrics:      getRealMetrics(enrichCtx, namespace, name, "Job", v1.PodSpec{}, window, jobLabels, int32(childCount)),
+						Metrics:      getRealMetrics(enrichCtx, clusterID, namespace, name, "Job", v1.PodSpec{}, window, jobLabels, int32(childCount)),
 						CostPerMonth: rand.Intn(100) + 10,
 						RecentLogs:   recentLogs, Events: recentEvents,
 						Scaling: ScalingInfo{
@@ -1256,7 +1356,8 @@ func WorkloadsHandler(c *gin.Context) {
 }
 
 type RegisterClusterRequest struct {
-	Kubeconfig string `json:"kubeconfig" binding:"required"`
+	Kubeconfig  string `json:"kubeconfig" binding:"required"`
+	DisplayName string `json:"displayName"`
 }
 
 func RegisterClusterHandler(c *gin.Context) {
@@ -1272,7 +1373,7 @@ func RegisterClusterHandler(c *gin.Context) {
 	}
 
 	// 1. Add to Manager (In-Memory)
-	cluster, err := k8s.Manager.AddClusterFromKubeconfig([]byte(req.Kubeconfig))
+	cluster, err := k8s.Manager.AddClusterFromKubeconfig([]byte(req.Kubeconfig), req.DisplayName)
 	if err != nil {
 		errMsg := err.Error()
 		if strings.Contains(errMsg, "unable to read") || strings.Contains(errMsg, "no such file") {
@@ -1284,9 +1385,10 @@ func RegisterClusterHandler(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"message": "Cluster registered successfully",
-		"id":      cluster.ID,
-		"name":    cluster.Name,
+		"message":     "Cluster registered successfully",
+		"id":          cluster.ID,
+		"name":        cluster.Name,
+		"displayName": cluster.DisplayName,
 	})
 }
 

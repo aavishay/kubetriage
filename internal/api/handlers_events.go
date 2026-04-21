@@ -34,21 +34,31 @@ func ClusterEventsHandler(c *gin.Context) {
 		return
 	}
 
-	// 2. Get Client
+	// 2. Get Client (VPN MODE: connect on-demand)
 	var client *k8s.ClusterConn
 	if clusterID != "" && k8s.Manager != nil {
-		cls, err := k8s.Manager.GetCluster(clusterID)
+		cls, err := k8s.Manager.GetOrConnectCluster(clusterID)
 		if err != nil {
-			c.JSON(http.StatusNotFound, gin.H{"error": "Cluster not found"})
+			c.JSON(http.StatusServiceUnavailable, gin.H{
+				"error":   fmt.Sprintf("Cannot connect to cluster: %v", err),
+				"message": "Cluster may be behind a VPN. Please connect to the VPN and try again.",
+			})
 			return
 		}
 		client = cls
 	} else if k8s.Manager != nil && len(k8s.Manager.ListClusters()) > 0 {
-		client = k8s.Manager.ListClusters()[0]
+		// Try to connect to first available cluster
+		firstCluster := k8s.Manager.ListClusters()[0]
+		if connected, err := k8s.Manager.GetOrConnectCluster(firstCluster.ID); err == nil {
+			client = connected
+		}
 	}
 
 	if client == nil || client.ClientSet == nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "K8s client not initialized"})
+		c.JSON(http.StatusServiceUnavailable, gin.H{
+			"error":   "K8s client not initialized or cluster unreachable",
+			"message": "Please select a cluster and ensure VPN connection if required.",
+		})
 		return
 	}
 

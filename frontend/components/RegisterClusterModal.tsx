@@ -10,6 +10,7 @@ interface RegisterClusterModalProps {
 
 export const RegisterClusterModal: React.FC<RegisterClusterModalProps> = ({ isOpen, onClose }) => {
     const [kubeconfig, setKubeconfig] = useState('');
+    const [displayName, setDisplayName] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState(false);
@@ -30,7 +31,7 @@ export const RegisterClusterModal: React.FC<RegisterClusterModalProps> = ({ isOp
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ kubeconfig }),
+                body: JSON.stringify({ kubeconfig, displayName: displayName || undefined }),
             });
 
             if (!response.ok) {
@@ -40,6 +41,7 @@ export const RegisterClusterModal: React.FC<RegisterClusterModalProps> = ({ isOp
 
             setSuccess(true);
             setKubeconfig('');
+            setDisplayName('');
             await refreshClusters();
 
             setTimeout(() => {
@@ -88,6 +90,22 @@ export const RegisterClusterModal: React.FC<RegisterClusterModalProps> = ({ isOp
                             Connection established successfully
                         </div>
                     )}
+
+                    <div className="space-y-2">
+                        <label className="text-xs font-medium text-text-secondary uppercase">
+                            Display Name (Optional)
+                        </label>
+                        <input
+                            type="text"
+                            value={displayName}
+                            onChange={(e) => setDisplayName(e.target.value)}
+                            placeholder="e.g., QA West Europe Cluster"
+                            className="kt-input"
+                        />
+                        <p className="text-[10px] text-text-tertiary">
+                            A friendly name for this cluster. If not provided, the context name from kubeconfig will be used.
+                        </p>
+                    </div>
 
                     <div className="space-y-2">
                         <label className="text-xs font-medium text-text-secondary uppercase">

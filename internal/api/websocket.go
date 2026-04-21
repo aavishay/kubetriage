@@ -38,12 +38,15 @@ func StreamLogsHandler(c *gin.Context) {
 	}
 	defer ws.Close()
 
-	// Resolve the correct client
+	// VPN MODE: Connect to selected cluster on-demand
 	var client *kubernetes.Clientset
 	if clusterID != "" && k8s.Manager != nil {
-		if cls, err := k8s.Manager.GetCluster(clusterID); err == nil {
-			client = cls.ClientSet
+		cls, err := k8s.Manager.GetOrConnectCluster(clusterID)
+		if err != nil {
+			ws.WriteMessage(websocket.TextMessage, []byte("Error: Cannot connect to cluster. Please ensure VPN is connected."))
+			return
 		}
+		client = cls.ClientSet
 	}
 	if client == nil {
 		client = k8s.ClientSet

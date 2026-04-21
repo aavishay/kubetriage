@@ -271,7 +271,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
                         Target Cluster
                       </div>
                       <div className="text-sm font-semibold text-text-primary truncate flex items-center gap-2">
-                        {selectedCluster.name}
+                        {selectedCluster.displayName || selectedCluster.name}
                         <span className={`w-1.5 h-1.5 rounded-full ${getStatusColor(selectedCluster?.status || 'Active')} ${getStatusGlow(selectedCluster?.status || 'Active')}`} />
                       </div>
                     </div>
@@ -318,7 +318,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
 
                         <div className="flex-1 min-w-0">
                           <p className={`text-sm font-semibold truncate ${selectedCluster?.id === cluster.id ? 'text-primary-500' : 'text-text-secondary group-hover/item:text-text-primary'}`}>
-                            {cluster.name}
+                            {cluster.displayName || cluster.name}
                           </p>
                           <div className="flex items-center gap-2 mt-0.5">
                             <span className={`w-1.5 h-1.5 rounded-full ${getStatusColor(cluster.status)} ${getStatusGlow(cluster.status)}`}></span>

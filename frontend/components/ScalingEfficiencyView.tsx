@@ -134,17 +134,6 @@ export const ScalingEfficiencyView: React.FC<ScalingEfficiencyViewProps> = ({ cl
     ];
   }, [data.summary]);
 
-  // Karpenter Chart Data
-  const karpenterChartData = useMemo(() => {
-    return data.karpenter.map(np => ({
-      name: np.nodePoolName,
-      utilization: np.utilizationPercent,
-      binPacking: np.binPackingEfficiency,
-      totalNodes: np.totalNodes,
-      readyNodes: np.readyNodes
-    }));
-  }, [data.karpenter]);
-
   // KEDA Efficiency Chart Data
   const kedaChartData = useMemo(() => {
     return data.keda.map(k => ({
@@ -213,15 +202,6 @@ export const ScalingEfficiencyView: React.FC<ScalingEfficiencyViewProps> = ({ cl
       return hpaSortOrder === 'asc' ? (aVal as number) - (bVal as number) : (bVal as number) - (aVal as number);
     });
   }, [data.hpa, hpaSortBy, hpaSortOrder]);
-
-  // Cost Analysis Data (costPerCPU from backend is already monthly)
-  const costAnalysisData = useMemo(() => {
-    return data.karpenter.map(np => ({
-      name: np.nodePoolName,
-      costPerCPU: np.costPerCPU,
-      costPerMemory: np.costPerGBMemory
-    }));
-  }, [data.karpenter]);
 
   const getEfficiencyColor = (score: number) => {
     if (score >= 80) return COLORS.success;
@@ -296,6 +276,54 @@ export const ScalingEfficiencyView: React.FC<ScalingEfficiencyViewProps> = ({ cl
     });
   }, [data.unifiedProvisioners, selectedProvisionerType, nodePoolSortBy, nodePoolSortOrder]);
 
+  // Combined Node Pool Chart Data (legacy Karpenter + unified provisioners)
+  const nodePoolChartData = useMemo(() => {
+    const unifiedData = filteredNodePools.map(np => ({
+      name: np.name,
+      utilization: np.utilizationPercent,
+      binPacking: np.binPackingEfficiency,
+      totalNodes: np.totalNodes,
+      readyNodes: np.readyNodes
+    }));
+    const legacyData = data.karpenter.map(np => ({
+      name: np.nodePoolName,
+      utilization: np.utilizationPercent,
+      binPacking: np.binPackingEfficiency,
+      totalNodes: np.totalNodes,
+      readyNodes: np.readyNodes
+    }));
+    // Combine and dedupe by name
+    const combined = [...unifiedData];
+    legacyData.forEach(item => {
+      if (!combined.find(c => c.name === item.name)) {
+        combined.push(item);
+      }
+    });
+    return combined;
+  }, [filteredNodePools, data.karpenter]);
+
+  // Cost Analysis Data (from both unified provisioners and legacy karpenter)
+  const costAnalysisData = useMemo(() => {
+    const unifiedData = filteredNodePools.map(np => ({
+      name: np.name,
+      costPerCPU: np.costPerCPU || 0,
+      costPerMemory: np.costPerGBMemory || 0
+    }));
+    const legacyData = data.karpenter.map(np => ({
+      name: np.nodePoolName,
+      costPerCPU: np.costPerCPU,
+      costPerMemory: np.costPerGBMemory
+    }));
+    // Combine and dedupe by name
+    const combined = [...unifiedData];
+    legacyData.forEach(item => {
+      if (!combined.find(c => c.name === item.name)) {
+        combined.push(item);
+      }
+    });
+    return combined;
+  }, [filteredNodePools, data.karpenter]);
+
   if (loading && !data.summary) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[600px]">
@@ -355,7 +383,7 @@ const UnifiedNodePoolCard: React.FC<UnifiedNodePoolCardProps> = ({ nodePool, isS
     >
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2 flex-wrap">
-          <span className="font-bold text-text-primary">{nodePool.name}</span>
+          <span className="font-bold text-text-primary">{nodePool.name || 'Unnamed Pool'}</span>
           <span className={`px-2 py-0.5 rounded-md text-[10px] font-black uppercase ${getProvisionerBadgeColor(nodePool.provisionerType)}`}>
             {nodePool.provisionerType === 'azure-nap' ? 'Azure NAP' : nodePool.provisionerType}
           </span>
@@ -834,7 +862,7 @@ const UnifiedNodePoolCard: React.FC<UnifiedNodePoolCardProps> = ({ nodePool, isS
                       Utilization vs Bin-Packing Efficiency
                     </p>
                     <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={karpenterChartData}>
+                      <BarChart data={nodePoolChartData}>
                         <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
                         <XAxis dataKey="name" tick={{ fill: '#9ca3af', fontSize: 10 }} />
                         <YAxis tick={{ fill: '#9ca3af', fontSize: 10 }} />

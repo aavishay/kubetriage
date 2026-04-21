@@ -240,9 +240,9 @@ export const DeveloperPortalView: React.FC = () => {
             <div className="flex items-start justify-between">
               <div>
                 <p className="text-[10px] font-black uppercase tracking-widest text-text-tertiary mb-1">Workloads</p>
-                <p className="text-3xl font-black text-text-primary">{data.workloads.length}</p>
+                <p className="text-3xl font-black text-text-primary">{(data.workloads || []).length}</p>
                 <p className="text-xs text-emerald-500 font-semibold mt-1">
-                  {data.workloads.filter(w => w.status === 'Healthy').length} healthy
+                  {(data.workloads || []).filter(w => w.status === 'Healthy').length} healthy
                 </p>
               </div>
               <div className="p-3 rounded-xl bg-primary-500/10">

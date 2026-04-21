@@ -119,6 +119,7 @@ export const MonitoringProvider: React.FC<MonitoringProviderProps> = ({ children
         const mappedClusters = data.map((c: any) => ({
           id: c.id,
           name: c.name,
+          displayName: c.displayName || c.name,
           provider: c.provider || 'On-Prem',
           status: c.status || 'Active',
           region: 'local',

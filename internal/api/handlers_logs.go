@@ -35,12 +35,18 @@ func SearchLogsHandler(c *gin.Context) {
 		return
 	}
 
-	// Resolve the correct client
+	// VPN MODE: Connect to selected cluster on-demand
 	var client *kubernetes.Clientset
 	if clusterID != "" && k8s.Manager != nil {
-		if cls, err := k8s.Manager.GetCluster(clusterID); err == nil {
-			client = cls.ClientSet
+		cls, err := k8s.Manager.GetOrConnectCluster(clusterID)
+		if err != nil {
+			c.JSON(http.StatusServiceUnavailable, gin.H{
+				"error":   fmt.Sprintf("Cannot connect to cluster: %v", err),
+				"message": "Cluster may be behind a VPN. Please connect to the VPN and try again.",
+			})
+			return
 		}
+		client = cls.ClientSet
 	}
 	if client == nil {
 		client = k8s.ClientSet

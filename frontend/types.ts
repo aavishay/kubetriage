@@ -117,6 +117,7 @@ export interface ScalingInfo {
 export interface Cluster {
   id: string;
   name: string;
+  displayName: string;
   region: string;
   provider: 'GKE' | 'EKS' | 'AKS' | 'On-Prem';
   status: 'Active' | 'Degraded' | 'Offline' | 'Pending';
