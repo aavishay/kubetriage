@@ -461,3 +461,85 @@ export interface Comment {
   WorkloadName?: string;
   CreatedAt: string;
 }
+
+// GitOps Types
+export interface GitOpsCondition {
+  type: string;
+  status: string;
+  reason: string;
+  message: string;
+  lastTransitionTime?: string;
+}
+
+export interface GitOpsResource {
+  tool: 'ArgoCD' | 'Flux';
+  kind: string;
+  name: string;
+  namespace: string;
+  syncStatus: string;
+  healthStatus: string;
+  lastSyncTime: string;
+  revision: string;
+  sourceUrl: string;
+  message: string;
+  conditions: GitOpsCondition[];
+  resourceCount: number;
+  readyResources: number;
+  syncErrors?: string[];
+  misconfigurations?: string[];
+}
+
+export interface GitOpsSummary {
+  total: number;
+  synced: number;
+  outOfSync: number;
+  degraded: number;
+  progressing: number;
+  suspended: number;
+  unknown: number;
+}
+
+export interface GitOpsStatusResponse {
+  clusterId: string;
+  timestamp: string;
+  argocd: GitOpsResource[];
+  flux: GitOpsResource[];
+  summary: GitOpsSummary;
+}
+
+// NodeClaim Types
+export interface NodeClaim {
+  name: string;
+  namespace: string;
+  nodePool: string;
+  provisionerType: 'karpenter' | 'azure-nap' | 'cluster-autoscaler';
+  status: 'Pending' | 'Ready' | 'Drifted' | 'Expired' | 'Terminating' | 'Unknown';
+  nodeName?: string;
+  instanceType?: string;
+  zone?: string;
+  capacityType?: string;
+  age: number; // seconds
+  conditions: GitOpsCondition[];
+  launchTime?: string;
+  registrationTime?: string;
+  misconfigurations?: string[];
+}
+
+export interface NodeClaimsSummary {
+  total: number;
+  ready: number;
+  pending: number;
+  drifted: number;
+  expired: number;
+  terminating: number;
+  unknown: number;
+  avgProvisioningTimeSec: number;
+  stuckPendingCount: number;
+}
+
+export interface NodeClaimsResponse {
+  clusterId: string;
+  timestamp: string;
+  claims: NodeClaim[];
+  summary: NodeClaimsSummary;
+}

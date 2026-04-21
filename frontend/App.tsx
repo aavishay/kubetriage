@@ -18,6 +18,7 @@ import { AIChatWidget } from './components/AIChatWidget';
 import { NotFound } from './components/NotFound';
 import { SettingsView } from './components/SettingsView';
 import { ReportsView } from './components/ReportsView';
+import { GitOpsView } from './components/GitOpsView';
 import { PageTransition } from './components/PageTransition';
 import { BellRing, X, Loader2, Key, ExternalLink, Settings2 } from 'lucide-react';
 import { DiagnosticPlaybook } from './types';
@@ -186,6 +187,11 @@ const AppContent: React.FC = () => {
           <Route path="/topology" element={
             <PageTransition>
               <TopologyView workloads={workloads} />
+            </PageTransition>
+          } />
+          <Route path="/gitops" element={
+            <PageTransition>
+              <GitOpsView clusterId={selectedCluster?.id} />
             </PageTransition>
           } />
           <Route path="/reports" element={

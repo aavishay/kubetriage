@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { KarpenterEfficiencyMetrics, KEDAEfficiencyMetrics, HPAMetrics, EfficiencySummary, UnifiedProvisionerMetrics, UnifiedNodePool } from '../types';
+import { KarpenterEfficiencyMetrics, KEDAEfficiencyMetrics, HPAMetrics, EfficiencySummary, UnifiedProvisionerMetrics, UnifiedNodePool, NodeClaim, NodeClaimsSummary, NodeClaimsResponse } from '../types';
 import {
   Zap, Activity, TrendingUp, AlertTriangle, CheckCircle2,
   Cpu, MemoryStick, Server, Clock, DollarSign, Gauge,
@@ -49,6 +49,12 @@ export const ScalingEfficiencyView: React.FC<ScalingEfficiencyViewProps> = ({ cl
   const [hpaSortBy, setHpaSortBy] = useState<'name' | 'currentReplicas' | 'cpuUtilization'>('currentReplicas');
   const [hpaSortOrder, setHpaSortOrder] = useState<'asc' | 'desc'>('desc');
 
+  // Node Claims state
+  const [nodeClaims, setNodeClaims] = useState<NodeClaim[]>([]);
+  const [nodeClaimsSummary, setNodeClaimsSummary] = useState<NodeClaimsSummary | null>(null);
+  const [nodeClaimsLoading, setNodeClaimsLoading] = useState(false);
+  const [selectedNodeClaim, setSelectedNodeClaim] = useState<string | null>(null);
+
   const fetchData = async () => {
     setLoading(true);
     try {
@@ -72,9 +78,29 @@ export const ScalingEfficiencyView: React.FC<ScalingEfficiencyViewProps> = ({ cl
     }
   };
 
+  const fetchNodeClaims = async () => {
+    setNodeClaimsLoading(true);
+    try {
+      const response = await fetch(`/api/cluster/node-claims?cluster=${clusterId || ''}`);
+      if (response.ok) {
+        const result: NodeClaimsResponse = await response.json();
+        setNodeClaims(result.claims || []);
+        setNodeClaimsSummary(result.summary || null);
+      }
+    } catch (error) {
+      console.error('Failed to fetch node claims:', error);
+    } finally {
+      setNodeClaimsLoading(false);
+    }
+  };
+
   useEffect(() => {
     fetchData();
-    const interval = setInterval(fetchData, 60000); // Refresh every minute
+    fetchNodeClaims();
+    const interval = setInterval(() => {
+      fetchData();
+      fetchNodeClaims();
+    }, 60000); // Refresh every minute
     return () => clearInterval(interval);
   }, [clusterId]);
 
@@ -1395,6 +1421,186 @@ const UnifiedNodePoolCard: React.FC<UnifiedNodePoolCardProps> = ({ nodePool, isS
                             </div>
                             <ul className="space-y-1">
                               {hpa.misconfigurations.map((m, i) => (
+                                <li key={i} className="text-xs text-rose-400 flex items-start gap-2">
+                                  <span className="mt-1">•</span>
+                                  {m}
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+
+      {/* Node Claims */}
+      <div className="bg-bg-card rounded-3xl border border-border-main overflow-hidden">
+        <div className="p-6 border-b border-border-main bg-bg-hover/50">
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 bg-purple-600 rounded-xl shadow-lg shadow-purple-600/20">
+              <Server className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <h2 className="text-sm font-black uppercase tracking-widest text-text-primary">
+                Node Claims
+              </h2>
+              <p className="text-[10px] text-text-tertiary font-semibold">
+                Karpenter and Azure NAP node provisioning progress
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div className="p-6 space-y-6">
+          {nodeClaims.length === 0 ? (
+            <div className="text-center py-12">
+              <Server className="w-12 h-12 text-text-tertiary mx-auto mb-4" />
+              <p className="text-text-tertiary">No node claims found</p>
+            </div>
+          ) : (
+            <>
+              {/* Summary */}
+              {nodeClaimsSummary && (
+                <div className="grid grid-cols-3 sm:grid-cols-6 gap-4">
+                  {[
+                    { label: 'Total', value: nodeClaimsSummary.total, color: 'text-text-primary' },
+                    { label: 'Ready', value: nodeClaimsSummary.ready, color: 'text-emerald-500' },
+                    { label: 'Pending', value: nodeClaimsSummary.pending, color: 'text-amber-500' },
+                    { label: 'Drifted', value: nodeClaimsSummary.drifted, color: 'text-rose-500' },
+                    { label: 'Expired', value: nodeClaimsSummary.expired, color: 'text-gray-500' },
+                    { label: 'Stuck >5m', value: nodeClaimsSummary.stuckPendingCount, color: 'text-rose-500' },
+                  ].map((s, i) => (
+                    <div key={i} className="bg-bg-hover rounded-xl p-3 text-center">
+                      <p className="text-[10px] font-black uppercase text-text-tertiary mb-1">{s.label}</p>
+                      <p className={`text-xl font-black ${s.color}`}>{s.value}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Claims Table */}
+              <div className="space-y-3">
+                {nodeClaims.map(claim => (
+                  <div
+                    key={`${claim.provisionerType}-${claim.name}`}
+                    className={`rounded-2xl border-2 transition-all ${
+                      selectedNodeClaim === `${claim.provisionerType}-${claim.name}`
+                        ? 'border-purple-500 bg-purple-500/5'
+                        : 'border-border-main hover:border-purple-500/30 bg-bg-hover/30'
+                    }`}
+                  >
+                    <div
+                      className="p-4 cursor-pointer"
+                      onClick={() => setSelectedNodeClaim(
+                        selectedNodeClaim === `${claim.provisionerType}-${claim.name}`
+                          ? null
+                          : `${claim.provisionerType}-${claim.name}`
+                      )}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3 flex-wrap">
+                          <span className="font-bold text-text-primary">{claim.name}</span>
+                          <span className={`px-2 py-0.5 rounded-md text-[10px] font-black uppercase ${
+                            claim.provisionerType === 'karpenter'
+                              ? 'bg-primary-500/10 text-primary-500'
+                              : 'bg-cyan-500/10 text-cyan-500'
+                          }`}>
+                            {claim.provisionerType}
+                          </span>
+                          <span className={`px-2 py-0.5 rounded-md text-[10px] font-black uppercase border ${
+                            claim.status === 'Ready'
+                              ? 'text-emerald-500 bg-emerald-500/10 border-emerald-500/20'
+                              : claim.status === 'Pending'
+                              ? 'text-amber-500 bg-amber-500/10 border-amber-500/20'
+                              : claim.status === 'Drifted'
+                              ? 'text-rose-500 bg-rose-500/10 border-rose-500/20'
+                              : claim.status === 'Expired'
+                              ? 'text-gray-500 bg-gray-500/10 border-gray-500/20'
+                              : 'text-slate-500 bg-slate-500/10 border-slate-500/20'
+                          }`}
+                          >
+                            {claim.status}
+                          </span>
+                          <span className="text-[10px] text-text-tertiary">{claim.nodePool}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs text-text-secondary">{Math.round(claim.age / 60)}m</span>
+                          {selectedNodeClaim === `${claim.provisionerType}-${claim.name}` ? (
+                            <ChevronUp className="w-4 h-4 text-text-tertiary" />
+                          ) : (
+                            <ChevronDown className="w-4 h-4 text-text-tertiary" />
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    {selectedNodeClaim === `${claim.provisionerType}-${claim.name}` && (
+                      <div className="px-4 pb-4 pt-2 border-t border-border-main space-y-3 animate-in fade-in slide-in-from-top-2">
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                          {claim.instanceType && (
+                            <div className="p-2 rounded-lg bg-bg-hover">
+                              <p className="text-[10px] font-black uppercase text-text-tertiary">Instance Type</p>
+                              <p className="text-sm font-bold text-text-primary">{claim.instanceType}</p>
+                            </div>
+                          )}
+                          {claim.zone && (
+                            <div className="p-2 rounded-lg bg-bg-hover">
+                              <p className="text-[10px] font-black uppercase text-text-tertiary">Zone</p>
+                              <p className="text-sm font-bold text-text-primary">{claim.zone}</p>
+                            </div>
+                          )}
+                          {claim.capacityType && (
+                            <div className="p-2 rounded-lg bg-bg-hover">
+                              <p className="text-[10px] font-black uppercase text-text-tertiary">Capacity</p>
+                              <p className="text-sm font-bold text-text-primary capitalize">{claim.capacityType}</p>
+                            </div>
+                          )}
+                          {claim.nodeName && (
+                            <div className="p-2 rounded-lg bg-bg-hover">
+                              <p className="text-[10px] font-black uppercase text-text-tertiary">Node</p>
+                              <p className="text-sm font-bold text-text-primary">{claim.nodeName}</p>
+                            </div>
+                          )}
+                        </div>
+
+                        {claim.conditions.length > 0 && (
+                          <div>
+                            <p className="text-[10px] font-black uppercase text-text-tertiary mb-2">Conditions</p>
+                            <div className="space-y-2">
+                              {claim.conditions.map((cond, idx) => (
+                                <div key={idx} className="flex items-start gap-2 p-2 rounded-lg bg-bg-hover">
+                                  <span className={`mt-0.5 ${cond.status === 'True' ? 'text-emerald-500' : 'text-rose-500'}`}>
+                                    {cond.status === 'True' ? (
+                                      <CheckCircle2 className="w-3.5 h-3.5" />
+                                    ) : (
+                                      <AlertTriangle className="w-3.5 h-3.5" />
+                                    )}
+                                  </span>
+                                  <div>
+                                    <p className="text-xs font-bold text-text-primary">{cond.type}</p>
+                                    {cond.reason && <p className="text-[10px] text-text-secondary">{cond.reason}</p>}
+                                    {cond.message && <p className="text-[10px] text-text-secondary">{cond.message}</p>}
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {claim.misconfigurations && claim.misconfigurations.length > 0 && (
+                          <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/20">
+                            <div className="flex items-center gap-2 mb-2">
+                              <AlertTriangle className="w-4 h-4 text-rose-500" />
+                              <span className="text-sm font-bold text-rose-500">Issues</span>
+                            </div>
+                            <ul className="space-y-1">
+                              {claim.misconfigurations.map((m, i) => (
                                 <li key={i} className="text-xs text-rose-400 flex items-start gap-2">
                                   <span className="mt-1">•</span>
                                   {m}

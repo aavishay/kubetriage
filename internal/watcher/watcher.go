@@ -87,6 +87,12 @@ func (w *Watcher) scanCluster(ctx context.Context, cls *k8s.ClusterConn) {
 
 	// 3. Run Automation Recipes (Phase 2)
 	w.scanAutomation(ctx, cls)
+
+	// 4. Scan GitOps resources (ArgoCD / Flux)
+	w.scanGitOps(ctx, cls)
+
+	// 5. Scan Node Claims progress (Karpenter / Azure NAP)
+	w.scanNodeClaims(ctx, cls)
 }
 
 func (w *Watcher) analyzePod(ctx context.Context, cls *k8s.ClusterConn, pod corev1.Pod) {

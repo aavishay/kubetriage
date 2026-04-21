@@ -130,6 +130,24 @@ type ResourceLimits struct {
 	MaxMemory int64 `json:"maxMemory,omitempty"`
 }
 
+// NodeClaim represents a single node claim from any provisioner (Karpenter, Azure NAP, etc.)
+type NodeClaim struct {
+	Name              string                `json:"name"`
+	Namespace         string                `json:"namespace"`
+	NodePool          string                `json:"nodePool"`
+	ProvisionerType   ProvisionerType       `json:"provisionerType"`
+	Status            string                `json:"status"` // "Pending", "Ready", "Drifted", "Expired", "Terminating", "Unknown"
+	NodeName          string                `json:"nodeName,omitempty"`
+	InstanceType      string                `json:"instanceType,omitempty"`
+	Zone              string                `json:"zone,omitempty"`
+	CapacityType      string                `json:"capacityType,omitempty"` // spot, on-demand
+	Age               time.Duration         `json:"age"`
+	Conditions        []ProvisionerCondition `json:"conditions"`
+	LaunchTime        *time.Time            `json:"launchTime,omitempty"`
+	RegistrationTime  *time.Time            `json:"registrationTime,omitempty"`
+	Misconfigurations []string              `json:"misconfigurations,omitempty"`
+}
+
 // DetectProvisioner detects which node provisioner(s) are installed in the cluster
 func DetectProvisioner(ctx context.Context, client *ClusterConn) ([]NodeProvisioner, error) {
 	var provisioners []NodeProvisioner
@@ -941,4 +959,179 @@ func getSeriesDefaultMemory(vmSize string) int {
 	default:
 		return 8
 	}
+}
+
+// FetchKarpenterNodeClaims lists individual Karpenter NodeClaims with detailed progress.
+func FetchKarpenterNodeClaims(ctx context.Context, client *ClusterConn) ([]NodeClaim, error) {
+	var claims []NodeClaim
+	if client == nil || client.DynamicClient == nil {
+		return claims, nil
+	}
+
+	gvr := schema.GroupVersionResource{Group: "karpenter.sh", Version: "v1beta1", Resource: "nodeclaims"}
+	ncs, err := client.DynamicClient.Resource(gvr).List(ctx, metav1.ListOptions{})
+	if err != nil {
+		return claims, nil // Graceful: Karpenter not installed
+	}
+
+	for _, nc := range ncs.Items {
+		claim := NodeClaim{
+			Name:            nc.GetName(),
+			Namespace:       nc.GetNamespace(),
+			ProvisionerType: ProvisionerTypeKarpenter,
+			Status:          "Unknown",
+			Conditions:      []ProvisionerCondition{},
+		}
+
+		labels := nc.GetLabels()
+		claim.NodePool = labels["karpenter.sh/nodepool"]
+		if claim.NodePool == "" {
+			claim.NodePool = labels["karpenter.sh/provisioner-name"]
+		}
+		claim.InstanceType = labels["node.kubernetes.io/instance-type"]
+		claim.Zone = labels["topology.kubernetes.io/zone"]
+		claim.CapacityType = labels["karpenter.sh/capacity-type"]
+		if claim.CapacityType == "" {
+			claim.CapacityType = labels["karpenter.k8s.aws/capacity-type"]
+		}
+
+		if nodeName, ok := labels["karpenter.sh/node-name"]; ok {
+			claim.NodeName = nodeName
+		}
+
+		claim.Age = time.Since(nc.GetCreationTimestamp().Time)
+		if lt := nc.GetCreationTimestamp(); !lt.IsZero() {
+			t := lt.Time
+			claim.LaunchTime = &t
+		}
+
+		if status, ok := nc.Object["status"].(map[string]interface{}); ok {
+			if conds, ok := status["conditions"].([]interface{}); ok {
+				isReady := false
+				isDrifted := false
+				for _, c := range conds {
+					if cMap, ok := c.(map[string]interface{}); ok {
+						condition := ProvisionerCondition{}
+						if t, ok := cMap["type"].(string); ok {
+							condition.Type = t
+						}
+						if s, ok := cMap["status"].(string); ok {
+							condition.Status = s
+						}
+						if r, ok := cMap["reason"].(string); ok {
+							condition.Reason = r
+						}
+						if m, ok := cMap["message"].(string); ok {
+							condition.Message = m
+						}
+						if lt, ok := cMap["lastTransitionTime"].(string); ok {
+							condition.LastTransitionTime, _ = time.Parse(time.RFC3339, lt)
+						}
+						claim.Conditions = append(claim.Conditions, condition)
+
+						if condition.Type == "Ready" && condition.Status == "True" {
+							isReady = true
+							if condition.LastTransitionTime.After(nc.GetCreationTimestamp().Time) {
+								t := condition.LastTransitionTime
+								claim.RegistrationTime = &t
+							}
+						}
+						if condition.Type == "Drifted" && condition.Status == "True" {
+							isDrifted = true
+						}
+						if condition.Type == "Expired" && condition.Status == "True" {
+							claim.Status = "Expired"
+						}
+					}
+				}
+				if claim.Status == "Expired" {
+					// keep expired
+				} else if isDrifted {
+					claim.Status = "Drifted"
+				} else if isReady {
+					claim.Status = "Ready"
+				} else {
+					claim.Status = "Pending"
+				}
+			}
+		}
+
+		if claim.Status == "Pending" && claim.Age > 5*time.Minute {
+			claim.Misconfigurations = append(claim.Misconfigurations, fmt.Sprintf("NodeClaim has been pending for %s", claim.Age.Round(time.Second)))
+		}
+
+		claims = append(claims, claim)
+	}
+
+	return claims, nil
+}
+
+// FetchAzureNAPNodeClaims infers node claim-like status from Azure NAP-managed nodes.
+func FetchAzureNAPNodeClaims(ctx context.Context, client *ClusterConn) ([]NodeClaim, error) {
+	var claims []NodeClaim
+	if client == nil || client.ClientSet == nil {
+		return claims, nil
+	}
+
+	nodes, err := client.ClientSet.CoreV1().Nodes().List(ctx, metav1.ListOptions{})
+	if err != nil {
+		return claims, err
+	}
+
+	for _, node := range nodes.Items {
+		// Only consider Azure NAP nodes
+		if _, ok := node.Labels["agentpool"]; !ok {
+			continue
+		}
+
+		claim := NodeClaim{
+			Name:            node.Name,
+			NodePool:        node.Labels["agentpool"],
+			ProvisionerType: ProvisionerTypeAzureNAP,
+			InstanceType:    node.Labels["node.kubernetes.io/instance-type"],
+			Zone:            node.Labels["topology.kubernetes.io/zone"],
+			Age:             time.Since(node.CreationTimestamp.Time),
+		}
+
+		if lt := node.CreationTimestamp; !lt.IsZero() {
+			t := lt.Time
+			claim.LaunchTime = &t
+		}
+
+		// Determine status from node conditions
+		isReady := false
+		for _, cond := range node.Status.Conditions {
+			if cond.Type == corev1.NodeReady {
+				if cond.Status == corev1.ConditionTrue {
+					isReady = true
+					claim.RegistrationTime = &cond.LastTransitionTime.Time
+				} else {
+					claim.Misconfigurations = append(claim.Misconfigurations,
+						fmt.Sprintf("Node not ready: %s", cond.Reason))
+				}
+			}
+			if cond.Status == corev1.ConditionTrue && (cond.Type == corev1.NodeMemoryPressure || cond.Type == corev1.NodeDiskPressure || cond.Type == corev1.NodePIDPressure) {
+				claim.Misconfigurations = append(claim.Misconfigurations,
+					fmt.Sprintf("Node pressure: %s", cond.Type))
+			}
+		}
+
+		// Check for scale-down or scaling labels
+		if _, ok := node.Labels["kubernetes.azure.com/scaledown-needed"]; ok {
+			claim.Status = "Terminating"
+			claim.Misconfigurations = append(claim.Misconfigurations, "Node marked for scale-down")
+		} else if isReady {
+			claim.Status = "Ready"
+		} else {
+			claim.Status = "Pending"
+			if claim.Age > 5*time.Minute {
+				claim.Misconfigurations = append(claim.Misconfigurations,
+					fmt.Sprintf("Node has been pending for %s", claim.Age.Round(time.Second)))
+			}
+		}
+
+		claims = append(claims, claim)
+	}
+
+	return claims, nil
 }

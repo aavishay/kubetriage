@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { LayoutDashboard, AlertCircle, Scale, Settings, Box, ChevronLeft, ChevronRight, Sun, Moon, ChevronsUpDown, Check, Server, Plus, X, Globe, Cloud, Bell, BookOpen, Menu, Key, Zap, FileText, RefreshCw, Trash2, Activity, Brain, Users, Bot, Database } from 'lucide-react';
+import { LayoutDashboard, AlertCircle, Scale, Settings, Box, ChevronLeft, ChevronRight, Sun, Moon, ChevronsUpDown, Check, Server, Plus, X, Globe, Cloud, Bell, BookOpen, Menu, Key, Zap, FileText, RefreshCw, Trash2, Activity, Brain, Users, Bot, Database, GitBranch } from 'lucide-react';
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useMonitoring } from '../contexts/MonitoringContext';
 import { Cluster } from '../types';
@@ -94,6 +94,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
     { path: '/autonomous', label: 'Auto Remediation', icon: Bot },
     { path: '/metrics/external', label: 'External Metrics', icon: Database },
     { path: '/topology', label: 'Architecture', icon: Cloud },
+    { path: '/gitops', label: 'GitOps', icon: GitBranch },
     { path: '/reports', label: 'Reporting', icon: FileText },
     { path: '/notifications', label: 'Alerting', icon: Bell },
     { path: '/settings', label: 'Settings', icon: Settings },

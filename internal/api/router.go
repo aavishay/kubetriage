@@ -77,8 +77,14 @@ func SetupRouter(cfg RouterConfig) *gin.Engine {
 		api.GET("/cluster/events", ClusterEventsHandler)
 		api.GET("/cluster/metrics", ClusterMetricsHandler)
 		api.GET("/cluster/scaling-efficiency", ScalingEfficiencyHandler)
+		api.GET("/cluster/node-claims", NodeClaimsHandler)
 		api.GET("/clusters/aggregate", MultiClusterHandler)
 		api.GET("/clusters/:id/health", ClusterHealthCheckHandler)
+
+		// GitOps
+		api.GET("/gitops/status", GitOpsStatusHandler)
+		api.GET("/gitops/applications", GitOpsApplicationsHandler)
+		api.GET("/gitops/flux", GitOpsFluxHandler)
 
 		// Reports
 		api.GET("/reports", ListReportsHandler)
