@@ -157,7 +157,7 @@ export const RightSizingView: React.FC<RightSizingViewProps> = ({ workloads, isD
       <div className="flex flex-col items-center justify-center min-h-[600px] animate-in fade-in duration-500">
         <div className="p-6 bg-bg-hover rounded-full mb-6 relative">
           <Server className="w-12 h-12 text-text-tertiary" />
-          <div className="absolute top-0 right-0 w-4 h-4 bg-amber-500 rounded-full animate-ping" />
+          <div className="absolute top-0 right-0 w-3 h-3 bg-amber-500 rounded-full animate-ping" />
         </div>
         <h2 className="text-xl font-semibold text-text-primary mb-2">No Optimization Candidates</h2>
         <p className="text-text-tertiary max-w-md text-center mb-8 text-sm">
@@ -309,17 +309,37 @@ export const RightSizingView: React.FC<RightSizingViewProps> = ({ workloads, isD
   const filteredWorkloads = (workloads || []).filter(w => w.name.toLowerCase().includes(searchTerm.toLowerCase()));
 
   return (
-    <div className="flex flex-col lg:flex-row gap-6 h-auto lg:h-[calc(100vh-160px)] relative w-full overflow-hidden font-sans">
+    <div className="flex flex-col h-full w-full bg-bg-main text-text-primary font-sans selection:bg-primary-500/30">
+      {/* Page Header */}
+      <div className="shrink-0 p-6 border-b border-border-main bg-bg-card/50 backdrop-blur-xl flex flex-col md:flex-row justify-between items-start md:items-center gap-6 shadow-sm">
+        <div>
+          <h2 className="text-3xl font-black text-text-primary flex items-center gap-4 tracking-tighter uppercase">
+            <div className="p-2.5 bg-gradient-to-br from-primary-600 to-primary-500 rounded-xl shadow-lg shadow-primary-500/20 border border-transparent">
+              <Scale className="w-6 h-6 text-white" />
+            </div>
+            Right-Sizing
+          </h2>
+          <p className="text-sm text-text-tertiary mt-2 font-medium tracking-wide pl-1">
+            Simulate resource caps to detect potential DiskPressure or OOM evictions.
+          </p>
+        </div>
+      </div>
+
+      <div className="flex-1 min-h-0 overflow-hidden flex flex-col lg:flex-row gap-6 p-6 relative w-full">
 
       <aside className={`
         ${selectedId && !isSidebarOpen ? 'hidden' : 'flex'}
         lg:flex w-full lg:w-80 h-auto lg:h-full shrink-0 bg-bg-card rounded-2xl overflow-hidden flex flex-col border border-border-main shadow-sm
       `}>
-        <div className="p-5 md:p-6 border-b border-border-main bg-bg-hover/50">
-          <h3 className="font-semibold text-text-primary flex items-center gap-2 text-base">
-            <Scale className="w-5 h-5 text-primary-500" /> Infrastructure Fleet
-          </h3>
-          <div className="mt-6 relative">
+        <div className="p-4 border-b border-border-main bg-bg-hover/50 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-primary-600 rounded-lg shadow-sm shadow-primary-500/20">
+              <Scale className="w-4 h-4 text-white" />
+            </div>
+            <h3 className="font-semibold text-text-primary text-sm">Infrastructure Fleet</h3>
+          </div>
+        </div>
+        <div className="p-3 relative">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-text-tertiary pointer-events-none" />
             <input
               type="text"
@@ -329,20 +349,21 @@ export const RightSizingView: React.FC<RightSizingViewProps> = ({ workloads, isD
               className="kt-input pl-11 pr-4 text-xs font-medium"
             />
           </div>
-        </div>
         <div className="flex-1 overflow-y-auto p-3 space-y-1.5 bg-bg-hover/30">
           {filteredWorkloads.map(w => (
             <div
               key={w.id}
               onClick={() => { setSelectedId(w.id); setRecommendation(null); setIsSidebarOpen(false); }}
-              className={`p-5 rounded-xl cursor-pointer transition-all border-2 ${selectedId === w.id ? 'bg-primary-600 text-white border-primary-500 shadow-xl shadow-primary-600/20' : 'bg-bg-card border-border-main hover:bg-bg-hover'}`}
+              className={`p-3 rounded-lg cursor-pointer transition-all border ${selectedId === w.id ? 'bg-primary-500/10 border-primary-500/30' : 'bg-bg-card border-transparent hover:bg-bg-hover'}`}
             >
               <div className="flex justify-between items-center mb-1">
-                <span className="text-sm font-semibold truncate">{w.name}</span>
+                <span className={`text-sm font-medium truncate ${selectedId === w.id ? 'text-text-primary' : 'text-text-secondary'}`}>{w.name}</span>
                 <div className={`w-2 h-2 rounded-full ${w.status === 'Healthy' ? 'bg-emerald-500' : w.status === 'Warning' ? 'bg-amber-500' : 'bg-red-500'}`} />
               </div>
-              <div className="text-xs text-text-tertiary">
-                {w.namespace} • {w.kind}
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] text-text-tertiary uppercase font-medium">{w.kind}</span>
+                <span className="text-[10px] text-text-tertiary/70 select-none">•</span>
+                <span className="text-[10px] text-text-tertiary">{w.namespace}</span>
               </div>
             </div>
           ))}
@@ -360,20 +381,24 @@ export const RightSizingView: React.FC<RightSizingViewProps> = ({ workloads, isD
                 <button onClick={() => setIsSidebarOpen(true)} className="lg:hidden p-2.5 rounded-xl bg-bg-card border border-border-main">
                   <ChevronLeft className="w-5 h-5 text-primary-500" />
                 </button>
-                <div className="p-4 bg-primary-600 rounded-xl shadow-xl shadow-primary-600/20 shrink-0">
-                  <Gauge className="w-6 h-6 text-white" />
+                <div className="p-2.5 bg-gradient-to-br from-primary-600 to-primary-500 rounded-xl shadow-lg shadow-primary-500/20 border border-transparent shrink-0">
+                  <Gauge className="w-5 h-5 text-white" />
                 </div>
                 <div className="min-w-0">
                   <h2 className="text-2xl md:text-3xl font-black text-text-primary tracking-tighter leading-none">{selectedWorkload.name}</h2>
                   <div className="flex items-center gap-3 mt-1.5">
                     <span className="text-xs text-text-tertiary">{selectedWorkload.namespace}</span>
-                    <span className="text-xs px-2 py-0.5 rounded-md bg-primary-100 text-primary-600 font-medium">{selectedWorkload.kind}</span>
+                    <span className="text-xs px-2 py-0.5 rounded-md bg-primary-500/10 text-primary-600 dark:text-primary-400 font-medium border border-primary-500/20">{selectedWorkload.kind}</span>
                   </div>
                 </div>
               </div>
 
               <div className="flex items-center gap-3">
-                <button onClick={handleOptimize} disabled={loading} className="flex items-center gap-2 px-6 py-3 bg-primary-600 text-white text-xs font-medium rounded-xl hover:bg-primary-700 transition-all shadow-lg disabled:opacity-50 active:scale-95">
+                <button
+                  onClick={handleOptimize}
+                  disabled={loading}
+                  className="kt-button kt-button-primary flex items-center gap-2 shadow-sm shadow-primary-500/20"
+                >
                   {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />} Analyze Capacity
                 </button>
               </div>
@@ -397,7 +422,7 @@ export const RightSizingView: React.FC<RightSizingViewProps> = ({ workloads, isD
                   <div className="flex flex-col xl:flex-row gap-6 items-center bg-bg-hover/50 p-5 rounded-xl border border-border-main">
                     <div className="flex-[3] w-full space-y-4">
                       <div className="flex justify-between items-end">
-                        <div className="flex items-center gap-2"><Cpu className="w-4 h-4 text-primary-500" /><label className="text-[10px] font-black uppercase text-gray-400 tracking-widest">CPU Limit (Simulated)</label></div>
+                        <div className="flex items-center gap-2"><Cpu className="w-4 h-4 text-primary-500" /><label className="text-[10px] font-black uppercase text-text-tertiary tracking-widest">CPU Limit (Simulated)</label></div>
                         <span className="text-xl font-bold font-mono text-primary-500">{adjustedCpuLimit.toFixed(2)}c</span>
                       </div>
                       <input type="range" min="0.01" max={selectedWorkload.metrics.cpuLimit * 2} step="0.01" value={adjustedCpuLimit} onChange={(e) => setAdjustedCpuLimit(parseFloat(e.target.value))} className="w-full h-3 bg-bg-hover rounded-full appearance-none cursor-pointer accent-primary-600" />
@@ -412,7 +437,7 @@ export const RightSizingView: React.FC<RightSizingViewProps> = ({ workloads, isD
                   <div className="flex flex-col xl:flex-row gap-6 items-center bg-bg-hover/50 p-5 rounded-xl border border-border-main">
                     <div className="flex-[3] w-full space-y-4">
                       <div className="flex justify-between items-end">
-                        <div className="flex items-center gap-2"><MemoryStick className="w-4 h-4 text-emerald-500" /><label className="text-[10px] font-black uppercase text-zinc-400 tracking-widest">Memory Limit (Simulated)</label></div>
+                        <div className="flex items-center gap-2"><MemoryStick className="w-4 h-4 text-emerald-500" /><label className="text-[10px] font-black uppercase text-text-tertiary tracking-widest">Memory Limit (Simulated)</label></div>
                         <span className="text-xl font-bold font-mono text-emerald-500">{adjustedMemoryLimit.toFixed(0)}Mi</span>
                       </div>
                       <input type="range" min="10" max={selectedWorkload.metrics.memoryLimit * 2} step="10" value={adjustedMemoryLimit} onChange={(e) => setAdjustedMemoryLimit(parseFloat(e.target.value))} className="w-full h-3 bg-bg-hover rounded-full appearance-none cursor-pointer accent-emerald-500" />
@@ -427,13 +452,13 @@ export const RightSizingView: React.FC<RightSizingViewProps> = ({ workloads, isD
                   <div className="flex flex-col xl:flex-row gap-6 items-center bg-bg-hover/50 p-5 rounded-xl border border-border-main">
                     <div className="flex-[3] w-full space-y-4">
                       <div className="flex justify-between items-end">
-                        <div className="flex items-center gap-2"><HardDrive className="w-4 h-4 text-amber-500" /><label className="text-[10px] font-black uppercase text-zinc-400 tracking-widest">Ephemeral Storage Limit</label></div>
+                        <div className="flex items-center gap-2"><HardDrive className="w-4 h-4 text-amber-500" /><label className="text-[10px] font-black uppercase text-text-tertiary tracking-widest">Ephemeral Storage Limit</label></div>
                         <span className="text-xl font-bold font-mono text-amber-500">{adjustedStorageLimit.toFixed(1)}Gi</span>
                       </div>
                       <input type="range" min="0.1" max={(selectedWorkload.metrics.storageLimit || 5) * 2} step="0.1" value={adjustedStorageLimit} onChange={(e) => setAdjustedStorageLimit(parseFloat(e.target.value))} className="w-full h-3 bg-bg-hover rounded-full appearance-none cursor-pointer accent-amber-500" />
                     </div>
                     <div className="flex-[1] w-full p-4 rounded-xl bg-bg-card border border-border-main text-center">
-                      <p className="text-[8px] font-black uppercase text-zinc-400 mb-1">Disk Load</p>
+                      <p className="text-[8px] font-black uppercase text-text-tertiary mb-1">Disk Load</p>
                       <div className={`text-lg font-bold ${parseFloat(analysis?.storageEfficiency || '0') > 90 ? 'text-rose-500' : 'text-amber-500'}`}>{analysis?.storageEfficiency}%</div>
                     </div>
                   </div>
@@ -443,7 +468,7 @@ export const RightSizingView: React.FC<RightSizingViewProps> = ({ workloads, isD
                     <div className="flex flex-col xl:flex-row gap-6 items-center bg-bg-hover/50 p-5 rounded-xl border border-border-main">
                       <div className="flex-[3] w-full space-y-4">
                         <div className="flex justify-between items-end">
-                          <div className="flex items-center gap-2"><Cpu className="w-4 h-4 text-violet-500" /><label className="text-[10px] font-black uppercase text-zinc-400 tracking-widest">GPU Limit (Simulated)</label></div>
+                          <div className="flex items-center gap-2"><Cpu className="w-4 h-4 text-violet-500" /><label className="text-[10px] font-black uppercase text-text-tertiary tracking-widest">GPU Limit (Simulated)</label></div>
                           <span className="text-xl font-bold font-mono text-violet-500">{adjustedGpuLimit.toFixed(0)} GPU</span>
                         </div>
                         <input type="range" min="1" max={(selectedWorkload.metrics.gpuLimit || 1) * 2} step="1" value={adjustedGpuLimit} onChange={(e) => setAdjustedGpuLimit(parseFloat(e.target.value))} className="w-full h-3 bg-bg-hover rounded-full appearance-none cursor-pointer accent-violet-500" />
@@ -460,7 +485,7 @@ export const RightSizingView: React.FC<RightSizingViewProps> = ({ workloads, isD
               {/* Telemetry Grid */}
               <div className="grid grid-cols-1 gap-8">
                 {/* CPU Chart */}
-                <div className="bg-bg-card rounded-xl border border-border-main p-6 shadow-sm">
+                <div className="bg-bg-card rounded-2xl border border-border-main p-6 shadow-sm">
                   <h3 className="text-xs font-medium text-text-tertiary mb-6 flex items-center gap-2">
                     <Cpu className="w-4 h-4 text-primary-500" /> CPU Demand Simulation
                   </h3>
@@ -479,7 +504,7 @@ export const RightSizingView: React.FC<RightSizingViewProps> = ({ workloads, isD
                 </div>
 
                 {/* RAM Chart */}
-                <div className="bg-bg-card rounded-xl border border-border-main p-6 shadow-sm">
+                <div className="bg-bg-card rounded-2xl border border-border-main p-6 shadow-sm">
                   <h3 className="text-xs font-medium text-text-tertiary mb-6 flex items-center gap-2">
                     <MemoryStick className="w-4 h-4 text-emerald-500" /> Memory Pressure Simulation
                   </h3>
@@ -498,7 +523,7 @@ export const RightSizingView: React.FC<RightSizingViewProps> = ({ workloads, isD
                 </div>
 
                 {/* Storage Chart */}
-                <div className="bg-bg-card rounded-xl border border-border-main p-6 shadow-sm">
+                <div className="bg-bg-card rounded-2xl border border-border-main p-6 shadow-sm">
                   <h3 className="text-xs font-medium text-text-tertiary mb-6 flex items-center gap-2">
                     <HardDrive className="w-4 h-4 text-amber-500" /> Ephemeral Storage Demand
                   </h3>
@@ -516,7 +541,7 @@ export const RightSizingView: React.FC<RightSizingViewProps> = ({ workloads, isD
                     {analysis?.storageRisky && (
                       <div className="absolute inset-x-0 bottom-0 py-2 bg-rose-500/10 flex items-center justify-center gap-2 rounded-lg">
                         <ShieldAlert className="w-4 h-4 text-rose-500 animate-bounce" />
-                        <span className="text-[10px] font-black uppercase text-rose-600 tracking-widest">Active DiskPressure Region - Eviction Imminent</span>
+                        <span className="text-[10px] font-black uppercase text-rose-600 dark:text-rose-400 tracking-widest">Active DiskPressure Region - Eviction Imminent</span>
                       </div>
                     )}
                   </div>
@@ -524,7 +549,7 @@ export const RightSizingView: React.FC<RightSizingViewProps> = ({ workloads, isD
 
                 {/* GPU Chart - Only show if workload has GPU resources */}
                 {(selectedWorkload.metrics.gpuLimit || 0) > 0 && (
-                  <div className="bg-bg-card rounded-xl border border-border-main p-6 shadow-sm">
+                  <div className="bg-bg-card rounded-2xl border border-border-main p-6 shadow-sm">
                     <h3 className="text-xs font-medium text-text-tertiary mb-6 flex items-center gap-2">
                       <Cpu className="w-4 h-4 text-violet-500" /> GPU Utilization Simulation
                     </h3>
@@ -542,7 +567,7 @@ export const RightSizingView: React.FC<RightSizingViewProps> = ({ workloads, isD
                       {analysis?.gpuRisky && (
                         <div className="absolute inset-x-0 bottom-0 py-2 bg-rose-500/10 flex items-center justify-center gap-2 rounded-lg">
                           <ShieldAlert className="w-4 h-4 text-rose-500 animate-bounce" />
-                          <span className="text-[10px] font-black uppercase text-rose-600 tracking-widest">GPU Throttling Risk - Consider GPU Limit Increase</span>
+                          <span className="text-[10px] font-black uppercase text-rose-600 dark:text-rose-400 tracking-widest">GPU Throttling Risk - Consider GPU Limit Increase</span>
                         </div>
                       )}
                     </div>
@@ -555,9 +580,14 @@ export const RightSizingView: React.FC<RightSizingViewProps> = ({ workloads, isD
                 <section className="animate-in fade-in slide-in-from-bottom-8 duration-700 pb-20">
                   <div className="bg-bg-card border border-primary-500/30 rounded-2xl overflow-hidden shadow-xl relative">
                     <div className="p-8 border-b border-border-main bg-bg-hover/80 backdrop-blur-md flex justify-between items-center sticky top-0 z-10">
-                      <h3 className="text-lg font-semibold text-text-primary flex items-center gap-2">
-                        <Sparkles className="w-6 h-6 text-primary-500" /> AI Capacity Intelligence
-                      </h3>
+                      <div className="flex items-center gap-3">
+                        <div className="p-2.5 bg-gradient-to-br from-primary-600 to-primary-500 rounded-xl shadow-lg shadow-primary-500/20 border border-transparent">
+                          <Sparkles className="w-5 h-5 text-white" />
+                        </div>
+                        <div>
+                          <h3 className="text-sm font-black uppercase tracking-widest text-text-primary">AI Capacity Intelligence</h3>
+                        </div>
+                      </div>
                     </div>
                     <div className="p-10 md:p-14 prose prose-primary max-w-none prose-invert">
                       <ReactMarkdown
@@ -571,7 +601,7 @@ export const RightSizingView: React.FC<RightSizingViewProps> = ({ workloads, isD
                                 </SyntaxHighlighter>
                               </div>
                             ) : (
-                              <code className="bg-primary-500/10 text-primary-600 px-2 py-0.5 rounded-lg font-mono text-xs font-bold" {...props}>{children}</code>
+                              <code className="bg-primary-500/10 text-primary-600 dark:text-primary-400 px-2 py-0.5 rounded-lg font-mono text-xs font-bold" {...props}>{children}</code>
                             )
                           }
                         }}
@@ -585,13 +615,16 @@ export const RightSizingView: React.FC<RightSizingViewProps> = ({ workloads, isD
             </div>
           </div>
         ) : (
-          <div className="flex-1 flex flex-col items-center justify-center p-12 text-center h-full">
-            <Scale className="w-12 h-12 text-primary-500 mb-8 animate-bounce" />
-            <h3 className="text-xl font-semibold text-text-primary mb-4">Capacity Simulation Workspace</h3>
-            <p className="text-sm text-text-tertiary max-w-sm font-semibold">Select a workload from the infrastructure fleet to initiate multi-dimensional capacity simulation.</p>
+          <div className="flex-1 flex flex-col items-center justify-center p-12 text-center h-full animate-fade-in">
+            <div className="p-6 bg-primary-500/10 rounded-full mb-4 shadow-xl shadow-primary-500/5">
+              <Scale className="w-10 h-10 text-primary-500 dark:text-primary-400" />
+            </div>
+            <h3 className="text-xl font-semibold text-text-primary mb-2">Capacity Simulation Workspace</h3>
+            <p className="text-sm text-text-tertiary max-w-sm">Select a workload from the infrastructure fleet to initiate multi-dimensional capacity simulation.</p>
           </div>
         )}
       </main>
     </div>
+  </div>
   );
 };
