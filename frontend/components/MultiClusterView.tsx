@@ -410,16 +410,16 @@ export const MultiClusterView: React.FC = () => {
           </div>
 
           {/* Cross-Cluster Incidents */}
-          {data.incidents.length > 0 && (
+          {(data.incidents || []).length > 0 && (
             <div className="bg-bg-card rounded-3xl border border-border-main overflow-hidden">
               <div className="p-6 border-b border-border-main bg-bg-hover/50">
                 <h3 className="text-sm font-black uppercase tracking-widest text-text-primary flex items-center gap-2">
                   <AlertTriangle className="w-4 h-4 text-rose-500" />
-                  Cross-Cluster Incidents ({data.incidents.length})
+                  Cross-Cluster Incidents ({(data.incidents || []).length})
                 </h3>
               </div>
               <div className="p-6 space-y-4">
-                {data.incidents.map((incident) => (
+                {(data.incidents || []).map((incident) => (
                   <div
                     key={incident.id}
                     className="p-4 rounded-xl border-2 border-rose-500/20 bg-rose-500/5"
@@ -542,11 +542,11 @@ export const MultiClusterView: React.FC = () => {
         <div className="bg-bg-card rounded-3xl border border-border-main overflow-hidden">
           <div className="p-6 border-b border-border-main bg-bg-hover/50">
             <h3 className="text-sm font-black uppercase tracking-widest text-text-primary">
-              All Incidents ({data.incidents.length})
+              All Incidents ({(data.incidents || []).length})
             </h3>
           </div>
           <div className="p-6">
-            {data.incidents.length === 0 ? (
+            {(data.incidents || []).length === 0 ? (
               <div className="text-center py-12">
                 <CheckCircle2 className="w-12 h-12 text-emerald-500 mx-auto mb-4" />
                 <h4 className="text-lg font-bold text-text-primary mb-2">No Cross-Cluster Incidents</h4>
@@ -554,7 +554,7 @@ export const MultiClusterView: React.FC = () => {
               </div>
             ) : (
               <div className="space-y-4">
-                {data.incidents.map((incident) => (
+                {(data.incidents || []).map((incident) => (
                   <div
                     key={incident.id}
                     className="p-5 rounded-xl border-2 border-rose-500/20 bg-rose-500/5"
