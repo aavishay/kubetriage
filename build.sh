@@ -1,21 +1,32 @@
-#!/usr/bin/env bash
+#!/bin/bash
 set -e
 
-echo "Building KubeTriage..."
+# --- Configuration ---
+ROOT_DIR=$(pwd)
+FRONTEND_DIR="$ROOT_DIR/frontend"
+BACKEND_DIR="$ROOT_DIR"
+BINARY_NAME="kubetriage"
 
-# Build Frontend
-echo "Building React frontend..."
-cd frontend
-npm ci --ignore-scripts || npm install --ignore-scripts
+# --- Build Process ---
+
+echo "🚀 Building KubeTriage..."
+
+# 1. Build Frontend
+echo "📦 Building frontend..."
+cd "$FRONTEND_DIR"
+npm ci --ignore-scripts || npm install --legacy-peer-deps
 npm run build
-echo "Updating frontend assets in backend..."
-rm -rf ../internal/ui/dist
-cp -r dist ../internal/ui/dist
-cd ..
 
-# Build Backend
-echo "Building Go backend..."
+# 2. Prepare Backend Assets
+echo "📂 Syncing assets to backend..."
+rm -rf "$BACKEND_DIR/internal/ui/dist"
+cp -r "$FRONTEND_DIR/dist" "$BACKEND_DIR/internal/ui/dist"
+cd "$BACKEND_DIR"
+
+# 3. Build Backend CLI
+echo "🏗️  Building backend CLI..."
 go mod download
-go build -o kubetriage cmd/server/main.go
+go build -o "$BINARY_NAME" cmd/server/main.go
 
-echo "Build complete! Binary located at ./kubetriage"
+echo "✅ Build complete! You can now run:"
+echo "   ./$BINARY_NAME serve"
