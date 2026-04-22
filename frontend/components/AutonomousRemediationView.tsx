@@ -417,6 +417,45 @@ export const AutonomousRemediationView: React.FC = () => {
     return <span className={`inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-full ${styles[status] || 'bg-zinc-500/10'}`}>{status.replace('_', ' ')}</span>;
   };
 
+  if (isLoading) {
+    return (
+      <PageTransition>
+        <div className="flex flex-col gap-6 p-6 animate-fade-in">
+          <div className="flex items-center justify-between">
+            <div className="space-y-2">
+              <div className="kt-skeleton kt-skeleton-heading w-64" />
+              <div className="kt-skeleton kt-skeleton-text w-96" />
+            </div>
+            <div className="kt-skeleton w-10 h-10 rounded-lg" />
+          </div>
+          <div className="kt-skeleton w-full h-16 rounded-xl" />
+          <div className="kt-skeleton w-full h-10 rounded-xl" />
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            {[...Array(4)].map((_, i) => (
+              <div key={i} className="bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-700 p-5 space-y-3">
+                <div className="flex items-start justify-between">
+                  <div className="space-y-2">
+                    <div className="kt-skeleton kt-skeleton-text w-32" />
+                    <div className="kt-skeleton kt-skeleton-text w-48" />
+                  </div>
+                  <div className="kt-skeleton w-16 h-6 rounded-full" />
+                </div>
+                <div className="space-y-2">
+                  <div className="kt-skeleton w-24 h-5 rounded-full" />
+                  <div className="kt-skeleton w-3/4 h-3 rounded" />
+                </div>
+                <div className="flex gap-2 pt-2">
+                  <div className="kt-skeleton w-full h-8 rounded-lg" />
+                  <div className="kt-skeleton w-full h-8 rounded-lg" />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </PageTransition>
+    );
+  }
+
   return (
     <PageTransition>
       <div className="space-y-6">

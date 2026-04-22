@@ -95,8 +95,19 @@ export const CommentsThread: React.FC<CommentsThreadProps> = ({
             {/* List */}
             <div className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar min-h-[200px] max-h-[400px]">
                 {isLoading ? (
-                    <div className="flex justify-center p-4">
-                        <Loader2 className="w-5 h-5 animate-spin text-text-tertiary" />
+                    <div className="space-y-4 animate-fade-in">
+                        {[...Array(3)].map((_, i) => (
+                            <div key={i} className="flex gap-3">
+                                <div className="kt-skeleton w-6 h-6 rounded-full shrink-0" />
+                                <div className="flex-1 space-y-2">
+                                    <div className="flex gap-2">
+                                        <div className="kt-skeleton kt-skeleton-text w-20" />
+                                        <div className="kt-skeleton kt-skeleton-text w-16" />
+                                    </div>
+                                    <div className="kt-skeleton w-full h-10 rounded-2xl" />
+                                </div>
+                            </div>
+                        ))}
                     </div>
                 ) : comments.length === 0 ? (
                     <div className="text-center py-8 text-text-tertiary text-xs italic">
