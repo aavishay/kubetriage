@@ -17,7 +17,8 @@ import {
   Globe,
   ExternalLink,
   MoreHorizontal,
-  ChevronRight
+  ChevronRight,
+  Search
 } from 'lucide-react';
 import { PageTransition } from './PageTransition';
 import { MetricsChart } from './MetricsChart';
@@ -332,6 +333,49 @@ export const ExternalMetricsView: React.FC = () => {
     s.provider.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  if (isLoading && sources.length === 0) {
+    return (
+      <PageTransition>
+        <div className="flex flex-col gap-6 p-6 animate-fade-in">
+          <div className="flex items-center justify-between">
+            <div className="space-y-2">
+              <div className="kt-skeleton kt-skeleton-heading w-48" />
+              <div className="kt-skeleton kt-skeleton-text w-96" />
+            </div>
+            <div className="flex gap-2">
+              <div className="kt-skeleton w-32 h-9 rounded-lg" />
+              <div className="kt-skeleton w-28 h-9 rounded-lg" />
+            </div>
+          </div>
+          <div className="grid grid-cols-4 gap-4">
+            {[...Array(4)].map((_, i) => (
+              <div key={i} className="bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-700 p-4 space-y-2">
+                <div className="kt-skeleton kt-skeleton-text w-24" />
+                <div className="kt-skeleton kt-skeleton-heading w-12" />
+              </div>
+            ))}
+          </div>
+          <div className="kt-skeleton w-full h-10 rounded-lg" />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {[...Array(4)].map((_, i) => (
+              <div key={i} className="bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-700 p-5 space-y-3">
+                <div className="flex items-center gap-3">
+                  <div className="kt-skeleton w-10 h-10 rounded-lg" />
+                  <div className="flex-1 space-y-2">
+                    <div className="kt-skeleton kt-skeleton-text w-32" />
+                    <div className="kt-skeleton kt-skeleton-text w-24" />
+                  </div>
+                </div>
+                <div className="kt-skeleton w-full h-4 rounded" />
+                <div className="kt-skeleton w-3/4 h-4 rounded" />
+              </div>
+            ))}
+          </div>
+        </div>
+      </PageTransition>
+    );
+  }
+
   return (
     <PageTransition>
       <div className="space-y-6">
@@ -503,6 +547,19 @@ export const ExternalMetricsView: React.FC = () => {
                   )}
                 </div>
               ))}
+              {filteredSources.length === 0 && (
+                <div className="col-span-full flex flex-col items-center justify-center py-16 text-zinc-500 dark:text-zinc-400">
+                  <Database className="w-12 h-12 mb-4 opacity-30" />
+                  <h3 className="text-lg font-medium text-zinc-900 dark:text-white">No Metric Sources</h3>
+                  <p className="text-sm mt-2">Add a source to start ingesting external metrics.</p>
+                  <button
+                    onClick={() => setShowAddModal(true)}
+                    className="mt-4 flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors"
+                  >
+                    <Plus className="w-4 h-4" /> Add Source
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         )}
