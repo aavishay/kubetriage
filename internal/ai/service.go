@@ -28,6 +28,30 @@ func NewAIService(ctx context.Context) (*AIService, error) {
 	ollama := NewOllamaProvider()
 	providers["ollama"] = ollama
 
+	// Initialize Azure OpenAI
+	azure := NewAzureOpenAIProvider()
+	if azure.isAvailable() {
+		providers["azure"] = azure
+	} else {
+		log.Printf("Azure OpenAI provider not available: AZURE_OPENAI_KEY, AZURE_OPENAI_ENDPOINT, or AZURE_OPENAI_DEPLOYMENT not set")
+	}
+
+	// Initialize AWS Bedrock
+	bedrock := NewBedrockProvider()
+	if bedrock.isAvailable() {
+		providers["bedrock"] = bedrock
+	} else {
+		log.Printf("AWS Bedrock provider not available: AWS_ACCESS_KEY_ID or AWS_SECRET_ACCESS_KEY not set")
+	}
+
+	// Initialize Vertex AI
+	vertex := NewVertexProvider()
+	if vertex.isAvailable() {
+		providers["vertex"] = vertex
+	} else {
+		log.Printf("Vertex AI provider not available: VERTEX_API_KEY or VERTEX_PROJECT_ID not set")
+	}
+
 	if len(providers) == 0 {
 		return nil, fmt.Errorf("no AI providers available")
 	}

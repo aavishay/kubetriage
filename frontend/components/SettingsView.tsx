@@ -90,7 +90,7 @@ export const SettingsView: React.FC = () => {
                             <label className="text-[10px] font-bold text-text-tertiary uppercase tracking-wider flex items-center gap-1.5 opacity-70">
                                 <Cpu className="w-3.5 h-3.5" /> Provider
                             </label>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                                 <button
                                     onClick={() => { setProvider('gemini'); setModel(''); }}
                                     className={`relative p-5 rounded-xl border text-left transition-all duration-200 group ${provider === 'gemini'
@@ -127,6 +127,66 @@ export const SettingsView: React.FC = () => {
                                     {provider === 'ollama' && (
                                         <div className="absolute top-4 right-4">
                                             <div className="p-1 rounded-full bg-emerald-500/20"><Check className="w-3 h-3 text-emerald-500 dark:text-emerald-400" /></div>
+                                        </div>
+                                    )}
+                                </button>
+
+                                <button
+                                    onClick={() => { setProvider('azure'); setModel(''); }}
+                                    className={`relative p-5 rounded-xl border text-left transition-all duration-200 group ${provider === 'azure'
+                                        ? 'border-sky-500 bg-sky-500/5 ring-1 ring-sky-500/50'
+                                        : 'border-border-main hover:border-sky-500/30 hover:bg-bg-hover active:scale-[0.98]'}`}
+                                >
+                                    <div className="flex items-center justify-between mb-2">
+                                        <span className={`font-semibold transition-colors ${provider === 'azure' ? 'text-sky-500 dark:text-sky-400' : 'text-text-primary'}`}>Azure OpenAI</span>
+                                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${provider === 'azure' ? 'bg-sky-500 text-white' : 'bg-bg-hover text-text-tertiary border border-border-main'}`}>Cloud</span>
+                                    </div>
+                                    <p className="text-xs text-text-tertiary leading-relaxed">
+                                        Microsoft Azure OpenAI Service. Requires endpoint and key.
+                                    </p>
+                                    {provider === 'azure' && (
+                                        <div className="absolute top-4 right-4">
+                                            <div className="p-1 rounded-full bg-sky-500/20"><Check className="w-3 h-3 text-sky-500 dark:text-sky-400" /></div>
+                                        </div>
+                                    )}
+                                </button>
+
+                                <button
+                                    onClick={() => { setProvider('bedrock'); setModel(''); }}
+                                    className={`relative p-5 rounded-xl border text-left transition-all duration-200 group ${provider === 'bedrock'
+                                        ? 'border-amber-500 bg-amber-500/5 ring-1 ring-amber-500/50'
+                                        : 'border-border-main hover:border-amber-500/30 hover:bg-bg-hover active:scale-[0.98]'}`}
+                                >
+                                    <div className="flex items-center justify-between mb-2">
+                                        <span className={`font-semibold transition-colors ${provider === 'bedrock' ? 'text-amber-500 dark:text-amber-400' : 'text-text-primary'}`}>AWS Bedrock</span>
+                                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${provider === 'bedrock' ? 'bg-amber-500 text-white' : 'bg-bg-hover text-text-tertiary border border-border-main'}`}>Cloud</span>
+                                    </div>
+                                    <p className="text-xs text-text-tertiary leading-relaxed">
+                                        Amazon Bedrock managed foundation models. Requires AWS credentials.
+                                    </p>
+                                    {provider === 'bedrock' && (
+                                        <div className="absolute top-4 right-4">
+                                            <div className="p-1 rounded-full bg-amber-500/20"><Check className="w-3 h-3 text-amber-500 dark:text-amber-400" /></div>
+                                        </div>
+                                    )}
+                                </button>
+
+                                <button
+                                    onClick={() => { setProvider('vertex'); setModel(''); }}
+                                    className={`relative p-5 rounded-xl border text-left transition-all duration-200 group ${provider === 'vertex'
+                                        ? 'border-violet-500 bg-violet-500/5 ring-1 ring-violet-500/50'
+                                        : 'border-border-main hover:border-violet-500/30 hover:bg-bg-hover active:scale-[0.98]'}`}
+                                >
+                                    <div className="flex items-center justify-between mb-2">
+                                        <span className={`font-semibold transition-colors ${provider === 'vertex' ? 'text-violet-500 dark:text-violet-400' : 'text-text-primary'}`}>Vertex AI</span>
+                                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${provider === 'vertex' ? 'bg-violet-500 text-white' : 'bg-bg-hover text-text-tertiary border border-border-main'}`}>Cloud</span>
+                                    </div>
+                                    <p className="text-xs text-text-tertiary leading-relaxed">
+                                        Google Cloud Vertex AI platform. Requires project ID and API key.
+                                    </p>
+                                    {provider === 'vertex' && (
+                                        <div className="absolute top-4 right-4">
+                                            <div className="p-1 rounded-full bg-violet-500/20"><Check className="w-3 h-3 text-violet-500 dark:text-violet-400" /></div>
                                         </div>
                                     )}
                                 </button>
@@ -169,7 +229,15 @@ export const SettingsView: React.FC = () => {
                             <div className="flex items-start gap-1.5 px-1">
                                 <div className="mt-1 w-1 h-1 rounded-full bg-primary-500/50" />
                                 <p className="text-[11px] text-text-tertiary leading-normal">
-                                    {provider === 'ollama' ? 'Models must be pulled via `ollama pull <model>` to appear here.' : 'Select the optimal model for your use case.'}
+                                    {provider === 'ollama'
+                                        ? 'Models must be pulled via `ollama pull <model>` to appear here.'
+                                        : provider === 'azure'
+                                            ? 'Select your Azure OpenAI deployment model.'
+                                            : provider === 'bedrock'
+                                                ? 'Select the Bedrock foundation model for inference.'
+                                                : provider === 'vertex'
+                                                    ? 'Select the Vertex AI Gemini model for inference.'
+                                                    : 'Select the optimal model for your use case.'}
                                 </p>
                             </div>
                         </div>
