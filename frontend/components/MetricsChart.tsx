@@ -47,13 +47,13 @@ export const MetricsChart: React.FC<MetricsChartProps> = ({ data, color = "#6366
                     {requestValue !== undefined && (
                         <ReferenceLine
                             y={requestValue}
-                            stroke="#f59e0b"
+                            stroke="var(--kt-warning)"
                             strokeDasharray="4 4"
                             strokeWidth={1.5}
                             label={{
                                 value: `Req: ${requestValue.toFixed(2)}${unit}`,
                                 position: 'insideTopRight',
-                                fill: '#f59e0b',
+                                fill: 'var(--kt-warning)',
                                 fontSize: 9,
                             }}
                         />

@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 
 export const NotFound: React.FC = () => {
     return (
-        <div className="min-h-screen w-full flex items-center justify-center bg-bg-main text-text-primary p-4">
+        <div className="min-h-screen w-full flex items-center justify-center bg-bg-main text-text-primary p-4 animate-fade-in">
             <div className="max-w-md w-full text-center space-y-6">
                 <div className="relative inline-block">
                     <div className="p-6 bg-bg-card rounded-2xl border border-border-main shadow-xl">
