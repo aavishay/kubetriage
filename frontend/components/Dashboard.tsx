@@ -353,23 +353,36 @@ export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = tr
               <Activity className="w-4 h-4 text-primary-500 dark:text-primary-400" />
               Status Distribution
             </h3>
-            <div className="h-40 w-full">
+            <div className="h-44 w-full relative">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
-                  <Pie data={statusData} cx="50%" cy="50%" innerRadius={50} outerRadius={70} paddingAngle={5} dataKey="value" stroke="none">
+                  <Pie data={statusData} cx="50%" cy="50%" innerRadius={55} outerRadius={75} paddingAngle={4} dataKey="value" stroke="none">
                     {statusData.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={entry.color} />
                     ))}
                   </Pie>
-                  <Tooltip contentStyle={tooltipStyle} />
+                  <Tooltip
+                    contentStyle={tooltipStyle}
+                    formatter={(value: number, name: string) => [`${value} workloads`, name]}
+                  />
                 </PieChart>
               </ResponsiveContainer>
+              <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                <span className="text-2xl font-bold text-text-primary">{safeWorkloads.length}</span>
+                <span className="text-[10px] text-text-tertiary uppercase tracking-wider">Total</span>
+              </div>
             </div>
-            <div className="flex justify-center gap-4 mt-2">
+            <div className="grid grid-cols-3 gap-2 mt-3">
               {statusData.map((item) => (
-                <div key={item.name} className="flex items-center gap-1.5">
-                  <div className="w-2 h-2 rounded-full" style={{ backgroundColor: item.color }}></div>
-                  <span className="text-xs text-text-secondary">{item.name}</span>
+                <div
+                  key={item.name}
+                  className="flex flex-col items-center gap-1 p-2 rounded-xl bg-bg-hover/50 border border-border-main hover:border-primary-500/20 transition-all cursor-default"
+                >
+                  <div className="flex items-center gap-1.5">
+                    <div className="w-2 h-2 rounded-full" style={{ backgroundColor: item.color }} />
+                    <span className="text-[10px] font-medium text-text-secondary uppercase tracking-wider">{item.name}</span>
+                  </div>
+                  <span className="text-lg font-bold" style={{ color: item.color }}>{item.value}</span>
                 </div>
               ))}
             </div>
@@ -457,10 +470,21 @@ export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = tr
                 .map((item, idx) => (
                   <div
                     key={idx}
-                    className="flex items-center gap-4 p-3 rounded-xl hover:bg-bg-hover transition-colors cursor-pointer group"
+                    className="flex items-center gap-3 p-3 rounded-xl hover:bg-bg-hover transition-colors cursor-pointer group"
                     onClick={() => onTriageRequest?.(item.name, 'General Health')}
                   >
-                    <div className="w-32 shrink-0">
+                    {/* Rank Badge */}
+                    <div className={`
+                      w-6 h-6 shrink-0 rounded-lg flex items-center justify-center text-[10px] font-bold
+                      ${idx === 0 ? 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20' :
+                        idx === 1 ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20' :
+                        idx === 2 ? 'bg-primary-500/10 text-primary-600 dark:text-primary-400 border border-primary-500/20' :
+                        'bg-bg-hover text-text-tertiary border border-border-main'}
+                    `}>
+                      {idx + 1}
+                    </div>
+
+                    <div className="w-28 shrink-0">
                       <h4 className="text-sm font-medium text-text-primary truncate" title={item.name}>{item.name}</h4>
                       <div className="flex items-center gap-1.5 mt-1">
                         <div className={`w-1.5 h-1.5 rounded-full ${getStatusColor(item.status)}`} />
@@ -471,14 +495,18 @@ export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = tr
                     <div className="flex-1 flex flex-col justify-center">
                       <div className="flex justify-between items-center mb-1.5">
                         <span className="text-[10px] text-text-tertiary uppercase tracking-wider">{saturationTab}</span>
-                        <span className={`text-xs font-medium ${item.isCritical ? 'text-rose-500' : 'text-text-secondary'}`}>
+                        <span className={`text-xs font-bold ${item.isCritical ? 'text-rose-500' : item.isWarning ? 'text-amber-500' : 'text-text-secondary'}`}>
                           {item.saturation}%
                         </span>
                       </div>
-                      <div className="h-1.5 w-full bg-bg-hover/50 rounded-full overflow-hidden">
+                      <div className="h-2 w-full bg-bg-hover/50 rounded-full overflow-hidden">
                         <div
                           className={`h-full rounded-full transition-all duration-500 ${
-                            item.isCritical ? 'bg-rose-500' : item.isWarning ? 'bg-amber-500' : 'bg-primary-500'
+                            item.isCritical
+                              ? 'bg-gradient-to-r from-rose-600 to-rose-400'
+                              : item.isWarning
+                                ? 'bg-gradient-to-r from-amber-600 to-amber-400'
+                                : 'bg-gradient-to-r from-primary-600 to-primary-400'
                           }`}
                           style={{ width: `${Math.min(100, item.saturation)}%` }}
                         />
@@ -486,7 +514,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = tr
                     </div>
 
                     <div className="w-24 shrink-0 text-right">
-                      <div className="text-xs font-mono text-text-secondary">
+                      <div className="text-xs font-mono font-medium text-text-secondary">
                         {item.used.toFixed(1)}{item.unit}
                       </div>
                       {item.base > 0 && (
@@ -497,6 +525,13 @@ export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = tr
                     </div>
                   </div>
                 ))}
+              {workloads.length > 10 && (
+                <div className="pt-2 pb-1 text-center">
+                  <span className="text-[11px] text-text-tertiary">
+                    Showing top 10 of {workloads.length} workloads
+                  </span>
+                </div>
+              )}
             </div>
           </div>
         </div>

@@ -407,8 +407,23 @@ export const ReportsView: React.FC = () => {
 
                 {
                     isLoading ? (
-                        <div className="flex justify-center py-16">
-                            <Loader2 className="w-8 h-8 animate-spin text-primary-500" />
+                        <div className="space-y-4 animate-fade-in">
+                            <div className="flex items-center justify-between mb-4">
+                                <div className="kt-skeleton kt-skeleton-text w-32" />
+                                <div className="kt-skeleton w-24 h-8 rounded-lg" />
+                            </div>
+                            {[...Array(4)].map((_, i) => (
+                                <div key={i} className="bg-bg-card border border-border-main rounded-2xl p-5 space-y-3">
+                                    <div className="flex items-center gap-4">
+                                        <div className="kt-skeleton w-10 h-10 rounded-xl shrink-0" />
+                                        <div className="flex-1 space-y-2">
+                                            <div className="kt-skeleton kt-skeleton-text w-48" />
+                                            <div className="kt-skeleton kt-skeleton-text w-32" />
+                                        </div>
+                                        <div className="kt-skeleton w-16 h-6 rounded-full" />
+                                    </div>
+                                </div>
+                            ))}
                         </div>
                     ) : groupedReports.length > 0 ? (
                         <div className="space-y-3">
