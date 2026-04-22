@@ -18,6 +18,7 @@ import (
 	"github.com/aavishay/kubetriage/backend/internal/db"
 	"github.com/aavishay/kubetriage/backend/internal/k8s"
 	"github.com/aavishay/kubetriage/backend/internal/ml"
+	"github.com/aavishay/kubetriage/backend/internal/telemetry"
 	"github.com/aavishay/kubetriage/backend/internal/ui"
 	"github.com/aavishay/kubetriage/backend/internal/watcher"
 	"github.com/spf13/cobra"
@@ -67,7 +68,22 @@ func runServe(cmd *cobra.Command, _ []string) error {
 	}
 	log.Println("Database initialized")
 
-	// 3. Kubernetes Cluster Manager
+	// 3. OpenTelemetry Tracing (optional)
+	if otelEndpoint := os.Getenv("OTEL_EXPORTER_OTLP_ENDPOINT"); otelEndpoint != "" {
+		shutdownTracer, err := telemetry.InitTracer(ctx, "kubetriage", otelEndpoint)
+		if err != nil {
+			log.Printf("Warning: failed to initialize OpenTelemetry tracer: %v", err)
+		} else {
+			defer func() {
+				if err := shutdownTracer(ctx); err != nil {
+					log.Printf("Warning: failed to shutdown tracer: %v", err)
+				}
+			}()
+			log.Println("OpenTelemetry tracer initialized")
+		}
+	}
+
+	// 4. Kubernetes Cluster Manager
 	if _, err := k8s.InitK8sClient(); err != nil {
 		log.Printf("Warning: Kubernetes client initialization failed: %v", err)
 		log.Printf("Clusters from kubeconfig will not be available. You can register clusters manually via the UI.")
@@ -79,7 +95,7 @@ func runServe(cmd *cobra.Command, _ []string) error {
 		}
 	}
 
-	// 4. AI Service
+	// 5. AI Service
 	aiService, err := ai.NewAIService(ctx)
 	if err != nil {
 		return fmt.Errorf("failed to initialize AI service: %w", err)
@@ -87,17 +103,17 @@ func runServe(cmd *cobra.Command, _ []string) error {
 	defer aiService.Close()
 	log.Println("AI service initialized")
 
-	// 5. Background Watcher
+	// 6. Background Watcher
 	w := watcher.InitWatcher(ctx, aiService)
 	defer w.Stop()
 	log.Println("Cluster watcher started")
 
-	// 6. ML Service
+	// 7. ML Service
 	mlService := ml.NewService()
 	mlService.Start(ctx)
 	log.Println("ML service initialized")
 
-	// 7. Static Frontend Files
+	// 8. Static Frontend Files
 	rootFS := ui.GetStaticFS()
 	assetsFS := ui.GetAssetsFS()
 	indexHTML, err := ui.GetIndexHTML()
@@ -105,7 +121,7 @@ func runServe(cmd *cobra.Command, _ []string) error {
 		log.Printf("Warning: frontend index.html not found — serving API only. Run `make build` to embed the frontend. Error: %v", err)
 	}
 
-	// 8. HTTP Router
+	// 9. HTTP Router
 	router := api.SetupRouter(api.RouterConfig{
 		AIService: aiService,
 		MLService: mlService,
@@ -114,7 +130,7 @@ func runServe(cmd *cobra.Command, _ []string) error {
 		IndexHTML: indexHTML,
 	})
 
-	// 8. HTTP Server
+	// 10. HTTP Server
 	addr := ":" + port
 	srv := &http.Server{Addr: addr, Handler: router}
 
