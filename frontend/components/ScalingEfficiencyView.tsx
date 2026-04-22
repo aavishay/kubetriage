@@ -420,7 +420,7 @@ const UnifiedNodePoolCard: React.FC<UnifiedNodePoolCardProps> = ({ nodePool, isS
       case 'gcp':
         return 'bg-red-500/10 text-red-500';
       default:
-        return 'bg-gray-500/10 text-gray-500';
+        return 'bg-text-tertiary/10 text-text-tertiary';
     }
   };
 
@@ -433,7 +433,7 @@ const UnifiedNodePoolCard: React.FC<UnifiedNodePoolCardProps> = ({ nodePool, isS
       case 'cluster-autoscaler':
         return 'bg-purple-500/10 text-purple-500';
       default:
-        return 'bg-gray-500/10 text-gray-500';
+        return 'bg-text-tertiary/10 text-text-tertiary';
     }
   };
 
@@ -1512,7 +1512,7 @@ const UnifiedNodePoolCard: React.FC<UnifiedNodePoolCardProps> = ({ nodePool, isS
                     { label: 'Ready', value: nodeClaimsSummary.ready, color: 'text-emerald-500' },
                     { label: 'Pending', value: nodeClaimsSummary.pending, color: 'text-amber-500' },
                     { label: 'Drifted', value: nodeClaimsSummary.drifted, color: 'text-rose-500' },
-                    { label: 'Expired', value: nodeClaimsSummary.expired, color: 'text-gray-500' },
+                    { label: 'Expired', value: nodeClaimsSummary.expired, color: 'text-text-tertiary' },
                     { label: 'Stuck >5m', value: nodeClaimsSummary.stuckPendingCount, color: 'text-rose-500' },
                   ].map((s, i) => (
                     <div key={i} className="bg-bg-hover rounded-xl p-3 text-center">
@@ -1560,7 +1560,7 @@ const UnifiedNodePoolCard: React.FC<UnifiedNodePoolCardProps> = ({ nodePool, isS
                               : claim.status === 'Drifted'
                               ? 'text-rose-500 bg-rose-500/10 border-rose-500/20'
                               : claim.status === 'Expired'
-                              ? 'text-gray-500 bg-gray-500/10 border-gray-500/20'
+                              ? 'text-text-tertiary bg-gray-500/10 border-text-tertiary/20'
                               : 'text-slate-500 bg-slate-500/10 border-slate-500/20'
                           }`}
                           >

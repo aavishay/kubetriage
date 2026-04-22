@@ -123,7 +123,7 @@ export const MultiClusterView: React.FC = () => {
       case 'critical':
         return <XCircle className="w-5 h-5 text-rose-500" />;
       default:
-        return <Minus className="w-5 h-5 text-gray-500" />;
+        return <Minus className="w-5 h-5 text-text-tertiary" />;
     }
   };
 
@@ -132,7 +132,7 @@ export const MultiClusterView: React.FC = () => {
       case 'healthy': return 'text-emerald-500';
       case 'degraded': return 'text-amber-500';
       case 'offline': return 'text-rose-500';
-      default: return 'text-gray-500';
+      default: return 'text-text-tertiary';
     }
   };
 
@@ -141,7 +141,7 @@ export const MultiClusterView: React.FC = () => {
       case 'healthy': return 'bg-emerald-500/10';
       case 'degraded': return 'bg-amber-500/10';
       case 'offline': return 'bg-rose-500/10';
-      default: return 'bg-gray-500/10';
+      default: return 'bg-text-tertiary/10';
     }
   };
 

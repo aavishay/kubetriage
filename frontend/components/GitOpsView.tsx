@@ -33,7 +33,7 @@ const getStatusColor = (status: string) => {
       return 'text-amber-500 bg-amber-500/10 border-amber-500/20';
     case 'Suspended':
     case 'Stalled':
-      return 'text-gray-500 bg-gray-500/10 border-gray-500/20';
+      return 'text-text-tertiary bg-text-tertiary/10 border-text-tertiary/20';
     default:
       return 'text-text-tertiary bg-bg-hover border-border-main';
   }
@@ -125,7 +125,7 @@ export const GitOpsView: React.FC<GitOpsViewProps> = ({ clusterId }) => {
     { title: 'Out of Sync', value: summary.outOfSync, color: 'text-rose-500', bg: 'bg-rose-500/10' },
     { title: 'Degraded', value: summary.degraded, color: 'text-rose-500', bg: 'bg-rose-500/10' },
     { title: 'Progressing', value: summary.progressing, color: 'text-amber-500', bg: 'bg-amber-500/10' },
-    { title: 'Suspended', value: summary.suspended, color: 'text-gray-500', bg: 'bg-gray-500/10' },
+    { title: 'Suspended', value: summary.suspended, color: 'text-text-tertiary', bg: 'bg-text-tertiary/10' },
   ];
 
   if (loading && !data) {

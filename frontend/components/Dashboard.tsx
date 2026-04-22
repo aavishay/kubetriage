@@ -71,7 +71,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = tr
 
   const budgetGaugeData = [
     { name: 'Consumed', value: Math.max(0, isFinite(reliabilityMetrics.budgetPercentage) ? 100 - reliabilityMetrics.budgetPercentage : 100), color: reliabilityMetrics.severity === 'Critical' ? '#ef4444' : '#6366f1' },
-    { name: 'Remaining', value: Math.max(0, isFinite(reliabilityMetrics.budgetPercentage) ? reliabilityMetrics.budgetPercentage : 0), color: isDarkMode ? 'var(--kt-bg-hover)' : '#f3f4f6' },
+    { name: 'Remaining', value: Math.max(0, isFinite(reliabilityMetrics.budgetPercentage) ? reliabilityMetrics.budgetPercentage : 0), color: 'var(--kt-bg-hover)' },
   ];
 
   // Standardized card styles
