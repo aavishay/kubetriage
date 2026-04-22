@@ -402,7 +402,7 @@ export const AutonomousRemediationView: React.FC = () => {
 
   const getStatusBadge = (status: string) => {
     const styles: Record<string, string> = {
-      pending: 'bg-zinc-500/10 text-zinc-600',
+      pending: 'bg-text-tertiary/10 text-text-secondary',
       pending_approval: 'bg-amber-500/10 text-amber-600',
       approved: 'bg-blue-500/10 text-blue-600',
       rejected: 'bg-rose-500/10 text-rose-600',
@@ -411,10 +411,10 @@ export const AutonomousRemediationView: React.FC = () => {
       failed: 'bg-rose-500/10 text-rose-600',
       running: 'bg-blue-500/10 text-blue-600 animate-pulse',
       completed: 'bg-emerald-500/10 text-emerald-600',
-      cancelled: 'bg-zinc-500/10 text-zinc-600',
+      cancelled: 'bg-text-tertiary/10 text-text-secondary',
     };
 
-    return <span className={`inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-full ${styles[status] || 'bg-zinc-500/10'}`}>{status.replace('_', ' ')}</span>;
+    return <span className={`inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-full ${styles[status] || 'bg-text-tertiary/10'}`}>{status.replace('_', ' ')}</span>;
   };
 
   if (isLoading) {
@@ -432,7 +432,7 @@ export const AutonomousRemediationView: React.FC = () => {
           <div className="kt-skeleton w-full h-10 rounded-xl" />
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             {[...Array(4)].map((_, i) => (
-              <div key={i} className="bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-700 p-5 space-y-3">
+              <div key={i} className="bg-bg-card rounded-xl border border-border-main p-5 space-y-3">
                 <div className="flex items-start justify-between">
                   <div className="space-y-2">
                     <div className="kt-skeleton kt-skeleton-text w-32" />
@@ -462,15 +462,15 @@ export const AutonomousRemediationView: React.FC = () => {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-zinc-900 dark:text-white">Autonomous Remediation</h1>
-            <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-1">
+            <h1 className="text-2xl font-bold text-text-primary">Autonomous Remediation</h1>
+            <p className="text-sm text-text-secondary mt-1">
               AI-generated fixes with human approval and automatic rollback safety
             </p>
           </div>
           <div className="flex items-center gap-2">
             <button
               onClick={fetchData}
-              className="p-2 text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+              className="p-2 text-text-secondary hover:text-text-primary rounded-lg hover:bg-bg-hover transition-colors"
             >
               <RefreshCw className={`w-5 h-5 ${isLoading ? 'animate-spin' : ''}`} />
             </button>
@@ -489,7 +489,7 @@ export const AutonomousRemediationView: React.FC = () => {
         </div>
 
         {/* Tabs */}
-        <div className="flex items-center gap-2 border-b border-zinc-200 dark:border-zinc-700">
+        <div className="flex items-center gap-2 border-b border-border-main">
           {(['proposals', 'runbooks', 'scheduled'] as const).map((tab) => (
             <button
               key={tab}
@@ -497,7 +497,7 @@ export const AutonomousRemediationView: React.FC = () => {
               className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
                 activeTab === tab
                   ? 'border-blue-500 text-blue-600 dark:text-blue-400'
-                  : 'border-transparent text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200'
+                  : 'border-transparent text-text-secondary hover:text-text-primary'
               }`}
             >
               {tab === 'proposals' && 'Auto-Fix Proposals'}
@@ -514,21 +514,21 @@ export const AutonomousRemediationView: React.FC = () => {
             <>
               {proposals.length === 0 ? (
                 <div className="text-center py-12">
-                  <Shield className="w-12 h-12 text-zinc-300 dark:text-zinc-600 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-zinc-900 dark:text-white">No Fix Proposals</h3>
-                  <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-2">AI will generate fix proposals as issues are detected</p>
+                  <Shield className="w-12 h-12 text-text-tertiary mx-auto mb-4" />
+                  <h3 className="text-lg font-medium text-text-primary">No Fix Proposals</h3>
+                  <p className="text-sm text-text-secondary mt-2">AI will generate fix proposals as issues are detected</p>
                 </div>
               ) : (
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                   {proposals.map((proposal) => (
-                    <div key={proposal.id} className="bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-700 p-5 hover:border-blue-300 dark:hover:border-blue-700 transition-colors">
+                    <div key={proposal.id} className="bg-bg-card rounded-xl border border-border-main p-5 hover:border-primary-500/30 transition-colors">
                       <div className="flex items-start justify-between mb-4">
                         <div>
-                          <h3 className="text-sm font-semibold text-zinc-900 dark:text-white flex items-center gap-2">
+                          <h3 className="text-sm font-semibold text-text-primary flex items-center gap-2">
                             {proposal.name}
-                            <span className="text-xs text-zinc-500 font-normal">{proposal.namespace}</span>
+                            <span className="text-xs text-text-tertiary font-normal">{proposal.namespace}</span>
                           </h3>
-                          <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">{proposal.issue}</p>
+                          <p className="text-xs text-text-secondary mt-1">{proposal.issue}</p>
                         </div>
                         {getStatusBadge(proposal.status)}
                       </div>
@@ -536,24 +536,24 @@ export const AutonomousRemediationView: React.FC = () => {
                       <div className="space-y-3 mb-4">
                         <div className="flex items-center gap-2">
                           {getRiskBadge(proposal.riskLevel)}
-                          <span className="text-xs text-zinc-500 dark:text-zinc-400">•</span>
-                          <span className="text-xs text-zinc-500 dark:text-zinc-400">{proposal.proposedFix.type}</span>
+                          <span className="text-xs text-text-secondary">•</span>
+                          <span className="text-xs text-text-secondary">{proposal.proposedFix.type}</span>
                         </div>
 
-                        <div className="bg-zinc-50 dark:bg-zinc-800/50 rounded-lg p-3">
-                          <p className="text-xs font-medium text-zinc-700 dark:text-zinc-300 mb-1">Proposed Fix</p>
-                          <p className="text-sm text-zinc-900 dark:text-zinc-100">{proposal.proposedFix.description}</p>
-                          <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-2 italic">"{proposal.proposedFix.reasoning}"</p>
+                        <div className="bg-bg-hover/50 rounded-lg p-3">
+                          <p className="text-xs font-medium text-text-secondary mb-1">Proposed Fix</p>
+                          <p className="text-sm text-text-primary">{proposal.proposedFix.description}</p>
+                          <p className="text-xs text-text-secondary mt-2 italic">"{proposal.proposedFix.reasoning}"</p>
                         </div>
 
-                        <div className="flex items-center gap-2 text-xs text-zinc-500 dark:text-zinc-400">
+                        <div className="flex items-center gap-2 text-xs text-text-secondary">
                           <Clock className="w-3.5 h-3.5" />
                           <span>Rollback timeout: {proposal.rollbackPlan.timeout}s</span>
                         </div>
                       </div>
 
                       {/* Actions */}
-                      <div className="flex items-center gap-2 pt-3 border-t border-zinc-200 dark:border-zinc-700">
+                      <div className="flex items-center gap-2 pt-3 border-t border-border-main">
                         {proposal.status === 'pending' && (
                           <>
                             <button
@@ -564,7 +564,7 @@ export const AutonomousRemediationView: React.FC = () => {
                             </button>
                             <button
                               onClick={() => handleApprove(proposal, false)}
-                              className="px-3 py-2 text-xs font-medium text-zinc-600 dark:text-zinc-400 hover:text-rose-600 dark:hover:text-rose-400 border border-zinc-200 dark:border-zinc-700 rounded-lg transition-colors"
+                              className="px-3 py-2 text-xs font-medium text-text-secondary hover:text-rose-600 dark:hover:text-rose-400 border border-border-main rounded-lg transition-colors"
                             >
                               <XCircle className="w-3.5 h-3.5" />
                             </button>
@@ -597,7 +597,7 @@ export const AutonomousRemediationView: React.FC = () => {
                         )}
 
                         {proposal.result && (
-                          <div className="flex items-center gap-2 text-xs text-zinc-500">
+                          <div className="flex items-center gap-2 text-xs text-text-tertiary">
                             {proposal.result.success ? (
                               <>
                                 <CheckCircle className="w-3.5 h-3.5 text-emerald-500" />
@@ -624,26 +624,26 @@ export const AutonomousRemediationView: React.FC = () => {
             <>
               {runbooks.length === 0 ? (
                 <div className="text-center py-12">
-                  <FileText className="w-12 h-12 text-zinc-300 dark:text-zinc-600 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-zinc-900 dark:text-white">No Runbooks</h3>
-                  <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-2">Convert triage reports to executable runbooks</p>
+                  <FileText className="w-12 h-12 text-text-tertiary mx-auto mb-4" />
+                  <h3 className="text-lg font-medium text-text-primary">No Runbooks</h3>
+                  <p className="text-sm text-text-secondary mt-2">Convert triage reports to executable runbooks</p>
                 </div>
               ) : (
                 <div className="space-y-4">
                   {runbooks.map((runbook) => (
-                    <div key={runbook.id} className="bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-700 overflow-hidden">
-                      <div className="p-5 border-b border-zinc-200 dark:border-zinc-700">
+                    <div key={runbook.id} className="bg-bg-card rounded-xl border border-border-main overflow-hidden">
+                      <div className="p-5 border-b border-border-main">
                         <div className="flex items-start justify-between">
                           <div>
                             <div className="flex items-center gap-2">
-                              <h3 className="text-sm font-semibold text-zinc-900 dark:text-white">{runbook.name}</h3>
+                              <h3 className="text-sm font-semibold text-text-primary">{runbook.name}</h3>
                               <span className="inline-flex items-center px-2 py-0.5 text-xs font-medium rounded-full bg-emerald-500/10 text-emerald-600">
                                 {runbook.successRate.toFixed(1)}% success
                               </span>
                             </div>
-                            <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">{runbook.description}</p>
+                            <p className="text-xs text-text-secondary mt-1">{runbook.description}</p>
                           </div>
-                          <button className="flex items-center gap-1.5 text-xs font-medium text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300">
+                          <button className="flex items-center gap-1.5 text-xs font-medium text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300">
                             <Play className="w-3.5 h-3.5" /> Execute
                           </button>
                         </div>
@@ -658,13 +658,13 @@ export const AutonomousRemediationView: React.FC = () => {
                                   {index + 1}
                                 </div>
                                 {index < runbook.steps.length - 1 && (
-                                  <div className="w-0.5 h-8 bg-zinc-200 dark:bg-zinc-700 mt-1" />
+                                  <div className="w-0.5 h-8 bg-border-main mt-1" />
                                 )}
                               </div>
                               <div className="flex-1 pb-6">
                                 <div className="flex items-start justify-between">
                                   <div>
-                                    <h4 className="text-sm font-medium text-zinc-900 dark:text-white flex items-center gap-2">
+                                    <h4 className="text-sm font-medium text-text-primary flex items-center gap-2">
                                       {step.name}
                                       {step.requiresApproval && (
                                         <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-full bg-amber-500/10 text-amber-600">
@@ -672,14 +672,14 @@ export const AutonomousRemediationView: React.FC = () => {
                                         </span>
                                       )}
                                     </h4>
-                                    <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">{step.description}</p>
+                                    <p className="text-xs text-text-secondary mt-1">{step.description}</p>
                                     {step.command && (
-                                      <code className="mt-2 block text-xs bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 p-2 rounded font-mono">
+                                      <code className="mt-2 block text-xs bg-bg-hover text-text-secondary p-2 rounded font-mono">
                                         {step.command}
                                       </code>
                                     )}
                                   </div>
-                                  <div className="flex items-center gap-2 text-xs text-zinc-500">
+                                  <div className="flex items-center gap-2 text-xs text-text-tertiary">
                                     <Timer className="w-3.5 h-3.5" />
                                     <span>{step.timeout}s</span>
                                   </div>
@@ -690,7 +690,7 @@ export const AutonomousRemediationView: React.FC = () => {
                         </div>
                       </div>
 
-                      <div className="px-5 py-3 bg-zinc-50 dark:bg-zinc-800/50 border-t border-zinc-200 dark:border-zinc-700 flex items-center justify-between text-xs text-zinc-500">
+                      <div className="px-5 py-3 bg-bg-hover/50 border-t border-border-main flex items-center justify-between text-xs text-text-tertiary">
                         <div className="flex items-center gap-4">
                           <span>Source: {runbook.source}</span>
                           <span>Used {runbook.usageCount} times</span>
@@ -709,18 +709,18 @@ export const AutonomousRemediationView: React.FC = () => {
             <>
               {scheduledFixes.length === 0 ? (
                 <div className="text-center py-12">
-                  <Calendar className="w-12 h-12 text-zinc-300 dark:text-zinc-600 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-zinc-900 dark:text-white">No Scheduled Fixes</h3>
-                  <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-2">Schedule recurring remediation actions</p>
+                  <Calendar className="w-12 h-12 text-text-tertiary mx-auto mb-4" />
+                  <h3 className="text-lg font-medium text-text-primary">No Scheduled Fixes</h3>
+                  <p className="text-sm text-text-secondary mt-2">Schedule recurring remediation actions</p>
                 </div>
               ) : (
                 <div className="space-y-4">
                   {scheduledFixes.map((fix) => (
-                    <div key={fix.id} className="bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-700 p-5">
+                    <div key={fix.id} className="bg-bg-card rounded-xl border border-border-main p-5">
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-1">
-                            <h3 className="text-sm font-semibold text-zinc-900 dark:text-white">{fix.name}</h3>
+                            <h3 className="text-sm font-semibold text-text-primary">{fix.name}</h3>
                             {getStatusBadge(fix.status)}
                             {fix.requiresApproval && (
                               <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-full bg-amber-500/10 text-amber-600">
@@ -728,19 +728,19 @@ export const AutonomousRemediationView: React.FC = () => {
                               </span>
                             )}
                           </div>
-                          <p className="text-xs text-zinc-500 dark:text-zinc-400 mb-3">{fix.description}</p>
+                          <p className="text-xs text-text-secondary mb-3">{fix.description}</p>
 
                           <div className="flex flex-wrap items-center gap-4 text-xs">
-                            <div className="flex items-center gap-1.5 text-zinc-600 dark:text-zinc-400">
+                            <div className="flex items-center gap-1.5 text-text-secondary">
                               <Calendar className="w-3.5 h-3.5" />
                               <span>{new Date(fix.scheduledTime).toLocaleString()}</span>
-                              {fix.recurrence && <span className="text-zinc-400">({fix.recurrence})</span>}
+                              {fix.recurrence && <span className="text-text-tertiary">({fix.recurrence})</span>}
                             </div>
-                            <div className="flex items-center gap-1.5 text-zinc-600 dark:text-zinc-400">
+                            <div className="flex items-center gap-1.5 text-text-secondary">
                               <GitPullRequest className="w-3.5 h-3.5" />
                               <span>{fix.targetNamespace}/{fix.targetWorkload}</span>
                             </div>
-                            <div className="flex items-center gap-1.5 text-zinc-600 dark:text-zinc-400">
+                            <div className="flex items-center gap-1.5 text-text-secondary">
                               <User className="w-3.5 h-3.5" />
                               <span>{fix.createdBy}</span>
                             </div>
@@ -760,7 +760,7 @@ export const AutonomousRemediationView: React.FC = () => {
                           {(fix.status === 'pending' || fix.status === 'approved' || fix.status === 'pending_approval') && (
                             <button
                               onClick={() => handleCancelScheduled(fix)}
-                              className="text-zinc-500 hover:text-rose-600 dark:text-zinc-400 dark:hover:text-rose-400 text-xs font-medium py-2 px-3 transition-colors"
+                              className="text-text-secondary hover:text-rose-600 dark:text-text-secondary dark:hover:text-rose-400 text-xs font-medium py-2 px-3 transition-colors"
                             >
                               Cancel
                             </button>
@@ -773,8 +773,8 @@ export const AutonomousRemediationView: React.FC = () => {
                       </div>
 
                       {fix.approvedBy && (
-                        <div className="mt-4 pt-3 border-t border-zinc-200 dark:border-zinc-700">
-                          <div className="flex items-center gap-2 text-xs text-zinc-500">
+                        <div className="mt-4 pt-3 border-t border-border-main">
+                          <div className="flex items-center gap-2 text-xs text-text-tertiary">
                             <CheckCircle className="w-3.5 h-3.5 text-emerald-500" />
                             <span>Approved by {fix.approvedBy} {fix.approvedAt && new Date(fix.approvedAt).toLocaleString()}</span>
                           </div>
@@ -791,43 +791,43 @@ export const AutonomousRemediationView: React.FC = () => {
         {/* Approval Modal */}
         {showApprovalModal && selectedProposal && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-700 max-w-lg w-full p-6">
-              <h3 className="text-lg font-semibold text-zinc-900 dark:text-white mb-4">Review Fix Proposal</h3>
+            <div className="bg-bg-card rounded-xl border border-border-main max-w-lg w-full p-6">
+              <h3 className="text-lg font-semibold text-text-primary mb-4">Review Fix Proposal</h3>
 
               <div className="space-y-4 mb-6">
                 <div>
-                  <p className="text-xs font-medium text-zinc-500 uppercase">Workload</p>
-                  <p className="text-sm text-zinc-900 dark:text-white">{selectedProposal.name} ({selectedProposal.namespace})</p>
+                  <p className="text-xs font-medium text-text-tertiary uppercase">Workload</p>
+                  <p className="text-sm text-text-primary">{selectedProposal.name} ({selectedProposal.namespace})</p>
                 </div>
                 <div>
-                  <p className="text-xs font-medium text-zinc-500 uppercase">Issue</p>
-                  <p className="text-sm text-zinc-900 dark:text-white">{selectedProposal.issue}</p>
+                  <p className="text-xs font-medium text-text-tertiary uppercase">Issue</p>
+                  <p className="text-sm text-text-primary">{selectedProposal.issue}</p>
                 </div>
                 <div>
-                  <p className="text-xs font-medium text-zinc-500 uppercase">Proposed Fix</p>
-                  <p className="text-sm text-zinc-900 dark:text-white">{selectedProposal.proposedFix.description}</p>
-                  <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1 italic">{selectedProposal.proposedFix.reasoning}</p>
+                  <p className="text-xs font-medium text-text-tertiary uppercase">Proposed Fix</p>
+                  <p className="text-sm text-text-primary">{selectedProposal.proposedFix.description}</p>
+                  <p className="text-xs text-text-secondary mt-1 italic">{selectedProposal.proposedFix.reasoning}</p>
                 </div>
                 <div>
-                  <p className="text-xs font-medium text-zinc-500 uppercase">Impact</p>
-                  <p className="text-sm text-zinc-900 dark:text-white">{selectedProposal.estimatedImpact}</p>
+                  <p className="text-xs font-medium text-text-tertiary uppercase">Impact</p>
+                  <p className="text-sm text-text-primary">{selectedProposal.estimatedImpact}</p>
                 </div>
                 <div>
-                  <p className="text-xs font-medium text-zinc-500 uppercase">Rollback Plan</p>
-                  <p className="text-sm text-zinc-900 dark:text-white">
+                  <p className="text-xs font-medium text-text-tertiary uppercase">Rollback Plan</p>
+                  <p className="text-sm text-text-primary">
                     Automatic rollback if fix fails within {selectedProposal.rollbackPlan.timeout} seconds
                   </p>
                 </div>
               </div>
 
               <div className="mb-6">
-                <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
+                <label className="block text-sm font-medium text-text-secondary mb-2">
                   Comment (optional)
                 </label>
                 <textarea
                   value={approvalComment}
                   onChange={(e) => setApprovalComment(e.target.value)}
-                  className="w-full px-3 py-2 border border-zinc-300 dark:border-zinc-600 rounded-lg text-sm bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-border-main rounded-lg text-sm bg-bg-card text-text-primary focus:outline-none focus:ring-2 focus:ring-primary-500"
                   rows={3}
                   placeholder="Add a note about this approval decision..."
                 />
@@ -842,7 +842,7 @@ export const AutonomousRemediationView: React.FC = () => {
                 </button>
                 <button
                   onClick={() => handleApprove(selectedProposal, false)}
-                  className="flex-1 bg-white hover:bg-zinc-50 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 border border-zinc-300 dark:border-zinc-600 text-sm font-medium py-2.5 px-4 rounded-lg transition-colors flex items-center justify-center gap-2"
+                  className="flex-1 bg-bg-card hover:bg-bg-hover text-text-secondary border border-border-main text-sm font-medium py-2.5 px-4 rounded-lg transition-colors flex items-center justify-center gap-2"
                 >
                   <XCircle className="w-4 h-4" /> Reject
                 </button>
@@ -850,7 +850,7 @@ export const AutonomousRemediationView: React.FC = () => {
 
               <button
                 onClick={() => { setShowApprovalModal(false); setSelectedProposal(null); setApprovalComment(''); }}
-                className="w-full mt-3 text-sm text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200"
+                className="w-full mt-3 text-sm text-text-secondary hover:text-text-primary"
               >
                 Cancel
               </button>
