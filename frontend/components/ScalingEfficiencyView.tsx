@@ -1608,7 +1608,7 @@ const UnifiedNodePoolCard: React.FC<UnifiedNodePoolCardProps> = ({ nodePool, isS
                           )}
                         </div>
 
-                        {claim.conditions.length > 0 && (
+                        {claim.conditions && claim.conditions.length > 0 && (
                           <div>
                             <p className="text-[10px] font-black uppercase text-text-tertiary mb-2">Conditions</p>
                             <div className="space-y-2">
