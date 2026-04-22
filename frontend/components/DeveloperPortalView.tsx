@@ -181,14 +181,47 @@ export const DeveloperPortalView: React.FC = () => {
 
   if (loading && !data) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[600px]">
-        <div className="p-6 bg-bg-hover rounded-full mb-6 animate-pulse">
-          <Users className="w-12 h-12 text-primary-500" />
+      <div className="flex flex-col gap-6 p-6 animate-fade-in">
+        <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
+          <div className="space-y-2">
+            <div className="kt-skeleton kt-skeleton-heading w-56" />
+            <div className="kt-skeleton kt-skeleton-text w-72" />
+          </div>
+          <div className="flex gap-2">
+            <div className="kt-skeleton w-32 h-9 rounded-xl" />
+            <div className="kt-skeleton w-10 h-9 rounded-xl" />
+          </div>
         </div>
-        <h2 className="text-2xl font-black text-text-primary uppercase tracking-tighter mb-2">
-          Loading Developer Portal
-        </h2>
-        <p className="text-text-tertiary">Fetching your team's workloads...</p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {[...Array(4)].map((_, i) => (
+            <div key={i} className="bg-bg-card rounded-2xl p-5 border border-border-main shadow-sm space-y-3">
+              <div className="flex justify-between">
+                <div className="kt-skeleton kt-skeleton-text w-20" />
+                <div className="kt-skeleton w-8 h-8 rounded-xl" />
+              </div>
+              <div className="kt-skeleton kt-skeleton-heading w-16" />
+              <div className="kt-skeleton kt-skeleton-text w-28" />
+            </div>
+          ))}
+        </div>
+        <div className="bg-bg-card rounded-3xl border border-border-main overflow-hidden">
+          <div className="p-6 border-b border-border-main bg-bg-hover/50 space-y-2">
+            <div className="kt-skeleton kt-skeleton-text w-32" />
+            <div className="kt-skeleton kt-skeleton-text w-48" />
+          </div>
+          <div className="p-6 space-y-3">
+            {[...Array(5)].map((_, i) => (
+              <div key={i} className="flex items-center gap-4 p-4 rounded-xl border border-border-main bg-bg-hover/30">
+                <div className="kt-skeleton w-10 h-10 rounded-full shrink-0" />
+                <div className="flex-1 space-y-2">
+                  <div className="kt-skeleton kt-skeleton-text w-40" />
+                  <div className="kt-skeleton kt-skeleton-text w-56" />
+                </div>
+                <div className="kt-skeleton w-20 h-8 rounded-lg" />
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
     );
   }

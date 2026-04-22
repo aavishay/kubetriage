@@ -142,8 +142,25 @@ export const AuditLogsView: React.FC = () => {
 
         <div className="p-6 space-y-4">
           {loading ? (
-            <div className="flex items-center justify-center py-12">
-              <Clock className="w-8 h-8 text-text-tertiary animate-spin" />
+            <div className="space-y-3 animate-fade-in">
+              <div className="flex items-center gap-2 mb-4">
+                <div className="kt-skeleton kt-skeleton-text w-24" />
+                <div className="kt-skeleton kt-skeleton-text w-16 ml-auto" />
+              </div>
+              {[...Array(6)].map((_, i) => (
+                <div key={i} className="flex items-center gap-4 p-3 rounded-xl bg-bg-hover/30 border border-border-main">
+                  <div className="kt-skeleton w-8 h-8 rounded-lg shrink-0" />
+                  <div className="flex-1 space-y-2">
+                    <div className="flex gap-4">
+                      <div className="kt-skeleton kt-skeleton-text w-20" />
+                      <div className="kt-skeleton kt-skeleton-text w-32" />
+                      <div className="kt-skeleton kt-skeleton-text w-24" />
+                    </div>
+                    <div className="kt-skeleton kt-skeleton-text w-full max-w-md" />
+                  </div>
+                  <div className="kt-skeleton w-24 h-5 rounded-full" />
+                </div>
+              ))}
             </div>
           ) : logs.length === 0 ? (
             <div className="text-center py-12">
