@@ -778,7 +778,7 @@ export const TriageView: React.FC<TriageViewProps> = ({ workloads, isDarkMode = 
                   {isAnalyzing ? (
                     <div className="h-48 flex flex-col items-center justify-center gap-4">
                       <Loader2 className="w-8 h-8 text-primary-500 animate-spin" />
-                      <p className="text-sm text-zinc-500">Analyzing workload...</p>
+                      <p className="text-sm text-text-tertiary">Analyzing workload...</p>
                     </div>
                   ) : analysis ? (
                     <div className="animate-fade-in">

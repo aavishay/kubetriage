@@ -133,7 +133,7 @@ export const LogStreamViewer: React.FC<LogStreamViewerProps> = ({ clusterId, nam
                             className="kt-input appearance-none pr-7 cursor-pointer uppercase font-bold text-xs"
                         >
                             {podNames.map(p => (
-                                <option key={p} value={p} className={isDarkMode ? 'bg-zinc-900 text-white' : 'bg-white text-zinc-900'}>{p}</option>
+                                <option key={p} value={p} className={isDarkMode ? 'bg-bg-card text-text-primary' : 'bg-bg-card text-text-primary'}>{p}</option>
                             ))}
                         </select>
                         <ChevronDown className="w-4 h-4 absolute right-0 top-1/2 -translate-y-1/2 pointer-events-none text-text-tertiary group-hover/pod:text-primary-500 transition-colors" />

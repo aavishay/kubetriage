@@ -415,7 +415,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
                 {isDarkMode ? (
                   <Sun className="w-5 h-5 group-hover:text-amber-400 transition-colors" />
                 ) : (
-                  <Moon className="w-5 h-5 group-hover:text-blue-500 transition-colors" />
+                  <Moon className="w-5 h-5 group-hover:text-primary-500 transition-colors" />
                 )}
               </button>
             </div>

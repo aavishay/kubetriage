@@ -218,7 +218,7 @@ export const SettingsView: React.FC = () => {
                                     >
                                         <option value="" disabled>Select a model...</option>
                                         {fetchedModels.map(m => (
-                                            <option key={m} value={m} className={isDarkMode ? 'bg-zinc-900' : 'bg-white'}>{m}</option>
+                                            <option key={m} value={m} className={isDarkMode ? 'bg-bg-card' : 'bg-bg-card'}>{m}</option>
                                         ))}
                                     </select>
                                     <div className="absolute right-5 top-1/2 -translate-y-1/2 pointer-events-none text-text-tertiary group-hover:text-primary-500 transition-colors">

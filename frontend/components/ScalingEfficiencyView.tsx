@@ -1315,7 +1315,7 @@ const UnifiedNodePoolCard: React.FC<UnifiedNodePoolCardProps> = ({ nodePool, isS
                     className={`p-5 rounded-2xl border-2 cursor-pointer transition-all ${
                       selectedHPA === hpa.name
                         ? 'border-blue-500 bg-blue-500/5'
-                        : 'border-border-main hover:border-blue-500/30 bg-bg-hover/30'
+                        : 'border-border-main hover:border-primary-500/30 bg-bg-hover/30'
                     }`}
                     onClick={() => setSelectedHPA(
                       selectedHPA === hpa.name ? null : hpa.name
