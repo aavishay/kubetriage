@@ -114,7 +114,6 @@ KubeTriage is an **Autonomous SRE Guard** — proactive in detecting, triaging, 
 These are exploratory ideas not yet scheduled for implementation:
 
 - **GitOps Integration**: Native ArgoCD/Flux reconciliation views
-- **Chaos Engineering**: Integrated chaos experiments for resilience testing
 - **Capacity Planning**: Predictive pod scheduling based on trends
-- **Custom AI Providers**: Support for Azure AI, AWS Bedrock,Vertex AI
+- **Custom AI Providers**: Support for Azure AI, AWS Bedrock, Vertex AI, Claude
 - **Offline Mode**: Local-first operation with sync when online
