@@ -545,13 +545,13 @@ export const DeveloperPortalView: React.FC = () => {
               {costBreakdown.length > 0 ? (
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={costBreakdown} layout="vertical">
-                    <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-                    <XAxis type="number" tick={{ fill: '#9ca3af', fontSize: 10 }} />
-                    <YAxis dataKey="name" type="category" width={100} tick={{ fill: '#9ca3af', fontSize: 10 }} />
+                    <CartesianGrid strokeDasharray="3 3" stroke="var(--kt-border-main)" />
+                    <XAxis type="number" tick={{ fill: 'var(--kt-fg-tertiary)', fontSize: 10 }} />
+                    <YAxis dataKey="name" type="category" width={100} tick={{ fill: 'var(--kt-fg-tertiary)', fontSize: 10 }} />
                     <Tooltip
                       contentStyle={{
-                        backgroundColor: '#1f2937',
-                        border: '1px solid #374151',
+                        backgroundColor: 'var(--kt-bg-card)',
+                        border: '1px solid var(--kt-border-main)',
                         borderRadius: '12px'
                       }}
                       formatter={(value: number) => [`$${value.toFixed(2)}`, 'Monthly Cost']}

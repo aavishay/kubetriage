@@ -362,14 +362,15 @@ export const MLIntelligenceView: React.FC = () => {
               {anomalyChartData.length > 0 ? (
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={anomalyChartData}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-                    <XAxis dataKey="name" tick={{ fill: '#9ca3af', fontSize: 10 }} />
-                    <YAxis tick={{ fill: '#9ca3af', fontSize: 10 }} />
+                    <CartesianGrid strokeDasharray="3 3" stroke="var(--kt-border-main)" />
+                    <XAxis dataKey="name" tick={{ fill: 'var(--kt-fg-tertiary)', fontSize: 10 }} />
+                    <YAxis tick={{ fill: 'var(--kt-fg-tertiary)', fontSize: 10 }} />
                     <Tooltip
                       contentStyle={{
-                        backgroundColor: '#1f2937',
-                        border: '1px solid #374151',
-                        borderRadius: '12px'
+                        backgroundColor: 'var(--kt-bg-card)',
+                        border: '1px solid var(--kt-border-main)',
+                        borderRadius: '12px',
+                        color: 'var(--kt-fg-primary)'
                       }}
                     />
                     <Bar dataKey="value" fill={COLORS.primary} radius={[4, 4, 0, 0]} />
@@ -394,14 +395,15 @@ export const MLIntelligenceView: React.FC = () => {
               {patternChartData.length > 0 ? (
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={patternChartData} layout="vertical">
-                    <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-                    <XAxis type="number" tick={{ fill: '#9ca3af', fontSize: 10 }} />
-                    <YAxis dataKey="name" type="category" width={120} tick={{ fill: '#9ca3af', fontSize: 10 }} />
+                    <CartesianGrid strokeDasharray="3 3" stroke="var(--kt-border-main)" />
+                    <XAxis type="number" tick={{ fill: 'var(--kt-fg-tertiary)', fontSize: 10 }} />
+                    <YAxis dataKey="name" type="category" width={120} tick={{ fill: 'var(--kt-fg-tertiary)', fontSize: 10 }} />
                     <Tooltip
                       contentStyle={{
-                        backgroundColor: '#1f2937',
-                        border: '1px solid #374151',
-                        borderRadius: '12px'
+                        backgroundColor: 'var(--kt-bg-card)',
+                        border: '1px solid var(--kt-border-main)',
+                        borderRadius: '12px',
+                        color: 'var(--kt-fg-primary)'
                       }}
                     />
                     <Bar dataKey="frequency" fill={COLORS.success} radius={[0, 4, 4, 0]} />
