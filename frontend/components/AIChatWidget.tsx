@@ -131,7 +131,7 @@ export const AIChatWidget: React.FC<AIChatWidgetProps> = ({ isOpen, onClose, ini
                             style={vscDarkPlus}
                             language={match[1]}
                             PreTag="div"
-                            customStyle={{ margin: 0, borderRadius: '0.75rem', fontSize: '0.75rem', background: '#12151B' }}
+                            customStyle={{ margin: 0, borderRadius: '0.75rem', fontSize: '0.75rem', background: 'var(--kt-bg-card)' }}
                             {...props}
                           >
                             {String(children).replace(/\n$/, '')}

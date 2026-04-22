@@ -22,7 +22,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLogin }) => {
   };
 
   return (
-    <div className="min-h-screen w-full flex items-center justify-center bg-bg-main selection:bg-primary-500/30 font-sans">
+    <div className="min-h-screen w-full flex items-center justify-center bg-bg-main selection:bg-primary-500/30 font-sans animate-fade-in">
       <div className="w-full max-w-md p-6">
         <div className="bg-bg-card border border-border-main rounded-2xl shadow-xl p-8 relative">
           <div className="flex flex-col items-center mb-8">

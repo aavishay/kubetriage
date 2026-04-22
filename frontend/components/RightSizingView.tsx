@@ -495,9 +495,9 @@ export const RightSizingView: React.FC<RightSizingViewProps> = ({ workloads, isD
                         <XAxis dataKey="time" hide />
                         <YAxis domain={[0, 'auto']} hide />
                         <Tooltip content={<CustomTooltip isDarkMode={isDarkMode} type="cpu" />} />
-                        <Area type="monotone" dataKey="cpuUsage" stroke="#6366f1" strokeWidth={4} fillOpacity={0.1} fill="#6366f1" isAnimationActive={false} />
-                        <ReferenceLine y={adjustedCpuLimit} stroke={analysis?.cpuRisky ? '#f43f5e' : '#10b981'} strokeDasharray="8 8" strokeWidth={3} />
-                        <Scatter data={analysis?.throttledPoints || []} fill="#ef4444" />
+                        <Area type="monotone" dataKey="cpuUsage" stroke="var(--kt-primary-500)" strokeWidth={4} fillOpacity={0.1} fill="var(--kt-primary-500)" isAnimationActive={false} />
+                        <ReferenceLine y={adjustedCpuLimit} stroke={analysis?.cpuRisky ? 'var(--kt-danger)' : 'var(--kt-success)'} strokeDasharray="8 8" strokeWidth={3} />
+                        <Scatter data={analysis?.throttledPoints || []} fill="var(--kt-danger)" />
                       </ComposedChart>
                     </ResponsiveContainer>
                   </div>
@@ -514,9 +514,9 @@ export const RightSizingView: React.FC<RightSizingViewProps> = ({ workloads, isD
                         <XAxis dataKey="time" hide />
                         <YAxis domain={[0, 'auto']} hide />
                         <Tooltip content={<CustomTooltip isDarkMode={isDarkMode} type="memory" />} />
-                        <Area type="monotone" dataKey="memoryUsage" stroke="#10b981" strokeWidth={4} fillOpacity={0.1} fill="#10b981" isAnimationActive={false} />
-                        <ReferenceLine y={adjustedMemoryLimit} stroke={analysis?.memRisky ? '#f43f5e' : '#10b981'} strokeDasharray="8 8" strokeWidth={3} />
-                        <Scatter data={analysis?.memOomPoints || []} fill="#ef4444" />
+                        <Area type="monotone" dataKey="memoryUsage" stroke="var(--kt-success)" strokeWidth={4} fillOpacity={0.1} fill="var(--kt-success)" isAnimationActive={false} />
+                        <ReferenceLine y={adjustedMemoryLimit} stroke={analysis?.memRisky ? 'var(--kt-danger)' : 'var(--kt-success)'} strokeDasharray="8 8" strokeWidth={3} />
+                        <Scatter data={analysis?.memOomPoints || []} fill="var(--kt-danger)" />
                       </ComposedChart>
                     </ResponsiveContainer>
                   </div>
@@ -533,9 +533,9 @@ export const RightSizingView: React.FC<RightSizingViewProps> = ({ workloads, isD
                         <XAxis dataKey="time" hide />
                         <YAxis domain={[0, 'auto']} hide />
                         <Tooltip content={<CustomTooltip isDarkMode={isDarkMode} type="storage" />} />
-                        <Area type="monotone" dataKey="storageUsage" stroke="#f59e0b" strokeWidth={4} fillOpacity={0.1} fill="#f59e0b" isAnimationActive={false} />
-                        <ReferenceLine y={adjustedStorageLimit} stroke={analysis?.storageRisky ? '#f43f5e' : '#f59e0b'} strokeDasharray="8 8" strokeWidth={3} />
-                        <Scatter data={analysis?.storagePressurePoints || []} fill="#ef4444" />
+                        <Area type="monotone" dataKey="storageUsage" stroke="var(--kt-warning)" strokeWidth={4} fillOpacity={0.1} fill="var(--kt-warning)" isAnimationActive={false} />
+                        <ReferenceLine y={adjustedStorageLimit} stroke={analysis?.storageRisky ? 'var(--kt-danger)' : 'var(--kt-warning)'} strokeDasharray="8 8" strokeWidth={3} />
+                        <Scatter data={analysis?.storagePressurePoints || []} fill="var(--kt-danger)" />
                       </ComposedChart>
                     </ResponsiveContainer>
                     {analysis?.storageRisky && (
@@ -559,9 +559,9 @@ export const RightSizingView: React.FC<RightSizingViewProps> = ({ workloads, isD
                           <XAxis dataKey="time" hide />
                           <YAxis domain={[0, 100]} hide />
                           <Tooltip content={<CustomTooltip isDarkMode={isDarkMode} type="gpu" />} />
-                          <Area type="monotone" dataKey="gpuUsage" stroke="#8b5cf6" strokeWidth={4} fillOpacity={0.1} fill="#8b5cf6" isAnimationActive={false} />
-                          <ReferenceLine y={adjustedGpuLimit * 100} stroke={analysis?.gpuRisky ? '#f43f5e' : '#8b5cf6'} strokeDasharray="8 8" strokeWidth={3} />
-                          <Scatter data={analysis?.gpuPressurePoints || []} fill="#ef4444" />
+                          <Area type="monotone" dataKey="gpuUsage" stroke="var(--kt-info)" strokeWidth={4} fillOpacity={0.1} fill="var(--kt-info)" isAnimationActive={false} />
+                          <ReferenceLine y={adjustedGpuLimit * 100} stroke={analysis?.gpuRisky ? 'var(--kt-danger)' : 'var(--kt-info)'} strokeDasharray="8 8" strokeWidth={3} />
+                          <Scatter data={analysis?.gpuPressurePoints || []} fill="var(--kt-danger)" />
                         </ComposedChart>
                       </ResponsiveContainer>
                       {analysis?.gpuRisky && (
