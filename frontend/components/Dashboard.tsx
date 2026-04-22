@@ -86,7 +86,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = tr
   };
 
   const tooltipStyle = {
-    backgroundColor: isDarkMode ? '#12151B' : '#ffffff',
+    backgroundColor: 'var(--kt-bg-card)',
     borderColor: 'var(--kt-border-main)',
     color: 'var(--kt-fg-primary)',
     borderRadius: '12px',
