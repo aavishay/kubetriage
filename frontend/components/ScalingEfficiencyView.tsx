@@ -1560,8 +1560,8 @@ const UnifiedNodePoolCard: React.FC<UnifiedNodePoolCardProps> = ({ nodePool, isS
                               : claim.status === 'Drifted'
                               ? 'text-rose-500 bg-rose-500/10 border-rose-500/20'
                               : claim.status === 'Expired'
-                              ? 'text-text-tertiary bg-gray-500/10 border-text-tertiary/20'
-                              : 'text-slate-500 bg-slate-500/10 border-slate-500/20'
+                              ? 'text-text-tertiary bg-bg-hover border-text-tertiary/20'
+                              : 'text-text-tertiary bg-bg-hover border-text-tertiary/20'
                           }`}
                           >
                             {claim.status}

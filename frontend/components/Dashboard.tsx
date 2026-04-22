@@ -2,7 +2,11 @@ import React, { useMemo } from 'react';
 import { Workload, DiagnosticPlaybook } from '../types';
 import { getMetricStatusColor } from '../types';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
-import { Activity, DollarSign, Box, Zap, TrendingDown, ShieldAlert, HeartPulse, Sparkles, Network, ArrowRight, Target, ShieldCheck, Wifi, ChevronRight, Server, Loader2 } from 'lucide-react';
+import { Activity, DollarSign, Box, Zap, TrendingDown, ShieldAlert, HeartPulse, Sparkles, Network, ArrowRight, Target, ShieldCheck, ChevronRight, Server, Loader2 } from 'lucide-react';
+import { DashboardCard } from './dashboard/DashboardCard';
+import { MetricCard } from './dashboard/MetricCard';
+import { StatusBadge } from './dashboard/StatusBadge';
+import { useStaggerAnimation } from './PageTransition';
 
 interface DashboardProps {
   workloads: Workload[];
@@ -74,12 +78,6 @@ export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = tr
     { name: 'Remaining', value: Math.max(0, isFinite(reliabilityMetrics.budgetPercentage) ? reliabilityMetrics.budgetPercentage : 0), color: 'var(--kt-bg-hover)' },
   ];
 
-  // Standardized card styles
-  const cardBase = "bg-bg-card border border-border-main rounded-2xl transition-all duration-200";
-  const cardHover = "hover:border-primary-500/30 hover:shadow-lg dark:hover:shadow-black/20";
-  const cardPadding = "p-5";
-  const cardPaddingLg = "p-6";
-
   // Status colors
   const getStatusColor = (status: string) => {
     return getMetricStatusColor(status === 'Healthy' ? 0 : status === 'Warning' ? 80 : 100);
@@ -96,6 +94,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = tr
     padding: '10px 14px',
     boxShadow: 'var(--kt-shadow-lg)'
   };
+
+  const stagger = useStaggerAnimation(10, 60);
 
   // Loading State
   if (isLoading && safeWorkloads.length === 0) {
@@ -192,7 +192,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = tr
 
       {/* Hero Section - Simplified */}
       {criticalCount > 0 && (
-        <section className={`${cardBase} ${cardPaddingLg} relative overflow-hidden`}>
+        <DashboardCard padding="lg" hover={false} className="relative overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-r from-rose-500/5 to-transparent pointer-events-none"></div>
           <div className="flex flex-col lg:flex-row items-center gap-6 relative z-10">
             <div className="relative shrink-0">
@@ -229,68 +229,43 @@ export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = tr
               </button>
             </div>
           </div>
-        </section>
+        </DashboardCard>
       )}
 
       {/* Metrics Grid */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        {/* Cost Card */}
-        <div className={`${cardBase} ${cardHover} ${cardPadding}`}>
-          <div className="flex justify-between items-start mb-4">
-            <div className="p-2.5 bg-primary-500/10 rounded-xl text-primary-500 dark:text-primary-400">
-              <DollarSign className="w-5 h-5" />
-            </div>
-            <span className="text-xs font-medium text-primary-600 dark:text-primary-400 bg-primary-500/10 px-2 py-0.5 rounded-full">
-              +4.2%
-            </span>
-          </div>
-          <p className="text-xs font-medium text-text-secondary uppercase tracking-wider mb-1">Monthly Cost</p>
-          <h3 className="text-2xl font-bold text-text-primary">${totalCost.toLocaleString()}</h3>
-        </div>
-
-        {/* Health Card */}
-        <div className={`${cardBase} ${cardHover} ${cardPadding}`}>
-          <div className="flex justify-between items-start mb-4">
-            <div className="p-2.5 bg-emerald-500/10 rounded-xl text-emerald-600 dark:text-emerald-400">
-              <Activity className="w-5 h-5" />
-            </div>
-            <span className="text-xs font-medium text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full">
-              {Math.round((1 - (criticalCount / (safeWorkloads.length || 1))) * 100)}%
-            </span>
-          </div>
-          <p className="text-xs font-medium text-text-secondary uppercase tracking-wider mb-1">Health Score</p>
-          <h3 className="text-2xl font-bold text-text-primary">
-            {criticalCount === 0 ? 'Healthy' : 'Degraded'}
-          </h3>
-        </div>
-
-        {/* Savings Card */}
-        <div className={`${cardBase} ${cardHover} ${cardPadding}`}>
-          <div className="flex justify-between items-start mb-4">
-            <div className="p-2.5 bg-primary-500/10 rounded-xl text-primary-600 dark:text-primary-400">
-              <TrendingDown className="w-5 h-5" />
-            </div>
-            <span className="text-xs font-medium text-primary-600 dark:text-primary-400 bg-primary-500/10 px-2 py-0.5 rounded-full">
-              Potential
-            </span>
-          </div>
-          <p className="text-xs font-medium text-text-secondary uppercase tracking-wider mb-1">Cost Savings</p>
-          <h3 className="text-2xl font-bold text-text-primary">${Math.round(potentialSavings).toLocaleString()}</h3>
-        </div>
-
-        {/* Workloads Card */}
-        <div className={`${cardBase} ${cardHover} ${cardPadding}`}>
-          <div className="flex justify-between items-start mb-4">
-            <div className="p-2.5 bg-cyan-500/10 rounded-xl text-cyan-600 dark:text-cyan-400">
-              <Box className="w-5 h-5" />
-            </div>
-            <span className="text-xs font-medium text-cyan-600 dark:text-cyan-400 bg-cyan-500/10 px-2 py-0.5 rounded-full">
-              {safeWorkloads.length}
-            </span>
-          </div>
-          <p className="text-xs font-medium text-text-secondary uppercase tracking-wider mb-1">Workloads</p>
-          <h3 className="text-2xl font-bold text-text-primary">Active</h3>
-        </div>
+        <MetricCard
+          icon={DollarSign}
+          iconColor="text-primary-500 dark:text-primary-400"
+          label="Monthly Cost"
+          value={`$${totalCost.toLocaleString()}`}
+          trend="+4.2%"
+          delay={stagger(0).animationDelay}
+        />
+        <MetricCard
+          icon={Activity}
+          iconColor="text-emerald-600 dark:text-emerald-400"
+          label="Health Score"
+          value={criticalCount === 0 ? 'Healthy' : 'Degraded'}
+          trendLabel={`${Math.round((1 - (criticalCount / (safeWorkloads.length || 1))) * 100)}%`}
+          delay={stagger(1).animationDelay}
+        />
+        <MetricCard
+          icon={TrendingDown}
+          iconColor="text-primary-600 dark:text-primary-400"
+          label="Cost Savings"
+          value={`$${Math.round(potentialSavings).toLocaleString()}`}
+          trendLabel="Potential"
+          delay={stagger(2).animationDelay}
+        />
+        <MetricCard
+          icon={Box}
+          iconColor="text-cyan-600 dark:text-cyan-400"
+          label="Workloads"
+          value="Active"
+          trendLabel={`${safeWorkloads.length}`}
+          delay={stagger(3).animationDelay}
+        />
       </div>
 
       {/* Main Content Grid */}
@@ -299,7 +274,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = tr
         {/* Left Column - Incidents & Status */}
         <div className="lg:col-span-2 flex flex-col gap-4">
           {/* Active Incidents */}
-          <div className={`${cardBase} ${cardPaddingLg} flex flex-col flex-1`}>
+          <DashboardCard padding="lg" className="flex flex-col flex-1">
             <h3 className="text-xs font-semibold text-text-secondary uppercase tracking-wider mb-4 flex items-center gap-2">
               <div className="w-1.5 h-1.5 rounded-full bg-rose-500"></div>
               Active Incidents
@@ -318,13 +293,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = tr
                         <div className={`w-1.5 h-1.5 rounded-full ${getStatusColor(w.status)}`} />
                         <span className="text-sm font-semibold text-text-primary">{w.name}</span>
                       </div>
-                      <span className={`text-[10px] font-medium uppercase px-2 py-0.5 rounded-full ${
-                        w.status === 'Critical'
-                          ? 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20'
-                          : 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20'
-                      }`}>
-                        {w.status}
-                      </span>
+                      <StatusBadge status={w.status} />
                     </div>
                     <p className="text-xs text-text-secondary mb-3">{getIncidentSummary(w)}</p>
                     <div className="flex items-center justify-between">
@@ -345,10 +314,10 @@ export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = tr
                 </div>
               )}
             </div>
-          </div>
+          </DashboardCard>
 
           {/* Status Distribution */}
-          <div className={`${cardBase} ${cardPaddingLg}`}>
+          <DashboardCard padding="lg">
             <h3 className="text-xs font-semibold text-text-secondary uppercase tracking-wider mb-4 flex items-center gap-2">
               <Activity className="w-4 h-4 text-primary-500 dark:text-primary-400" />
               Status Distribution
@@ -386,159 +355,161 @@ export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = tr
                 </div>
               ))}
             </div>
-          </div>
+          </DashboardCard>
         </div>
 
         {/* Right Column - Resource Saturation */}
-        <div className={`lg:col-span-3 ${cardBase} ${cardPaddingLg} flex flex-col`}>
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
-            <h3 className="text-xs font-semibold text-text-secondary uppercase tracking-wider flex items-center gap-2">
-              <Zap className="w-4 h-4 text-primary-500 dark:text-primary-400" />
-              Resource Saturation
-            </h3>
-            <div className="flex flex-wrap items-center gap-2">
-              {/* Timeframe Selector */}
-              <div className="flex p-1 bg-bg-hover/50 rounded-lg border border-border-main">
-                {(['5m', '15m', '30m', '1h'] as const).map((win) => (
-                  <button
-                    key={win}
-                    onClick={() => setMetricsWindow?.(win)}
-                    className={`px-2.5 py-1 rounded-md text-xs font-medium transition-all ${metricsWindow === win
-                      ? 'bg-primary-500/10 text-primary-600 dark:text-primary-400'
-                      : 'text-text-secondary hover:text-text-primary'
-                      }`}
-                  >
-                    {win}
-                  </button>
-                ))}
-              </div>
-              {/* Resource Tab Selector */}
-              <div className="flex p-1 bg-bg-hover/50 rounded-lg border border-border-main">
-                {(['CPU', 'Memory', 'Storage', 'GPU', 'Network'] as const).map((type) => (
-                  <button
-                    key={type}
-                    onClick={() => setSaturationTab(type)}
-                    className={`px-2.5 py-1 rounded-md text-xs font-medium transition-all ${saturationTab === type
-                      ? 'bg-primary-500/10 text-primary-600 dark:text-primary-400'
-                      : 'text-text-secondary hover:text-text-primary'
-                      }`}
-                  >
-                    {type}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          <div className="flex-1 min-h-0 overflow-y-auto pr-2 custom-scrollbar">
-            <div className="space-y-3">
-              {workloads
-                .map((w) => {
-                  const metrics = w.metrics || {} as any;
-                  let base = 0, used = 0, unit = '';
-
-                  if (saturationTab === 'CPU') {
-                    base = (Number(metrics.cpuLimit) || 0) * 1000;
-                    used = (Number(metrics.cpuUsage) || 0) * 1000;
-                    unit = 'mCPU';
-                  } else if (saturationTab === 'Memory') {
-                    base = Number(metrics.memoryLimit) || 0;
-                    used = Number(metrics.memoryUsage) || 0;
-                    unit = 'MiB';
-                  } else if (saturationTab === 'Storage') {
-                    base = Number(metrics.storageLimit) || 0;
-                    used = Number(metrics.storageUsage) || 0;
-                    unit = 'GiB';
-                  } else if (saturationTab === 'GPU') {
-                    base = Number(metrics.gpuLimit) || 0;
-                    used = Number(metrics.gpuUsage) || 0;
-                    unit = '%';
-                  } else {
-                    used = (Number(metrics.networkIn) || 0) + (Number(metrics.networkOut) || 0);
-                    unit = 'MB/s';
-                  }
-
-                  const rawSaturation = base > 0 ? Math.round((used / base) * 100) : 0;
-                  const saturation = Math.min(100, rawSaturation);
-                  const isCritical = saturation >= 90;
-                  const isWarning = saturation >= 70 && !isCritical;
-
-                  return { name: w.name, base, used, unit, saturation, isCritical, isWarning, status: w.status };
-                })
-                .sort((a, b) => b.saturation - a.saturation)
-                .slice(0, 10)
-                .map((item, idx) => (
-                  <div
-                    key={idx}
-                    className="flex items-center gap-3 p-3 rounded-xl hover:bg-bg-hover transition-colors cursor-pointer group"
-                    onClick={() => onTriageRequest?.(item.name, 'General Health')}
-                  >
-                    {/* Rank Badge */}
-                    <div className={`
-                      w-6 h-6 shrink-0 rounded-lg flex items-center justify-center text-[10px] font-bold
-                      ${idx === 0 ? 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20' :
-                        idx === 1 ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20' :
-                        idx === 2 ? 'bg-primary-500/10 text-primary-600 dark:text-primary-400 border border-primary-500/20' :
-                        'bg-bg-hover text-text-tertiary border border-border-main'}
-                    `}>
-                      {idx + 1}
-                    </div>
-
-                    <div className="w-28 shrink-0">
-                      <h4 className="text-sm font-medium text-text-primary truncate" title={item.name}>{item.name}</h4>
-                      <div className="flex items-center gap-1.5 mt-1">
-                        <div className={`w-1.5 h-1.5 rounded-full ${getStatusColor(item.status)}`} />
-                        <span className="text-[10px] text-text-tertiary uppercase">{item.status}</span>
-                      </div>
-                    </div>
-
-                    <div className="flex-1 flex flex-col justify-center">
-                      <div className="flex justify-between items-center mb-1.5">
-                        <span className="text-[10px] text-text-tertiary uppercase tracking-wider">{saturationTab}</span>
-                        <span className={`text-xs font-bold ${item.isCritical ? 'text-rose-500' : item.isWarning ? 'text-amber-500' : 'text-text-secondary'}`}>
-                          {item.saturation}%
-                        </span>
-                      </div>
-                      <div className="h-2 w-full bg-bg-hover/50 rounded-full overflow-hidden">
-                        <div
-                          className={`h-full rounded-full transition-all duration-500 ${
-                            item.isCritical
-                              ? 'bg-gradient-to-r from-rose-600 to-rose-400'
-                              : item.isWarning
-                                ? 'bg-gradient-to-r from-amber-600 to-amber-400'
-                                : 'bg-gradient-to-r from-primary-600 to-primary-400'
-                          }`}
-                          style={{ width: `${Math.min(100, item.saturation)}%` }}
-                        />
-                      </div>
-                    </div>
-
-                    <div className="w-24 shrink-0 text-right">
-                      <div className="text-xs font-mono font-medium text-text-secondary">
-                        {item.used.toFixed(1)}{item.unit}
-                      </div>
-                      {item.base > 0 && (
-                        <div className="text-[10px] text-text-tertiary">
-                          / {item.base.toFixed(0)}{item.unit}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              {workloads.length > 10 && (
-                <div className="pt-2 pb-1 text-center">
-                  <span className="text-[11px] text-text-tertiary">
-                    Showing top 10 of {workloads.length} workloads
-                  </span>
+        <div className="lg:col-span-3">
+          <DashboardCard padding="lg" className="flex flex-col h-full">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+              <h3 className="text-xs font-semibold text-text-secondary uppercase tracking-wider flex items-center gap-2">
+                <Zap className="w-4 h-4 text-primary-500 dark:text-primary-400" />
+                Resource Saturation
+              </h3>
+              <div className="flex flex-wrap items-center gap-2">
+                {/* Timeframe Selector */}
+                <div className="flex p-1 bg-bg-hover/50 rounded-lg border border-border-main">
+                  {(['5m', '15m', '30m', '1h'] as const).map((win) => (
+                    <button
+                      key={win}
+                      onClick={() => setMetricsWindow?.(win)}
+                      className={`px-2.5 py-1 rounded-md text-xs font-medium transition-all ${metricsWindow === win
+                        ? 'bg-primary-500/10 text-primary-600 dark:text-primary-400'
+                        : 'text-text-secondary hover:text-text-primary'
+                        }`}
+                    >
+                      {win}
+                    </button>
+                  ))}
                 </div>
-              )}
+                {/* Resource Tab Selector */}
+                <div className="flex p-1 bg-bg-hover/50 rounded-lg border border-border-main">
+                  {(['CPU', 'Memory', 'Storage', 'GPU', 'Network'] as const).map((type) => (
+                    <button
+                      key={type}
+                      onClick={() => setSaturationTab(type)}
+                      className={`px-2.5 py-1 rounded-md text-xs font-medium transition-all ${saturationTab === type
+                        ? 'bg-primary-500/10 text-primary-600 dark:text-primary-400'
+                        : 'text-text-secondary hover:text-text-primary'
+                        }`}
+                    >
+                      {type}
+                    </button>
+                  ))}
+                </div>
+              </div>
             </div>
-          </div>
+
+            <div className="flex-1 min-h-0 overflow-y-auto pr-2 custom-scrollbar">
+              <div className="space-y-3">
+                {workloads
+                  .map((w) => {
+                    const metrics = w.metrics || {} as any;
+                    let base = 0, used = 0, unit = '';
+
+                    if (saturationTab === 'CPU') {
+                      base = (Number(metrics.cpuLimit) || 0) * 1000;
+                      used = (Number(metrics.cpuUsage) || 0) * 1000;
+                      unit = 'mCPU';
+                    } else if (saturationTab === 'Memory') {
+                      base = Number(metrics.memoryLimit) || 0;
+                      used = Number(metrics.memoryUsage) || 0;
+                      unit = 'MiB';
+                    } else if (saturationTab === 'Storage') {
+                      base = Number(metrics.storageLimit) || 0;
+                      used = Number(metrics.storageUsage) || 0;
+                      unit = 'GiB';
+                    } else if (saturationTab === 'GPU') {
+                      base = Number(metrics.gpuLimit) || 0;
+                      used = Number(metrics.gpuUsage) || 0;
+                      unit = '%';
+                    } else {
+                      used = (Number(metrics.networkIn) || 0) + (Number(metrics.networkOut) || 0);
+                      unit = 'MB/s';
+                    }
+
+                    const rawSaturation = base > 0 ? Math.round((used / base) * 100) : 0;
+                    const saturation = Math.min(100, rawSaturation);
+                    const isCritical = saturation >= 90;
+                    const isWarning = saturation >= 70 && !isCritical;
+
+                    return { name: w.name, base, used, unit, saturation, isCritical, isWarning, status: w.status };
+                  })
+                  .sort((a, b) => b.saturation - a.saturation)
+                  .slice(0, 10)
+                  .map((item, idx) => (
+                    <div
+                      key={idx}
+                      className="flex items-center gap-3 p-3 rounded-xl hover:bg-bg-hover transition-colors cursor-pointer group"
+                      onClick={() => onTriageRequest?.(item.name, 'General Health')}
+                    >
+                      {/* Rank Badge */}
+                      <div className={`
+                        w-6 h-6 shrink-0 rounded-lg flex items-center justify-center text-[10px] font-bold
+                        ${idx === 0 ? 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20' :
+                          idx === 1 ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20' :
+                          idx === 2 ? 'bg-primary-500/10 text-primary-600 dark:text-primary-400 border border-primary-500/20' :
+                          'bg-bg-hover text-text-tertiary border border-border-main'}
+                      `}>
+                        {idx + 1}
+                      </div>
+
+                      <div className="w-28 shrink-0">
+                        <h4 className="text-sm font-medium text-text-primary truncate" title={item.name}>{item.name}</h4>
+                        <div className="flex items-center gap-1.5 mt-1">
+                          <div className={`w-1.5 h-1.5 rounded-full ${getStatusColor(item.status)}`} />
+                          <span className="text-[10px] text-text-tertiary uppercase">{item.status}</span>
+                        </div>
+                      </div>
+
+                      <div className="flex-1 flex flex-col justify-center">
+                        <div className="flex justify-between items-center mb-1.5">
+                          <span className="text-[10px] text-text-tertiary uppercase tracking-wider">{saturationTab}</span>
+                          <span className={`text-xs font-bold ${item.isCritical ? 'text-rose-500' : item.isWarning ? 'text-amber-500' : 'text-text-secondary'}`}>
+                            {item.saturation}%
+                          </span>
+                        </div>
+                        <div className="h-2 w-full bg-bg-hover/50 rounded-full overflow-hidden">
+                          <div
+                            className={`h-full rounded-full transition-all duration-500 ${
+                              item.isCritical
+                                ? 'bg-gradient-to-r from-rose-600 to-rose-400'
+                                : item.isWarning
+                                  ? 'bg-gradient-to-r from-amber-600 to-amber-400'
+                                  : 'bg-gradient-to-r from-primary-600 to-primary-400'
+                            }`}
+                            style={{ width: `${Math.min(100, item.saturation)}%` }}
+                          />
+                        </div>
+                      </div>
+
+                      <div className="w-24 shrink-0 text-right">
+                        <div className="text-xs font-mono font-medium text-text-secondary">
+                          {item.used.toFixed(1)}{item.unit}
+                        </div>
+                        {item.base > 0 && (
+                          <div className="text-[10px] text-text-tertiary">
+                            / {item.base.toFixed(0)}{item.unit}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                {workloads.length > 10 && (
+                  <div className="pt-2 pb-1 text-center">
+                    <span className="text-[11px] text-text-tertiary">
+                      Showing top 10 of {workloads.length} workloads
+                    </span>
+                  </div>
+                )}
+              </div>
+            </div>
+          </DashboardCard>
         </div>
       </div>
 
       {/* Error Budget Section */}
-      <div className={`${cardBase} overflow-hidden shadow-sm`}>
+      <DashboardCard hover={false} className="overflow-hidden shadow-sm">
         <div className="p-5 border-b border-border-main flex flex-col md:flex-row justify-between items-center gap-4 bg-bg-hover/30">
           <div className="flex items-center gap-4">
             <div className="p-3 bg-primary-500/10 rounded-xl text-primary-600 dark:text-primary-400">
@@ -596,13 +567,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = tr
                   <ShieldCheck className="w-4 h-4 text-emerald-500 dark:text-emerald-400" />
                   <span className="text-xs text-text-secondary uppercase tracking-wider">Risk Factor</span>
                 </div>
-                <span className={`text-[10px] font-medium uppercase px-2 py-0.5 rounded-full ${
-                  reliabilityMetrics.severity === 'Healthy' ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' :
-                  reliabilityMetrics.severity === 'Warning' ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400' :
-                  'bg-rose-500/10 text-rose-600 dark:text-rose-400'
-                }`}>
-                  {reliabilityMetrics.severity}
-                </span>
+                <StatusBadge status={reliabilityMetrics.severity} />
               </div>
               <div className="text-2xl font-bold text-text-primary">{reliabilityMetrics.burnRate.toFixed(2)}x</div>
               <p className="text-xs text-text-tertiary">Burn rate vs normal</p>
@@ -637,7 +602,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = tr
             </button>
           </div>
         </div>
-      </div>
+      </DashboardCard>
     </div>
   );
 };

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { useLocation } from 'react-router-dom';
 
 interface PageTransitionProps {
@@ -6,29 +6,19 @@ interface PageTransitionProps {
 }
 
 export const PageTransition: React.FC<PageTransitionProps> = ({ children }) => {
-  return <>{children}</>;
+  const location = useLocation();
+
+  return (
+    <div key={location.pathname} className="kt-page-enter">
+      {children}
+    </div>
+  );
 };
 
 // Hook for scroll animations
 export const useScrollAnimation = () => {
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            entry.target.classList.add('animate-in');
-            observer.unobserve(entry.target);
-          }
-        });
-      },
-      { threshold: 0.1, rootMargin: '0px 0px -50px 0px' }
-    );
-
-    const elements = document.querySelectorAll('.scroll-animate');
-    elements.forEach((el) => observer.observe(el));
-
-    return () => observer.disconnect();
-  }, []);
+  // Intentionally empty — scroll animations are handled via CSS + IntersectionObserver
+  // in consuming components. This hook is kept for backward compatibility.
 };
 
 // Stagger animation hook

@@ -326,6 +326,7 @@ export interface EfficiencySummary {
 export interface ClusterStatus {
   id: string;
   name: string;
+  displayName?: string;
   status: 'Healthy' | 'Degraded' | 'Offline';
   provider: string;
   region: string;

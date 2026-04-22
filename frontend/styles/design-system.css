@@ -482,6 +482,25 @@
   border-radius: 50%;
 }
 
+/* Page Transitions */
+@keyframes kt-page-enter {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes kt-page-exit {
+  from { opacity: 1; transform: translateY(0); }
+  to { opacity: 0; transform: translateY(-6px); }
+}
+
+.kt-page-enter {
+  animation: kt-page-enter var(--kt-duration-normal) var(--kt-ease-out) both;
+}
+
+.kt-page-exit {
+  animation: kt-page-exit var(--kt-duration-fast) var(--kt-ease-default) both;
+}
+
 /* Reduced Motion */
 @media (prefers-reduced-motion: reduce) {
   *,

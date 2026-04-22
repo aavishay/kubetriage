@@ -283,7 +283,7 @@ export const NotificationsView: React.FC<NotificationsViewProps> = ({
                            onChange={(e) => updateNotificationSettings({ ...notificationSettings, toastEnabled: e.target.checked })}
                            className="sr-only peer"
                         />
-                        <div className="w-12 h-7 bg-bg-hover peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[4px] after:left-[4px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-600 shadow-inner group-hover:scale-105 transition-transform" />
+                        <div className="w-12 h-7 bg-bg-hover peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[4px] after:left-[4px] after:bg-white after:border-border-main after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-600 shadow-inner group-hover:scale-105 transition-transform" />
                      </label>
                   </div>
 

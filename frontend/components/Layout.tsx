@@ -47,6 +47,22 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
 
   const clusterMenuRef = useRef<HTMLDivElement>(null);
 
+  // Scroll to top on route change
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [location.pathname]);
+
+  // Keyboard shortcut: '[' toggles sidebar collapse on desktop
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === '[' && !e.ctrlKey && !e.metaKey && !e.altKey) {
+        setIsCollapsed(prev => !prev);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
   // Measure real API latency via health check
   useEffect(() => {
     const measureLatency = async () => {
@@ -141,11 +157,15 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
         <div
           className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 md:hidden animate-fade-in"
           onClick={() => setIsMobileMenuOpen(false)}
+          aria-hidden="true"
         />
       )}
 
       {/* Desktop & Mobile Sidebar */}
-      <aside className={`
+      <aside
+        id="main-sidebar"
+        aria-label="Main navigation"
+        className={`
         fixed md:static inset-y-0 left-0 z-50 md:z-auto
         flex flex-col bg-bg-card border-r border-border-main
         transition-all duration-300 ease-out
@@ -190,7 +210,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
               key={item.path}
               to={item.path}
               className={({ isActive }) => `
-                flex items-center w-full px-3 py-3 rounded-xl transition-all duration-200 group relative overflow-hidden
+                flex items-center w-full px-3 py-3 rounded-xl transition-all duration-200 group relative overflow-hidden focus-visible:ring-2 focus-visible:ring-primary-500/50 outline-none
                 ${isActive
                   ? 'bg-primary-500/10 text-text-primary border border-primary-500/20'
                   : 'text-text-secondary hover:text-text-primary hover:bg-bg-hover border border-transparent'}
@@ -231,8 +251,9 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
         <div className="p-3 border-t border-border-main hidden md:block">
           <button
             onClick={() => setIsCollapsed(!isCollapsed)}
-            className="flex items-center justify-center w-full p-2.5 rounded-lg hover:bg-bg-hover text-text-tertiary hover:text-text-primary transition-all duration-200 group"
-            title={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+            className="flex items-center justify-center w-full p-2.5 rounded-lg hover:bg-bg-hover text-text-tertiary hover:text-text-primary transition-all duration-200 group focus-visible:ring-2 focus-visible:ring-primary-500/50 outline-none"
+            title={isCollapsed ? 'Expand sidebar (press [)' : 'Collapse sidebar (press [)'}
+            aria-label={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
           >
             {isCollapsed ? (
               <ChevronRight className="w-5 h-5 group-hover:translate-x-0.5 transition-transform" />
@@ -251,8 +272,11 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
           <div className="flex items-center gap-4 w-full">
             {/* Mobile Toggle */}
             <button
-              className="p-2 md:hidden text-text-secondary hover:text-text-primary transition-colors rounded-lg hover:bg-bg-hover"
+              className="p-2 md:hidden text-text-secondary hover:text-text-primary transition-colors rounded-lg hover:bg-bg-hover focus-visible:ring-2 focus-visible:ring-primary-500/50 outline-none"
               onClick={() => setIsMobileMenuOpen(true)}
+              aria-label="Open navigation menu"
+              aria-expanded={isMobileMenuOpen}
+              aria-controls="main-sidebar"
             >
               <Menu className="w-5 h-5" />
             </button>
@@ -261,7 +285,10 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
             <div className="relative" ref={clusterMenuRef}>
               <button
                 onClick={() => setIsClusterMenuOpen(!isClusterMenuOpen)}
-                className="flex items-center gap-2.5 px-3 py-2 bg-bg-card/80 border border-border-main rounded-xl hover:border-primary-500/30 hover:bg-kt-dark-lighter/50 transition-all duration-200 group min-w-[44px] md:min-w-[200px]"
+                className="flex items-center gap-2.5 px-3 py-2 bg-bg-card/80 border border-border-main rounded-xl hover:border-primary-500/30 hover:bg-bg-hover/50 transition-all duration-200 group min-w-[44px] md:min-w-[200px] focus-visible:ring-2 focus-visible:ring-primary-500/50 outline-none"
+                aria-expanded={isClusterMenuOpen}
+                aria-controls="cluster-dropdown"
+                aria-label="Select target cluster"
               >
                 {selectedCluster ? (
                   <>
@@ -292,7 +319,10 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
 
               {/* Cluster Dropdown */}
               {isClusterMenuOpen && (
-                <div className="absolute top-full left-0 mt-2 w-80 bg-bg-card border border-border-main rounded-2xl shadow-2xl py-2 animate-slide-up z-50 overflow-hidden">
+                <div
+                  id="cluster-dropdown"
+                  className="absolute top-full left-0 mt-2 w-80 bg-bg-card border border-border-main rounded-2xl shadow-2xl py-2 animate-slide-up z-50 overflow-hidden"
+                >
                   <div className="px-4 py-3 border-b border-border-main bg-bg-hover">
                     <p className="text-[11px] font-semibold text-text-tertiary uppercase tracking-wider flex items-center gap-2">
                       <Server className="w-3.5 h-3.5" /> Control Plane Fleet
@@ -376,7 +406,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
               {/* Settings */}
               <button
                 onClick={() => navigate('/settings')}
-                className="p-2.5 rounded-xl bg-bg-hover border border-border-main text-text-secondary hover:text-text-primary hover:border-primary-500/30 transition-all duration-200 active:scale-95 group"
+                className="p-2.5 rounded-xl bg-bg-hover border border-border-main text-text-secondary hover:text-text-primary hover:border-primary-500/30 transition-all duration-200 active:scale-95 group focus-visible:ring-2 focus-visible:ring-primary-500/50 outline-none"
                 title="Settings"
               >
                 <Settings className="w-5 h-5 group-hover:rotate-45 transition-transform" />
@@ -385,7 +415,8 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
               {/* Notifications */}
               <button
                 onClick={() => navigate('/notifications')}
-                className="relative p-2.5 rounded-xl bg-bg-hover border border-border-main text-text-secondary hover:text-text-primary hover:border-primary-500/30 transition-all duration-200 group"
+                className="relative p-2.5 rounded-xl bg-bg-hover border border-border-main text-text-secondary hover:text-text-primary hover:border-primary-500/30 transition-all duration-200 group focus-visible:ring-2 focus-visible:ring-primary-500/50 outline-none"
+                aria-label="Notifications"
               >
                 <Bell className="w-5 h-5 group-hover:scale-110 transition-transform" />
                 {unreadReports > 0 && (
@@ -400,7 +431,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
               <button
                 onClick={refreshWorkloads}
                 disabled={isWorkloadsLoading}
-                className={`p-2.5 rounded-xl bg-bg-hover border border-border-main text-text-secondary hover:text-text-primary hover:border-primary-500/30 transition-all duration-200 ${isWorkloadsLoading ? 'opacity-50' : 'active:scale-95'}`}
+                className={`p-2.5 rounded-xl bg-bg-hover border border-border-main text-text-secondary hover:text-text-primary hover:border-primary-500/30 transition-all duration-200 focus-visible:ring-2 focus-visible:ring-primary-500/50 outline-none ${isWorkloadsLoading ? 'opacity-50' : 'active:scale-95'}`}
                 title="Refresh Telemetry"
               >
                 <RefreshCw className={`w-5 h-5 ${isWorkloadsLoading ? 'animate-spin text-primary-500' : ''}`} />
@@ -409,7 +440,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
               {/* Theme Toggle */}
               <button
                 onClick={toggleTheme}
-                className="p-2.5 rounded-xl bg-bg-hover border border-border-main text-text-secondary hover:text-text-primary hover:border-primary-500/30 transition-all duration-200 active:scale-95 group"
+                className="p-2.5 rounded-xl bg-bg-hover border border-border-main text-text-secondary hover:text-text-primary hover:border-primary-500/30 transition-all duration-200 active:scale-95 group focus-visible:ring-2 focus-visible:ring-primary-500/50 outline-none"
                 title={isDarkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
               >
                 {isDarkMode ? (
