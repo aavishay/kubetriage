@@ -106,7 +106,7 @@ export const TopologyView: React.FC<TopologyViewProps> = ({ workloads }) => {
     };
 
     return (
-        <div className="flex flex-col h-full w-full bg-bg-main text-text-primary font-sans selection:bg-primary-500/30">
+        <div className="flex flex-col h-full w-full bg-bg-main text-text-primary font-sans selection:bg-primary-500/30 animate-fade-in">
             {/* Header - Fixed Height */}
             <div className="shrink-0 p-6 border-b border-border-main bg-bg-card/50 backdrop-blur-xl flex flex-col md:flex-row justify-between items-start md:items-center gap-6 shadow-sm">
                 <div>

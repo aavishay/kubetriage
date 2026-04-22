@@ -220,7 +220,7 @@ export const NotificationsView: React.FC<NotificationsViewProps> = ({
    };
 
    return (
-      <div className="space-y-6 font-sans">
+      <div className="space-y-6 font-sans animate-fade-in">
          <div className="bg-bg-card rounded-[2.5rem] p-6 border border-border-main shadow-sm flex flex-col md:flex-row justify-between items-center gap-6">
             <div>
                <div className="flex items-center gap-3 mb-2">

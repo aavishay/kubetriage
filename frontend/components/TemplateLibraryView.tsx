@@ -107,7 +107,7 @@ export const TemplateLibraryView: React.FC<TemplateLibraryViewProps> = ({ onAppl
    };
 
    return (
-      <div className="space-y-8 pb-20">
+      <div className="space-y-8 pb-20 animate-fade-in">
          {/* Hero Header */}
          <div className="bg-bg-card border border-border-main rounded-xl p-6 md:p-8">
             <div className="max-w-2xl">
