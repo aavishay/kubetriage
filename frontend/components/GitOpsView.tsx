@@ -130,14 +130,39 @@ export const GitOpsView: React.FC<GitOpsViewProps> = ({ clusterId }) => {
 
   if (loading && !data) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[600px]">
-        <div className="p-6 bg-bg-hover rounded-full mb-6 animate-pulse">
-          <GitBranch className="w-12 h-12 text-text-tertiary" />
+      <div className="flex flex-col gap-6 p-6 animate-fade-in">
+        {/* Header skeleton */}
+        <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
+          <div className="space-y-2">
+            <div className="kt-skeleton kt-skeleton-heading w-48" />
+            <div className="kt-skeleton kt-skeleton-text w-72" />
+          </div>
+          <div className="kt-skeleton w-24 h-9 rounded-xl" />
         </div>
-        <h2 className="text-2xl font-black text-text-primary uppercase tracking-tighter mb-2">
-          Loading GitOps Status
-        </h2>
-        <p className="text-text-tertiary">Scanning ArgoCD and Flux resources...</p>
+        {/* Summary cards skeleton */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+          {[...Array(6)].map((_, i) => (
+            <div key={i} className="bg-bg-card rounded-2xl p-5 border border-border-main shadow-sm space-y-3">
+              <div className="kt-skeleton kt-skeleton-text w-16" />
+              <div className="kt-skeleton kt-skeleton-heading w-12" />
+            </div>
+          ))}
+        </div>
+        {/* Tab bar skeleton */}
+        <div className="kt-skeleton w-full h-10 rounded-xl" />
+        {/* Resource list skeleton */}
+        <div className="space-y-3">
+          {[...Array(5)].map((_, i) => (
+            <div key={i} className="bg-bg-card rounded-2xl p-4 border border-border-main shadow-sm flex items-center gap-4">
+              <div className="kt-skeleton w-10 h-10 rounded-xl shrink-0" />
+              <div className="flex-1 space-y-2">
+                <div className="kt-skeleton kt-skeleton-text w-48" />
+                <div className="kt-skeleton kt-skeleton-text w-32" />
+              </div>
+              <div className="kt-skeleton w-20 h-6 rounded-full" />
+            </div>
+          ))}
+        </div>
       </div>
     );
   }

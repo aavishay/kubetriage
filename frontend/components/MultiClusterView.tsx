@@ -345,14 +345,15 @@ export const MultiClusterView: React.FC = () => {
               <div className="h-[250px]">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={clusterHealthData}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-                    <XAxis dataKey="name" tick={{ fill: '#9ca3af', fontSize: 10 }} />
-                    <YAxis tick={{ fill: '#9ca3af', fontSize: 10 }} />
+                    <CartesianGrid strokeDasharray="3 3" stroke="var(--kt-border-main)" />
+                    <XAxis dataKey="name" tick={{ fill: 'var(--kt-fg-tertiary)', fontSize: 10 }} />
+                    <YAxis tick={{ fill: 'var(--kt-fg-tertiary)', fontSize: 10 }} />
                     <Tooltip
                       contentStyle={{
-                        backgroundColor: '#1f2937',
-                        border: '1px solid #374151',
-                        borderRadius: '12px'
+                        backgroundColor: 'var(--kt-bg-card)',
+                        border: '1px solid var(--kt-border-main)',
+                        borderRadius: '12px',
+                        color: 'var(--kt-fg-primary)'
                       }}
                     />
                     <Bar dataKey="nodes" name="Total Nodes" fill={COLORS.primary} radius={[4, 4, 0, 0]} />
@@ -368,7 +369,7 @@ export const MultiClusterView: React.FC = () => {
                 <PieChart className="w-4 h-4 text-primary-500" />
                 Workload Status Distribution
               </h3>
-              <div className="h-[250px] flex items-center justify-center">
+              <div className="h-[250px] flex items-center justify-center relative">
                 {statusDistribution.some(s => s.value > 0) ? (
                   <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
@@ -376,20 +377,24 @@ export const MultiClusterView: React.FC = () => {
                         data={statusDistribution}
                         cx="50%"
                         cy="50%"
-                        innerRadius={60}
-                        outerRadius={100}
-                        paddingAngle={5}
+                        innerRadius={65}
+                        outerRadius={95}
+                        paddingAngle={4}
                         dataKey="value"
+                        stroke="var(--kt-bg-card)"
+                        strokeWidth={2}
                       >
                         {statusDistribution.map((entry, index) => (
                           <Cell key={`cell-${index}`} fill={entry.color} />
                         ))}
                       </Pie>
                       <Tooltip
+                        formatter={(value: number, name: string) => [`${value} workloads`, name]}
                         contentStyle={{
-                          backgroundColor: '#1f2937',
-                          border: '1px solid #374151',
-                          borderRadius: '12px'
+                          backgroundColor: 'var(--kt-bg-card)',
+                          border: '1px solid var(--kt-border-main)',
+                          borderRadius: '12px',
+                          color: 'var(--kt-fg-primary)'
                         }}
                       />
                     </PieChart>
@@ -397,12 +402,19 @@ export const MultiClusterView: React.FC = () => {
                 ) : (
                   <p className="text-text-tertiary">No workload data available</p>
                 )}
+                <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                  <span className="text-2xl font-black text-text-primary">{data.summary.totalWorkloads}</span>
+                  <span className="text-[10px] text-text-tertiary uppercase tracking-wider">Workloads</span>
+                </div>
               </div>
-              <div className="flex justify-center gap-6 mt-4">
+              <div className="grid grid-cols-3 gap-2 mt-4">
                 {statusDistribution.filter(s => s.value > 0).map(s => (
-                  <div key={s.name} className="flex items-center gap-2">
-                    <div className="w-3 h-3 rounded-full" style={{ backgroundColor: s.color }} />
-                    <span className="text-xs text-text-secondary">{s.name}: {s.value}</span>
+                  <div key={s.name} className="flex flex-col items-center gap-1 p-2 rounded-xl bg-bg-hover/50 border border-border-main">
+                    <div className="flex items-center gap-1.5">
+                      <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: s.color }} />
+                      <span className="text-[10px] font-semibold text-text-secondary uppercase tracking-wider">{s.name}</span>
+                    </div>
+                    <span className="text-lg font-bold" style={{ color: s.color }}>{s.value}</span>
                   </div>
                 ))}
               </div>

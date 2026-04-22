@@ -352,14 +352,53 @@ export const ScalingEfficiencyView: React.FC<ScalingEfficiencyViewProps> = ({ cl
 
   if (loading && !data.summary) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[600px]">
-        <div className="p-6 bg-bg-hover rounded-full mb-6 animate-pulse">
-          <Scale className="w-12 h-12 text-text-tertiary" />
+      <div className="flex flex-col gap-6 p-6 animate-fade-in">
+        {/* Header skeleton */}
+        <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
+          <div className="space-y-2">
+            <div className="kt-skeleton kt-skeleton-heading w-56" />
+            <div className="kt-skeleton kt-skeleton-text w-80" />
+          </div>
+          <div className="kt-skeleton w-24 h-9 rounded-xl" />
         </div>
-        <h2 className="text-2xl font-black text-text-primary uppercase tracking-tighter mb-2">
-          Loading Scaling Metrics
-        </h2>
-        <p className="text-text-tertiary">Analyzing Karpenter & KEDA efficiency...</p>
+        {/* Summary cards skeleton */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {[...Array(4)].map((_, i) => (
+            <div key={i} className="bg-bg-card rounded-2xl p-5 border border-border-main shadow-sm space-y-3">
+              <div className="flex justify-between">
+                <div className="kt-skeleton kt-skeleton-text w-20" />
+                <div className="kt-skeleton w-8 h-8 rounded-xl" />
+              </div>
+              <div className="kt-skeleton kt-skeleton-heading w-16" />
+              <div className="kt-skeleton kt-skeleton-text w-28" />
+            </div>
+          ))}
+        </div>
+        {/* Chart skeleton */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="bg-bg-card rounded-3xl border border-border-main p-6 space-y-4">
+            <div className="kt-skeleton kt-skeleton-text w-40" />
+            <div className="kt-skeleton w-full h-[250px] rounded-xl" />
+          </div>
+          <div className="bg-bg-card rounded-3xl border border-border-main p-6 space-y-4">
+            <div className="kt-skeleton kt-skeleton-text w-40" />
+            <div className="kt-skeleton w-full h-[250px] rounded-xl" />
+          </div>
+        </div>
+        {/* Node pool cards skeleton */}
+        <div className="space-y-3">
+          <div className="kt-skeleton kt-skeleton-text w-32" />
+          {[...Array(3)].map((_, i) => (
+            <div key={i} className="bg-bg-card rounded-2xl p-4 border border-border-main shadow-sm flex items-center gap-4">
+              <div className="kt-skeleton w-12 h-12 rounded-xl shrink-0" />
+              <div className="flex-1 space-y-2">
+                <div className="kt-skeleton kt-skeleton-text w-48" />
+                <div className="kt-skeleton kt-skeleton-text w-64" />
+              </div>
+              <div className="kt-skeleton w-24 h-8 rounded-lg" />
+            </div>
+          ))}
+        </div>
       </div>
     );
   }
