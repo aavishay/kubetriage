@@ -928,16 +928,16 @@ const UnifiedNodePoolCard: React.FC<UnifiedNodePoolCardProps> = ({ nodePool, isS
                     </p>
                     <ResponsiveContainer width="100%" height="100%">
                       <BarChart data={nodePoolChartData}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-                        <XAxis dataKey="name" tick={{ fill: '#9ca3af', fontSize: 10 }} />
-                        <YAxis tick={{ fill: '#9ca3af', fontSize: 10 }} />
+                        <CartesianGrid strokeDasharray="3 3" stroke="var(--kt-border-main)" />
+                        <XAxis dataKey="name" tick={{ fill: 'var(--kt-fg-tertiary)', fontSize: 10 }} />
+                        <YAxis tick={{ fill: 'var(--kt-fg-tertiary)', fontSize: 10 }} />
                         <Tooltip
                           contentStyle={{
-                            backgroundColor: '#1f2937',
-                            border: '1px solid #374151',
-                            borderRadius: '12px'
+                            backgroundColor: 'var(--kt-bg-card)',
+                            border: '1px solid var(--kt-border-main)',
+                            borderRadius: '12px',
+                            color: 'var(--kt-fg-primary)'
                           }}
-                          labelStyle={{ color: '#f3f4f6' }}
                         />
                         <Bar dataKey="utilization" name="Utilization %" fill={COLORS.primary} radius={[4, 4, 0, 0]} />
                         <Bar dataKey="binPacking" name="Bin Packing %" fill={COLORS.success} radius={[4, 4, 0, 0]} />
@@ -1197,16 +1197,16 @@ const UnifiedNodePoolCard: React.FC<UnifiedNodePoolCardProps> = ({ nodePool, isS
                     </p>
                     <ResponsiveContainer width="100%" height="100%">
                       <BarChart data={kedaChartData} layout="vertical">
-                        <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-                        <XAxis type="number" domain={[0, 100]} tick={{ fill: '#9ca3af', fontSize: 10 }} />
-                        <YAxis dataKey="name" type="category" width={120} tick={{ fill: '#9ca3af', fontSize: 10 }} />
+                        <CartesianGrid strokeDasharray="3 3" stroke="var(--kt-border-main)" />
+                        <XAxis type="number" domain={[0, 100]} tick={{ fill: 'var(--kt-fg-tertiary)', fontSize: 10 }} />
+                        <YAxis dataKey="name" type="category" width={120} tick={{ fill: 'var(--kt-fg-tertiary)', fontSize: 10 }} />
                         <Tooltip
                           contentStyle={{
-                            backgroundColor: '#1f2937',
-                            border: '1px solid #374151',
-                            borderRadius: '12px'
+                            backgroundColor: 'var(--kt-bg-card)',
+                            border: '1px solid var(--kt-border-main)',
+                            borderRadius: '12px',
+                            color: 'var(--kt-fg-primary)'
                           }}
-                          labelStyle={{ color: '#f3f4f6' }}
                         />
                         <Bar dataKey="efficiency" name="Efficiency %" radius={[0, 4, 4, 0]}>
                           {kedaChartData.map((entry, index) => (
@@ -1681,16 +1681,16 @@ const UnifiedNodePoolCard: React.FC<UnifiedNodePoolCardProps> = ({ nodePool, isS
             <div className="h-[250px]">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={costAnalysisData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-                  <XAxis dataKey="name" tick={{ fill: '#9ca3af', fontSize: 10 }} />
-                  <YAxis tick={{ fill: '#9ca3af', fontSize: 10 }} />
+                  <CartesianGrid strokeDasharray="3 3" stroke="var(--kt-border-main)" />
+                  <XAxis dataKey="name" tick={{ fill: 'var(--kt-fg-tertiary)', fontSize: 10 }} />
+                  <YAxis tick={{ fill: 'var(--kt-fg-tertiary)', fontSize: 10 }} />
                   <Tooltip
                     contentStyle={{
-                      backgroundColor: '#1f2937',
-                      border: '1px solid #374151',
-                      borderRadius: '12px'
+                      backgroundColor: 'var(--kt-bg-card)',
+                      border: '1px solid var(--kt-border-main)',
+                      borderRadius: '12px',
+                      color: 'var(--kt-fg-primary)'
                     }}
-                    labelStyle={{ color: '#f3f4f6' }}
                     formatter={(value: number) => [`$${value.toFixed(2)}`, '']}
                   />
                   <Bar dataKey="costPerCPU" name="Cost per CPU/month" fill={COLORS.primary} radius={[4, 4, 0, 0]} />
