@@ -76,6 +76,29 @@ func (c *Comment) BeforeCreate(tx *gorm.DB) (err error) {
 	return
 }
 
+// AuditLog tracks actions performed in the system
+type AuditLog struct {
+	ID        uuid.UUID `gorm:"type:uuid;primaryKey"`
+	Action    string    `gorm:"not null;index"`           // e.g., "remediate_apply", "cluster_delete", "settings_update"
+	Resource  string    `gorm:"index"`                  // Resource type: "workload", "cluster", "report", "settings"
+	ResourceID string   `gorm:"index"`                 // Specific resource identifier
+	UserID    string    `gorm:"index"`                  // User who performed the action
+	ClusterID string    `gorm:"index"`                  // Related cluster if applicable
+	Namespace string    `gorm:"index"`                  // Related namespace if applicable
+	Details   string    `gorm:"type:text"`              // JSON or text details of the action
+	IPAddress string    `gorm:""`                       // Client IP address
+	Success   bool      `gorm:"default:true"`            // Whether the action succeeded
+	ErrorMsg  string    `gorm:""`                       // Error message if action failed
+	CreatedAt time.Time
+}
+
+func (a *AuditLog) BeforeCreate(tx *gorm.DB) (err error) {
+	if a.ID == uuid.Nil {
+		a.ID = uuid.New()
+	}
+	return
+}
+
 // Recipe model for Automation Engine (Phase 2)
 type Recipe struct {
 	ID            uuid.UUID `gorm:"type:uuid;primaryKey"`

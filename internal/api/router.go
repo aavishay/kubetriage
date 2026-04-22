@@ -58,6 +58,9 @@ func SetupRouter(cfg RouterConfig) *gin.Engine {
 	// OpenTelemetry Middleware
 	r.Use(otelgin.Middleware("kubetriage-backend"))
 
+	// Audit Log Middleware
+	r.Use(AuditLogMiddleware())
+
 	// Init Handlers
 	aiHandler := NewAIHandler(cfg.AIService)
 	mlHandler := NewMLHandler(cfg.MLService)
@@ -173,6 +176,9 @@ func SetupRouter(cfg RouterConfig) *gin.Engine {
 		api.POST("/metrics/ingest", IngestMetricsHandler)
 		api.GET("/metrics/query", QueryMetricsHandler)
 		api.GET("/metrics/stats", GetMetricsStatsHandler)
+
+		// Audit Logs
+		api.GET("/audit-logs", AuditLogsHandler)
 	}
 	// Serve Frontend Static Files
 	r.StaticFS("/assets", cfg.AssetsFS)
