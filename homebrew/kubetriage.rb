@@ -6,23 +6,23 @@ class Kubetriage < Formula
 
   on_macos do
     on_arm do
-      url "https://github.com/aavishay/kubetriage/releases/download/v#{version}/kubetriage-v#{version}-darwin-arm64.tar.gz"
-      sha256 "7c6da00302b2c383f66b6d724a6efc0d4ff398f7119c473e1740c7a91e1d1b1f"
+      url "https://github.com/aavishay/kubetriage/releases/download/v1.6.0/kubetriage-v1.6.0-1-gfd39d9e-dirty-darwin-arm64.tar.gz"
+      sha256 "a7e8e59986f2ef2554230236ada3d63f76adb43626d812ae7f035bb40d9d63f0"
     end
     on_intel do
-      url "https://github.com/aavishay/kubetriage/releases/download/v#{version}/kubetriage-v#{version}-darwin-amd64.tar.gz"
-      sha256 "c38eedc048a7a7da139dff83df292219e7745cad7bf982075191d40ae083f60b"
+      url "https://github.com/aavishay/kubetriage/releases/download/v1.6.0/kubetriage-v1.6.0-1-gfd39d9e-dirty-darwin-amd64.tar.gz"
+      sha256 "ae7bcf743ffa78c7a0f43928f0f03971b9a33ad602f9e74ab4b00abfbaf0bab9"
     end
   end
 
   on_linux do
     on_intel do
-      url "https://github.com/aavishay/kubetriage/releases/download/v#{version}/kubetriage-v#{version}-linux-amd64.tar.gz"
-      sha256 "de200b69fc824306420dbc2de2b5b0591e05c888448d77d0a689fe0346a6d418"
+      url "https://github.com/aavishay/kubetriage/releases/download/v1.6.0/kubetriage-v1.6.0-1-gfd39d9e-dirty-linux-amd64.tar.gz"
+      sha256 "0a32216c8ee1993df3494c3fe7a6a22efadd8ad18497f34e97d183cfe9483872"
     end
     on_arm do
-      url "https://github.com/aavishay/kubetriage/releases/download/v#{version}/kubetriage-v#{version}-linux-arm64.tar.gz"
-      sha256 "f1236160a4951edc11940aef382e9bfa7eda496e964b16ef857866e5bb791a4a"
+      url "https://github.com/aavishay/kubetriage/releases/download/v1.6.0/kubetriage-v1.6.0-1-gfd39d9e-dirty-linux-arm64.tar.gz"
+      sha256 "2f6e8527734878f9132b2ee49d76d1dccd5eddab3276d7081066bc352f707578"
     end
   end
 
