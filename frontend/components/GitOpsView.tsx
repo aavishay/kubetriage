@@ -172,7 +172,7 @@ export const GitOpsView: React.FC<GitOpsViewProps> = ({ clusterId }) => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-2xl font-black text-text-primary uppercase tracking-tighter flex items-center gap-3">
+          <h1 className="text-2xl font-black text-text-primary   flex items-center gap-3">
             <GitBranch className="w-7 h-7 text-primary-500" />
             GitOps Status
           </h1>
@@ -199,7 +199,7 @@ export const GitOpsView: React.FC<GitOpsViewProps> = ({ clusterId }) => {
             key={idx}
             className="bg-bg-card rounded-2xl p-5 border border-border-main shadow-sm hover:border-primary-500/30 transition-all"
           >
-            <p className="text-[10px] font-black uppercase tracking-widest text-text-tertiary mb-1">
+            <p className="text-[10px] font-semibold   text-text-tertiary mb-1">
               {card.title}
             </p>
             <p className={`text-2xl font-black ${card.color}`}>{card.value}</p>
@@ -214,7 +214,7 @@ export const GitOpsView: React.FC<GitOpsViewProps> = ({ clusterId }) => {
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
-              className={`px-4 py-2 rounded-lg text-xs font-bold uppercase transition-all ${
+              className={`px-4 py-2 rounded-lg text-xs font-bold  transition-all ${
                 activeTab === tab
                   ? 'bg-primary-500 text-white'
                   : 'text-text-tertiary hover:text-text-primary'
@@ -254,7 +254,7 @@ export const GitOpsView: React.FC<GitOpsViewProps> = ({ clusterId }) => {
               <GitBranch className="w-5 h-5 text-white" />
             </div>
             <div>
-              <h2 className="text-sm font-black uppercase tracking-widest text-text-primary">
+              <h2 className="text-sm font-black   text-text-primary">
                 GitOps Resources
               </h2>
               <p className="text-[10px] text-text-tertiary font-semibold">
@@ -296,7 +296,7 @@ export const GitOpsView: React.FC<GitOpsViewProps> = ({ clusterId }) => {
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-3 flex-wrap">
                       <span className="font-bold text-text-primary">{resource.name}</span>
-                      <span className="px-2 py-0.5 rounded-md bg-primary-500/10 text-primary-500 text-[10px] font-black uppercase">
+                      <span className="px-2 py-0.5 rounded-full bg-primary-500/10 text-primary-500 text-[10px] font-semibold ">
                         {resource.tool}
                       </span>
                       <span className="px-2 py-0.5 rounded-md bg-bg-hover text-text-tertiary text-[10px] font-bold">
@@ -306,7 +306,7 @@ export const GitOpsView: React.FC<GitOpsViewProps> = ({ clusterId }) => {
                     </div>
                     <div className="flex items-center gap-2">
                       {resource.misconfigurations && resource.misconfigurations.length > 0 && (
-                        <span className="px-2 py-0.5 rounded-md bg-rose-500/10 text-rose-500 text-[10px] font-black">
+                        <span className="px-2 py-0.5 rounded-full bg-rose-500/10 text-rose-500 text-[10px] font-semibold">
                           {resource.misconfigurations.length} Issues
                         </span>
                       )}
@@ -320,13 +320,13 @@ export const GitOpsView: React.FC<GitOpsViewProps> = ({ clusterId }) => {
 
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                     <div className="flex items-center gap-2">
-                      <span className={`px-2 py-1 rounded-md text-[10px] font-black uppercase border flex items-center gap-1 ${getStatusColor(resource.syncStatus)}`}>
+                      <span className={`px-2 py-1 rounded-full text-[10px] font-semibold  border flex items-center gap-1 ${getStatusColor(resource.syncStatus)}`}>
                         {getStatusIcon(resource.syncStatus)}
                         {resource.syncStatus}
                       </span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <span className={`px-2 py-1 rounded-md text-[10px] font-black uppercase border flex items-center gap-1 ${getStatusColor(resource.healthStatus)}`}>
+                      <span className={`px-2 py-1 rounded-full text-[10px] font-semibold  border flex items-center gap-1 ${getStatusColor(resource.healthStatus)}`}>
                         {getStatusIcon(resource.healthStatus)}
                         {resource.healthStatus}
                       </span>
@@ -369,7 +369,7 @@ export const GitOpsView: React.FC<GitOpsViewProps> = ({ clusterId }) => {
                     {/* Message */}
                     {resource.message && (
                       <div className="p-3 rounded-xl bg-bg-card border border-border-main">
-                        <p className="text-[10px] font-black uppercase text-text-tertiary mb-1">Message</p>
+                        <p className="text-[10px] font-semibold  text-text-tertiary mb-1">Message</p>
                         <p className="text-xs text-text-secondary">{resource.message}</p>
                       </div>
                     )}
@@ -377,7 +377,7 @@ export const GitOpsView: React.FC<GitOpsViewProps> = ({ clusterId }) => {
                     {/* Conditions */}
                     {resource.conditions && resource.conditions.length > 0 && (
                       <div>
-                        <p className="text-[10px] font-black uppercase text-text-tertiary mb-2">Conditions</p>
+                        <p className="text-[10px] font-semibold  text-text-tertiary mb-2">Conditions</p>
                         <div className="space-y-2">
                           {resource.conditions.map((cond, idx) => (
                             <div
@@ -449,13 +449,13 @@ export const GitOpsView: React.FC<GitOpsViewProps> = ({ clusterId }) => {
                     {resource.tool === 'ArgoCD' && (
                       <div className="grid grid-cols-2 gap-4">
                         <div className="p-3 rounded-xl bg-bg-hover">
-                          <p className="text-[10px] font-black uppercase text-text-tertiary mb-1">Resources</p>
+                          <p className="text-[10px] font-semibold  text-text-tertiary mb-1">Resources</p>
                           <p className="text-xl font-bold text-text-primary">
                             {resource.readyResources}/{resource.resourceCount}
                           </p>
                         </div>
                         <div className="p-3 rounded-xl bg-bg-hover">
-                          <p className="text-[10px] font-black uppercase text-text-tertiary mb-1">Health</p>
+                          <p className="text-[10px] font-semibold  text-text-tertiary mb-1">Health</p>
                           <p className="text-xl font-bold text-text-primary">
                             {resource.healthStatus}
                           </p>

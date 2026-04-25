@@ -179,10 +179,10 @@ export const ReportsView: React.FC = () => {
             <div className="bg-bg-card border border-border-main rounded-2xl p-8 md:p-10 shadow-sm relative overflow-hidden group">
                 <div className="absolute top-0 right-0 w-64 h-64 bg-primary-500/5 blur-[100px] rounded-full -translate-y-1/2 translate-x-1/2 group-hover:bg-primary-500/10 transition-colors" />
                 <div className="relative max-w-2xl">
-                    <div className="inline-flex items-center gap-1.5 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider mb-6 border border-emerald-500/20 shadow-sm">
+                    <div className="inline-flex items-center gap-1.5 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 px-3 py-1 rounded-full text-[10px] font-semibold mb-6 border border-emerald-500/20 shadow-sm">
                         <Shield className="w-3.5 h-3.5" /> Compliance & Audit
                     </div>
-                    <h1 className="text-3xl font-black text-text-primary mb-3 tracking-tight">
+                    <h1 className="text-3xl font-black text-text-primary mb-3">
                         Reporting Center
                     </h1>
                     <p className="text-base text-text-tertiary mb-8 font-medium leading-relaxed">
@@ -204,7 +204,7 @@ export const ReportsView: React.FC = () => {
                     <div className="p-2 bg-emerald-500/10 rounded-lg">
                         <FileCheck className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
                     </div>
-                    <h2 className="text-xl font-bold text-text-primary tracking-tight">Available Reports</h2>
+                    <h2 className="text-xl font-bold text-text-primary">Available Reports</h2>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -217,7 +217,7 @@ export const ReportsView: React.FC = () => {
                         <p className="text-sm text-text-tertiary mb-6 flex-1 font-medium leading-relaxed">
                             Complete audit log of user actions, authentication events, and configuration changes securely stored.
                         </p>
-                        <div className="flex items-center gap-2 text-[11px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-widest">
+                        <div className="flex items-center gap-2 text-[11px] font-bold text-emerald-600 dark:text-emerald-400">
                             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" /> Ready for Download
                         </div>
                     </div>
@@ -231,7 +231,7 @@ export const ReportsView: React.FC = () => {
                         <p className="text-sm text-text-tertiary mb-6 flex-1 font-medium leading-relaxed">
                             Monthly aggregated uptime, resource utilization, and incident frequency reports.
                         </p>
-                        <div className="flex items-center gap-2 text-[11px] font-bold text-text-tertiary uppercase tracking-widest">
+                        <div className="flex items-center gap-2 text-[11px] font-bold text-text-tertiary">
                             <span className="w-2 h-2 rounded-full bg-border-main" /> Coming Soon
                         </div>
                     </div>
@@ -245,7 +245,7 @@ export const ReportsView: React.FC = () => {
                         <div className="p-2 bg-primary-500/10 rounded-lg">
                             <Clock className="w-5 h-5 text-primary-600 dark:text-primary-400" />
                         </div>
-                        <h2 className="text-xl font-bold text-text-primary tracking-tight">Analysis History</h2>
+                        <h2 className="text-xl font-bold text-text-primary">Analysis History</h2>
                         <span className="text-xs font-medium text-text-tertiary bg-bg-hover px-2 py-1 rounded-full border border-border-main">
                             {groupedReports.length} workloads
                         </span>
@@ -255,7 +255,7 @@ export const ReportsView: React.FC = () => {
                         {groupedReports.length > 0 && (
                             <button
                                 onClick={allExpanded ? collapseAll : expandAll}
-                                className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all shadow-sm bg-bg-card text-text-secondary hover:text-text-primary hover:bg-bg-hover border border-border-main"
+                                className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold transition-all shadow-sm bg-bg-card text-text-secondary hover:text-text-primary hover:bg-bg-hover border border-border-main"
                                 title={allExpanded ? "Collapse all groups" : "Expand all groups"}
                             >
                                 {allExpanded ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronRight className="w-3.5 h-3.5" />}
@@ -275,7 +275,7 @@ export const ReportsView: React.FC = () => {
                         <button
                             onClick={() => setShowConfirm(true)}
                             disabled={isDeleting || reports.length === 0}
-                            className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all shadow-sm kt-button-danger ${isDeleting || reports.length === 0 ? 'opacity-40 cursor-not-allowed' : ''}`}
+                            className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-semibold transition-all shadow-sm kt-button-danger ${isDeleting || reports.length === 0 ? 'opacity-40 cursor-not-allowed' : ''}`}
                             title="Delete all reports"
                         >
                             {isDeleting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
@@ -291,20 +291,20 @@ export const ReportsView: React.FC = () => {
                             <div className="p-4 bg-rose-500/10 text-rose-600 dark:text-rose-400 rounded-2xl w-fit mb-6 border border-rose-500/10 shadow-inner">
                                 <Trash2 className="w-8 h-8" />
                             </div>
-                            <h3 className="text-xl font-bold text-text-primary mb-3 tracking-tight">Delete All Reports?</h3>
+                            <h3 className="text-xl font-bold text-text-primary mb-3">Delete All Reports?</h3>
                             <p className="text-sm text-text-tertiary mb-8 font-medium leading-relaxed">
-                                This will permanently delete all historical reports in your laboratory. This action <span className="text-rose-500 font-bold uppercase tracking-tight">cannot be undone</span>.
+                                This will permanently delete all historical reports in your laboratory. This action <span className="text-rose-500 font-bold">cannot be undone</span>.
                             </p>
                             <div className="flex gap-3">
                                 <button
                                     onClick={() => setShowConfirm(false)}
-                                    className="flex-1 px-4 py-3 rounded-xl bg-bg-hover text-text-secondary text-sm font-bold uppercase tracking-wider hover:bg-bg-hover/80 transition-all border border-border-main"
+                                    className="flex-1 px-4 py-3 rounded-xl bg-bg-hover text-text-secondary text-sm font-semibold hover:bg-bg-hover/80 transition-all border border-border-main"
                                 >
                                     Cancel
                                 </button>
                                 <button
                                     onClick={handleCleanArchive}
-                                    className="flex-1 px-4 py-3 rounded-xl bg-rose-600 text-white text-sm font-bold uppercase tracking-wider hover:bg-rose-500 transition-all shadow-lg shadow-rose-500/20"
+                                    className="flex-1 px-4 py-3 rounded-xl bg-rose-600 text-white text-sm font-semibold hover:bg-rose-500 transition-all shadow-lg shadow-rose-500/20"
                                 >
                                     Delete All
                                 </button>
@@ -319,11 +319,11 @@ export const ReportsView: React.FC = () => {
                         <div className="bg-bg-card rounded-[2rem] w-full max-w-4xl h-[85vh] flex flex-col border border-border-main shadow-2xl animate-in zoom-in-95 duration-200 overflow-hidden" onClick={e => e.stopPropagation()}>
                             <div className="flex items-center justify-between p-6 md:p-8 border-b border-border-main bg-bg-hover/30">
                                 <div className="flex-1">
-                                    <h3 className="text-2xl font-black text-text-primary mb-2 tracking-tight">
+                                    <h3 className="text-2xl font-black text-text-primary mb-2">
                                         {selectedReport.WorkloadName}
                                     </h3>
                                     <div className="flex items-center gap-3">
-                                        <span className={`px-2.5 py-0.5 rounded-lg text-[10px] font-bold uppercase tracking-wider ${selectedReport.Severity === 'Critical' ? 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20' : 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20'}`}>
+                                        <span className={`px-2.5 py-0.5 rounded-lg text-[10px] font-semibold ${selectedReport.Severity === 'Critical' ? 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20' : 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20'}`}>
                                             {selectedReport.Severity}
                                         </span>
                                         <div className="flex items-center gap-1.5 text-xs text-text-tertiary font-medium">
@@ -333,7 +333,7 @@ export const ReportsView: React.FC = () => {
 
                                         {activeUsers[`report-${selectedReport.ID}`] && activeUsers[`report-${selectedReport.ID}`].length > 0 && (
                                             <div className="flex items-center gap-1.5 ml-4 border-l border-border-main pl-4">
-                                                <span className="text-[10px] font-bold text-text-tertiary uppercase tracking-tight opacity-70">Collaborating:</span>
+                                                <span className="text-[10px] font-bold text-text-tertiary opacity-70">Collaborating:</span>
                                                 <div className="flex -space-x-2">
                                                     {activeUsers[`report-${selectedReport.ID}`].map((u) => (
                                                         <img key={u.userId} src={u.avatarUrl} alt={u.userName} title={u.userName} className="w-6 h-6 rounded-full border-2 border-bg-card shadow-sm" />
@@ -343,7 +343,7 @@ export const ReportsView: React.FC = () => {
                                         )}
                                     </div>
                                 </div>
-                                <button onClick={() => { notifyLeave(`report-${selectedReport.ID}`); setSelectedReport(null); }} className="p-3 text-text-tertiary hover:text-text-primary hover:bg-bg-hover rounded-xl transition-all active:scale-95 border border-transparent hover:border-border-main shadow-sm">
+                                <button onClick={() => { notifyLeave(`report-${selectedReport.ID}`); setSelectedReport(null); }} className="p-3 text-text-tertiary hover:text-text-primary hover:bg-bg-hover rounded-xl transition-all active:translate-y-[1px] active:brightness-95 border border-transparent hover:border-border-main shadow-sm">
                                     <X className="w-6 h-6" />
                                 </button>
                             </div>
@@ -365,10 +365,10 @@ export const ReportsView: React.FC = () => {
                                             <pre className="m-0">{selectedReport.AutoRemediationPayload}</pre>
                                         </div>
                                         <div className="flex flex-wrap gap-3 relative z-10">
-                                            <button onClick={() => handleApprove(selectedReport)} className="bg-emerald-600 hover:bg-emerald-500 text-white px-6 py-2.5 rounded-xl text-sm font-bold uppercase tracking-wider transition-all flex items-center gap-2 shadow-lg shadow-emerald-500/20 hover:-translate-y-0.5 active:translate-y-0">
+                                            <button onClick={() => handleApprove(selectedReport)} className="bg-emerald-600 hover:bg-emerald-500 text-white px-6 py-2.5 rounded-xl text-sm font-semibold transition-all flex items-center gap-2 shadow-lg shadow-emerald-500/20 hover:-translate-y-0.5 active:translate-y-0">
                                                 <CheckCircle2 className="w-4 h-4" /> Execute & Apply
                                             </button>
-                                            <button onClick={() => handleReject(selectedReport)} className="bg-bg-card hover:bg-bg-hover text-text-tertiary border border-border-main px-6 py-2.5 rounded-xl text-sm font-bold uppercase tracking-wider transition-all active:scale-95">
+                                            <button onClick={() => handleReject(selectedReport)} className="bg-bg-card hover:bg-bg-hover text-text-tertiary border border-border-main px-6 py-2.5 rounded-xl text-sm font-semibold transition-all active:translate-y-[1px] active:brightness-95">
                                                 Dismiss Patch
                                             </button>
                                         </div>
@@ -382,23 +382,23 @@ export const ReportsView: React.FC = () => {
                                 )}
                             </div>
                             <div className="p-6 border-t border-border-main bg-bg-hover/20 flex flex-col sm:flex-row justify-between items-center gap-4">
-                                <div className="text-[10px] text-text-tertiary font-bold font-mono tracking-tighter opacity-60 uppercase">
+                                <div className="text-[10px] text-text-tertiary font-bold font-mono opacity-60">
                                     RECORD_UID: {selectedReport.ID} • SEGMENT: {selectedCluster?.name || 'LAB_INFRA'} • AGENT: CLUSTER_SENTINEL_V4
                                 </div>
                                 <div className="flex items-center gap-3">
                                     <button
                                         onClick={() => handleExport(selectedReport, 'slack')}
-                                        className="flex items-center gap-1.5 bg-primary-500/5 dark:bg-primary-500/10 text-primary-600 dark:text-primary-400 hover:bg-primary-500/10 px-4 py-2 rounded-xl text-[11px] font-bold uppercase tracking-wider transition-all border border-primary-500/10 hover:shadow-lg hover:shadow-primary-500/10"
+                                        className="flex items-center gap-1.5 bg-primary-500/5 dark:bg-primary-500/10 text-primary-600 dark:text-primary-400 hover:bg-primary-500/10 px-4 py-2 rounded-xl text-[11px] font-semibold transition-all border border-primary-500/10 hover:shadow-lg hover:shadow-primary-500/10"
                                     >
                                         <MessageSquare className="w-4 h-4" /> Slack Notify
                                     </button>
                                     <button
                                         onClick={() => handleExport(selectedReport, 'jira')}
-                                        className="flex items-center gap-1.5 bg-sky-500/5 dark:bg-sky-500/10 text-sky-600 dark:text-sky-400 hover:bg-sky-500/10 px-4 py-2 rounded-xl text-[11px] font-bold uppercase tracking-wider transition-all border border-sky-500/10 hover:shadow-lg hover:shadow-sky-500/10"
+                                        className="flex items-center gap-1.5 bg-sky-500/5 dark:bg-sky-500/10 text-sky-600 dark:text-sky-400 hover:bg-sky-500/10 px-4 py-2 rounded-xl text-[11px] font-semibold transition-all border border-sky-500/10 hover:shadow-lg hover:shadow-sky-500/10"
                                     >
                                         <Ticket className="w-4 h-4" /> Jira Issue
                                     </button>
-                                    <button onClick={() => { notifyLeave(`report-${selectedReport.ID}`); setSelectedReport(null); }} className="bg-primary-600 hover:bg-primary-500 text-white px-6 py-2 rounded-xl text-sm font-bold uppercase tracking-wider transition-all shadow-lg shadow-primary-500/20 active:scale-95 ml-2">Finalize</button>
+                                    <button onClick={() => { notifyLeave(`report-${selectedReport.ID}`); setSelectedReport(null); }} className="bg-primary-600 hover:bg-primary-500 text-white px-6 py-2 rounded-xl text-sm font-semibold transition-all shadow-lg shadow-primary-500/20 active:translate-y-[1px] active:brightness-95 ml-2">Finalize</button>
                                 </div>
                             </div>
                         </div>
@@ -454,11 +454,11 @@ export const ReportsView: React.FC = () => {
                                                     <h4 className="text-sm font-bold text-text-primary group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors truncate">
                                                         {group.workloadName}
                                                     </h4>
-                                                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border uppercase tracking-tighter ${group.criticalCount > 0 ? 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20' : 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20'}`}>
+                                                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${group.criticalCount > 0 ? 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20' : 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20'}`}>
                                                         {group.count} report{group.count !== 1 ? 's' : ''}
                                                     </span>
                                                     {group.criticalCount > 0 && (
-                                                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20 uppercase tracking-tighter">
+                                                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20">
                                                             {group.criticalCount} critical
                                                         </span>
                                                     )}
@@ -472,7 +472,7 @@ export const ReportsView: React.FC = () => {
                                             </div>
 
                                             <div className="hidden sm:flex items-center gap-3 shrink-0">
-                                                <span className={`text-[10px] font-bold px-2.5 py-1 rounded-lg border uppercase tracking-wider ${group.latestReport.Severity === 'Critical' ? 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20' : 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20'}`}>
+                                                <span className={`text-[10px] font-semibold px-2.5 py-1 rounded-lg border ${group.latestReport.Severity === 'Critical' ? 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20' : 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20'}`}>
                                                     {group.latestReport.Severity}
                                                 </span>
                                             </div>
@@ -499,10 +499,10 @@ export const ReportsView: React.FC = () => {
 
                                                             <div className="flex-1 min-w-0">
                                                                 <div className="flex items-center gap-2">
-                                                                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-bg-card text-text-tertiary border border-border-main uppercase tracking-tighter">
+                                                                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-bg-card text-text-tertiary border border-border-main">
                                                                         {formatDate(report.CreatedAt)}
                                                                     </span>
-                                                                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-lg border uppercase tracking-wider ${report.Severity === 'Critical' ? 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20' : 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20'}`}>
+                                                                    <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-lg border ${report.Severity === 'Critical' ? 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20' : 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20'}`}>
                                                                         {report.Severity}
                                                                     </span>
                                                                     {report.IncidentType && (
@@ -540,7 +540,7 @@ export const ReportsView: React.FC = () => {
                             <div className="mb-6 p-6 bg-bg-hover rounded-full border border-border-main shadow-inner group-hover:scale-110 transition-transform duration-500">
                                 <FileText className="w-12 h-12 text-text-tertiary opacity-40" />
                             </div>
-                            <h3 className="text-xl font-bold text-text-primary mb-2 tracking-tight">No Reports Found</h3>
+                            <h3 className="text-xl font-bold text-text-primary mb-2">No Reports Found</h3>
                             <p className="text-sm text-text-tertiary max-w-xs mx-auto font-medium leading-relaxed">
                                 No historical analysis records available in your current laboratory segment.
                             </p>

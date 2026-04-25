@@ -85,7 +85,7 @@ export const AuditLogsView: React.FC = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-2xl font-black text-text-primary uppercase tracking-tighter flex items-center gap-3">
+          <h1 className="text-2xl font-black text-text-primary   flex items-center gap-3">
             <Shield className="w-7 h-7 text-primary-500" />
             Audit Logs
           </h1>
@@ -134,7 +134,7 @@ export const AuditLogsView: React.FC = () => {
               <Shield className="w-5 h-5 text-white" />
             </div>
             <div>
-              <h2 className="text-sm font-black uppercase tracking-widest text-text-primary">Activity Log</h2>
+              <h2 className="text-sm font-black   text-text-primary">Activity Log</h2>
               <p className="text-[10px] text-text-tertiary font-semibold">{total} total entries</p>
             </div>
           </div>
@@ -185,15 +185,15 @@ export const AuditLogsView: React.FC = () => {
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-3 flex-wrap">
                       <span className="font-bold text-text-primary">{log.Action}</span>
-                      <span className="px-2 py-0.5 rounded-md bg-primary-500/10 text-primary-500 text-[10px] font-black uppercase">
+                      <span className="px-2 py-0.5 rounded-full bg-primary-500/10 text-primary-500 text-[10px] font-semibold ">
                         {log.Resource}
                       </span>
                       {log.Success ? (
-                        <span className="px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-500 text-[10px] font-bold flex items-center gap-1">
+                        <span className="px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-500 text-[10px] font-bold flex items-center gap-1">
                           <CheckCircle2 className="w-3 h-3" /> Success
                         </span>
                       ) : (
-                        <span className="px-2 py-0.5 rounded-md bg-rose-500/10 text-rose-500 text-[10px] font-bold flex items-center gap-1">
+                        <span className="px-2 py-0.5 rounded-full bg-rose-500/10 text-rose-500 text-[10px] font-bold flex items-center gap-1">
                           <XCircle className="w-3 h-3" /> Failed
                         </span>
                       )}
@@ -237,7 +237,7 @@ export const AuditLogsView: React.FC = () => {
                   <div className="px-5 pb-5 pt-2 border-t border-border-main space-y-4 animate-in fade-in slide-in-from-top-2">
                     {log.Details && (
                       <div className="p-3 rounded-xl bg-bg-card border border-border-main">
-                        <p className="text-[10px] font-black uppercase text-text-tertiary mb-1">Details</p>
+                        <p className="text-[10px] font-semibold  text-text-tertiary mb-1">Details</p>
                         <pre className="text-xs text-text-secondary whitespace-pre-wrap font-mono overflow-x-auto">{log.Details}</pre>
                       </div>
                     )}

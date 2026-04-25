@@ -4,15 +4,15 @@ export const PageSkeleton: React.FC = () => {
   return (
     <div className="space-y-6 animate-fade-in">
       {/* Header skeleton matching Layout header height */}
-      <div className="h-16 bg-bg-card/50 border-b border-border-main rounded-xl flex items-center justify-between px-6">
+      <div className="h-16 bg-bg-card/50 border-b border-border-main rounded-2xl flex items-center justify-between px-6">
         <div className="flex items-center gap-4">
           <div className="kt-skeleton w-8 h-8 rounded-lg" />
           <div className="kt-skeleton kt-skeleton-text w-40" />
         </div>
         <div className="flex items-center gap-2">
-          <div className="kt-skeleton w-10 h-10 rounded-xl" />
-          <div className="kt-skeleton w-10 h-10 rounded-xl" />
-          <div className="kt-skeleton w-10 h-10 rounded-xl" />
+          <div className="kt-skeleton w-10 h-10 rounded-2xl" />
+          <div className="kt-skeleton w-10 h-10 rounded-2xl" />
+          <div className="kt-skeleton w-10 h-10 rounded-2xl" />
         </div>
       </div>
 
@@ -21,7 +21,7 @@ export const PageSkeleton: React.FC = () => {
         {[...Array(4)].map((_, i) => (
           <div key={i} className="bg-bg-card border border-border-main rounded-2xl p-5 space-y-3">
             <div className="flex justify-between items-start">
-              <div className="kt-skeleton w-10 h-10 rounded-xl" />
+              <div className="kt-skeleton w-10 h-10 rounded-2xl" />
               <div className="kt-skeleton kt-skeleton-text w-16" />
             </div>
             <div className="kt-skeleton kt-skeleton-text w-24" />

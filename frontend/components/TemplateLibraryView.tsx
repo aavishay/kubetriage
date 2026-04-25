@@ -162,7 +162,7 @@ export const TemplateLibraryView: React.FC<TemplateLibraryViewProps> = ({ onAppl
                         {pb.description}
                      </p>
                      <div className="space-y-2 mb-4">
-                        <p className="text-xs text-text-tertiary uppercase">Focus Areas</p>
+                        <p className="text-xs text-text-tertiary ">Focus Areas</p>
                         <div className="flex flex-wrap gap-1.5">
                            {pb.focus.map(f => (
                               <span key={f} className="text-[10px] bg-bg-hover text-text-secondary px-2 py-0.5 rounded border border-border-main">

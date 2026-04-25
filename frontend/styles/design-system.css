@@ -1,4 +1,4 @@
-/* KubeTriage Design System v2.0 */
+/* KubeTriage Design System v2.1 — VS Code Default Theme */
 /* Centralized tokens for consistent styling across the application */
 
 @import "tailwindcss";
@@ -7,17 +7,17 @@
    TAILWIND v4 THEME - Custom Tokens
    ============================================ */
 @theme {
-  /* Primary Brand Colors */
-  --color-primary-50: #f0faff;
-  --color-primary-100: #e0f2fe;
-  --color-primary-200: #bae6fd;
-  --color-primary-300: #7dd3fc;
-  --color-primary-400: #38bdf8;
-  --color-primary-500: #0ea5e9;
-  --color-primary-600: #0284c7;
-  --color-primary-700: #0369a1;
-  --color-primary-800: #075985;
-  --color-primary-900: #0c4a6e;
+  /* Primary Brand Colors (VS Code Blue) */
+  --color-primary-50: #e6f2ff;
+  --color-primary-100: #cce5ff;
+  --color-primary-200: #99cbff;
+  --color-primary-300: #66b1ff;
+  --color-primary-400: #3397ff;
+  --color-primary-500: #007acc;
+  --color-primary-600: #0062a3;
+  --color-primary-700: #00497a;
+  --color-primary-800: #003152;
+  --color-primary-900: #001829;
 
   /* Themed Surface Colors (Dynamic) */
   --color-bg-main: var(--kt-bg-main);
@@ -41,6 +41,9 @@
   --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
   --font-display: 'Bricolage Grotesque', sans-serif;
   --font-mono: 'JetBrains Mono', monospace;
+
+  /* Radius Overrides */
+  --radius-2xl: 20px;
 }
 
 /* ============================================
@@ -48,44 +51,44 @@
    ============================================ */
 :root {
   /* Brand Constants */
-  --kt-primary-50: #f0faff;
-  --kt-primary-500: #0ea5e9;
-  --kt-primary-600: #0284c7;
+  --kt-primary-50: #e6f2ff;
+  --kt-primary-500: #007acc;
+  --kt-primary-600: #0062a3;
 
-  /* Base Light Theme (Default) */
-  --kt-bg-main: #f9fafb;
+  /* Base Light Theme (Default) — VS Code Light+ */
+  --kt-bg-main: #f8f8f8;
   --kt-bg-card: #ffffff;
-  --kt-bg-hover: #f3f4f6;
-  --kt-border-main: #e5e7eb;
+  --kt-bg-hover: #f3f3f3;
+  --kt-border-main: #e5e5e5;
 
-  --kt-fg-primary: #111827;
-  --kt-fg-secondary: #4b5563;
-  --kt-fg-tertiary: #9ca3af;
-  --kt-fg-muted: #d1d5db;
+  --kt-fg-primary: #1e1e1e;
+  --kt-fg-secondary: #6e6e6e;
+  --kt-fg-tertiary: #a0a0a0;
+  --kt-fg-muted: #c8c8c8;
 
   /* Semantic Overlay (Glass) */
-  --kt-glass-bg: rgba(255, 255, 255, 0.7);
-  --kt-glass-border: rgba(0, 0, 0, 0.05);
+  --kt-glass-bg: rgba(255, 255, 255, 0.75);
+  --kt-glass-border: rgba(0, 0, 0, 0.06);
 
-  /* Semantic Feedback */
+  /* Semantic Feedback — VS Code palette */
   --kt-success: #10b981;
-  --kt-success-light: rgba(16, 185, 129, 0.1);
-  --kt-warning: #f59e0b;
-  --kt-warning-light: rgba(245, 158, 11, 0.1);
-  --kt-danger: #f43f5e;
-  --kt-danger-light: rgba(244, 63, 94, 0.1);
-  --kt-info: #8b5cf6;
-  --kt-info-light: rgba(139, 92, 246, 0.1);
+  --kt-success-light: rgba(16, 185, 129, 0.08);
+  --kt-warning: #cca700;
+  --kt-warning-light: rgba(204, 167, 0, 0.08);
+  --kt-danger: #f48771;
+  --kt-danger-light: rgba(244, 135, 113, 0.08);
+  --kt-info: #4fc1ff;
+  --kt-info-light: rgba(79, 193, 255, 0.08);
 
-  /* Shadows */
-  --kt-shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-  --kt-shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
-  --kt-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.05);
-  --kt-shadow-glow-primary: 0 0 20px rgba(14, 165, 233, 0.3);
+  /* Shadows — Cool & Neutral */
+  --kt-shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.04);
+  --kt-shadow-md: 0 4px 12px -2px rgba(0, 0, 0, 0.08), 0 2px 4px -2px rgba(0, 0, 0, 0.04);
+  --kt-shadow-lg: 0 12px 24px -4px rgba(0, 0, 0, 0.10), 0 4px 8px -4px rgba(0, 0, 0, 0.06);
+  --kt-shadow-glow-primary: 0 0 24px rgba(0, 122, 204, 0.25);
 
   /* Darker overlay variants (for dropdowns, modals, etc.) */
-  --kt-dark-lighter: #1a1e26;
-  --kt-dark-hover: #262b35;
+  --kt-dark-lighter: #252526;
+  --kt-dark-hover: #2c2c2c;
   --kt-dark-border: rgba(255, 255, 255, 0.08);
 
   /* Font Weights */
@@ -115,39 +118,40 @@
   --kt-duration-slow: 300ms;
   --kt-ease-default: ease-in-out;
   --kt-ease-out: cubic-bezier(0.33, 1, 0.68, 1);
+  --kt-ease-luxury: cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .dark {
-  /* Base Dark Theme (Override) */
-  --kt-bg-main: #0B0D11;
-  --kt-bg-card: #12151B;
-  --kt-bg-hover: #1A1E26;
-  --kt-border-main: #1E232B;
+  /* Base Dark Theme (Override) — VS Code Dark+ */
+  --kt-bg-main: #1e1e1e;
+  --kt-bg-card: #252526;
+  --kt-bg-hover: #2c2c2c;
+  --kt-border-main: #3e3e42;
 
-  --kt-fg-primary: #ffffff;
-  --kt-fg-secondary: #a1a1aa;
-  --kt-fg-tertiary: #71717a;
-  --kt-fg-muted: #52525b;
+  --kt-fg-primary: #cccccc;
+  --kt-fg-secondary: #9cdcfe;
+  --kt-fg-tertiary: #808080;
+  --kt-fg-muted: #5c5c5c;
 
   /* Semantic Overlay (Glass) */
-  --kt-glass-bg: rgba(18, 21, 27, 0.8);
-  --kt-glass-border: rgba(255, 255, 255, 0.05);
+  --kt-glass-bg: rgba(37, 37, 38, 0.75);
+  --kt-glass-border: rgba(255, 255, 255, 0.06);
 
-  /* Semantic Feedback - Light variants for dark mode */
-  --kt-success-light: rgba(16, 185, 129, 0.15);
-  --kt-warning-light: rgba(245, 158, 11, 0.15);
-  --kt-danger-light: rgba(244, 63, 94, 0.15);
-  --kt-info-light: rgba(139, 92, 246, 0.15);
+  /* Semantic Feedback — Light variants for dark mode */
+  --kt-success-light: rgba(16, 185, 129, 0.12);
+  --kt-warning-light: rgba(204, 167, 0, 0.12);
+  --kt-danger-light: rgba(244, 135, 113, 0.12);
+  --kt-info-light: rgba(79, 193, 255, 0.12);
 
-  /* Shadows */
-  --kt-shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
-  --kt-shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -2px rgba(0, 0, 0, 0.3);
-  --kt-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.5), 0 4px 6px -4px rgba(0, 0, 0, 0.4);
-  --kt-shadow-glow-primary: 0 0 20px rgba(14, 165, 233, 0.4);
+  /* Shadows — Deep & neutral */
+  --kt-shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.30);
+  --kt-shadow-md: 0 4px 12px -2px rgba(0, 0, 0, 0.40), 0 2px 4px -2px rgba(0, 0, 0, 0.30);
+  --kt-shadow-lg: 0 12px 24px -4px rgba(0, 0, 0, 0.50), 0 4px 8px -4px rgba(0, 0, 0, 0.40);
+  --kt-shadow-glow-primary: 0 0 24px rgba(0, 122, 204, 0.35);
 
   /* Darker overlay variants (for dropdowns, modals, buttons) */
-  --kt-dark-lighter: #1a1e26;
-  --kt-dark-hover: #262b35;
+  --kt-dark-lighter: #252526;
+  --kt-dark-hover: #2c2c2c;
   --kt-dark-border: rgba(255, 255, 255, 0.08);
 }
 
@@ -159,12 +163,13 @@
   --kt-space-2: 8px;
   --kt-space-3: 12px;
   --kt-space-4: 16px;
+  --kt-space-5: 20px;
   --kt-space-6: 24px;
   --kt-space-8: 32px;
 
   --kt-radius-md: 10px;
-  --kt-radius-lg: 16px;
-  --kt-radius-xl: 24px;
+  --kt-radius-lg: 12px;
+  --kt-radius-xl: 20px;
   --kt-radius-full: 9999px;
 }
 
@@ -174,7 +179,7 @@
 :root {
   /* Card */
   --kt-card-bg: var(--kt-bg-card);
-  --kt-card-border: 1px solid var(--kt-border-main);
+  --kt-card-border: 1px solid transparent;
   --kt-card-radius: var(--kt-radius-xl);
   --kt-card-padding: var(--kt-space-6);
 
@@ -182,7 +187,7 @@
   --kt-button-radius: var(--kt-radius-lg);
 
   /* Input */
-  --kt-input-radius: var(--kt-radius-md);
+  --kt-input-radius: var(--kt-radius-lg);
   --kt-input-border: 1px solid var(--kt-border-main);
 
   /* Focus Ring */
@@ -199,17 +204,19 @@
   border: var(--kt-card-border);
   border-radius: var(--kt-card-radius);
   padding: var(--kt-card-padding);
-  transition: all var(--kt-duration-normal) var(--kt-ease-default);
+  transition: all var(--kt-duration-slow) var(--kt-ease-luxury);
+  box-shadow: var(--kt-shadow-sm);
 }
 
 .kt-card-hover:hover {
   transform: translateY(-2px);
-  box-shadow: var(--kt-shadow-lg);
+  box-shadow: var(--kt-shadow-md);
+  border-color: rgba(0, 122, 204, 0.10);
 }
 
 .kt-card-glow:hover {
   box-shadow: var(--kt-shadow-glow-primary);
-  border-color: rgba(14, 165, 233, 0.3);
+  border-color: rgba(0, 122, 204, 0.20);
 }
 
 /* Form Inputs */
@@ -217,7 +224,7 @@
   width: 100%;
   background: var(--kt-bg-main);
   border: var(--kt-input-border);
-  border-radius: var(--kt-radius-md);
+  border-radius: var(--kt-radius-lg);
   padding: 0.625rem 0.875rem;
   font-family: var(--font-sans);
   font-size: var(--kt-text-sm);
@@ -233,7 +240,7 @@
 
 .kt-input:focus {
   border-color: var(--kt-primary-500);
-  box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.15);
+  box-shadow: 0 0 0 3px rgba(0, 122, 204, 0.15);
 }
 
 .kt-input:hover:not(:focus):not(:disabled) {
@@ -266,7 +273,8 @@
 }
 
 .kt-button:active {
-  transform: scale(0.98);
+  transform: translateY(1px);
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.10);
 }
 
 /* Button Size Variants */
@@ -283,24 +291,26 @@
 
 /* Button Variants */
 .kt-button-primary {
-  background: var(--kt-primary-600);
+  background: linear-gradient(135deg, var(--kt-primary-500), var(--kt-primary-600));
   color: white;
+  box-shadow: 0 1px 2px 0 rgba(0, 122, 204, 0.20);
 }
 
 .kt-button-primary:hover {
-  background: var(--kt-primary-500);
-  box-shadow: var(--kt-shadow-glow-primary);
+  background: linear-gradient(135deg, var(--kt-primary-400), var(--kt-primary-500));
+  box-shadow: var(--kt-shadow-md), 0 0 16px rgba(0, 122, 204, 0.25);
 }
 
 .kt-button-secondary {
-  background: var(--kt-dark-lighter);
+  background: var(--kt-bg-hover);
   color: var(--kt-text-primary);
-  border: 1px solid var(--kt-dark-border);
+  border: 1px solid var(--kt-border-main);
 }
 
 .kt-button-secondary:hover {
-  background: var(--kt-dark-hover);
+  background: var(--kt-bg-card);
   border-color: var(--kt-primary-500);
+  color: var(--kt-primary-500);
 }
 
 .kt-button-ghost {
@@ -322,7 +332,7 @@
 .kt-button-danger:hover {
   background: var(--kt-danger);
   opacity: 0.9;
-  box-shadow: 0 0 20px rgba(244, 63, 94, 0.3);
+  box-shadow: 0 0 20px rgba(244, 135, 113, 0.3);
 }
 
 .kt-button-danger:disabled {
@@ -339,34 +349,32 @@
   gap: var(--kt-space-1);
   padding: var(--kt-space-1) var(--kt-space-3);
   font-size: var(--kt-text-xs);
-  font-weight: var(--kt-font-bold);
-  text-transform: uppercase;
-  letter-spacing: var(--kt-tracking-wider);
-  border-radius: var(--kt-radius-md);
+  font-weight: var(--kt-font-semibold);
+  border-radius: var(--kt-radius-full);
 }
 
 .kt-badge-success {
   background: var(--kt-success-light);
   color: var(--kt-success);
-  border: 1px solid rgba(16, 185, 129, 0.2);
+  border: 1px solid rgba(16, 185, 129, 0.18);
 }
 
 .kt-badge-warning {
   background: var(--kt-warning-light);
   color: var(--kt-warning);
-  border: 1px solid rgba(245, 158, 11, 0.2);
+  border: 1px solid rgba(204, 167, 0, 0.18);
 }
 
 .kt-badge-danger {
   background: var(--kt-danger-light);
   color: var(--kt-danger);
-  border: 1px solid rgba(244, 63, 94, 0.2);
+  border: 1px solid rgba(244, 135, 113, 0.18);
 }
 
 .kt-badge-info {
   background: var(--kt-info-light);
   color: var(--kt-info);
-  border: 1px solid rgba(139, 92, 246, 0.2);
+  border: 1px solid rgba(79, 193, 255, 0.18);
 }
 
 /* Typography Utilities */
@@ -377,10 +385,8 @@
 }
 
 .kt-text-label {
-  font-size: var(--kt-text-xs);
-  font-weight: var(--kt-font-bold);
-  text-transform: uppercase;
-  letter-spacing: var(--kt-tracking-wider);
+  font-size: 0.8125rem;
+  font-weight: var(--kt-font-semibold);
   color: var(--kt-text-tertiary);
 }
 
@@ -414,12 +420,42 @@
 }
 
 .kt-scrollbar::-webkit-scrollbar-thumb {
-  background: var(--kt-dark-border);
+  background: var(--kt-fg-muted);
   border-radius: var(--kt-radius-full);
 }
 
 .kt-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: var(--kt-text-muted);
+  background: var(--kt-text-tertiary);
+}
+
+/* Custom Scrollbar (macOS visible + cross-browser) */
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: var(--kt-fg-muted) transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: var(--kt-fg-muted);
+  border-radius: var(--kt-radius-full);
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: var(--kt-fg-secondary);
+}
+
+.custom-scrollbar::-webkit-scrollbar-corner {
+  background: transparent;
 }
 
 /* Animation Utilities */
@@ -439,11 +475,11 @@
 }
 
 .kt-animate-fade-in {
-  animation: kt-fade-in var(--kt-duration-normal) var(--kt-ease-out);
+  animation: kt-fade-in var(--kt-duration-slow) var(--kt-ease-out) both;
 }
 
 .kt-animate-slide-up {
-  animation: kt-slide-up var(--kt-duration-normal) var(--kt-ease-out);
+  animation: kt-slide-up var(--kt-duration-slow) var(--kt-ease-out) both;
 }
 
 .kt-animate-pulse-soft {
@@ -494,11 +530,11 @@
 }
 
 .kt-page-enter {
-  animation: kt-page-enter var(--kt-duration-normal) var(--kt-ease-out) both;
+  animation: kt-page-enter var(--kt-duration-slow) var(--kt-ease-luxury) both;
 }
 
 .kt-page-exit {
-  animation: kt-page-exit var(--kt-duration-fast) var(--kt-ease-default) both;
+  animation: kt-page-exit var(--kt-duration-normal) var(--kt-ease-default) both;
 }
 
 /* Reduced Motion */

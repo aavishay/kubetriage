@@ -45,7 +45,7 @@ export class ErrorBoundary extends Component<Props, State> {
                             </div>
                         </div>
 
-                        <h1 className="text-3xl font-black text-text-primary uppercase tracking-tighter mb-4">
+                        <h1 className="text-3xl font-black text-text-primary mb-4">
                             Critical Runtime Event
                         </h1>
 
@@ -75,7 +75,7 @@ export class ErrorBoundary extends Component<Props, State> {
                         </div>
                     </div>
 
-                    <div className="mt-8 text-xs font-black uppercase tracking-widest text-text-tertiary">
+                    <div className="mt-8 font-semibold text-xs text-text-tertiary">
                         KubeTriage Reliability Engine
                     </div>
                 </div>

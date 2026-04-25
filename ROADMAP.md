@@ -61,10 +61,11 @@ KubeTriage is an **Autonomous SRE Guard** — proactive in detecting, triaging, 
 - [x] **Security Triage**: Auto-scan against CIS benchmarks and OPA policies
 - [x] **Compliance Reports**: One-click cluster security/configuration reports
 
----
+### 4. GitOps Integration
+- [x] **Native ArgoCD/Flux Reconciliation Views**: Real-time sync status, drift detection, and deep links from incidents to GitOps resources
 
 ## 🚀 Phase 5: Autonomous Operations (v2.0)
-*Goal: Shift from "SRE Assistant" to "SRE Autopilot" with autonomous remediation capabilities.*
+*Status: Complete (Implemented in v1.5.x)*
 
 ### 1. Autonomous Remediation
 - [x] **AI-Generated Patch Suggestions**: AI analyzes errors and suggests Kubernetes patches (merge/JSON patch)
@@ -96,6 +97,22 @@ KubeTriage is an **Autonomous SRE Guard** — proactive in detecting, triaging, 
 - [x] **Shell Completions**: bash, zsh, fish auto-completion
 - [x] **Cross-Platform Releases**: darwin/amd64, darwin/arm64, linux/amd64, linux/arm64
 
+### 7. Multi-Provider AI Backends
+- [x] **Custom AI Providers**: Support for Azure OpenAI, AWS Bedrock (Claude via Bedrock), Google Vertex AI, and local Ollama models
+
+### 8. Capacity Planning
+- [x] **Predictive Resource Forecasting**: Linear regression-based trend analysis for CPU, memory, and other metrics with 72-hour projections
+- [x] **Exhaustion Detection**: Automatic calculation of time-to-exhaustion for workloads with growing resource usage
+- [x] **Scheduling Recommendations**: Actionable recommendations (scale replicas, increase limits, right-size) based on trend severity
+- [x] **Interactive Trend Charts**: Historical vs. forecast visualization with severity-based color coding in the Capacity Planning view
+
+### 9. Offline Mode
+- [x] **Service Worker**: Background asset caching for offline app shell loading
+- [x] **IndexedDB Cache**: API response caching with 24-hour TTL for GET requests
+- [x] **Offline Action Queue**: Mutating requests (POST/PUT/DELETE) automatically queue when offline and sync on reconnect
+- [x] **Network Status UI**: Real-time online/offline indicator with pending action count and manual sync trigger
+- [x] **Graceful Degradation**: Cached data served when offline; synthetic 503 responses when no cache exists
+
 ---
 
 ## ⚠️ Known Limitations
@@ -113,7 +130,4 @@ KubeTriage is an **Autonomous SRE Guard** — proactive in detecting, triaging, 
 
 These are exploratory ideas not yet scheduled for implementation:
 
-- **GitOps Integration**: Native ArgoCD/Flux reconciliation views
-- **Capacity Planning**: Predictive pod scheduling based on trends
-- **Custom AI Providers**: Support for Azure AI, AWS Bedrock, Vertex AI, Claude
-- **Offline Mode**: Local-first operation with sync when online
+- *(None at this time — all planned features are implemented as of v1.5.x)*

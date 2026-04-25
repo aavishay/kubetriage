@@ -110,13 +110,13 @@ export const TopologyView: React.FC<TopologyViewProps> = ({ workloads }) => {
             {/* Header - Fixed Height */}
             <div className="shrink-0 p-6 border-b border-border-main bg-bg-card/50 backdrop-blur-xl flex flex-col md:flex-row justify-between items-start md:items-center gap-6 shadow-sm">
                 <div>
-                    <h2 className="text-3xl font-black text-text-primary flex items-center gap-4 tracking-tighter uppercase">
+                    <h2 className="text-3xl font-black text-text-primary flex items-center gap-4  ">
                         <div className="p-2.5 bg-gradient-to-br from-primary-600 to-primary-500 rounded-xl shadow-lg shadow-primary-500/20 border border-transparent">
                             <Share2 className="w-6 h-6 text-white" />
                         </div>
                         Architecture Topology
                     </h2>
-                    <p className="text-sm text-text-tertiary mt-2 font-medium tracking-wide pl-1">
+                    <p className="text-sm text-text-tertiary mt-2 font-medium  pl-1">
                         Visualize cluster workload distribution and neural dependencies.
                     </p>
                 </div>
@@ -125,7 +125,7 @@ export const TopologyView: React.FC<TopologyViewProps> = ({ workloads }) => {
                     <div className="flex bg-bg-hover/50 p-1 rounded-xl border border-border-main shadow-inner">
                         <button
                             onClick={() => setViewMode('schematic')}
-                            className={`px-4 py-2 text-xs font-bold uppercase tracking-widest rounded-lg flex items-center gap-2 transition-all ${viewMode === 'schematic'
+                            className={`px-4 py-2 text-xs font-bold  st rounded-lg flex items-center gap-2 transition-all ${viewMode === 'schematic'
                                 ? 'bg-primary-600 text-white shadow-lg shadow-primary-500/20'
                                 : 'text-text-tertiary hover:text-text-primary hover:bg-bg-hover'
                                 }`}
@@ -134,7 +134,7 @@ export const TopologyView: React.FC<TopologyViewProps> = ({ workloads }) => {
                         </button>
                         <button
                             onClick={() => setViewMode('graph')}
-                            className={`px-4 py-2 text-xs font-bold uppercase tracking-widest rounded-lg flex items-center gap-2 transition-all ${viewMode === 'graph'
+                            className={`px-4 py-2 text-xs font-bold  st rounded-lg flex items-center gap-2 transition-all ${viewMode === 'graph'
                                 ? 'bg-primary-600 text-white shadow-lg shadow-primary-500/20'
                                 : 'text-text-tertiary hover:text-text-primary hover:bg-bg-hover'
                                 }`}
@@ -189,12 +189,12 @@ export const TopologyView: React.FC<TopologyViewProps> = ({ workloads }) => {
                         <div className="bg-red-500/10 backdrop-blur-md border border-red-500/30 text-red-200 px-6 py-4 rounded-2xl shadow-2xl flex items-start gap-4 w-full">
                             <AlertCircle className="w-5 h-5 shrink-0 text-red-400 mt-0.5" />
                             <div className="flex-1">
-                                <h4 className="text-sm font-bold text-red-100 uppercase tracking-wider mb-1">Rendering Error</h4>
+                                <h4 className="text-sm font-bold text-red-100 mb-1">Rendering Error</h4>
                                 <p className="text-sm opacity-90">{error}</p>
                             </div>
                             <button
                                 onClick={() => setShowDebug(!showDebug)}
-                                className="text-xs font-bold uppercase underline decoration-red-400/50 hover:text-white"
+                                className="text-xs font-bold  underline decoration-red-400/50 hover:text-white"
                             >
                                 {showDebug ? 'Hide Code' : 'Debug'}
                             </button>
@@ -202,7 +202,7 @@ export const TopologyView: React.FC<TopologyViewProps> = ({ workloads }) => {
                         </div>
                         {showDebug && diagramCode && (
                             <div className="mt-2 w-full bg-bg-card text-text-secondary p-6 rounded-2xl text-xs font-mono overflow-auto max-h-96 border border-border-main shadow-2xl custom-scrollbar relative">
-                                <div className="absolute top-2 right-4 text-[10px] uppercase tracking-widest text-text-tertiary font-bold">Mermaid Source</div>
+                                <div className="absolute top-2 right-4 text-[10px]  st text-text-tertiary font-bold">Mermaid Source</div>
                                 <pre>{diagramCode}</pre>
                             </div>
                         )}
@@ -221,7 +221,7 @@ export const TopologyView: React.FC<TopologyViewProps> = ({ workloads }) => {
                                     </div>
                                 </div>
                                 <div>
-                                    <h3 className="text-xl font-bold text-text-primary mb-2 tracking-wide">Constructing Neural Map...</h3>
+                                    <h3 className="text-xl font-bold text-text-primary mb-2 ">Constructing Neural Map...</h3>
                                     <p className="text-sm text-text-tertiary max-w-sm mx-auto leading-relaxed">
                                         Analyzing workload relationships and rendering high-fidelity topology via Generative AI.
                                     </p>
@@ -239,7 +239,7 @@ export const TopologyView: React.FC<TopologyViewProps> = ({ workloads }) => {
                                 <div className="w-20 h-20 bg-gradient-to-br from-primary-500/10 to-primary-500/10 rounded-[2.5rem] flex items-center justify-center mb-8 border border-border-main group-hover:scale-110 transition-transform duration-501">
                                     <Sparkles className="w-10 h-10 text-primary-500 dark:text-primary-400" />
                                 </div>
-                                <h3 className="text-2xl font-black text-text-primary mb-3 uppercase tracking-wider">Neural Map Generator</h3>
+                                <h3 className="text-2xl font-black text-text-primary mb-3">Neural Map Generator</h3>
                                 <p className="text-text-tertiary mb-8 max-w-md text-sm leading-relaxed font-medium">
                                     Use Generative AI to visually reconstruct your cluster architecture. Typically visualizes namespaces, workload kinds, and inferred network traffic.
                                 </p>
@@ -264,7 +264,7 @@ export const TopologyView: React.FC<TopologyViewProps> = ({ workloads }) => {
                                         <div className="p-1.5 rounded-lg bg-primary-500/10 text-primary-600 dark:text-primary-400">
                                             <Layers className="w-4 h-4" />
                                         </div>
-                                        <span className="text-sm font-bold text-text-primary tracking-wide uppercase">{namespace}</span>
+                                        <span className="text-sm font-bold text-text-primary  ">{namespace}</span>
                                     </div>
                                     <span className="text-[10px] font-bold bg-bg-main text-text-tertiary px-2.5 py-1 rounded-full border border-border-main shadow-sm">
                                         {items.length} WORKLOADS
@@ -285,7 +285,7 @@ export const TopologyView: React.FC<TopologyViewProps> = ({ workloads }) => {
                                                     }`}></div>
                                                 <div>
                                                     <div className="text-sm font-bold text-text-primary group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">{w.name}</div>
-                                                    <div className="text-[10px] text-text-tertiary flex items-center gap-2 mt-1 font-mono font-bold uppercase tracking-tighter opacity-70">
+                                                    <div className="text-[10px] text-text-tertiary flex items-center gap-2 mt-1 font-mono font-bold   opacity-70">
                                                         <span className="flex items-center gap-1"><Box className="w-3 h-3" /> {w.kind}</span>
                                                         <span className="opacity-30">|</span>
                                                         <span className="flex items-center gap-1"><Server className="w-3 h-3" /> {w.replicas}</span>

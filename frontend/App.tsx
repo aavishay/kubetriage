@@ -11,12 +11,14 @@ import { BellRing, X, Loader2, Key, ExternalLink, Settings2 } from 'lucide-react
 import { DiagnosticPlaybook } from './types';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { PresenceProvider } from './contexts/PresenceContext';
+import { OfflineIndicator } from './components/OfflineIndicator';
 
 // Route-level code splitting for all views
 const Dashboard = lazy(() => import('./components/Dashboard').then(m => ({ default: m.Dashboard })));
 const TriageView = lazy(() => import('./components/TriageView').then(m => ({ default: m.TriageView })));
 const RightSizingView = lazy(() => import('./components/RightSizingView').then(m => ({ default: m.RightSizingView })));
 const ScalingEfficiencyView = lazy(() => import('./components/ScalingEfficiencyView').then(m => ({ default: m.ScalingEfficiencyView })));
+const CapacityPlanningView = lazy(() => import('./components/CapacityPlanningView').then(m => ({ default: m.CapacityPlanningView })));
 const MultiClusterView = lazy(() => import('./components/MultiClusterView').then(m => ({ default: m.MultiClusterView })));
 const MLIntelligenceView = lazy(() => import('./components/MLIntelligenceView').then(m => ({ default: m.MLIntelligenceView })));
 const DeveloperPortalView = lazy(() => import('./components/DeveloperPortalView').then(m => ({ default: m.DeveloperPortalView })));
@@ -164,6 +166,11 @@ const AppContent: React.FC = () => {
                 <ScalingEfficiencyView clusterId={selectedCluster?.id} />
               </PageTransition>
             } />
+            <Route path="/capacity" element={
+              <PageTransition>
+                <CapacityPlanningView />
+              </PageTransition>
+            } />
             <Route path="/multicluster" element={
               <PageTransition>
                 <MultiClusterView />
@@ -238,13 +245,14 @@ const AppContent: React.FC = () => {
           </Routes>
         </Suspense>
       </Layout>
+      <OfflineIndicator />
 
       {/* Alert Notification Toast */}
       {activeNotification && (
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[100] w-full max-w-md p-4 animate-in slide-in-from-bottom-4 fade-in duration-300">
           <div
             onClick={() => navigate('/triage')}
-            className={`cursor-pointer hover:bg-bg-hover transition-all p-4 rounded-xl border shadow-lg flex items-center gap-4 bg-bg-card group ${activeNotification.severity === 'Critical' ? 'border-rose-500/50 shadow-rose-500/10' : 'border-amber-400/50 shadow-amber-400/10'}`}
+            className={`cursor-pointer hover:bg-bg-hover transition-all p-4 rounded-2xl border border-transparent shadow-md flex items-center gap-4 bg-bg-card group ${activeNotification.severity === 'Critical' ? 'border-l-4 border-l-rose-500' : 'border-l-4 border-l-amber-500'}`}
           >
             <div className={`p-3 rounded-lg shrink-0 ${activeNotification.severity === 'Critical' ? 'bg-rose-500 text-white' : 'bg-amber-500 text-white'}`}>
               <BellRing className="w-5 h-5" />

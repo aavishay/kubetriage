@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { Bot, Cpu, Check, AlertCircle, Loader2, RefreshCw, Clock } from 'lucide-react';
+import { Bot, Cpu, Check, AlertCircle, Loader2, RefreshCw, Clock, Wifi, WifiOff, Database, Trash2, ArrowUpCircle } from 'lucide-react';
 import { useMonitoring } from '../contexts/MonitoringContext';
+import { clearCache, getCacheStats } from '../services/offlineService';
 
 export const SettingsView: React.FC = () => {
     const { aiConfig, updateAIConfig, notificationSettings, updateNotificationSettings, isDarkMode, refreshInterval, setRefreshInterval } = useMonitoring();
@@ -8,6 +9,8 @@ export const SettingsView: React.FC = () => {
     const [isLoadingModels, setIsLoadingModels] = useState(false);
     const [fetchError, setFetchError] = useState<string | null>(null);
     const [isSaving, setIsSaving] = useState(false);
+    const [offlineStats, setOfflineStats] = useState({ entries: 0, queueSize: 0 });
+    const [isClearing, setIsClearing] = useState(false);
 
     const [provider, setProvider] = useState(aiConfig?.provider || 'ollama');
     const [model, setModel] = useState(aiConfig?.model || 'llama3:latest');
@@ -19,6 +22,17 @@ export const SettingsView: React.FC = () => {
             setModel(aiConfig.model);
         }
     }, [aiConfig]);
+
+    // Load offline cache stats
+    useEffect(() => {
+        const loadStats = async () => {
+            const stats = await getCacheStats();
+            setOfflineStats(stats);
+        };
+        loadStats();
+        const interval = setInterval(loadStats, 10000);
+        return () => clearInterval(interval);
+    }, []);
 
     // Fetch models when provider changes
     useEffect(() => {
@@ -60,11 +74,19 @@ export const SettingsView: React.FC = () => {
         setTimeout(() => setIsSaving(false), 800);
     };
 
+    const handleClearCache = async () => {
+        setIsClearing(true);
+        await clearCache();
+        const stats = await getCacheStats();
+        setOfflineStats(stats);
+        setIsClearing(false);
+    };
+
     return (
         <div className="w-full h-full p-6 overflow-y-auto custom-scrollbar bg-bg-main animate-fade-in">
             <div className="max-w-3xl mx-auto space-y-6 pb-20">
                 <div className="flex flex-col gap-1">
-                    <h1 className="text-2xl font-bold text-text-primary tracking-tight">
+                    <h1 className="text-2xl font-bold text-text-primary ">
                         Settings
                     </h1>
                     <p className="text-sm text-text-tertiary">
@@ -87,7 +109,7 @@ export const SettingsView: React.FC = () => {
                     <div className="p-5 space-y-6">
                         {/* Provider Selection */}
                         <div className="space-y-3">
-                            <label className="text-[10px] font-bold text-text-tertiary uppercase tracking-wider flex items-center gap-1.5 opacity-70">
+                            <label className="text-[10px] font-bold text-text-tertiary flex items-center gap-1.5 opacity-70">
                                 <Cpu className="w-3.5 h-3.5" /> Provider
                             </label>
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -99,7 +121,7 @@ export const SettingsView: React.FC = () => {
                                 >
                                     <div className="flex items-center justify-between mb-2">
                                         <span className={`font-semibold transition-colors ${provider === 'gemini' ? 'text-primary-500 dark:text-primary-400' : 'text-text-primary'}`}>Google Gemini</span>
-                                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${provider === 'gemini' ? 'bg-primary-500 text-white' : 'bg-bg-hover text-text-tertiary border border-border-main'}`}>Cloud</span>
+                                        <span className={`px-2 py-0.5 rounded text-[10px] font-semibold ${provider === 'gemini' ? 'bg-primary-500 text-white' : 'bg-bg-hover text-text-tertiary border border-border-main'}`}>Cloud</span>
                                     </div>
                                     <p className="text-xs text-text-tertiary leading-relaxed">
                                         High-performance cloud inference. Requires API key.
@@ -119,7 +141,7 @@ export const SettingsView: React.FC = () => {
                                 >
                                     <div className="flex items-center justify-between mb-2">
                                         <span className={`font-semibold transition-colors ${provider === 'ollama' ? 'text-emerald-500 dark:text-emerald-400' : 'text-text-primary'}`}>Ollama</span>
-                                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${provider === 'ollama' ? 'bg-emerald-500 text-white' : 'bg-bg-hover text-text-tertiary border border-border-main'}`}>Local</span>
+                                        <span className={`px-2 py-0.5 rounded text-[10px] font-semibold ${provider === 'ollama' ? 'bg-emerald-500 text-white' : 'bg-bg-hover text-text-tertiary border border-border-main'}`}>Local</span>
                                     </div>
                                     <p className="text-xs text-text-tertiary leading-relaxed">
                                         Private, local inference. Best for air-gapped environments.
@@ -139,7 +161,7 @@ export const SettingsView: React.FC = () => {
                                 >
                                     <div className="flex items-center justify-between mb-2">
                                         <span className={`font-semibold transition-colors ${provider === 'azure' ? 'text-sky-500 dark:text-sky-400' : 'text-text-primary'}`}>Azure OpenAI</span>
-                                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${provider === 'azure' ? 'bg-sky-500 text-white' : 'bg-bg-hover text-text-tertiary border border-border-main'}`}>Cloud</span>
+                                        <span className={`px-2 py-0.5 rounded text-[10px] font-semibold ${provider === 'azure' ? 'bg-sky-500 text-white' : 'bg-bg-hover text-text-tertiary border border-border-main'}`}>Cloud</span>
                                     </div>
                                     <p className="text-xs text-text-tertiary leading-relaxed">
                                         Microsoft Azure OpenAI Service. Requires endpoint and key.
@@ -159,7 +181,7 @@ export const SettingsView: React.FC = () => {
                                 >
                                     <div className="flex items-center justify-between mb-2">
                                         <span className={`font-semibold transition-colors ${provider === 'bedrock' ? 'text-amber-500 dark:text-amber-400' : 'text-text-primary'}`}>AWS Bedrock</span>
-                                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${provider === 'bedrock' ? 'bg-amber-500 text-white' : 'bg-bg-hover text-text-tertiary border border-border-main'}`}>Cloud</span>
+                                        <span className={`px-2 py-0.5 rounded text-[10px] font-semibold ${provider === 'bedrock' ? 'bg-amber-500 text-white' : 'bg-bg-hover text-text-tertiary border border-border-main'}`}>Cloud</span>
                                     </div>
                                     <p className="text-xs text-text-tertiary leading-relaxed">
                                         Amazon Bedrock managed foundation models. Requires AWS credentials.
@@ -179,7 +201,7 @@ export const SettingsView: React.FC = () => {
                                 >
                                     <div className="flex items-center justify-between mb-2">
                                         <span className={`font-semibold transition-colors ${provider === 'vertex' ? 'text-violet-500 dark:text-violet-400' : 'text-text-primary'}`}>Vertex AI</span>
-                                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${provider === 'vertex' ? 'bg-violet-500 text-white' : 'bg-bg-hover text-text-tertiary border border-border-main'}`}>Cloud</span>
+                                        <span className={`px-2 py-0.5 rounded text-[10px] font-semibold ${provider === 'vertex' ? 'bg-violet-500 text-white' : 'bg-bg-hover text-text-tertiary border border-border-main'}`}>Cloud</span>
                                     </div>
                                     <p className="text-xs text-text-tertiary leading-relaxed">
                                         Google Cloud Vertex AI platform. Requires project ID and API key.
@@ -195,7 +217,7 @@ export const SettingsView: React.FC = () => {
 
                         {/* Model Selection */}
                         <div className="space-y-2">
-                            <label className="text-[10px] font-bold text-text-tertiary uppercase tracking-wider opacity-70">
+                            <label className="text-[10px] font-bold text-text-tertiary opacity-70">
                                 ModelSelection
                             </label>
 
@@ -247,7 +269,7 @@ export const SettingsView: React.FC = () => {
 
                         {/* Refresh Interval Settings */}
                         <div className="space-y-3">
-                            <label className="text-[10px] font-bold text-text-tertiary uppercase tracking-wider opacity-70 flex items-center gap-1.5">
+                            <label className="text-[10px] font-bold text-text-tertiary opacity-70 flex items-center gap-1.5">
                                 <RefreshCw className="w-3.5 h-3.5" /> Auto Refresh
                             </label>
                             <div className="bg-bg-hover/20 rounded-xl p-5 border border-border-main space-y-4 shadow-inner">
@@ -258,7 +280,7 @@ export const SettingsView: React.FC = () => {
                                     </div>
                                     <div className="flex items-center gap-2 text-xs font-medium">
                                         <Clock className="w-3.5 h-3.5 text-primary-500" />
-                                        <span className="font-bold text-primary-600 dark:text-primary-400 bg-primary-500/10 px-2 py-0.5 rounded-md min-w-[3rem] text-center">{refreshInterval}s</span>
+                                        <span className="font-bold text-primary-600 dark:text-primary-400 bg-primary-500/10 px-2 py-0.5 rounded-full min-w-[3rem] text-center">{refreshInterval}s</span>
                                     </div>
                                 </div>
                                 <div className="flex flex-wrap gap-2 pt-2">
@@ -289,7 +311,7 @@ export const SettingsView: React.FC = () => {
 
                         {/* Notification Settings */}
                         <div className="space-y-3">
-                            <label className="text-[10px] font-bold text-text-tertiary uppercase tracking-wider opacity-70 flex items-center gap-1.5">
+                            <label className="text-[10px] font-bold text-text-tertiary opacity-70 flex items-center gap-1.5">
                                 <AlertCircle className="w-3.5 h-3.5" /> Notifications
                             </label>
                             <div className="bg-bg-hover/20 rounded-xl p-5 border border-border-main space-y-4 shadow-inner">
@@ -309,8 +331,8 @@ export const SettingsView: React.FC = () => {
                                 {notificationSettings.toastEnabled && (
                                     <div className="space-y-3 pt-4 border-t border-border-main animate-fade-in">
                                         <div className="flex justify-between items-center text-xs">
-                                            <span className="text-text-secondary font-medium uppercase tracking-tight opacity-80">Cooldown Frequency</span>
-                                            <span className="font-bold text-primary-600 dark:text-primary-400 bg-primary-500/10 px-2 py-0.5 rounded-md min-w-[3rem] text-center">{notificationSettings.toastFrequency}s</span>
+                                            <span className="text-text-secondary font-medium   opacity-80">Cooldown Frequency</span>
+                                            <span className="font-bold text-primary-600 dark:text-primary-400 bg-primary-500/10 px-2 py-0.5 rounded-full min-w-[3rem] text-center">{notificationSettings.toastFrequency}s</span>
                                         </div>
                                         <input
                                             type="range"
@@ -324,6 +346,66 @@ export const SettingsView: React.FC = () => {
                                     </div>
                                 )}
                             </div>
+                        </div>
+                    </div>
+
+                    {/* Divider */}
+                    <div className="h-px w-full bg-border-main/50"></div>
+
+                    {/* Offline Mode Settings */}
+                    <div className="space-y-3">
+                        <label className="text-[10px] font-bold text-text-tertiary opacity-70 flex items-center gap-1.5">
+                            <Wifi className="w-3.5 h-3.5" /> Offline Mode
+                        </label>
+                        <div className="bg-bg-hover/20 rounded-xl p-5 border border-border-main space-y-4 shadow-inner">
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-start gap-3">
+                                    <div className={`p-2 rounded-lg ${navigator.onLine ? 'bg-emerald-500/10' : 'bg-rose-500/10'}`}>
+                                        {navigator.onLine ? (
+                                            <Wifi className="w-4 h-4 text-emerald-500" />
+                                        ) : (
+                                            <WifiOff className="w-4 h-4 text-rose-500" />
+                                        )}
+                                    </div>
+                                    <div>
+                                        <h3 className="text-sm font-semibold text-text-primary">Offline Support</h3>
+                                        <p className="text-xs text-text-tertiary mt-1">
+                                            {navigator.onLine
+                                                ? 'Connected. GET responses are cached locally; mutations queue when offline.'
+                                                : 'Offline. Data is served from cache and actions are queued for sync.'}
+                                        </p>
+                                    </div>
+                                </div>
+                                <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${navigator.onLine ? 'bg-emerald-500/10 text-emerald-500' : 'bg-rose-500/10 text-rose-500'}`}>
+                                    {navigator.onLine ? 'Online' : 'Offline'}
+                                </span>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-3">
+                                <div className="bg-bg-card rounded-lg p-3 border border-border-main">
+                                    <div className="flex items-center gap-2 mb-1">
+                                        <Database className="w-3.5 h-3.5 text-primary-500" />
+                                        <span className="text-[10px] font-semibold text-text-tertiary">Cached Entries</span>
+                                    </div>
+                                    <p className="text-lg font-black text-text-primary">{offlineStats.entries}</p>
+                                </div>
+                                <div className="bg-bg-card rounded-lg p-3 border border-border-main">
+                                    <div className="flex items-center gap-2 mb-1">
+                                        <ArrowUpCircle className="w-3.5 h-3.5 text-amber-500" />
+                                        <span className="text-[10px] font-semibold text-text-tertiary">Queued Actions</span>
+                                    </div>
+                                    <p className="text-lg font-black text-text-primary">{offlineStats.queueSize}</p>
+                                </div>
+                            </div>
+
+                            <button
+                                onClick={handleClearCache}
+                                disabled={isClearing || offlineStats.entries === 0}
+                                className="flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-medium bg-rose-500/10 text-rose-500 hover:bg-rose-500/20 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                            >
+                                <Trash2 className="w-3.5 h-3.5" />
+                                {isClearing ? 'Clearing...' : 'Clear Cache'}
+                            </button>
                         </div>
                     </div>
 

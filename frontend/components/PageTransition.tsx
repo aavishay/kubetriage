@@ -9,7 +9,7 @@ export const PageTransition: React.FC<PageTransitionProps> = ({ children }) => {
   const location = useLocation();
 
   return (
-    <div key={location.pathname} className="kt-page-enter">
+    <div key={location.pathname} className="kt-page-enter h-full">
       {children}
     </div>
   );

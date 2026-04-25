@@ -79,7 +79,7 @@ const StatusBadge = ({ status }: { status: string }) => {
     Critical: 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20',
   };
   return (
-    <span className={`text-[10px] font-medium uppercase px-2 py-0.5 rounded-full border ${colors[status as keyof typeof colors] || colors.Healthy}`}>
+    <span className={`text-[10px] font-medium  px-2 py-0.5 rounded-full border ${colors[status as keyof typeof colors] || colors.Healthy}`}>
       {status}
     </span>
   );
@@ -110,7 +110,7 @@ const TrafficPathExplorer = ({ workload }: { workload: Workload }) => {
           <div className="w-14 h-14 rounded-xl bg-bg-main border border-border-main flex items-center justify-center text-text-tertiary shadow-sm">
             <Globe className="w-6 h-6" />
           </div>
-          <span className="text-[10px] text-text-tertiary uppercase">Ingress</span>
+          <span className="text-[10px] text-text-tertiary ">Ingress</span>
         </div>
 
         <div className="flex-1 h-px bg-gradient-to-r from-transparent via-primary-500/50 to-transparent"></div>
@@ -128,7 +128,7 @@ const TrafficPathExplorer = ({ workload }: { workload: Workload }) => {
           <div className="w-14 h-14 rounded-xl bg-bg-main border border-rose-500/30 flex items-center justify-center text-rose-500 dark:text-rose-400 shadow-sm">
             <Server className="w-6 h-6" />
           </div>
-          <span className="text-[10px] text-rose-600 dark:text-rose-400 uppercase">Backend</span>
+          <span className="text-[10px] text-rose-600 dark:text-rose-400 ">Backend</span>
         </div>
       </div>
     </div>
@@ -523,7 +523,7 @@ export const TriageView: React.FC<TriageViewProps> = ({ workloads, isDarkMode = 
   return (
     <div className="flex flex-col lg:flex-row gap-4 h-full relative w-full overflow-hidden">
       {/* Sidebar */}
-      <aside className={`${selectedWorkload && !isSidebarOpen ? 'hidden' : 'flex'} lg:flex flex-col ${cardBase} overflow-hidden shrink-0 transition-all duration-300 ${
+      <aside className={`${selectedWorkload && !isSidebarOpen ? 'hidden' : 'flex'} lg:flex flex-col ${cardBase} overflow-hidden shrink-0 transition-all duration-300 h-full min-h-0 ${
         isDesktopCollapsed ? 'lg:w-16' : 'w-full lg:w-80'
       }`}>
         <div className={`border-b border-border-main flex items-center ${isDesktopCollapsed ? 'p-4 justify-center' : 'p-4 justify-between'}`}>
@@ -573,7 +573,7 @@ export const TriageView: React.FC<TriageViewProps> = ({ workloads, isDarkMode = 
                 <button
                   key={s}
                   onClick={() => setStatusFilter(s)}
-                  className={`px-2.5 py-1 rounded-md text-[10px] font-semibold uppercase tracking-wider transition-all ${
+                  className={`px-2.5 py-1 rounded-md text-[10px] font-semibold transition-all ${
                     statusFilter === s
                       ? s === 'all' ? 'bg-primary-500/15 text-primary-600 dark:text-primary-400 border border-primary-500/30' :
                         s === 'Healthy' ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30' :
@@ -608,7 +608,7 @@ export const TriageView: React.FC<TriageViewProps> = ({ workloads, isDarkMode = 
           {filteredWorkloads.length === 0 && (
             <div className="flex flex-col items-center justify-center py-12 text-text-tertiary">
               <Search className="w-8 h-8 mb-3 opacity-30" />
-              <p className="text-xs font-medium uppercase tracking-wider">No workloads match</p>
+              <p className="text-xs font-medium">No workloads match</p>
               <p className="text-[10px] mt-1 opacity-60">Try adjusting filters</p>
             </div>
           )}
@@ -640,7 +640,7 @@ export const TriageView: React.FC<TriageViewProps> = ({ workloads, isDarkMode = 
               </div>
               {!isDesktopCollapsed && (
                 <div className="flex items-center gap-2">
-                  <span className="text-[10px] text-text-tertiary uppercase font-medium">{w.kind}</span>
+                  <span className="text-[10px] text-text-tertiary  font-medium">{w.kind}</span>
                   <span className="text-[10px] text-text-tertiary/70 select-none">•</span>
                   <span className="text-[10px] text-text-tertiary">{w.namespace}</span>
                 </div>
@@ -697,7 +697,7 @@ export const TriageView: React.FC<TriageViewProps> = ({ workloads, isDarkMode = 
               {/* Metrics Grid */}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                 <div className={`${cardBase} ${cardHover} p-4`}>
-                  <p className="text-[10px] text-text-tertiary uppercase mb-1">Replicas</p>
+                  <p className="text-[10px] text-text-tertiary  mb-1">Replicas</p>
                   <div className="text-2xl font-semibold text-text-primary">
                     {selectedWorkload.availableReplicas}
                     <span className="text-sm text-text-tertiary">/{selectedWorkload.replicas}</span>
@@ -705,21 +705,21 @@ export const TriageView: React.FC<TriageViewProps> = ({ workloads, isDarkMode = 
                 </div>
 
                 <div className={`${cardBase} ${cardHover} p-4`}>
-                  <p className="text-[10px] text-text-tertiary uppercase mb-1">CPU</p>
+                  <p className="text-[10px] text-text-tertiary  mb-1">CPU</p>
                   <div className={`text-2xl font-semibold ${saturation.cpu > 90 ? 'text-rose-500' : 'text-text-primary'}`}>
                     {saturation.cpu}%
                   </div>
                 </div>
 
                 <div className={`${cardBase} ${cardHover} p-4`}>
-                  <p className="text-[10px] text-text-tertiary uppercase mb-1">Memory</p>
+                  <p className="text-[10px] text-text-tertiary  mb-1">Memory</p>
                   <div className={`text-2xl font-semibold ${saturation.mem > 90 ? 'text-rose-500' : 'text-text-primary'}`}>
                     {saturation.mem}%
                   </div>
                 </div>
 
                 <div className={`${cardBase} ${cardHover} p-4`}>
-                  <p className="text-[10px] text-text-tertiary uppercase mb-1">Storage</p>
+                  <p className="text-[10px] text-text-tertiary  mb-1">Ephemeral Storage</p>
                   <div className={`text-2xl font-semibold ${saturation.storage > 85 ? 'text-rose-500' : 'text-text-primary'}`}>
                     {saturation.storage}%
                   </div>
@@ -727,7 +727,7 @@ export const TriageView: React.FC<TriageViewProps> = ({ workloads, isDarkMode = 
 
                 {hasGpu && (
                   <div className={`${cardBase} ${cardHover} p-4 border-purple-500/20`}>
-                    <p className="text-[10px] text-text-tertiary uppercase mb-1 flex items-center gap-1">
+                    <p className="text-[10px] text-text-tertiary  mb-1 flex items-center gap-1">
                       <Zap className="w-3 h-3 text-purple-500" /> GPU
                     </p>
                     <div className={`text-2xl font-semibold ${saturation.gpu > 90 ? 'text-rose-500' : 'text-purple-600 dark:text-purple-400'}`}>
@@ -792,7 +792,7 @@ export const TriageView: React.FC<TriageViewProps> = ({ workloads, isDarkMode = 
                             <h4 className="text-sm font-medium text-text-primary">Analysis Complete</h4>
                             {currentReport && (
                               <div className="flex items-center gap-2 mt-1">
-                                <span className={`text-[10px] uppercase px-1.5 py-0.5 rounded-sm font-semibold ${
+                                <span className={`text-[10px]  px-1.5 py-0.5 rounded-sm font-semibold ${
                                   currentReport.Severity === 'Critical' ? 'bg-rose-500/20 text-rose-600 dark:text-rose-400' :
                                   currentReport.Severity === 'Warning' ? 'bg-amber-500/20 text-amber-600 dark:text-amber-400' :
                                   'bg-emerald-500/20 text-emerald-600 dark:text-emerald-400'
@@ -851,7 +851,7 @@ export const TriageView: React.FC<TriageViewProps> = ({ workloads, isDarkMode = 
                               <h4 className="text-sm font-medium text-text-primary flex items-center gap-2">
                                 <Sparkles className="w-4 h-4 text-primary-500 dark:text-primary-400" /> Proposed Fix
                               </h4>
-                              <span className={`text-[10px] uppercase px-2 py-0.5 rounded-full border ${
+                              <span className={`text-[10px]  px-2 py-0.5 rounded-full border ${
                                 patchSuggestion.risk === 'High'
                                   ? 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20'
                                   : 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20'
@@ -942,7 +942,7 @@ export const TriageView: React.FC<TriageViewProps> = ({ workloads, isDarkMode = 
                   {(!selectedWorkload.recentLogs || selectedWorkload.recentLogs.length === 0) ? (
                     <div className="h-full flex flex-col items-center justify-center text-text-tertiary/50 gap-3">
                       <Terminal className="w-8 h-8 opacity-20" />
-                      <p className="text-xs uppercase tracking-wider font-medium">No logs available</p>
+                      <p className="text-xs font-medium">No logs available</p>
                     </div>
                   ) : (
                     selectedWorkload.recentLogs

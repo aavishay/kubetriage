@@ -324,7 +324,7 @@ func getRealMetrics(ctx context.Context, clusterID, namespace, name, kind string
 
 	// 4. Fallback: Metrics Server (Real Data)
 	// If usage is still 0 (Prometheus failed or missing), try Kubernetes Metrics API
-	if metrics.CpuUsage == 0 && metrics.MemoryUsage == 0 && len(matchLabels) > 0 && clusterID != "" {
+	if (metrics.CpuUsage == 0 || metrics.MemoryUsage == 0 || metrics.StorageUsage == 0) && len(matchLabels) > 0 && clusterID != "" {
 		mgr := k8s.GetClusterManager()
 		if mgr != nil {
 			// VPN MODE: Connect to selected cluster on-demand, then get metrics client
@@ -342,24 +342,126 @@ func getRealMetrics(ctx context.Context, clusterID, namespace, name, kind string
 				if err == nil {
 					var cpuTotal float64
 					var memTotal float64
+					var storageTotal float64
 
 					for _, pm := range podMetrics.Items {
 						for _, c := range pm.Containers {
-							cpuTotal += float64(c.Usage.Cpu().MilliValue()) / 1000.0      // Cores
-							memTotal += float64(c.Usage.Memory().Value()) / (1024 * 1024) // MiB
+							if metrics.CpuUsage == 0 {
+								cpuTotal += float64(c.Usage.Cpu().MilliValue()) / 1000.0 // Cores
+							}
+							if metrics.MemoryUsage == 0 {
+								memTotal += float64(c.Usage.Memory().Value()) / (1024 * 1024) // MiB
+							}
+							if metrics.StorageUsage == 0 {
+								if q, ok := c.Usage[v1.ResourceEphemeralStorage]; ok {
+									storageTotal += float64(q.Value()) / (1024 * 1024 * 1024) // GiB
+								}
+							}
 						}
 					}
 
-					if cpuTotal > 0 || memTotal > 0 {
-						metrics.CpuUsage = cpuTotal
-						metrics.MemoryUsage = memTotal
+					if cpuTotal > 0 || memTotal > 0 || storageTotal > 0 {
+						if metrics.CpuUsage == 0 {
+							metrics.CpuUsage = cpuTotal
+						}
+						if metrics.MemoryUsage == 0 {
+							metrics.MemoryUsage = memTotal
+						}
+						if metrics.StorageUsage == 0 {
+							metrics.StorageUsage = storageTotal
+						}
 					}
 				}
 			}
 		}
 	}
 
+	// 5. Final fallback: Kubelet stats summary for ephemeral storage
+	// The Kubernetes Metrics API only provides CPU/Memory. Ephemeral storage
+	// is available via each node's kubelet /stats/summary endpoint.
+	if metrics.StorageUsage == 0 && len(matchLabels) > 0 && clusterID != "" {
+		mgr := k8s.GetClusterManager()
+		if mgr != nil {
+			cls, err := mgr.GetOrConnectCluster(clusterID)
+			if err == nil && cls != nil && cls.ClientSet != nil {
+				usage := fetchEphemeralStorageFromKubelet(ctx, cls.ClientSet, namespace, matchLabels)
+				if usage > 0 {
+					metrics.StorageUsage = usage
+				}
+			}
+		}
+	}
+
 	return metrics
+}
+
+// fetchEphemeralStorageFromKubelet queries each node's kubelet stats/summary
+// endpoint to get per-pod ephemeral storage usage. This is required because
+// the Kubernetes Metrics API (metrics.k8s.io) does not expose storage metrics.
+func fetchEphemeralStorageFromKubelet(ctx context.Context, client *kubernetes.Clientset, namespace string, matchLabels map[string]string) float64 {
+	pods, err := client.CoreV1().Pods(namespace).List(ctx, metav1.ListOptions{
+		LabelSelector: labels.Set(matchLabels).String(),
+	})
+	if err != nil || len(pods.Items) == 0 {
+		return 0
+	}
+
+	targetPods := make(map[string]bool)
+	nodesToQuery := make(map[string]bool)
+	for _, pod := range pods.Items {
+		targetPods[pod.Name] = true
+		if pod.Spec.NodeName != "" {
+			nodesToQuery[pod.Spec.NodeName] = true
+		}
+	}
+
+	var total float64
+	for node := range nodesToQuery {
+		data, err := client.CoreV1().RESTClient().Get().AbsPath("api", "v1", "nodes", node, "proxy", "stats", "summary").Do(ctx).Raw()
+		if err != nil {
+			continue
+		}
+
+		var summary map[string]interface{}
+		if err := json.Unmarshal(data, &summary); err != nil {
+			continue
+		}
+
+		podsList, ok := summary["pods"].([]interface{})
+		if !ok {
+			continue
+		}
+
+		for _, p := range podsList {
+			podMap, ok := p.(map[string]interface{})
+			if !ok {
+				continue
+			}
+
+			podRef, ok := podMap["podRef"].(map[string]interface{})
+			if !ok {
+				continue
+			}
+
+			podName, _ := podRef["name"].(string)
+			podNS, _ := podRef["namespace"].(string)
+
+			if podNS != namespace || !targetPods[podName] {
+				continue
+			}
+
+			ephemeral, ok := podMap["ephemeral-storage"].(map[string]interface{})
+			if !ok {
+				continue
+			}
+
+			if usedBytes, ok := ephemeral["usedBytes"].(float64); ok {
+				total += usedBytes
+			}
+		}
+	}
+
+	return total / (1024 * 1024 * 1024) // GiB
 }
 
 func fetchRecentLogs(ctx context.Context, client *kubernetes.Clientset, namespace string, matchLabels map[string]string) []string {

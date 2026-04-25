@@ -129,6 +129,7 @@ func SetupRouter(cfg RouterConfig) *gin.Engine {
 		api.GET("/ml/patterns", mlHandler.GetPatterns)
 		api.GET("/ml/stats", mlHandler.GetMLStats)
 		api.GET("/ml/forecast", mlHandler.GetForecast)
+		api.GET("/ml/capacity-plans", mlHandler.GetCapacityPlans)
 		api.POST("/ml/metrics", mlHandler.IngestMetrics)
 		api.GET("/ml/predict/:id", mlHandler.PredictRootCause)
 

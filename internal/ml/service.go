@@ -63,6 +63,28 @@ type RootCausePrediction struct {
 	SuggestedAction string    `json:"suggestedAction"`
 }
 
+// CapacityForecastPoint represents a single point in a capacity forecast
+type CapacityForecastPoint struct {
+	Timestamp time.Time `json:"timestamp"`
+	Value     float64   `json:"value"`
+}
+
+// CapacityPlan represents a capacity planning recommendation for a workload
+type CapacityPlan struct {
+	WorkloadKey           string                  `json:"workloadKey"`
+	Namespace             string                  `json:"namespace"`
+	Cluster               string                  `json:"cluster"`
+	Metric                string                  `json:"metric"`
+	HistoricalPoints      []CapacityForecastPoint `json:"historicalPoints"`
+	ForecastPoints        []CapacityForecastPoint `json:"forecastPoints"`
+	TrendSlope            float64                 `json:"trendSlope"`
+	TrendIntercept        float64                 `json:"trendIntercept"`
+	TimeToExhaustionHours *float64                `json:"timeToExhaustionHours,omitempty"`
+	Recommendation        string                  `json:"recommendation"`
+	Confidence            float64                 `json:"confidence"`
+	Severity              string                  `json:"severity"` // "Critical", "Warning", "Healthy"
+}
+
 // TimeSeriesModel represents a learned time series pattern
 type TimeSeriesModel struct {
 	mu              sync.RWMutex
@@ -431,7 +453,47 @@ func (s *Service) GetPatterns() []Pattern {
 	return s.patterns
 }
 
-// GetForecast predicts future capacity needs
+// linearRegression computes slope and intercept for y = slope*x + intercept
+// using least squares. Returns R-squared as confidence measure.
+func linearRegression(x, y []float64) (slope, intercept, rSquared float64) {
+	if len(x) < 2 || len(y) < 2 || len(x) != len(y) {
+		return 0, 0, 0
+	}
+
+	n := float64(len(x))
+	var sumX, sumY, sumXY, sumX2, sumY2 float64
+	for i := 0; i < len(x); i++ {
+		sumX += x[i]
+		sumY += y[i]
+		sumXY += x[i] * y[i]
+		sumX2 += x[i] * x[i]
+		sumY2 += y[i] * y[i]
+	}
+
+	denom := n*sumX2 - sumX*sumX
+	if denom == 0 {
+		return 0, sumY / n, 0
+	}
+
+	slope = (n*sumXY - sumX*sumY) / denom
+	intercept = (sumY - slope*sumX) / n
+
+	// R-squared
+	ssTot := n*sumY2 - sumY*sumY
+	ssRes := sumY2 - 2*intercept*sumY - 2*slope*sumXY + n*intercept*intercept + 2*intercept*slope*sumX + slope*slope*sumX2
+	if ssTot != 0 && ssTot > 0 && ssRes >= 0 {
+		rSquared = 1 - ssRes/ssTot
+		if rSquared < 0 {
+			rSquared = 0
+		}
+	} else {
+		rSquared = 0
+	}
+
+	return slope, intercept, rSquared
+}
+
+// GetForecast predicts future capacity needs using linear regression trend
 func (s *Service) GetForecast(workloadKey string, hoursAhead int) ([]MetricPoint, error) {
 	s.mu.RLock()
 	model, exists := s.models[workloadKey]
@@ -442,24 +504,218 @@ func (s *Service) GetForecast(workloadKey string, hoursAhead int) ([]MetricPoint
 	}
 
 	model.mu.RLock()
-	mean := model.mean
-	stdDev := model.stdDev
+	history := make([]MetricPoint, len(model.history))
+	copy(history, model.history)
 	model.mu.RUnlock()
 
-	// Simple trend-based forecast
+	if len(history) < 2 {
+		return nil, fmt.Errorf("insufficient data for forecast")
+	}
+
+	// Build regression inputs: x = hours since first observation, y = value
+	x := make([]float64, len(history))
+	y := make([]float64, len(history))
+	baseTime := history[0].Timestamp
+	for i, h := range history {
+		x[i] = h.Timestamp.Sub(baseTime).Hours()
+		y[i] = h.Value
+	}
+
+	slope, _, _ := linearRegression(x, y)
+
 	var forecast []MetricPoint
 	now := time.Now()
 
 	for i := 1; i <= hoursAhead; i++ {
+		predicted := history[len(history)-1].Value + slope*float64(i)
+		if predicted < 0 {
+			predicted = 0
+		}
 		forecast = append(forecast, MetricPoint{
 			Timestamp: now.Add(time.Duration(i) * time.Hour),
-			Value:     mean + (stdDev * math.Sin(float64(i))), // Simplified seasonal pattern
+			Value:     predicted,
 			Workload:  model.workloadKey,
 			Metric:    model.metric,
 		})
 	}
 
 	return forecast, nil
+}
+
+// GetCapacityPlans generates capacity planning recommendations for all tracked workloads
+func (s *Service) GetCapacityPlans(clusterFilter, namespaceFilter string) []CapacityPlan {
+	s.mu.RLock()
+	models := make(map[string]*TimeSeriesModel, len(s.models))
+	for k, v := range s.models {
+		models[k] = v
+	}
+	s.mu.RUnlock()
+
+	var plans []CapacityPlan
+	now := time.Now()
+
+	for _, model := range models {
+		model.mu.RLock()
+		history := make([]MetricPoint, len(model.history))
+		copy(history, model.history)
+		workloadKey := model.workloadKey
+		metric := model.metric
+		model.mu.RUnlock()
+
+		if len(history) < 3 {
+			continue
+		}
+
+		// Parse workloadKey: cluster/namespace/workload/metric
+		parts := parseWorkloadKey(workloadKey)
+		cluster := parts["cluster"]
+		namespace := parts["namespace"]
+		workload := parts["workload"]
+
+		// Apply filters
+		if clusterFilter != "" && cluster != clusterFilter {
+			continue
+		}
+		if namespaceFilter != "" && namespace != namespaceFilter {
+			continue
+		}
+
+		// Build regression
+		x := make([]float64, len(history))
+		y := make([]float64, len(history))
+		baseTime := history[0].Timestamp
+		for i, h := range history {
+			x[i] = h.Timestamp.Sub(baseTime).Hours()
+			y[i] = h.Value
+		}
+
+		slope, intercept, rSquared := linearRegression(x, y)
+
+		// Historical points for chart
+		var historicalPoints []CapacityForecastPoint
+		for _, h := range history {
+			historicalPoints = append(historicalPoints, CapacityForecastPoint{
+				Timestamp: h.Timestamp,
+				Value:     h.Value,
+			})
+		}
+
+		// Forecast next 72 hours
+		forecastHours := 72
+		lastX := history[len(history)-1].Timestamp.Sub(baseTime).Hours()
+		var forecastPoints []CapacityForecastPoint
+		for i := 1; i <= forecastHours; i++ {
+			nextX := lastX + float64(i)
+			predicted := slope*nextX + intercept
+			if predicted < 0 {
+				predicted = 0
+			}
+			forecastPoints = append(forecastPoints, CapacityForecastPoint{
+				Timestamp: now.Add(time.Duration(i) * time.Hour),
+				Value:     predicted,
+			})
+		}
+
+		// Determine severity and recommendation
+		var recommendation string
+		var severity string
+		var timeToExhaustion *float64
+
+		// Use the latest value as a proxy for current request/limit context
+		// In a real implementation, we'd pass actual request/limit values
+		latestValue := history[len(history)-1].Value
+		projected72h := slope*(lastX+72) + intercept
+
+		// Heuristic thresholds (can be refined with actual resource limits)
+		growthRate := slope // per hour
+		dailyGrowth := growthRate * 24
+
+		if dailyGrowth > 0 {
+			// Growing trend
+			if projected72h > latestValue*2.0 {
+				severity = "Critical"
+				recommendation = fmt.Sprintf("%s usage for %s is projected to double within 72 hours. Scale replicas or increase resource limits immediately.", metric, workload)
+				tte := (latestValue * 1.5) / growthRate
+				timeToExhaustion = &tte
+			} else if projected72h > latestValue*1.5 {
+				severity = "Warning"
+				recommendation = fmt.Sprintf("%s usage for %s is trending up. Consider scaling within 48-72 hours.", metric, workload)
+				tte := (latestValue * 1.3) / growthRate
+				timeToExhaustion = &tte
+			} else {
+				severity = "Healthy"
+				recommendation = fmt.Sprintf("%s usage for %s is stable with moderate growth. No immediate action required.", metric, workload)
+			}
+		} else if dailyGrowth < -0.01 {
+			// Declining trend
+			severity = "Healthy"
+			recommendation = fmt.Sprintf("%s usage for %s is declining. Consider right-sizing to reduce costs.", metric, workload)
+		} else {
+			// Flat trend
+			severity = "Healthy"
+			recommendation = fmt.Sprintf("%s usage for %s is stable. No capacity changes needed.", metric, workload)
+		}
+
+		plans = append(plans, CapacityPlan{
+			WorkloadKey:           workloadKey,
+			Namespace:             namespace,
+			Cluster:               cluster,
+			Metric:                metric,
+			HistoricalPoints:      historicalPoints,
+			ForecastPoints:        forecastPoints,
+			TrendSlope:            slope,
+			TrendIntercept:        intercept,
+			TimeToExhaustionHours: timeToExhaustion,
+			Recommendation:        recommendation,
+			Confidence:            rSquared,
+			Severity:              severity,
+		})
+	}
+
+	return plans
+}
+
+// parseWorkloadKey splits a key like "cluster/namespace/workload/metric" into components
+func parseWorkloadKey(key string) map[string]string {
+	result := map[string]string{
+		"cluster":   "",
+		"namespace": "",
+		"workload":  "",
+		"metric":    "",
+	}
+	parts := splitKey(key)
+	if len(parts) >= 1 {
+		result["cluster"] = parts[0]
+	}
+	if len(parts) >= 2 {
+		result["namespace"] = parts[1]
+	}
+	if len(parts) >= 3 {
+		result["workload"] = parts[2]
+	}
+	if len(parts) >= 4 {
+		result["metric"] = parts[3]
+	}
+	return result
+}
+
+// splitKey safely splits a workload key, handling empty strings
+func splitKey(key string) []string {
+	if key == "" {
+		return nil
+	}
+	var parts []string
+	start := 0
+	for i := 0; i < len(key); i++ {
+		if key[i] == '/' {
+			parts = append(parts, key[start:i])
+			start = i + 1
+		}
+	}
+	if start < len(key) {
+		parts = append(parts, key[start:])
+	}
+	return parts
 }
 
 // helper function

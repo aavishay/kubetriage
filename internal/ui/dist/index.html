@@ -8,13 +8,22 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Bricolage+Grotesque:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
   <title>KubeTriage</title>
-  <script type="module" crossorigin src="/assets/index-wlYTuAAA.js"></script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js')
+          .then(() => console.log('Service Worker registered'))
+          .catch((err) => console.log('Service Worker registration failed:', err));
+      });
+    }
+  </script>
+  <script type="module" crossorigin src="/assets/index-ChoZvrfA.js"></script>
   <link rel="modulepreload" crossorigin href="/assets/vendor-CipAjqqo.js">
-  <link rel="modulepreload" crossorigin href="/assets/charts-qrjBJV0S.js">
-  <link rel="modulepreload" crossorigin href="/assets/mermaid-SMTUtyII.js">
-  <link rel="modulepreload" crossorigin href="/assets/icons-Btg5jpxD.js">
+  <link rel="modulepreload" crossorigin href="/assets/charts-B3vSFDl3.js">
+  <link rel="modulepreload" crossorigin href="/assets/mermaid-BuF1_kvn.js">
+  <link rel="modulepreload" crossorigin href="/assets/icons-CKthMua_.js">
   <link rel="modulepreload" crossorigin href="/assets/ai-BVGqaC7r.js">
-  <link rel="stylesheet" crossorigin href="/assets/index-BtkLViI9.css">
+  <link rel="stylesheet" crossorigin href="/assets/index-Cq-hFo2Z.css">
 </head>
 <body>
   <div id="root"></div>

@@ -2,7 +2,7 @@ class Kubetriage < Formula
   desc "KubeTriage - Autonomous SRE Guard for Kubernetes"
   homepage "https://github.com/aavishay/kubetriage"
   license "MIT"
-  version "1.5.1"
+  version "1.6.0"
 
   on_macos do
     on_arm do

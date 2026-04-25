@@ -213,7 +213,7 @@ export const MLIntelligenceView: React.FC = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-2xl font-black text-text-primary uppercase tracking-tighter flex items-center gap-3">
+          <h1 className="text-2xl font-black text-text-primary   flex items-center gap-3">
             <Brain className="w-7 h-7 text-primary-500" />
             ML Intelligence
           </h1>
@@ -244,7 +244,7 @@ export const MLIntelligenceView: React.FC = () => {
         <div className="bg-bg-card rounded-2xl p-5 border border-border-main shadow-sm">
           <div className="flex items-start justify-between">
             <div>
-              <p className="text-[10px] font-black uppercase tracking-widest text-text-tertiary mb-1">Models Trained</p>
+              <p className="text-[10px] font-semibold   text-text-tertiary mb-1">Models Trained</p>
               <p className="text-3xl font-black text-text-primary">{(data.stats || {}).modelsTrained ?? 0}</p>
               <p className="text-xs text-emerald-500 font-semibold mt-1">ML models active</p>
             </div>
@@ -257,7 +257,7 @@ export const MLIntelligenceView: React.FC = () => {
         <div className="bg-bg-card rounded-2xl p-5 border border-border-main shadow-sm">
           <div className="flex items-start justify-between">
             <div>
-              <p className="text-[10px] font-black uppercase tracking-widest text-text-tertiary mb-1">Patterns Found</p>
+              <p className="text-[10px] font-semibold   text-text-tertiary mb-1">Patterns Found</p>
               <p className="text-3xl font-black text-text-primary">{(data.stats || {}).patternsFound ?? 0}</p>
               <p className="text-xs text-emerald-500 font-semibold mt-1">{highConfidencePatterns.length} high confidence</p>
             </div>
@@ -270,7 +270,7 @@ export const MLIntelligenceView: React.FC = () => {
         <div className="bg-bg-card rounded-2xl p-5 border border-border-main shadow-sm">
           <div className="flex items-start justify-between">
             <div>
-              <p className="text-[10px] font-black uppercase tracking-widest text-text-tertiary mb-1">Active Anomalies</p>
+              <p className="text-[10px] font-semibold   text-text-tertiary mb-1">Active Anomalies</p>
               <p className="text-3xl font-black text-text-primary">{(data.stats || {}).anomaliesActive ?? 0}</p>
               <p className={`text-xs font-semibold mt-1 ${criticalAnomalies.length > 0 ? 'text-rose-500' : 'text-emerald-500'}`}>
                 {criticalAnomalies.length} critical
@@ -285,7 +285,7 @@ export const MLIntelligenceView: React.FC = () => {
         <div className="bg-bg-card rounded-2xl p-5 border border-border-main shadow-sm">
           <div className="flex items-start justify-between">
             <div>
-              <p className="text-[10px] font-black uppercase tracking-widest text-text-tertiary mb-1">ML Insights</p>
+              <p className="text-[10px] font-semibold   text-text-tertiary mb-1">ML Insights</p>
               <p className="text-3xl font-black text-text-primary">{(data.insights || []).length}</p>
               <p className="text-xs text-amber-500 font-semibold mt-1">Generated today</p>
             </div>
@@ -300,7 +300,7 @@ export const MLIntelligenceView: React.FC = () => {
       {(data.insights || []).length > 0 && (
         <div className="bg-bg-card rounded-2xl border border-border-main overflow-hidden">
           <div className="p-4 border-b border-border-main bg-bg-hover/50">
-            <h3 className="text-sm font-black uppercase tracking-widest text-text-primary flex items-center gap-2">
+            <h3 className="text-sm font-black   text-text-primary flex items-center gap-2">
               <Zap className="w-4 h-4 text-primary-500" />
               ML-Generated Insights
             </h3>
@@ -338,7 +338,7 @@ export const MLIntelligenceView: React.FC = () => {
           <button
             key={tab}
             onClick={() => setSelectedTab(tab)}
-            className={`flex-1 px-4 py-2.5 rounded-lg text-sm font-bold uppercase tracking-wide transition-all ${
+            className={`flex-1 px-4 py-2.5 rounded-lg text-sm font-bold   transition-all ${
               selectedTab === tab
                 ? 'bg-primary-600 text-white'
                 : 'text-text-tertiary hover:text-text-primary'
@@ -354,7 +354,7 @@ export const MLIntelligenceView: React.FC = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Anomaly Distribution */}
           <div className="bg-bg-card rounded-3xl border border-border-main p-6">
-            <h3 className="text-sm font-black uppercase tracking-widest text-text-primary mb-4 flex items-center gap-2">
+            <h3 className="text-sm font-black   text-text-primary mb-4 flex items-center gap-2">
               <BarChart3 className="w-4 h-4 text-primary-500" />
               Anomalies by Metric
             </h3>
@@ -387,7 +387,7 @@ export const MLIntelligenceView: React.FC = () => {
 
           {/* Pattern Frequency */}
           <div className="bg-bg-card rounded-3xl border border-border-main p-6">
-            <h3 className="text-sm font-black uppercase tracking-widest text-text-primary mb-4 flex items-center gap-2">
+            <h3 className="text-sm font-black   text-text-primary mb-4 flex items-center gap-2">
               <TrendingUp className="w-4 h-4 text-emerald-500" />
               Recurring Patterns
             </h3>
@@ -424,7 +424,7 @@ export const MLIntelligenceView: React.FC = () => {
       {selectedTab === 'anomalies' && (
         <div className="bg-bg-card rounded-3xl border border-border-main overflow-hidden">
           <div className="p-6 border-b border-border-main bg-bg-hover/50">
-            <h3 className="text-sm font-black uppercase tracking-widest text-text-primary">
+            <h3 className="text-sm font-black   text-text-primary">
               Detected Anomalies ({(data.anomalies || []).length})
             </h3>
           </div>
@@ -456,7 +456,7 @@ export const MLIntelligenceView: React.FC = () => {
                         <p className="text-xs text-text-tertiary">{anomaly.namespace} • {anomaly.cluster}</p>
                       </div>
                     </div>
-                    <span className={`px-2 py-1 rounded-md text-[10px] font-black uppercase ${SEVERITY_BG[anomaly.severity]} ${SEVERITY_COLORS[anomaly.severity]}`}>
+                    <span className={`px-2 py-1 rounded-full text-[10px] font-semibold  ${SEVERITY_BG[anomaly.severity]} ${SEVERITY_COLORS[anomaly.severity]}`}>
                       {anomaly.severity}
                     </span>
                   </div>
@@ -478,7 +478,7 @@ export const MLIntelligenceView: React.FC = () => {
       {selectedTab === 'patterns' && (
         <div className="bg-bg-card rounded-3xl border border-border-main overflow-hidden">
           <div className="p-6 border-b border-border-main bg-bg-hover/50">
-            <h3 className="text-sm font-black uppercase tracking-widest text-text-primary">
+            <h3 className="text-sm font-black   text-text-primary">
               Discovered Patterns ({(data.patterns || []).length})
             </h3>
           </div>
@@ -533,7 +533,7 @@ export const MLIntelligenceView: React.FC = () => {
                     </div>
                   )}
                   <div className="p-3 rounded-lg bg-bg-hover border border-border-main">
-                    <p className="text-xs font-bold text-text-tertiary uppercase mb-1">Suggested Fix</p>
+                    <p className="text-xs font-bold text-text-tertiary  mb-1">Suggested Fix</p>
                     <p className="text-sm text-text-secondary">{pattern.suggestedFix}</p>
                   </div>
                 </div>

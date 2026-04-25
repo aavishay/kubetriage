@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
 import { Workload, Cluster, NotificationChannel, AlertRule, TriggeredAlert } from '../types';
+import { fetchWithOffline } from '../services/fetchWithOffline';
 
 interface MonitoringContextType {
   workloads: Workload[];
@@ -113,7 +114,7 @@ export const MonitoringProvider: React.FC<MonitoringProviderProps> = ({ children
   // Fetch Clusters
   const refreshClusters = useCallback(async () => {
     try {
-      const response = await fetch('/api/clusters');
+      const response = await fetchWithOffline('/api/clusters');
       if (response.ok) {
         const data = await response.json();
         const mappedClusters = data.map((c: any) => ({
@@ -147,7 +148,7 @@ export const MonitoringProvider: React.FC<MonitoringProviderProps> = ({ children
   useEffect(() => {
     const fetchReports = async () => {
       try {
-        const res = await fetch('/api/reports');
+        const res = await fetchWithOffline('/api/reports');
         if (res.ok) {
           const data = await res.json();
           setUnreadReports(data.filter((r: any) => !r.IsRead).length);
@@ -173,7 +174,7 @@ export const MonitoringProvider: React.FC<MonitoringProviderProps> = ({ children
 
       setIsWorkloadsLoading(true);
       try {
-        const response = await fetch(`/api/cluster/workloads?cluster=${selectedCluster.id}&window=${metricsWindow}`);
+        const response = await fetchWithOffline(`/api/cluster/workloads?cluster=${selectedCluster.id}&window=${metricsWindow}`);
         if (response.ok) {
           const data = await response.json();
           const workloadsWithEvents = Array.isArray(data) ? data.map((w: any) => ({
@@ -196,7 +197,7 @@ export const MonitoringProvider: React.FC<MonitoringProviderProps> = ({ children
     if (!selectedCluster) return;
     setIsWorkloadsLoading(true);
     try {
-      const response = await fetch(`/api/cluster/workloads?cluster=${selectedCluster.id}&window=${metricsWindow}`);
+      const response = await fetchWithOffline(`/api/cluster/workloads?cluster=${selectedCluster.id}&window=${metricsWindow}`);
       if (response.ok) {
         const data = await response.json();
         const workloadsWithEvents = Array.isArray(data) ? data.map((w: any) => ({
@@ -323,7 +324,7 @@ export const MonitoringProvider: React.FC<MonitoringProviderProps> = ({ children
 
   const removeCluster = async (id: string) => {
     try {
-      const res = await fetch(`/api/clusters/${id}`, { method: 'DELETE' });
+      const res = await fetchWithOffline(`/api/clusters/${id}`, { method: 'DELETE' });
       if (res.ok) {
         setClusters(prev => prev.filter(c => c.id !== id));
         if (selectedCluster?.id === id) {

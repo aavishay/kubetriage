@@ -151,7 +151,7 @@ export const MultiClusterView: React.FC = () => {
         <div className="p-6 bg-bg-hover rounded-full mb-6 animate-pulse">
           <Globe className="w-12 h-12 text-primary-500" />
         </div>
-        <h2 className="text-2xl font-black text-text-primary uppercase tracking-tighter mb-2">
+        <h2 className="text-2xl font-black text-text-primary   mb-2">
           Loading Multi-Cluster View
         </h2>
         <p className="text-text-tertiary">Aggregating data from all connected clusters...</p>
@@ -177,7 +177,7 @@ export const MultiClusterView: React.FC = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-2xl font-black text-text-primary uppercase tracking-tighter flex items-center gap-3">
+          <h1 className="text-2xl font-black text-text-primary   flex items-center gap-3">
             <Globe className="w-7 h-7 text-primary-500" />
             Multi-Cluster Federation
           </h1>
@@ -191,7 +191,7 @@ export const MultiClusterView: React.FC = () => {
               <button
                 key={mode}
                 onClick={() => setViewMode(mode)}
-                className={`px-4 py-2 rounded-lg text-sm font-bold uppercase tracking-wide transition-all ${
+                className={`px-4 py-2 rounded-lg text-sm font-bold  transition-all ${
                   viewMode === mode
                     ? 'bg-primary-600 text-white'
                     : 'text-text-tertiary hover:text-text-primary'
@@ -217,7 +217,7 @@ export const MultiClusterView: React.FC = () => {
         <div className="bg-bg-card rounded-2xl p-5 border border-border-main shadow-sm">
           <div className="flex items-start justify-between">
             <div>
-              <p className="text-[10px] font-black uppercase tracking-widest text-text-tertiary mb-1">Clusters</p>
+              <p className="text-[10px] font-semibold   text-text-tertiary mb-1">Clusters</p>
               <p className="text-3xl font-black text-text-primary">{data.summary.totalClusters}</p>
               <p className="text-xs text-emerald-500 font-semibold mt-1">
                 {data.summary.healthyClusters} healthy
@@ -232,7 +232,7 @@ export const MultiClusterView: React.FC = () => {
         <div className="bg-bg-card rounded-2xl p-5 border border-border-main shadow-sm">
           <div className="flex items-start justify-between">
             <div>
-              <p className="text-[10px] font-black uppercase tracking-widest text-text-tertiary mb-1">Workloads</p>
+              <p className="text-[10px] font-semibold   text-text-tertiary mb-1">Workloads</p>
               <p className="text-3xl font-black text-text-primary">{data.summary.totalWorkloads}</p>
               <p className="text-xs text-amber-500 font-semibold mt-1">
                 {data.summary.warningWorkloads + data.summary.criticalWorkloads} need attention
@@ -247,7 +247,7 @@ export const MultiClusterView: React.FC = () => {
         <div className="bg-bg-card rounded-2xl p-5 border border-border-main shadow-sm">
           <div className="flex items-start justify-between">
             <div>
-              <p className="text-[10px] font-black uppercase tracking-widest text-text-tertiary mb-1">Active Incidents</p>
+              <p className="text-[10px] font-semibold   text-text-tertiary mb-1">Active Incidents</p>
               <p className="text-3xl font-black text-text-primary">{data.summary.activeIncidents}</p>
               <p className={`text-xs font-semibold mt-1 ${data.summary.criticalIncidents > 0 ? 'text-rose-500' : 'text-emerald-500'}`}>
                 {data.summary.criticalIncidents} critical
@@ -262,7 +262,7 @@ export const MultiClusterView: React.FC = () => {
         <div className="bg-bg-card rounded-2xl p-5 border border-border-main shadow-sm">
           <div className="flex items-start justify-between">
             <div>
-              <p className="text-[10px] font-black uppercase tracking-widest text-text-tertiary mb-1">Monthly Cost</p>
+              <p className="text-[10px] font-semibold   text-text-tertiary mb-1">Monthly Cost</p>
               <p className="text-3xl font-black text-text-primary">
                 ${data.summary.estimatedMonthlyCost.toFixed(0)}
               </p>
@@ -302,22 +302,22 @@ export const MultiClusterView: React.FC = () => {
                       <p className="text-xs text-text-tertiary">{cluster.provider} • {cluster.region}</p>
                     </div>
                   </div>
-                  <span className={`px-2 py-1 rounded-md text-[10px] font-black uppercase ${getStatusBg(cluster.status)} ${getStatusColor(cluster.status)}`}>
+                  <span className={`px-2 py-1 rounded-full text-[10px] font-semibold  ${getStatusBg(cluster.status)} ${getStatusColor(cluster.status)}`}>
                     {cluster.status}
                   </span>
                 </div>
 
                 <div className="grid grid-cols-3 gap-3 mb-4">
                   <div className="text-center p-2 rounded-lg bg-bg-hover">
-                    <p className="text-[10px] text-text-tertiary uppercase">Nodes</p>
+                    <p className="text-[10px] text-text-tertiary ">Nodes</p>
                     <p className="font-bold text-text-primary">{cluster.healthyNodeCount}/{cluster.nodeCount}</p>
                   </div>
                   <div className="text-center p-2 rounded-lg bg-bg-hover">
-                    <p className="text-[10px] text-text-tertiary uppercase">Workloads</p>
+                    <p className="text-[10px] text-text-tertiary ">Workloads</p>
                     <p className="font-bold text-text-primary">{cluster.workloadCount}</p>
                   </div>
                   <div className="text-center p-2 rounded-lg bg-bg-hover">
-                    <p className="text-[10px] text-text-tertiary uppercase">Incidents</p>
+                    <p className="text-[10px] text-text-tertiary ">Incidents</p>
                     <p className={`font-bold ${cluster.incidentCount > 0 ? 'text-rose-500' : 'text-emerald-500'}`}>
                       {cluster.incidentCount}
                     </p>
@@ -338,7 +338,7 @@ export const MultiClusterView: React.FC = () => {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Cluster Utilization Chart */}
             <div className="bg-bg-card rounded-3xl border border-border-main p-6">
-              <h3 className="text-sm font-black uppercase tracking-widest text-text-primary mb-4 flex items-center gap-2">
+              <h3 className="text-sm font-black   text-text-primary mb-4 flex items-center gap-2">
                 <BarChart3 className="w-4 h-4 text-primary-500" />
                 Cluster Utilization
               </h3>
@@ -365,7 +365,7 @@ export const MultiClusterView: React.FC = () => {
 
             {/* Workload Status Distribution */}
             <div className="bg-bg-card rounded-3xl border border-border-main p-6">
-              <h3 className="text-sm font-black uppercase tracking-widest text-text-primary mb-4 flex items-center gap-2">
+              <h3 className="text-sm font-black   text-text-primary mb-4 flex items-center gap-2">
                 <PieChart className="w-4 h-4 text-primary-500" />
                 Workload Status Distribution
               </h3>
@@ -404,7 +404,7 @@ export const MultiClusterView: React.FC = () => {
                 )}
                 <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
                   <span className="text-2xl font-black text-text-primary">{data.summary.totalWorkloads}</span>
-                  <span className="text-[10px] text-text-tertiary uppercase tracking-wider">Workloads</span>
+                  <span className="text-[10px] text-text-tertiary">Workloads</span>
                 </div>
               </div>
               <div className="grid grid-cols-3 gap-2 mt-4">
@@ -412,7 +412,7 @@ export const MultiClusterView: React.FC = () => {
                   <div key={s.name} className="flex flex-col items-center gap-1 p-2 rounded-xl bg-bg-hover/50 border border-border-main">
                     <div className="flex items-center gap-1.5">
                       <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: s.color }} />
-                      <span className="text-[10px] font-semibold text-text-secondary uppercase tracking-wider">{s.name}</span>
+                      <span className="text-[10px] font-semibold text-text-secondary">{s.name}</span>
                     </div>
                     <span className="text-lg font-bold" style={{ color: s.color }}>{s.value}</span>
                   </div>
@@ -425,7 +425,7 @@ export const MultiClusterView: React.FC = () => {
           {(data.incidents || []).length > 0 && (
             <div className="bg-bg-card rounded-3xl border border-border-main overflow-hidden">
               <div className="p-6 border-b border-border-main bg-bg-hover/50">
-                <h3 className="text-sm font-black uppercase tracking-widest text-text-primary flex items-center gap-2">
+                <h3 className="text-sm font-black   text-text-primary flex items-center gap-2">
                   <AlertTriangle className="w-4 h-4 text-rose-500" />
                   Cross-Cluster Incidents ({(data.incidents || []).length})
                 </h3>
@@ -440,7 +440,7 @@ export const MultiClusterView: React.FC = () => {
                       <div>
                         <h4 className="font-bold text-text-primary flex items-center gap-2">
                           {incident.pattern === 'Cascading' && (
-                            <span className="px-2 py-0.5 rounded bg-rose-500 text-white text-[10px] font-black">
+                            <span className="px-2 py-0.5 rounded bg-rose-500 text-white text-[10px] font-semibold">
                               CASCADING
                             </span>
                           )}
@@ -448,7 +448,7 @@ export const MultiClusterView: React.FC = () => {
                         </h4>
                         <p className="text-sm text-text-secondary mt-1">{incident.description}</p>
                       </div>
-                      <span className={`px-2 py-1 rounded-md text-[10px] font-black uppercase ${
+                      <span className={`px-2 py-1 rounded-full text-[10px] font-semibold  ${
                         incident.severity === 'Critical' ? 'bg-rose-500 text-white' : 'bg-amber-500 text-white'
                       }`}>
                         {incident.severity}
@@ -481,7 +481,7 @@ export const MultiClusterView: React.FC = () => {
         <div className="bg-bg-card rounded-3xl border border-border-main overflow-hidden">
           <div className="p-6 border-b border-border-main bg-bg-hover/50">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-              <h3 className="text-sm font-black uppercase tracking-widest text-text-primary">
+              <h3 className="text-sm font-black   text-text-primary">
                 All Workloads ({filteredWorkloads.length})
               </h3>
               <div className="flex items-center gap-3">
@@ -531,7 +531,7 @@ export const MultiClusterView: React.FC = () => {
                       <p className="text-sm font-bold text-text-primary">
                         {workload.availableReplicas}/{workload.replicas}
                       </p>
-                      <p className="text-[10px] text-text-tertiary uppercase">Replicas</p>
+                      <p className="text-[10px] text-text-tertiary ">Replicas</p>
                     </div>
                     <button className="p-2 rounded-lg hover:bg-bg-hover text-text-tertiary hover:text-primary-500 transition-colors">
                       <ArrowUpRight className="w-4 h-4" />
@@ -553,7 +553,7 @@ export const MultiClusterView: React.FC = () => {
       {viewMode === 'incidents' && (
         <div className="bg-bg-card rounded-3xl border border-border-main overflow-hidden">
           <div className="p-6 border-b border-border-main bg-bg-hover/50">
-            <h3 className="text-sm font-black uppercase tracking-widest text-text-primary">
+            <h3 className="text-sm font-black   text-text-primary">
               All Incidents ({(data.incidents || []).length})
             </h3>
           </div>
@@ -577,19 +577,19 @@ export const MultiClusterView: React.FC = () => {
                         <p className="text-sm text-text-secondary mt-1">{incident.description}</p>
                       </div>
                       <div className="flex items-center gap-2">
-                        <span className={`px-2 py-1 rounded-md text-[10px] font-black uppercase ${
+                        <span className={`px-2 py-1 rounded-full text-[10px] font-semibold  ${
                           incident.severity === 'Critical' ? 'bg-rose-500 text-white' : 'bg-amber-500 text-white'
                         }`}>
                           {incident.severity}
                         </span>
-                        <span className="px-2 py-1 rounded-md text-[10px] font-black uppercase bg-bg-hover text-text-secondary">
+                        <span className="px-2 py-1 rounded-md text-[10px] font-semibold  bg-bg-hover text-text-secondary">
                           {incident.pattern}
                         </span>
                       </div>
                     </div>
                     <div className="space-y-3">
                       <div>
-                        <p className="text-xs font-bold text-text-tertiary uppercase mb-2">Affected Clusters</p>
+                        <p className="text-xs font-bold text-text-tertiary  mb-2">Affected Clusters</p>
                         <div className="flex flex-wrap gap-2">
                           {(incident.affectedClusters || []).map((clusterId) => (
                             <span
@@ -603,7 +603,7 @@ export const MultiClusterView: React.FC = () => {
                       </div>
                       {incident.rootCause && (
                         <div className="p-3 rounded-lg bg-bg-hover">
-                          <p className="text-xs font-bold text-text-tertiary uppercase mb-1">Root Cause</p>
+                          <p className="text-xs font-bold text-text-tertiary  mb-1">Root Cause</p>
                           <p className="text-sm text-text-secondary">{incident.rootCause}</p>
                         </div>
                       )}

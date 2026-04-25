@@ -9,8 +9,8 @@ interface DashboardCardProps {
 
 const paddingMap = {
   sm: 'p-4',
-  md: 'p-5',
-  lg: 'p-6',
+  md: 'p-6',
+  lg: 'p-8',
 };
 
 export const DashboardCard: React.FC<DashboardCardProps> = ({
@@ -20,12 +20,12 @@ export const DashboardCard: React.FC<DashboardCardProps> = ({
   hover = true,
 }) => {
   const hoverClasses = hover
-    ? 'hover:border-primary-500/30 hover:shadow-lg dark:hover:shadow-black/20'
+    ? 'hover:border-primary-500/10 hover:shadow-md'
     : '';
 
   return (
     <div
-      className={`bg-bg-card border border-border-main rounded-2xl transition-all duration-200 ${paddingMap[padding]} ${hoverClasses} ${className}`}
+      className={`bg-bg-card border border-transparent rounded-2xl transition-all duration-300 ${paddingMap[padding]} ${hoverClasses} ${className}`}
     >
       {children}
     </div>

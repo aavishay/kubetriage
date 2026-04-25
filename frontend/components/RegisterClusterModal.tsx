@@ -92,7 +92,7 @@ export const RegisterClusterModal: React.FC<RegisterClusterModalProps> = ({ isOp
                     )}
 
                     <div className="space-y-2">
-                        <label className="text-xs font-medium text-text-secondary uppercase">
+                        <label className="text-xs font-medium text-text-secondary ">
                             Display Name (Optional)
                         </label>
                         <input
@@ -108,7 +108,7 @@ export const RegisterClusterModal: React.FC<RegisterClusterModalProps> = ({ isOp
                     </div>
 
                     <div className="space-y-2">
-                        <label className="text-xs font-medium text-text-secondary uppercase">
+                        <label className="text-xs font-medium text-text-secondary ">
                             Kubeconfig
                         </label>
                         <textarea

@@ -544,3 +544,32 @@ export interface NodeClaimsResponse {
   claims: NodeClaim[];
   summary: NodeClaimsSummary;
 }
+
+// Capacity Planning Types
+export interface CapacityForecastPoint {
+  timestamp: string;
+  value: number;
+}
+
+export interface CapacityPlan {
+  workloadKey: string;
+  namespace: string;
+  cluster: string;
+  metric: 'cpu' | 'memory' | 'network' | 'disk';
+  historicalPoints: CapacityForecastPoint[];
+  forecastPoints: CapacityForecastPoint[];
+  trendSlope: number;
+  trendIntercept: number;
+  timeToExhaustionHours: number | null;
+  recommendation: string;
+  confidence: number;
+  severity: 'Critical' | 'Warning' | 'Healthy';
+}
+
+export interface CapacityPlansResponse {
+  timestamp: string;
+  plans: CapacityPlan[];
+  count: number;
+  criticalCount: number;
+  warningCount: number;
+}

@@ -214,6 +214,41 @@ func (h *MLHandler) IngestMetrics(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"status": "ingested", "count": len(points)})
 }
 
+// CapacityPlansResponse represents capacity planning recommendations
+type CapacityPlansResponse struct {
+	Timestamp    time.Time          `json:"timestamp"`
+	Plans        []ml.CapacityPlan  `json:"plans"`
+	Count        int                `json:"count"`
+	CriticalCount int               `json:"criticalCount"`
+	WarningCount  int               `json:"warningCount"`
+}
+
+// GetCapacityPlans returns capacity planning recommendations
+func (h *MLHandler) GetCapacityPlans(c *gin.Context) {
+	cluster := c.Query("cluster")
+	namespace := c.Query("namespace")
+
+	plans := h.service.GetCapacityPlans(cluster, namespace)
+
+	criticalCount := 0
+	warningCount := 0
+	for _, p := range plans {
+		if p.Severity == "Critical" {
+			criticalCount++
+		} else if p.Severity == "Warning" {
+			warningCount++
+		}
+	}
+
+	c.JSON(http.StatusOK, CapacityPlansResponse{
+		Timestamp:     time.Now(),
+		Plans:         plans,
+		Count:         len(plans),
+		CriticalCount: criticalCount,
+		WarningCount:  warningCount,
+	})
+}
+
 // MLIntelligenceResponse combines all ML data
 type MLIntelligenceResponse struct {
 	Timestamp   time.Time              `json:"timestamp"`

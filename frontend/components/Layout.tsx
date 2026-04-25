@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { LayoutDashboard, AlertCircle, Scale, Settings, Box, ChevronLeft, ChevronRight, Sun, Moon, ChevronsUpDown, Check, Server, Plus, X, Globe, Cloud, Bell, BookOpen, Menu, Key, Zap, FileText, RefreshCw, Trash2, Activity, Brain, Users, Bot, Database, GitBranch, Shield } from 'lucide-react';
+import { LayoutDashboard, AlertCircle, Scale, Settings, Box, ChevronLeft, ChevronRight, Sun, Moon, ChevronsUpDown, Check, Server, Plus, X, Globe, Cloud, Bell, BookOpen, Menu, Key, Zap, FileText, RefreshCw, Trash2, Activity, Brain, Users, Bot, Database, GitBranch, Shield, TrendingUp, Search, Command } from 'lucide-react';
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useMonitoring } from '../contexts/MonitoringContext';
 import { Cluster } from '../types';
@@ -44,8 +44,12 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
   const [isClusterMenuOpen, setIsClusterMenuOpen] = useState(false);
   const [isRegisterModalOpen, setIsRegisterModalOpen] = useState(false);
   const [clusterToDelete, setClusterToDelete] = useState<Cluster | null>(null);
+  const [isClusterSearchOpen, setIsClusterSearchOpen] = useState(false);
+  const [clusterSearchQuery, setClusterSearchQuery] = useState('');
+  const [clusterSearchIndex, setClusterSearchIndex] = useState(0);
 
   const clusterMenuRef = useRef<HTMLDivElement>(null);
+  const clusterSearchInputRef = useRef<HTMLInputElement>(null);
 
   // Scroll to top on route change
   useEffect(() => {
@@ -53,10 +57,20 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
   }, [location.pathname]);
 
   // Keyboard shortcut: '[' toggles sidebar collapse on desktop
+  // CMD+K / Ctrl+K opens cluster search
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === '[' && !e.ctrlKey && !e.metaKey && !e.altKey) {
         setIsCollapsed(prev => !prev);
+      }
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        setIsClusterSearchOpen(true);
+        setClusterSearchQuery('');
+        setClusterSearchIndex(0);
+      }
+      if (e.key === 'Escape') {
+        setIsClusterSearchOpen(false);
       }
     };
     window.addEventListener('keydown', handleKeyDown);
@@ -98,12 +112,26 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
     setIsMobileMenuOpen(false);
   }, [location.pathname]);
 
+  // Focus search input when cluster search opens
+  useEffect(() => {
+    if (isClusterSearchOpen) {
+      setTimeout(() => clusterSearchInputRef.current?.focus(), 50);
+    }
+  }, [isClusterSearchOpen]);
+
+  const filteredClusters = clusters.filter(c =>
+    (c.displayName || c.name).toLowerCase().includes(clusterSearchQuery.toLowerCase()) ||
+    c.provider.toLowerCase().includes(clusterSearchQuery.toLowerCase()) ||
+    (c.region || '').toLowerCase().includes(clusterSearchQuery.toLowerCase())
+  );
+
   const navItems = [
     { path: '/', label: 'Overview', icon: LayoutDashboard },
     { path: '/templates', label: 'Runbooks', icon: BookOpen },
     { path: '/triage', label: 'Triage', icon: AlertCircle },
     { path: '/rightsizing', label: 'Right Sizing', icon: Scale },
     { path: '/scaling', label: 'Scaling', icon: Activity },
+    { path: '/capacity', label: 'Capacity', icon: TrendingUp },
     { path: '/multicluster', label: 'Multi-Cluster', icon: Globe },
     { path: '/ml-intelligence', label: 'ML Intelligence', icon: Brain },
     { path: '/developer', label: 'Developer Portal', icon: Users },
@@ -167,7 +195,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
         aria-label="Main navigation"
         className={`
         fixed md:static inset-y-0 left-0 z-50 md:z-auto
-        flex flex-col bg-bg-card border-r border-border-main
+        flex flex-col bg-gradient-to-b from-bg-card to-bg-hover border-r border-border-main
         transition-all duration-300 ease-out
         shadow-[10px_0_30px_rgba(0,0,0,0.05)] dark:shadow-[10px_0_30px_rgba(0,0,0,0.3)] md:shadow-none
         ${isMobileMenuOpen ? 'translate-x-0 w-72' : '-translate-x-full md:translate-x-0'}
@@ -187,12 +215,12 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
 
           {(!isCollapsed || isMobileMenuOpen) && (
             <div className="animate-slide-up">
-              <h1 className="font-display font-black text-text-primary tracking-tight text-lg uppercase">
+              <h1 className="font-display font-black text-text-primary tracking-tight text-lg">
                 Kube<span className="text-primary-500">Triage</span>
               </h1>
               <div className="flex items-center gap-1.5 mt-1">
                 <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse-soft"></span>
-                <p className="text-[10px] font-semibold text-text-tertiary uppercase tracking-wider">Online</p>
+                <p className="text-[10px] font-semibold text-text-tertiary">Online</p>
               </div>
             </div>
           )}
@@ -210,9 +238,9 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
               key={item.path}
               to={item.path}
               className={({ isActive }) => `
-                flex items-center w-full px-3 py-3 rounded-xl transition-all duration-200 group relative overflow-hidden focus-visible:ring-2 focus-visible:ring-primary-500/50 outline-none
+                flex items-center w-full px-3 py-3 rounded-2xl transition-all duration-200 group relative overflow-hidden focus-visible:ring-2 focus-visible:ring-primary-500/50 outline-none
                 ${isActive
-                  ? 'bg-primary-500/10 text-text-primary border border-primary-500/20'
+                  ? 'bg-primary-500/8 text-primary-600 border border-transparent'
                   : 'text-text-secondary hover:text-text-primary hover:bg-bg-hover border border-transparent'}
               `}
               title={isCollapsed ? item.label : undefined}
@@ -220,15 +248,10 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
             >
               {({ isActive }) => (
                 <>
-                  {/* Active indicator line */}
-                  {isActive && (
-                    <div className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 bg-primary-500 rounded-r-full" />
-                  )}
-
                   <item.icon className={`
                     w-5 h-5 shrink-0 transition-all duration-200 relative z-10
                     ${isActive
-                      ? 'text-primary-500'
+                      ? 'text-primary-500 drop-shadow-[0_0_4px_rgba(220,95,58,0.3)]'
                       : 'text-text-tertiary group-hover:text-text-primary'}
                     ${isCollapsed && !isMobileMenuOpen ? 'mx-auto' : 'mr-3'}
                   `} />
@@ -248,10 +271,10 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
         </nav>
 
         {/* Collapse Toggle */}
-        <div className="p-3 border-t border-border-main hidden md:block">
+        <div className="p-4 hidden md:flex justify-center border-t border-border-main">
           <button
             onClick={() => setIsCollapsed(!isCollapsed)}
-            className="flex items-center justify-center w-full p-2.5 rounded-lg hover:bg-bg-hover text-text-tertiary hover:text-text-primary transition-all duration-200 group focus-visible:ring-2 focus-visible:ring-primary-500/50 outline-none"
+            className="w-10 h-10 rounded-full bg-bg-hover border border-border-main hover:bg-bg-card hover:border-primary-500/20 text-text-tertiary hover:text-text-primary transition-all duration-200 group focus-visible:ring-2 focus-visible:ring-primary-500/50 outline-none flex items-center justify-center"
             title={isCollapsed ? 'Expand sidebar (press [)' : 'Collapse sidebar (press [)'}
             aria-label={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
           >
@@ -296,8 +319,8 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
                       <ProviderIcon provider={selectedCluster.provider} className="w-4 h-4 text-text-secondary group-hover:text-primary-500" />
                     </div>
                     <div className="hidden sm:block text-left flex-1 min-w-0">
-                      <div className="text-[10px] font-semibold text-text-tertiary uppercase tracking-wider group-hover:text-primary-500 transition-colors">
-                        Target Cluster
+                      <div className="text-[10px] font-semibold text-text-tertiary group-hover:text-primary-500 transition-colors">
+                        Target cluster
                       </div>
                       <div className="text-sm font-semibold text-text-primary truncate flex items-center gap-2">
                         {selectedCluster.displayName || selectedCluster.name}
@@ -309,7 +332,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
                   <>
                     <Cloud className="w-5 h-5 text-text-secondary" />
                     <div className="hidden sm:block text-left">
-                      <div className="text-[10px] font-semibold text-text-tertiary uppercase tracking-wider">Target Cluster</div>
+                      <div className="text-[10px] font-semibold text-text-tertiary">Target cluster</div>
                       <div className="text-xs font-medium text-text-secondary">Select cluster...</div>
                     </div>
                   </>
@@ -324,7 +347,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
                   className="absolute top-full left-0 mt-2 w-80 bg-bg-card border border-border-main rounded-2xl shadow-2xl py-2 animate-slide-up z-50 overflow-hidden"
                 >
                   <div className="px-4 py-3 border-b border-border-main bg-bg-hover">
-                    <p className="text-[11px] font-semibold text-text-tertiary uppercase tracking-wider flex items-center gap-2">
+                    <p className="text-[11px] font-semibold text-text-tertiary flex items-center gap-2">
                       <Server className="w-3.5 h-3.5" /> Control Plane Fleet
                     </p>
                   </div>
@@ -336,14 +359,10 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
                         className={`
                           w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all text-left relative overflow-hidden group/item
                           ${selectedCluster?.id === cluster.id
-                            ? 'bg-primary-500/10 border border-primary-500/20'
+                            ? 'bg-primary-500/8 border border-transparent'
                             : 'hover:bg-bg-hover border border-transparent'}
                         `}
                       >
-                        {selectedCluster?.id === cluster.id && (
-                          <div className="absolute left-0 top-1/2 -translate-y-1/2 h-6 w-0.5 bg-primary-500 rounded-r-full" />
-                        )}
-
                         <div className="p-1.5 rounded-lg bg-bg-hover text-text-secondary group-hover/item:text-text-primary transition-colors">
                           <ProviderIcon provider={cluster.provider} className="w-4 h-4 shrink-0" />
                         </div>
@@ -388,7 +407,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
             <div className="hidden lg:flex items-center gap-3 ml-auto">
               <div className="flex items-center gap-4 px-4 py-2 bg-bg-card/50 rounded-xl border border-border-main">
                 <div className="flex items-center gap-2">
-                  <span className="text-[10px] font-semibold text-text-secondary uppercase tracking-wider">Latency</span>
+                  <span className="text-[10px] font-semibold text-text-secondary">Latency</span>
                   <span className="text-xs font-mono text-emerald-500 tabular-nums dark:text-emerald-400">{apiLatency !== null ? `${apiLatency}ms` : '...'}</span>
                 </div>
                 <div className="w-px h-4 bg-border-main"></div>
@@ -406,7 +425,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
               {/* Settings */}
               <button
                 onClick={() => navigate('/settings')}
-                className="p-2.5 rounded-xl bg-bg-hover border border-border-main text-text-secondary hover:text-text-primary hover:border-primary-500/30 transition-all duration-200 active:scale-95 group focus-visible:ring-2 focus-visible:ring-primary-500/50 outline-none"
+                className="p-2.5 rounded-xl bg-bg-hover border border-border-main text-text-secondary hover:text-text-primary hover:border-primary-500/30 transition-all duration-200 active:translate-y-[1px] active:brightness-95 group focus-visible:ring-2 focus-visible:ring-primary-500/50 outline-none"
                 title="Settings"
               >
                 <Settings className="w-5 h-5 group-hover:rotate-45 transition-transform" />
@@ -431,7 +450,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
               <button
                 onClick={refreshWorkloads}
                 disabled={isWorkloadsLoading}
-                className={`p-2.5 rounded-xl bg-bg-hover border border-border-main text-text-secondary hover:text-text-primary hover:border-primary-500/30 transition-all duration-200 focus-visible:ring-2 focus-visible:ring-primary-500/50 outline-none ${isWorkloadsLoading ? 'opacity-50' : 'active:scale-95'}`}
+                className={`p-2.5 rounded-xl bg-bg-hover border border-border-main text-text-secondary hover:text-text-primary hover:border-primary-500/30 transition-all duration-200 focus-visible:ring-2 focus-visible:ring-primary-500/50 outline-none ${isWorkloadsLoading ? 'opacity-50' : 'active:translate-y-[1px] active:brightness-95'}`}
                 title="Refresh Telemetry"
               >
                 <RefreshCw className={`w-5 h-5 ${isWorkloadsLoading ? 'animate-spin text-primary-500' : ''}`} />
@@ -440,7 +459,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
               {/* Theme Toggle */}
               <button
                 onClick={toggleTheme}
-                className="p-2.5 rounded-xl bg-bg-hover border border-border-main text-text-secondary hover:text-text-primary hover:border-primary-500/30 transition-all duration-200 active:scale-95 group focus-visible:ring-2 focus-visible:ring-primary-500/50 outline-none"
+                className="p-2.5 rounded-xl bg-bg-hover border border-border-main text-text-secondary hover:text-text-primary hover:border-primary-500/30 transition-all duration-200 active:translate-y-[1px] active:brightness-95 group focus-visible:ring-2 focus-visible:ring-primary-500/50 outline-none"
                 title={isDarkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
               >
                 {isDarkMode ? (
@@ -452,6 +471,106 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
             </div>
           </div>
         </header>
+
+        {/* CMD+K Cluster Search Modal */}
+        {isClusterSearchOpen && (
+          <div
+            className="fixed inset-0 z-[100] flex items-start justify-center pt-[15vh] bg-black/40 backdrop-blur-sm animate-fade-in"
+            onClick={() => setIsClusterSearchOpen(false)}
+          >
+            <div
+              className="w-full max-w-lg bg-bg-card border border-border-main rounded-2xl shadow-2xl overflow-hidden animate-slide-up"
+              onClick={e => e.stopPropagation()}
+            >
+              {/* Search Input */}
+              <div className="flex items-center gap-3 px-4 py-3 border-b border-border-main">
+                <Search className="w-5 h-5 text-text-tertiary" />
+                <input
+                  ref={clusterSearchInputRef}
+                  type="text"
+                  placeholder="Search clusters..."
+                  value={clusterSearchQuery}
+                  onChange={(e) => {
+                    setClusterSearchQuery(e.target.value);
+                    setClusterSearchIndex(0);
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'ArrowDown') {
+                      e.preventDefault();
+                      setClusterSearchIndex(prev => Math.min(filteredClusters.length - 1, prev + 1));
+                    } else if (e.key === 'ArrowUp') {
+                      e.preventDefault();
+                      setClusterSearchIndex(prev => Math.max(0, prev - 1));
+                    } else if (e.key === 'Enter') {
+                      e.preventDefault();
+                      const cluster = filteredClusters[clusterSearchIndex];
+                      if (cluster) {
+                        setSelectedCluster(cluster);
+                        setIsClusterSearchOpen(false);
+                      }
+                    }
+                  }}
+                  className="flex-1 bg-transparent text-text-primary placeholder:text-text-tertiary text-sm outline-none"
+                />
+                <div className="flex items-center gap-1 text-[10px] text-text-tertiary bg-bg-hover px-1.5 py-0.5 rounded border border-border-main">
+                  <Command className="w-3 h-3" />
+                  <span>K</span>
+                </div>
+              </div>
+
+              {/* Results */}
+              <div className="max-h-[320px] overflow-y-auto custom-scrollbar p-1.5">
+                {filteredClusters.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-8 text-text-tertiary">
+                    <Search className="w-6 h-6 mb-2 opacity-40" />
+                    <p className="text-xs">No clusters found</p>
+                  </div>
+                ) : (
+                  filteredClusters.map((cluster, idx) => (
+                    <button
+                      key={cluster.id}
+                      onClick={() => {
+                        setSelectedCluster(cluster);
+                        setIsClusterSearchOpen(false);
+                      }}
+                      onMouseEnter={() => setClusterSearchIndex(idx)}
+                      className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all text-left ${
+                        idx === clusterSearchIndex
+                          ? 'bg-primary-500/10 text-primary-600 dark:text-primary-400'
+                          : 'hover:bg-bg-hover'
+                      }`}
+                    >
+                      <div className="p-1.5 rounded-lg bg-bg-hover">
+                        <ProviderIcon provider={cluster.provider} className="w-4 h-4 shrink-0 text-text-secondary" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className={`text-sm font-semibold truncate ${idx === clusterSearchIndex ? 'text-primary-500' : 'text-text-primary'}`}>
+                          {cluster.displayName || cluster.name}
+                        </p>
+                        <div className="flex items-center gap-2 mt-0.5">
+                          <span className={`w-1.5 h-1.5 rounded-full ${getStatusColor(cluster.status)}`}></span>
+                          <p className="text-[10px] text-text-tertiary font-mono uppercase">{cluster.region} :: {cluster.provider}</p>
+                        </div>
+                      </div>
+                      {selectedCluster?.id === cluster.id && (
+                        <Check className="w-4 h-4 text-primary-500 shrink-0" />
+                      )}
+                    </button>
+                  ))
+                )}
+              </div>
+
+              {/* Footer */}
+              <div className="px-4 py-2 border-t border-border-main bg-bg-hover flex items-center justify-between text-[10px] text-text-tertiary">
+                <div className="flex items-center gap-3">
+                  <span className="flex items-center gap-1"><span className="bg-bg-card border border-border-main px-1 rounded">↓↑</span> navigate</span>
+                  <span className="flex items-center gap-1"><span className="bg-bg-card border border-border-main px-1 rounded">↵</span> select</span>
+                </div>
+                <span>{filteredClusters.length} cluster{filteredClusters.length !== 1 ? 's' : ''}</span>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Loading Progress Bar */}
         {isWorkloadsLoading && (

@@ -24,11 +24,11 @@ export const MetricCard: React.FC<MetricCardProps> = ({
 
   return (
     <div
-      className="bg-bg-card border border-border-main rounded-2xl p-5 transition-all duration-200 hover:border-primary-500/30 hover:shadow-lg dark:hover:shadow-black/20"
+      className="bg-bg-card border border-transparent rounded-2xl p-5 transition-all duration-300 hover:border-primary-500/10 hover:shadow-md"
       style={{ animationDelay }}
     >
       <div className="flex justify-between items-start mb-4">
-        <div className={`p-2.5 bg-primary-500/10 rounded-xl ${iconColor}`}>
+        <div className={`p-2.5 bg-primary-500/8 rounded-2xl backdrop-blur-sm ${iconColor}`}>
           <Icon className="w-5 h-5" />
         </div>
         {trend && (
@@ -42,7 +42,7 @@ export const MetricCard: React.FC<MetricCardProps> = ({
           </span>
         )}
       </div>
-      <p className="text-xs font-medium text-text-secondary uppercase tracking-wider mb-1">{label}</p>
+      <p className="text-[13px] font-semibold text-text-tertiary mb-1">{label}</p>
       <h3 className="text-2xl font-bold text-text-primary">{value}</h3>
     </div>
   );

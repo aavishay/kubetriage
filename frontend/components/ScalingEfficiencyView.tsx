@@ -449,26 +449,26 @@ const UnifiedNodePoolCard: React.FC<UnifiedNodePoolCardProps> = ({ nodePool, isS
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2 flex-wrap">
           <span className="font-bold text-text-primary">{nodePool.name || 'Unnamed Pool'}</span>
-          <span className={`px-2 py-0.5 rounded-md text-[10px] font-black uppercase ${getProvisionerBadgeColor(nodePool.provisionerType)}`}>
+          <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold  ${getProvisionerBadgeColor(nodePool.provisionerType)}`}>
             {nodePool.provisionerType === 'azure-nap' ? 'Azure NAP' : nodePool.provisionerType}
           </span>
-          <span className={`px-2 py-0.5 rounded-md text-[10px] font-black uppercase ${getProviderBadgeColor(nodePool.provider)}`}>
+          <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold  ${getProviderBadgeColor(nodePool.provider)}`}>
             {nodePool.provider.toUpperCase()}
           </span>
           {nodePool.consolidationEnabled && (
-            <span className="px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-500 text-[10px] font-black uppercase">
+            <span className="px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-500 text-[10px] font-semibold ">
               Cost Optimized
             </span>
           )}
         </div>
         <div className="flex items-center gap-2">
           {nodePool.pendingNodes > 0 && (
-            <span className="px-2 py-0.5 rounded-md bg-amber-500/10 text-amber-500 text-[10px] font-black">
+            <span className="px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-500 text-[10px] font-semibold">
               {nodePool.pendingNodes} Pending
             </span>
           )}
           {nodePool.driftedNodes > 0 && (
-            <span className="px-2 py-0.5 rounded-md bg-rose-500/10 text-rose-500 text-[10px] font-black">
+            <span className="px-2 py-0.5 rounded-full bg-rose-500/10 text-rose-500 text-[10px] font-semibold">
               {nodePool.driftedNodes} Drifted
             </span>
           )}
@@ -482,13 +482,13 @@ const UnifiedNodePoolCard: React.FC<UnifiedNodePoolCardProps> = ({ nodePool, isS
 
       <div className="grid grid-cols-4 gap-4 mb-4">
         <div className="text-center">
-          <p className="text-[10px] font-black uppercase text-text-tertiary">Nodes</p>
+          <p className="text-[10px] font-semibold  text-text-tertiary">Nodes</p>
           <p className="text-lg font-bold text-text-primary">
             {nodePool.readyNodes}/{nodePool.totalNodes}
           </p>
         </div>
         <div className="text-center">
-          <p className="text-[10px] font-black uppercase text-text-tertiary">Utilization</p>
+          <p className="text-[10px] font-semibold  text-text-tertiary">Utilization</p>
           <p className={`text-lg font-bold ${
             nodePool.utilizationPercent > 70 ? 'text-emerald-500' : 'text-amber-500'
           }`}>
@@ -496,7 +496,7 @@ const UnifiedNodePoolCard: React.FC<UnifiedNodePoolCardProps> = ({ nodePool, isS
           </p>
         </div>
         <div className="text-center">
-          <p className="text-[10px] font-black uppercase text-text-tertiary">Bin Packing</p>
+          <p className="text-[10px] font-semibold  text-text-tertiary">Bin Packing</p>
           <p className={`text-lg font-bold ${
             nodePool.binPackingEfficiency > 80 ? 'text-emerald-500' :
             nodePool.binPackingEfficiency > 60 ? 'text-amber-500' : 'text-rose-500'
@@ -505,7 +505,7 @@ const UnifiedNodePoolCard: React.FC<UnifiedNodePoolCardProps> = ({ nodePool, isS
           </p>
         </div>
         <div className="text-center">
-          <p className="text-[10px] font-black uppercase text-text-tertiary">Cost/Month</p>
+          <p className="text-[10px] font-semibold  text-text-tertiary">Cost/Month</p>
           <p className="text-lg font-bold text-primary-500 dark:text-primary-400">
             ${(nodePool.totalMonthlyCost || 0).toLocaleString('en-US', { maximumFractionDigits: 0 })}
           </p>
@@ -518,7 +518,7 @@ const UnifiedNodePoolCard: React.FC<UnifiedNodePoolCardProps> = ({ nodePool, isS
           {/* Instance Types / VM Sizes */}
           {(nodePool.instanceTypes?.length || 0) > 0 && (
             <div>
-              <p className="text-[10px] font-black uppercase text-text-tertiary mb-2">Instance Types</p>
+              <p className="text-[10px] font-semibold  text-text-tertiary mb-2">Instance Types</p>
               <div className="flex flex-wrap gap-2">
                 {nodePool.instanceTypes?.map((it) => (
                   <span
@@ -533,7 +533,7 @@ const UnifiedNodePoolCard: React.FC<UnifiedNodePoolCardProps> = ({ nodePool, isS
           )}
           {(nodePool.vmSizeNames?.length || 0) > 0 && (
             <div>
-              <p className="text-[10px] font-black uppercase text-text-tertiary mb-2">VM Sizes</p>
+              <p className="text-[10px] font-semibold  text-text-tertiary mb-2">VM Sizes</p>
               <div className="flex flex-wrap gap-2">
                 {nodePool.vmSizeNames?.map((size) => (
                   <span
@@ -550,7 +550,7 @@ const UnifiedNodePoolCard: React.FC<UnifiedNodePoolCardProps> = ({ nodePool, isS
           {/* Azure Config */}
           {nodePool.azureConfig && (
             <div>
-              <p className="text-[10px] font-black uppercase text-text-tertiary mb-2">Azure Configuration</p>
+              <p className="text-[10px] font-semibold  text-text-tertiary mb-2">Azure Configuration</p>
               <div className="grid grid-cols-2 gap-2 text-xs">
                 {nodePool.azureConfig.mode && (
                   <div className="flex justify-between">
@@ -594,7 +594,7 @@ const UnifiedNodePoolCard: React.FC<UnifiedNodePoolCardProps> = ({ nodePool, isS
           {/* AWS Config */}
           {nodePool.awsConfig && (
             <div>
-              <p className="text-[10px] font-black uppercase text-text-tertiary mb-2">AWS Configuration</p>
+              <p className="text-[10px] font-semibold  text-text-tertiary mb-2">AWS Configuration</p>
               <div className="space-y-1">
                 {nodePool.awsConfig.capacityType && (
                   <div className="flex justify-between text-xs">
@@ -615,7 +615,7 @@ const UnifiedNodePoolCard: React.FC<UnifiedNodePoolCardProps> = ({ nodePool, isS
           {/* Disruption Budgets */}
           {nodePool.disruptionBudgets && Object.keys(nodePool.disruptionBudgets).length > 0 && (
             <div>
-              <p className="text-[10px] font-black uppercase text-text-tertiary mb-2">Disruption Budgets</p>
+              <p className="text-[10px] font-semibold  text-text-tertiary mb-2">Disruption Budgets</p>
               <div className="space-y-1">
                 {Object.entries(nodePool.disruptionBudgets).map(([k, v]) => (
                   <div key={k} className="flex items-center gap-2 text-xs">
@@ -655,7 +655,7 @@ const UnifiedNodePoolCard: React.FC<UnifiedNodePoolCardProps> = ({ nodePool, isS
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-2xl font-black text-text-primary uppercase tracking-tighter flex items-center gap-3">
+          <h1 className="text-2xl font-black text-text-primary   flex items-center gap-3">
             <Zap className="w-7 h-7 text-primary-500" />
             Scaling Efficiency
           </h1>
@@ -667,7 +667,7 @@ const UnifiedNodePoolCard: React.FC<UnifiedNodePoolCardProps> = ({ nodePool, isS
               {data.detectedProvisioners.map(provisioner => (
                 <span
                   key={provisioner}
-                  className="px-2 py-0.5 rounded-md bg-primary-500/10 text-primary-500 text-[10px] font-black uppercase"
+                  className="px-2 py-0.5 rounded-full bg-primary-500/10 text-primary-500 text-[10px] font-semibold "
                 >
                   {getProvisionerDisplayName(provisioner)}
                 </span>
@@ -710,7 +710,7 @@ const UnifiedNodePoolCard: React.FC<UnifiedNodePoolCardProps> = ({ nodePool, isS
           >
             <div className="flex items-start justify-between">
               <div>
-                <p className="text-[10px] font-black uppercase tracking-widest text-text-tertiary mb-1">
+                <p className="text-[10px] font-semibold   text-text-tertiary mb-1">
                   {card.title}
                 </p>
                 <p className="text-2xl font-black text-text-primary">{card.value}</p>
@@ -726,7 +726,7 @@ const UnifiedNodePoolCard: React.FC<UnifiedNodePoolCardProps> = ({ nodePool, isS
         ))}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 gap-6">
         {/* Unified Node Pools (Karpenter + Azure NAP) */}
         <div className="bg-bg-card rounded-3xl border border-border-main overflow-hidden">
           <div className="p-6 border-b border-border-main bg-bg-hover/50">
@@ -736,7 +736,7 @@ const UnifiedNodePoolCard: React.FC<UnifiedNodePoolCardProps> = ({ nodePool, isS
                   <Server className="w-5 h-5 text-white" />
                 </div>
                 <div>
-                  <h2 className="text-sm font-black uppercase tracking-widest text-text-primary">
+                  <h2 className="text-sm font-black   text-text-primary">
                     Node Pools
                   </h2>
                   <p className="text-[10px] text-text-tertiary font-semibold">
@@ -804,23 +804,23 @@ const UnifiedNodePoolCard: React.FC<UnifiedNodePoolCardProps> = ({ nodePool, isS
                       <div className="flex items-center justify-between mb-4">
                         <div className="flex items-center gap-3">
                           <span className="font-bold text-text-primary">{np.nodePoolName}</span>
-                          <span className="px-2 py-0.5 rounded-md bg-blue-500/10 text-blue-500 text-[10px] font-black uppercase">
+                          <span className="px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-500 text-[10px] font-semibold ">
                             Karpenter
                           </span>
                           {np.consolidationEnabled && (
-                            <span className="px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-500 text-[10px] font-black uppercase">
+                            <span className="px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-500 text-[10px] font-semibold ">
                               Cost Optimized
                             </span>
                           )}
                         </div>
                         <div className="flex items-center gap-2">
                           {np.pendingNodeClaims > 0 && (
-                            <span className="px-2 py-0.5 rounded-md bg-amber-500/10 text-amber-500 text-[10px] font-black">
+                            <span className="px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-500 text-[10px] font-semibold">
                               {np.pendingNodeClaims} Pending
                             </span>
                           )}
                           {np.driftedNodes > 0 && (
-                            <span className="px-2 py-0.5 rounded-md bg-rose-500/10 text-rose-500 text-[10px] font-black">
+                            <span className="px-2 py-0.5 rounded-full bg-rose-500/10 text-rose-500 text-[10px] font-semibold">
                               {np.driftedNodes} Drifted
                             </span>
                           )}
@@ -834,13 +834,13 @@ const UnifiedNodePoolCard: React.FC<UnifiedNodePoolCardProps> = ({ nodePool, isS
 
                       <div className="grid grid-cols-4 gap-4 mb-4">
                         <div className="text-center">
-                          <p className="text-[10px] font-black uppercase text-text-tertiary">Nodes</p>
+                          <p className="text-[10px] font-semibold  text-text-tertiary">Nodes</p>
                           <p className="text-lg font-bold text-text-primary">
                             {np.readyNodes}/{np.totalNodes}
                           </p>
                         </div>
                         <div className="text-center">
-                          <p className="text-[10px] font-black uppercase text-text-tertiary">Utilization</p>
+                          <p className="text-[10px] font-semibold  text-text-tertiary">Utilization</p>
                           <p className={`text-lg font-bold ${
                             np.utilizationPercent > 70 ? 'text-emerald-500' : 'text-amber-500'
                           }`}>
@@ -848,7 +848,7 @@ const UnifiedNodePoolCard: React.FC<UnifiedNodePoolCardProps> = ({ nodePool, isS
                           </p>
                         </div>
                         <div className="text-center">
-                          <p className="text-[10px] font-black uppercase text-text-tertiary">Bin Packing</p>
+                          <p className="text-[10px] font-semibold  text-text-tertiary">Bin Packing</p>
                           <p className={`text-lg font-bold ${
                             np.binPackingEfficiency > 80 ? 'text-emerald-500' :
                             np.binPackingEfficiency > 60 ? 'text-amber-500' : 'text-rose-500'
@@ -857,7 +857,7 @@ const UnifiedNodePoolCard: React.FC<UnifiedNodePoolCardProps> = ({ nodePool, isS
                           </p>
                         </div>
                         <div className="text-center">
-                          <p className="text-[10px] font-black uppercase text-text-tertiary">Cost/CPU</p>
+                          <p className="text-[10px] font-semibold  text-text-tertiary">Cost/CPU</p>
                           <p className="text-lg font-bold text-text-primary">
                             ${np.costPerCPU.toFixed(3)}/h
                           </p>
@@ -868,7 +868,7 @@ const UnifiedNodePoolCard: React.FC<UnifiedNodePoolCardProps> = ({ nodePool, isS
                       {selectedNodePool === `legacy-${np.nodePoolName}` && (
                         <div className="mt-4 pt-4 border-t border-border-main space-y-4 animate-in fade-in slide-in-from-top-2">
                           <div>
-                            <p className="text-[10px] font-black uppercase text-text-tertiary mb-2">Instance Types</p>
+                            <p className="text-[10px] font-semibold  text-text-tertiary mb-2">Instance Types</p>
                             <div className="flex flex-wrap gap-2">
                               {np.instanceTypes.map((it) => (
                                 <span
@@ -886,7 +886,7 @@ const UnifiedNodePoolCard: React.FC<UnifiedNodePoolCardProps> = ({ nodePool, isS
 
                           {Object.keys(np.disruptionBudgets).length > 0 && (
                             <div>
-                              <p className="text-[10px] font-black uppercase text-text-tertiary mb-2">Disruption Budgets</p>
+                              <p className="text-[10px] font-semibold  text-text-tertiary mb-2">Disruption Budgets</p>
                               <div className="space-y-1">
                                 {Object.entries(np.disruptionBudgets).map(([k, v]) => (
                                   <div key={k} className="flex items-center gap-2 text-xs">
@@ -923,7 +923,7 @@ const UnifiedNodePoolCard: React.FC<UnifiedNodePoolCardProps> = ({ nodePool, isS
                 {/* Utilization Chart */}
                 {(filteredNodePools.length > 0 || data.karpenter.length > 0) && (
                   <div className="h-[250px] mt-6">
-                    <p className="text-[10px] font-black uppercase text-text-tertiary mb-4">
+                    <p className="text-[10px] font-semibold  text-text-tertiary mb-4">
                       Utilization vs Bin-Packing Efficiency
                     </p>
                     <ResponsiveContainer width="100%" height="100%">
@@ -958,7 +958,7 @@ const UnifiedNodePoolCard: React.FC<UnifiedNodePoolCardProps> = ({ nodePool, isS
                 <Activity className="w-5 h-5 text-white" />
               </div>
               <div>
-                <h2 className="text-sm font-black uppercase tracking-widest text-text-primary">
+                <h2 className="text-sm font-black   text-text-primary">
                   KEDA Event Scalers
                 </h2>
                 <p className="text-[10px] text-text-tertiary font-semibold">
@@ -1053,12 +1053,12 @@ const UnifiedNodePoolCard: React.FC<UnifiedNodePoolCardProps> = ({ nodePool, isS
                           <span className="font-bold text-text-primary">{keda.workloadName}</span>
                           <span className="text-[10px] text-text-tertiary">{keda.namespace}</span>
                           {!keda.isReady && (
-                            <span className="px-2 py-0.5 rounded-md bg-rose-500/10 text-rose-500 text-[10px] font-black">
+                            <span className="px-2 py-0.5 rounded-full bg-rose-500/10 text-rose-500 text-[10px] font-semibold">
                               Not Ready
                             </span>
                           )}
                           {keda.isFallback && (
-                            <span className="px-2 py-0.5 rounded-md bg-amber-500/10 text-amber-500 text-[10px] font-black">
+                            <span className="px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-500 text-[10px] font-semibold">
                               Fallback
                             </span>
                           )}
@@ -1089,7 +1089,7 @@ const UnifiedNodePoolCard: React.FC<UnifiedNodePoolCardProps> = ({ nodePool, isS
 
                       <div className="grid grid-cols-4 gap-4 mb-4">
                         <div className="text-center">
-                          <p className="text-[10px] font-black uppercase text-text-tertiary">Replicas</p>
+                          <p className="text-[10px] font-semibold  text-text-tertiary">Replicas</p>
                           <p className="text-lg font-bold text-text-primary">
                             {keda.currentReplicas}
                           </p>
@@ -1098,7 +1098,7 @@ const UnifiedNodePoolCard: React.FC<UnifiedNodePoolCardProps> = ({ nodePool, isS
                           </p>
                         </div>
                         <div className="text-center">
-                          <p className="text-[10px] font-black uppercase text-text-tertiary">Efficiency</p>
+                          <p className="text-[10px] font-semibold  text-text-tertiary">Efficiency</p>
                           <p className={`text-lg font-bold ${
                             keda.efficiencyScore >= 80 ? 'text-emerald-500' :
                             keda.efficiencyScore >= 60 ? 'text-amber-500' : 'text-rose-500'
@@ -1107,13 +1107,13 @@ const UnifiedNodePoolCard: React.FC<UnifiedNodePoolCardProps> = ({ nodePool, isS
                           </p>
                         </div>
                         <div className="text-center">
-                          <p className="text-[10px] font-black uppercase text-text-tertiary">At Min</p>
+                          <p className="text-[10px] font-semibold  text-text-tertiary">At Min</p>
                           <p className="text-lg font-bold text-text-primary">
                             {keda.timeAtMinPercent.toFixed(0)}%
                           </p>
                         </div>
                         <div className="text-center">
-                          <p className="text-[10px] font-black uppercase text-text-tertiary">At Max</p>
+                          <p className="text-[10px] font-semibold  text-text-tertiary">At Max</p>
                           <p className={`text-lg font-bold ${
                             keda.timeAtMaxPercent > 20 ? 'text-rose-500' : 'text-text-primary'
                           }`}>
@@ -1126,7 +1126,7 @@ const UnifiedNodePoolCard: React.FC<UnifiedNodePoolCardProps> = ({ nodePool, isS
                       {selectedKEDAWorkload === keda.workloadName && (
                         <div className="mt-4 pt-4 border-t border-border-main space-y-4 animate-in fade-in slide-in-from-top-2">
                           <div>
-                            <p className="text-[10px] font-black uppercase text-text-tertiary mb-2">Triggers</p>
+                            <p className="text-[10px] font-semibold  text-text-tertiary mb-2">Triggers</p>
                             <div className="space-y-2">
                               {keda.triggerTypes.map((trigger, idx) => (
                                 <div
@@ -1134,7 +1134,7 @@ const UnifiedNodePoolCard: React.FC<UnifiedNodePoolCardProps> = ({ nodePool, isS
                                   className="flex items-center justify-between p-3 rounded-xl bg-bg-card border border-border-main"
                                 >
                                   <div className="flex items-center gap-3">
-                                    <span className="px-2 py-0.5 rounded-md bg-primary-500/10 text-primary-500 text-[10px] font-bold">
+                                    <span className="px-2 py-0.5 rounded-full bg-primary-500/10 text-primary-500 text-[10px] font-bold">
                                       {trigger.type}
                                     </span>
                                     <span className="text-sm text-text-secondary">{trigger.metricName}</span>
@@ -1154,13 +1154,13 @@ const UnifiedNodePoolCard: React.FC<UnifiedNodePoolCardProps> = ({ nodePool, isS
 
                           <div className="grid grid-cols-2 gap-4">
                             <div className="p-3 rounded-xl bg-bg-hover">
-                              <p className="text-[10px] font-black uppercase text-text-tertiary mb-1">Cooldown Efficiency</p>
+                              <p className="text-[10px] font-semibold  text-text-tertiary mb-1">Cooldown Efficiency</p>
                               <p className="text-xl font-bold text-text-primary">
                                 {keda.cooldownEfficiency.toFixed(0)}%
                               </p>
                             </div>
                             <div className="p-3 rounded-xl bg-bg-hover">
-                              <p className="text-[10px] font-black uppercase text-text-tertiary mb-1">Scale-up Latency</p>
+                              <p className="text-[10px] font-semibold  text-text-tertiary mb-1">Scale-up Latency</p>
                               <p className="text-xl font-bold text-text-primary">
                                 {(keda.scaleUpLatency / 1000).toFixed(1)}s
                               </p>
@@ -1192,7 +1192,7 @@ const UnifiedNodePoolCard: React.FC<UnifiedNodePoolCardProps> = ({ nodePool, isS
                 {/* Efficiency Chart */}
                 {kedaChartData.length > 0 && (
                   <div className="h-[250px] mt-6">
-                    <p className="text-[10px] font-black uppercase text-text-tertiary mb-4">
+                    <p className="text-[10px] font-semibold  text-text-tertiary mb-4">
                       Scaling Efficiency by Workload
                     </p>
                     <ResponsiveContainer width="100%" height="100%">
@@ -1231,7 +1231,7 @@ const UnifiedNodePoolCard: React.FC<UnifiedNodePoolCardProps> = ({ nodePool, isS
               <Scale className="w-5 h-5 text-white" />
             </div>
             <div>
-              <h2 className="text-sm font-black uppercase tracking-widest text-text-primary">
+              <h2 className="text-sm font-black   text-text-primary">
                 HPA Horizontal Pod Autoscalers
               </h2>
               <p className="text-[10px] text-text-tertiary font-semibold">
@@ -1326,12 +1326,12 @@ const UnifiedNodePoolCard: React.FC<UnifiedNodePoolCardProps> = ({ nodePool, isS
                         <span className="font-bold text-text-primary">{hpa.name}</span>
                         <span className="text-[10px] text-text-tertiary">{hpa.namespace}</span>
                         {!hpa.isActive && (
-                          <span className="px-2 py-0.5 rounded-md bg-rose-500/10 text-rose-500 text-[10px] font-black">
+                          <span className="px-2 py-0.5 rounded-full bg-rose-500/10 text-rose-500 text-[10px] font-semibold">
                             Inactive
                           </span>
                         )}
                         {hpa.scalingLimited && (
-                          <span className="px-2 py-0.5 rounded-md bg-amber-500/10 text-amber-500 text-[10px] font-black">
+                          <span className="px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-500 text-[10px] font-semibold">
                             Limited
                           </span>
                         )}
@@ -1357,7 +1357,7 @@ const UnifiedNodePoolCard: React.FC<UnifiedNodePoolCardProps> = ({ nodePool, isS
 
                     <div className="grid grid-cols-4 gap-4 mb-4">
                       <div className="text-center">
-                        <p className="text-[10px] font-black uppercase text-text-tertiary">Current</p>
+                        <p className="text-[10px] font-semibold  text-text-tertiary">Current</p>
                         <p className="text-lg font-bold text-text-primary">
                           {hpa.currentReplicas}
                         </p>
@@ -1366,7 +1366,7 @@ const UnifiedNodePoolCard: React.FC<UnifiedNodePoolCardProps> = ({ nodePool, isS
                         </p>
                       </div>
                       <div className="text-center">
-                        <p className="text-[10px] font-black uppercase text-text-tertiary">Desired</p>
+                        <p className="text-[10px] font-semibold  text-text-tertiary">Desired</p>
                         <p className={`text-lg font-bold ${
                           hpa.desiredReplicas !== hpa.currentReplicas ? 'text-amber-500' : 'text-text-primary'
                         }`}>
@@ -1374,7 +1374,7 @@ const UnifiedNodePoolCard: React.FC<UnifiedNodePoolCardProps> = ({ nodePool, isS
                         </p>
                       </div>
                       <div className="text-center">
-                        <p className="text-[10px] font-black uppercase text-text-tertiary">CPU Target</p>
+                        <p className="text-[10px] font-semibold  text-text-tertiary">CPU Target</p>
                         <p className="text-lg font-bold text-text-primary">
                           {hpa.cpuUtilization?.targetUtilization || '-'}%
                         </p>
@@ -1385,7 +1385,7 @@ const UnifiedNodePoolCard: React.FC<UnifiedNodePoolCardProps> = ({ nodePool, isS
                         )}
                       </div>
                       <div className="text-center">
-                        <p className="text-[10px] font-black uppercase text-text-tertiary">Memory Target</p>
+                        <p className="text-[10px] font-semibold  text-text-tertiary">Memory Target</p>
                         <p className="text-lg font-bold text-text-primary">
                           {hpa.memoryUtilization?.targetUtilization || '-'}%
                         </p>
@@ -1402,7 +1402,7 @@ const UnifiedNodePoolCard: React.FC<UnifiedNodePoolCardProps> = ({ nodePool, isS
                       <div className="mt-4 pt-4 border-t border-border-main space-y-4 animate-in fade-in slide-in-from-top-2">
                         <div className="grid grid-cols-2 gap-4">
                           <div>
-                            <p className="text-[10px] font-black uppercase text-text-tertiary mb-2">Scale Target</p>
+                            <p className="text-[10px] font-semibold  text-text-tertiary mb-2">Scale Target</p>
                             <div className="p-3 rounded-xl bg-bg-card/50 border border-border-main">
                               <p className="text-sm text-text-primary">
                                 {hpa.scaleTargetRef.kind}: <span className="font-mono text-xs">{hpa.scaleTargetRef.name}</span>
@@ -1411,7 +1411,7 @@ const UnifiedNodePoolCard: React.FC<UnifiedNodePoolCardProps> = ({ nodePool, isS
                             </div>
                           </div>
                           <div>
-                            <p className="text-[10px] font-black uppercase text-text-tertiary mb-2">Status</p>
+                            <p className="text-[10px] font-semibold  text-text-tertiary mb-2">Status</p>
                             <div className="p-3 rounded-xl bg-bg-card/50 border border-border-main space-y-2">
                               <div className="flex items-center gap-2">
                                 <span className={`w-2 h-2 rounded-full ${hpa.isActive ? 'bg-emerald-500' : 'bg-rose-500'}`} />
@@ -1427,7 +1427,7 @@ const UnifiedNodePoolCard: React.FC<UnifiedNodePoolCardProps> = ({ nodePool, isS
 
                         {hpa.customMetrics && hpa.customMetrics.length > 0 && (
                           <div>
-                            <p className="text-[10px] font-black uppercase text-text-tertiary mb-2">Custom Metrics</p>
+                            <p className="text-[10px] font-semibold  text-text-tertiary mb-2">Custom Metrics</p>
                             <div className="space-y-2">
                               {hpa.customMetrics.map((metric, idx) => (
                                 <div
@@ -1486,7 +1486,7 @@ const UnifiedNodePoolCard: React.FC<UnifiedNodePoolCardProps> = ({ nodePool, isS
               <Server className="w-5 h-5 text-white" />
             </div>
             <div>
-              <h2 className="text-sm font-black uppercase tracking-widest text-text-primary">
+              <h2 className="text-sm font-black   text-text-primary">
                 Node Claims
               </h2>
               <p className="text-[10px] text-text-tertiary font-semibold">
@@ -1516,7 +1516,7 @@ const UnifiedNodePoolCard: React.FC<UnifiedNodePoolCardProps> = ({ nodePool, isS
                     { label: 'Stuck >5m', value: nodeClaimsSummary.stuckPendingCount, color: 'text-rose-500' },
                   ].map((s, i) => (
                     <div key={i} className="bg-bg-hover rounded-xl p-3 text-center">
-                      <p className="text-[10px] font-black uppercase text-text-tertiary mb-1">{s.label}</p>
+                      <p className="text-[10px] font-semibold  text-text-tertiary mb-1">{s.label}</p>
                       <p className={`text-xl font-black ${s.color}`}>{s.value}</p>
                     </div>
                   ))}
@@ -1545,14 +1545,14 @@ const UnifiedNodePoolCard: React.FC<UnifiedNodePoolCardProps> = ({ nodePool, isS
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3 flex-wrap">
                           <span className="font-bold text-text-primary">{claim.name}</span>
-                          <span className={`px-2 py-0.5 rounded-md text-[10px] font-black uppercase ${
+                          <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold  ${
                             claim.provisionerType === 'karpenter'
                               ? 'bg-primary-500/10 text-primary-500'
                               : 'bg-cyan-500/10 text-cyan-500'
                           }`}>
                             {claim.provisionerType}
                           </span>
-                          <span className={`px-2 py-0.5 rounded-md text-[10px] font-black uppercase border ${
+                          <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold  border ${
                             claim.status === 'Ready'
                               ? 'text-emerald-500 bg-emerald-500/10 border-emerald-500/20'
                               : claim.status === 'Pending'
@@ -1584,25 +1584,25 @@ const UnifiedNodePoolCard: React.FC<UnifiedNodePoolCardProps> = ({ nodePool, isS
                         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                           {claim.instanceType && (
                             <div className="p-2 rounded-lg bg-bg-hover">
-                              <p className="text-[10px] font-black uppercase text-text-tertiary">Instance Type</p>
+                              <p className="text-[10px] font-semibold  text-text-tertiary">Instance Type</p>
                               <p className="text-sm font-bold text-text-primary">{claim.instanceType}</p>
                             </div>
                           )}
                           {claim.zone && (
                             <div className="p-2 rounded-lg bg-bg-hover">
-                              <p className="text-[10px] font-black uppercase text-text-tertiary">Zone</p>
+                              <p className="text-[10px] font-semibold  text-text-tertiary">Zone</p>
                               <p className="text-sm font-bold text-text-primary">{claim.zone}</p>
                             </div>
                           )}
                           {claim.capacityType && (
                             <div className="p-2 rounded-lg bg-bg-hover">
-                              <p className="text-[10px] font-black uppercase text-text-tertiary">Capacity</p>
+                              <p className="text-[10px] font-semibold  text-text-tertiary">Capacity</p>
                               <p className="text-sm font-bold text-text-primary capitalize">{claim.capacityType}</p>
                             </div>
                           )}
                           {claim.nodeName && (
                             <div className="p-2 rounded-lg bg-bg-hover">
-                              <p className="text-[10px] font-black uppercase text-text-tertiary">Node</p>
+                              <p className="text-[10px] font-semibold  text-text-tertiary">Node</p>
                               <p className="text-sm font-bold text-text-primary">{claim.nodeName}</p>
                             </div>
                           )}
@@ -1610,7 +1610,7 @@ const UnifiedNodePoolCard: React.FC<UnifiedNodePoolCardProps> = ({ nodePool, isS
 
                         {claim.conditions && claim.conditions.length > 0 && (
                           <div>
-                            <p className="text-[10px] font-black uppercase text-text-tertiary mb-2">Conditions</p>
+                            <p className="text-[10px] font-semibold  text-text-tertiary mb-2">Conditions</p>
                             <div className="space-y-2">
                               {claim.conditions.map((cond, idx) => (
                                 <div key={idx} className="flex items-start gap-2 p-2 rounded-lg bg-bg-hover">
@@ -1667,7 +1667,7 @@ const UnifiedNodePoolCard: React.FC<UnifiedNodePoolCardProps> = ({ nodePool, isS
                 <DollarSign className="w-5 h-5 text-white" />
               </div>
               <div>
-                <h2 className="text-sm font-black uppercase tracking-widest text-text-primary">
+                <h2 className="text-sm font-black   text-text-primary">
                   Cost Analysis
                 </h2>
                 <p className="text-[10px] text-text-tertiary font-semibold">
