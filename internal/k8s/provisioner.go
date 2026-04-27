@@ -159,21 +159,14 @@ type NodeClaim struct {
 func DetectProvisioner(ctx context.Context, client *ClusterConn) ([]NodeProvisioner, error) {
 	var provisioners []NodeProvisioner
 
-	// Check for Karpenter
+	// Check for Karpenter first (highest priority as it's the modern provisioner)
 	if karpenter, err := detectKarpenter(ctx, client); err == nil && karpenter != nil {
 		provisioners = append(provisioners, *karpenter)
 	}
 
-	// Check for Azure NAP (dynamic node provisioning)
+	// Check for Azure NAP (dynamic node provisioning) - this covers AKS with NAP enabled
 	if azureNAP, err := detectAzureNAP(ctx, client); err == nil && azureNAP != nil {
 		provisioners = append(provisioners, *azureNAP)
-	}
-
-	// Check for AKS managed node pools (only if Karpenter is not present, to avoid duplicates)
-	if len(provisioners) == 0 {
-		if aksPools, err := detectAKSManagedPools(ctx, client); err == nil && aksPools != nil {
-			provisioners = append(provisioners, *aksPools)
-		}
 	}
 
 	// Check for Cluster Autoscaler
@@ -238,36 +231,62 @@ func detectKarpenter(ctx context.Context, client *ClusterConn) (*NodeProvisioner
 }
 
 // detectAzureNAP detects if Azure Node Auto-Provisioning (NAP) is enabled
-// NAP is different from AKS managed node pools - it dynamically provisions nodes
+// NAP is AKS's dynamic node provisioning feature that creates nodes based on pod requirements
 func detectAzureNAP(ctx context.Context, client *ClusterConn) (*NodeProvisioner, error) {
-	if client.DynamicClient == nil {
-		return nil, fmt.Errorf("dynamic client not available")
+	if client.ClientSet == nil {
+		return nil, fmt.Errorf("client not available")
 	}
 
-	// Check for actual Azure NAP by looking for specific labels/annotations
-	// that indicate dynamic provisioning is enabled
-	// NAP creates nodes with specific labels unlike regular AKS node pools
-	nodes, err := client.ClientSet.CoreV1().Nodes().List(ctx, metav1.ListOptions{})
-	if err != nil {
-		return nil, err
+	// Check for Azure cluster by examining node labels and provider IDs
+	nodes, err := client.ClientSet.CoreV1().Nodes().List(ctx, metav1.ListOptions{Limit: 5})
+	if err != nil || len(nodes.Items) == 0 {
+		return nil, nil
 	}
 
-	hasNAP := false
+	// Check if this is an Azure AKS cluster
+	isAKS := false
 	for _, node := range nodes.Items {
-		// Azure NAP specific labels - nodes provisioned by NAP have unique characteristics
-		// Check for kubernetes.azure.com/scaling-enabled which indicates NAP
-		if val, ok := node.Labels["kubernetes.azure.com/scaling-enabled"]; ok && val == "true" {
-			hasNAP = true
+		// Azure nodes have specific labels
+		if _, ok := node.Labels["kubernetes.azure.com/cluster"]; ok {
+			isAKS = true
 			break
 		}
-		// Check for the node-provisioner annotation that NAP sets
-		if _, ok := node.Annotations["kubernetes.azure.com/node-provisioner"]; ok {
-			hasNAP = true
+		// Check provider ID
+		if strings.Contains(node.Spec.ProviderID, "azure://") {
+			isAKS = true
 			break
 		}
 	}
 
-	if !hasNAP {
+	if !isAKS {
+		return nil, nil
+	}
+
+	// Check for Azure NAP specific indicators
+	hasNAP := false
+	hasAgentPools := false
+
+	allNodes, err := client.ClientSet.CoreV1().Nodes().List(ctx, metav1.ListOptions{})
+	if err == nil {
+		for _, node := range allNodes.Items {
+			// Check for Azure NAP specific labels
+			if val, ok := node.Labels["kubernetes.azure.com/scaling-enabled"]; ok && val == "true" {
+				hasNAP = true
+			}
+			// Check for the node-provisioner annotation that NAP sets
+			if _, ok := node.Annotations["kubernetes.azure.com/node-provisioner"]; ok {
+				hasNAP = true
+			}
+			// Check for agentpool labels (indicates managed node pools)
+			if _, ok := node.Labels["agentpool"]; ok {
+				hasAgentPools = true
+			}
+		}
+	}
+
+	// If we have agent pools, consider this as having NAP capabilities
+	// Azure NAP is essentially the auto-scaling feature of AKS node pools
+	if !hasNAP && !hasAgentPools {
 		return nil, nil
 	}
 
