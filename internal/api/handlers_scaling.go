@@ -47,6 +47,12 @@ type UnifiedNodePool struct {
 	DisruptionBudgets  map[string]string `json:"disruptionBudgets,omitempty"`
 	Misconfigurations  []string          `json:"misconfigurations,omitempty"`
 
+	// Karpenter NodeClass reference
+	NodeClass          string            `json:"nodeClass,omitempty"`
+
+	// Creation timestamp for age calculation
+	CreationTimestamp  time.Time         `json:"creationTimestamp,omitempty"`
+
 	// Provider-specific details
 	AzureConfig *AzureNodePoolDetails `json:"azureConfig,omitempty"`
 	AWSConfig   *AWSNodePoolDetails   `json:"awsConfig,omitempty"`
@@ -251,8 +257,8 @@ func ScalingEfficiencyHandler(c *gin.Context) {
 	// 6. Fetch HPA metrics
 	hpaMetrics := fetchHPAEfficiency(ctx, client)
 
-	// 7. Calculate summary
-	summary := calculateEfficiencySummary(karpenterMetrics, kedaMetrics, hpaMetrics)
+	// 7. Calculate summary from unified provisioners
+	summary := calculateEfficiencySummary(unifiedProvisioners, kedaMetrics, hpaMetrics)
 
 	// 8. Detect which provisioners are active
 	detectedProvisioners := detectActiveProvisioners(unifiedProvisioners)
@@ -819,21 +825,27 @@ func fetchHPAEfficiency(ctx context.Context, client *k8s.ClusterConn) []HPAMetri
 	return metrics
 }
 
-func calculateEfficiencySummary(karpenter []KarpenterEfficiencyMetrics, keda []KEDAEfficiencyMetrics, hpa []HPAMetrics) EfficiencySummary {
+func calculateEfficiencySummary(unifiedProvisioners []UnifiedProvisionerMetrics, keda []KEDAEfficiencyMetrics, hpa []HPAMetrics) EfficiencySummary {
 	summary := EfficiencySummary{
-		TotalNodePools:   len(karpenter),
 		TotalKEDAScalers: len(keda),
 		TotalHPAScalers:  len(hpa),
 	}
 
 	var totalUtilization, totalBinPacking float64
-	for _, k := range karpenter {
-		totalUtilization += k.UtilizationPercent
-		totalBinPacking += k.BinPackingEfficiency
-		if k.ConsolidationEnabled {
-			summary.TotalCostOptimized++
+	var totalNodePools int
+
+	for _, provisioner := range unifiedProvisioners {
+		summary.TotalNodePools += len(provisioner.NodePools)
+		totalNodePools += len(provisioner.NodePools)
+
+		for _, np := range provisioner.NodePools {
+			totalUtilization += np.UtilizationPercent
+			totalBinPacking += np.BinPackingEfficiency
+			if np.ConsolidationEnabled {
+				summary.TotalCostOptimized++
+			}
+			summary.IssuesFound += len(np.Misconfigurations)
 		}
-		summary.IssuesFound += len(k.Misconfigurations)
 	}
 
 	for _, k := range keda {
@@ -844,9 +856,9 @@ func calculateEfficiencySummary(karpenter []KarpenterEfficiencyMetrics, keda []K
 		summary.IssuesFound += len(h.Misconfigurations)
 	}
 
-	if len(karpenter) > 0 {
-		summary.AvgNodeUtilization = totalUtilization / float64(len(karpenter))
-		summary.AvgBinPackingEfficiency = totalBinPacking / float64(len(karpenter))
+	if totalNodePools > 0 {
+		summary.AvgNodeUtilization = totalUtilization / float64(totalNodePools)
+		summary.AvgBinPackingEfficiency = totalBinPacking / float64(totalNodePools)
 	}
 
 	return summary
@@ -1002,6 +1014,8 @@ func fetchKarpenterNodePoolsUnified(ctx context.Context, client *k8s.ClusterConn
 			ConsolidationEnabled: kp.ConsolidationEnabled,
 			DisruptionBudgets:    kp.DisruptionBudgets,
 			Misconfigurations:    kp.Misconfigurations,
+			NodeClass:            kp.NodeClass,
+			CreationTimestamp:    kp.CreationTimestamp,
 			AWSConfig: &AWSNodePoolDetails{
 				CapacityType: kp.AWSNodePool.CapacityType,
 			},
@@ -1039,6 +1053,8 @@ func fetchAzureNAPNodePoolsUnified(ctx context.Context, client *k8s.ClusterConn)
 			ConsolidationEnabled: ap.ConsolidationEnabled,
 			DisruptionBudgets:    ap.DisruptionBudgets,
 			Misconfigurations:    ap.Misconfigurations,
+			NodeClass:            "", // Azure NAP doesn't use NodeClass
+			CreationTimestamp:    ap.CreationTimestamp,
 		}
 
 		if ap.AzureNodePool != nil {

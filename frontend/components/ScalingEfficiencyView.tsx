@@ -26,6 +26,21 @@ const COLORS = {
 
 const CHART_COLORS = ['#6366f1', '#10b981', '#f59e0b', '#f43f5e', '#8b5cf6', '#ec4899'];
 
+// Helper function to format age from timestamp
+const formatAge = (timestamp?: string): string => {
+  if (!timestamp) return '-';
+  const date = new Date(timestamp);
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+  const diffDays = Math.floor(diffHours / 24);
+
+  if (diffDays > 0) {
+    return `${diffDays}d`;
+  }
+  return `${diffHours}h`;
+};
+
 export const ScalingEfficiencyView: React.FC<ScalingEfficiencyViewProps> = ({ clusterId }) => {
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<{
@@ -302,53 +317,25 @@ export const ScalingEfficiencyView: React.FC<ScalingEfficiencyViewProps> = ({ cl
     });
   }, [data.unifiedProvisioners, selectedProvisionerType, nodePoolSortBy, nodePoolSortOrder]);
 
-  // Combined Node Pool Chart Data (legacy Karpenter + unified provisioners)
+  // Node Pool Chart Data
   const nodePoolChartData = useMemo(() => {
-    const unifiedData = filteredNodePools.map(np => ({
+    return filteredNodePools.map(np => ({
       name: np.name,
       utilization: np.utilizationPercent,
       binPacking: np.binPackingEfficiency,
       totalNodes: np.totalNodes,
       readyNodes: np.readyNodes
     }));
-    const legacyData = data.karpenter.map(np => ({
-      name: np.nodePoolName,
-      utilization: np.utilizationPercent,
-      binPacking: np.binPackingEfficiency,
-      totalNodes: np.totalNodes,
-      readyNodes: np.readyNodes
-    }));
-    // Combine and dedupe by name
-    const combined = [...unifiedData];
-    legacyData.forEach(item => {
-      if (!combined.find(c => c.name === item.name)) {
-        combined.push(item);
-      }
-    });
-    return combined;
-  }, [filteredNodePools, data.karpenter]);
+  }, [filteredNodePools]);
 
-  // Cost Analysis Data (from both unified provisioners and legacy karpenter)
+  // Cost Analysis Data
   const costAnalysisData = useMemo(() => {
-    const unifiedData = filteredNodePools.map(np => ({
+    return filteredNodePools.map(np => ({
       name: np.name,
       costPerCPU: np.costPerCPU || 0,
       costPerMemory: np.costPerGBMemory || 0
     }));
-    const legacyData = data.karpenter.map(np => ({
-      name: np.nodePoolName,
-      costPerCPU: np.costPerCPU,
-      costPerMemory: np.costPerGBMemory
-    }));
-    // Combine and dedupe by name
-    const combined = [...unifiedData];
-    legacyData.forEach(item => {
-      if (!combined.find(c => c.name === item.name)) {
-        combined.push(item);
-      }
-    });
-    return combined;
-  }, [filteredNodePools, data.karpenter]);
+  }, [filteredNodePools]);
 
   if (loading && !data.summary) {
     return (
@@ -403,252 +390,6 @@ export const ScalingEfficiencyView: React.FC<ScalingEfficiencyViewProps> = ({ cl
     );
   }
 
-// Unified Node Pool Card Component
-interface UnifiedNodePoolCardProps {
-  nodePool: UnifiedNodePool;
-  isSelected: boolean;
-  onClick: () => void;
-}
-
-const UnifiedNodePoolCard: React.FC<UnifiedNodePoolCardProps> = ({ nodePool, isSelected, onClick }) => {
-  const getProviderBadgeColor = (provider: string) => {
-    switch (provider) {
-      case 'aws':
-        return 'bg-orange-500/10 text-orange-500';
-      case 'azure':
-        return 'bg-blue-500/10 text-blue-500';
-      case 'gcp':
-        return 'bg-red-500/10 text-red-500';
-      default:
-        return 'bg-text-tertiary/10 text-text-tertiary';
-    }
-  };
-
-  const getProvisionerBadgeColor = (type: string) => {
-    switch (type) {
-      case 'karpenter':
-        return 'bg-primary-500/10 text-primary-500';
-      case 'azure-nap':
-        return 'bg-cyan-500/10 text-cyan-500';
-      case 'cluster-autoscaler':
-        return 'bg-purple-500/10 text-purple-500';
-      default:
-        return 'bg-text-tertiary/10 text-text-tertiary';
-    }
-  };
-
-  return (
-    <div
-      className={`p-5 rounded-2xl border-2 cursor-pointer transition-all ${
-        isSelected
-          ? 'border-primary-500 bg-primary-500/5'
-          : 'border-border-main hover:border-primary-500/30 bg-bg-hover/30'
-      }`}
-      onClick={onClick}
-    >
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-2 flex-wrap">
-          <span className="font-bold text-text-primary">{nodePool.name || 'Unnamed Pool'}</span>
-          <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold  ${getProvisionerBadgeColor(nodePool.provisionerType)}`}>
-            {nodePool.provisionerType === 'azure-nap' ? 'Azure NAP' : nodePool.provisionerType}
-          </span>
-          <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold  ${getProviderBadgeColor(nodePool.provider)}`}>
-            {nodePool.provider.toUpperCase()}
-          </span>
-          {nodePool.consolidationEnabled && (
-            <span className="px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-500 text-[10px] font-semibold ">
-              Cost Optimized
-            </span>
-          )}
-        </div>
-        <div className="flex items-center gap-2">
-          {nodePool.pendingNodes > 0 && (
-            <span className="px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-500 text-[10px] font-semibold">
-              {nodePool.pendingNodes} Pending
-            </span>
-          )}
-          {nodePool.driftedNodes > 0 && (
-            <span className="px-2 py-0.5 rounded-full bg-rose-500/10 text-rose-500 text-[10px] font-semibold">
-              {nodePool.driftedNodes} Drifted
-            </span>
-          )}
-          {isSelected ? (
-            <ChevronUp className="w-4 h-4 text-text-tertiary" />
-          ) : (
-            <ChevronDown className="w-4 h-4 text-text-tertiary" />
-          )}
-        </div>
-      </div>
-
-      <div className="grid grid-cols-4 gap-4 mb-4">
-        <div className="text-center">
-          <p className="text-[10px] font-semibold  text-text-tertiary">Nodes</p>
-          <p className="text-lg font-bold text-text-primary">
-            {nodePool.readyNodes}/{nodePool.totalNodes}
-          </p>
-        </div>
-        <div className="text-center">
-          <p className="text-[10px] font-semibold  text-text-tertiary">Utilization</p>
-          <p className={`text-lg font-bold ${
-            nodePool.utilizationPercent > 70 ? 'text-emerald-500' : 'text-amber-500'
-          }`}>
-            {nodePool.utilizationPercent.toFixed(1)}%
-          </p>
-        </div>
-        <div className="text-center">
-          <p className="text-[10px] font-semibold  text-text-tertiary">Bin Packing</p>
-          <p className={`text-lg font-bold ${
-            nodePool.binPackingEfficiency > 80 ? 'text-emerald-500' :
-            nodePool.binPackingEfficiency > 60 ? 'text-amber-500' : 'text-rose-500'
-          }`}>
-            {nodePool.binPackingEfficiency.toFixed(1)}%
-          </p>
-        </div>
-        <div className="text-center">
-          <p className="text-[10px] font-semibold  text-text-tertiary">Cost/Month</p>
-          <p className="text-lg font-bold text-primary-500 dark:text-primary-400">
-            ${(nodePool.totalMonthlyCost || 0).toLocaleString('en-US', { maximumFractionDigits: 0 })}
-          </p>
-        </div>
-      </div>
-
-      {/* Expanded Details */}
-      {isSelected && (
-        <div className="mt-4 pt-4 border-t border-border-main space-y-4 animate-in fade-in slide-in-from-top-2">
-          {/* Instance Types / VM Sizes */}
-          {(nodePool.instanceTypes?.length || 0) > 0 && (
-            <div>
-              <p className="text-[10px] font-semibold  text-text-tertiary mb-2">Instance Types</p>
-              <div className="flex flex-wrap gap-2">
-                {nodePool.instanceTypes?.map((it) => (
-                  <span
-                    key={it}
-                    className="px-2 py-1 rounded-lg bg-bg-hover text-text-secondary text-xs font-medium"
-                  >
-                    {it}
-                  </span>
-                ))}
-              </div>
-            </div>
-          )}
-          {(nodePool.vmSizeNames?.length || 0) > 0 && (
-            <div>
-              <p className="text-[10px] font-semibold  text-text-tertiary mb-2">VM Sizes</p>
-              <div className="flex flex-wrap gap-2">
-                {nodePool.vmSizeNames?.map((size) => (
-                  <span
-                    key={size}
-                    className="px-2 py-1 rounded-lg bg-bg-hover text-text-secondary text-xs font-medium"
-                  >
-                    {size}
-                  </span>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Azure Config */}
-          {nodePool.azureConfig && (
-            <div>
-              <p className="text-[10px] font-semibold  text-text-tertiary mb-2">Azure Configuration</p>
-              <div className="grid grid-cols-2 gap-2 text-xs">
-                {nodePool.azureConfig.mode && (
-                  <div className="flex justify-between">
-                    <span className="text-text-secondary">Mode:</span>
-                    <span className="text-text-primary">{nodePool.azureConfig.mode}</span>
-                  </div>
-                )}
-                {nodePool.azureConfig.maxPods && (
-                  <div className="flex justify-between">
-                    <span className="text-text-secondary">Max Pods:</span>
-                    <span className="text-text-primary">{nodePool.azureConfig.maxPods}</span>
-                  </div>
-                )}
-                {nodePool.azureConfig.enableAutoScaling !== undefined && (
-                  <div className="flex justify-between">
-                    <span className="text-text-secondary">Auto Scaling:</span>
-                    <span className={nodePool.azureConfig.enableAutoScaling ? 'text-emerald-500' : 'text-text-tertiary'}>
-                      {nodePool.azureConfig.enableAutoScaling ? 'Enabled' : 'Disabled'}
-                    </span>
-                  </div>
-                )}
-                {nodePool.azureConfig.scaleSetPriority && (
-                  <div className="flex justify-between">
-                    <span className="text-text-secondary">Priority:</span>
-                    <span className="text-text-primary">{nodePool.azureConfig.scaleSetPriority}</span>
-                  </div>
-                )}
-              </div>
-              {nodePool.azureConfig.availabilityZones && nodePool.azureConfig.availabilityZones.length > 0 && (
-                <div className="mt-2 flex gap-1">
-                  {nodePool.azureConfig.availabilityZones.map(zone => (
-                    <span key={zone} className="px-2 py-0.5 rounded bg-primary-500/10 text-primary-500 text-[10px]">
-                      Zone {zone}
-                    </span>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* AWS Config */}
-          {nodePool.awsConfig && (
-            <div>
-              <p className="text-[10px] font-semibold  text-text-tertiary mb-2">AWS Configuration</p>
-              <div className="space-y-1">
-                {nodePool.awsConfig.capacityType && (
-                  <div className="flex justify-between text-xs">
-                    <span className="text-text-secondary">Capacity Type:</span>
-                    <span className="text-text-primary capitalize">{nodePool.awsConfig.capacityType}</span>
-                  </div>
-                )}
-                {nodePool.awsConfig.instanceProfile && (
-                  <div className="flex justify-between text-xs">
-                    <span className="text-text-secondary">Instance Profile:</span>
-                    <span className="text-text-primary">{nodePool.awsConfig.instanceProfile}</span>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* Disruption Budgets */}
-          {nodePool.disruptionBudgets && Object.keys(nodePool.disruptionBudgets).length > 0 && (
-            <div>
-              <p className="text-[10px] font-semibold  text-text-tertiary mb-2">Disruption Budgets</p>
-              <div className="space-y-1">
-                {Object.entries(nodePool.disruptionBudgets).map(([k, v]) => (
-                  <div key={k} className="flex items-center gap-2 text-xs">
-                    <span className="text-text-secondary">{k}:</span>
-                    <span className="font-medium text-text-primary">{v}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Misconfigurations */}
-          {nodePool.misconfigurations && nodePool.misconfigurations.length > 0 && (
-            <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/20">
-              <div className="flex items-center gap-2 mb-2">
-                <AlertTriangle className="w-4 h-4 text-rose-500" />
-                <span className="text-sm font-bold text-rose-500">Configuration Issues</span>
-              </div>
-              <ul className="space-y-1">
-                {nodePool.misconfigurations.map((m, i) => (
-                  <li key={i} className="text-xs text-rose-400 flex items-start gap-2">
-                    <span className="mt-1">•</span>
-                    {m}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-        </div>
-      )}
-    </div>
-  );
-};
 
   return (
     <div className="flex flex-col gap-6 p-6 font-sans">
@@ -766,146 +507,145 @@ const UnifiedNodePoolCard: React.FC<UnifiedNodePoolCardProps> = ({ nodePool, isS
             </div>
           </div>
 
-          <div className="p-6 space-y-6">
-            {filteredNodePools.length === 0 && data.karpenter.length === 0 ? (
+          <div className="p-6">
+            {filteredNodePools.length === 0 ? (
               <div className="text-center py-12">
                 <Server className="w-12 h-12 text-text-tertiary mx-auto mb-4" />
                 <p className="text-text-tertiary">No node pools found</p>
               </div>
             ) : (
               <>
-                {/* Unified Node Pool Cards */}
-                <div className="space-y-4">
-                  {filteredNodePools.map((np) => (
-                    <UnifiedNodePoolCard
-                      key={`${np.provisionerType}-${np.name}`}
-                      nodePool={np}
-                      isSelected={selectedNodePool === `${np.provisionerType}-${np.name}`}
-                      onClick={() => setSelectedNodePool(
-                        selectedNodePool === `${np.provisionerType}-${np.name}` ? null : `${np.provisionerType}-${np.name}`
+                {/* NodePool Table */}
+                <div className="overflow-hidden">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="border-b border-border-main">
+                        <th className="text-left py-3 px-4 text-sm font-medium text-text-tertiary">
+                          <label className="flex items-center cursor-pointer">
+                            <input type="checkbox" className="rounded border-border-main bg-bg-hover text-primary-500 focus:ring-primary-500" />
+                          </label>
+                        </th>
+                        <th className="text-left py-3 px-4 text-sm font-medium text-text-tertiary">Name</th>
+                        <th className="text-left py-3 px-4 text-sm font-medium text-text-tertiary">NodeClass</th>
+                        <th className="text-left py-3 px-4 text-sm font-medium text-text-tertiary">Nodes</th>
+                        <th className="text-left py-3 px-4 text-sm font-medium text-text-tertiary">Ready</th>
+                        <th className="text-left py-3 px-4 text-sm font-medium text-text-tertiary">Age</th>
+                        <th className="w-10"></th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filteredNodePools.length === 0 ? (
+                        <tr>
+                          <td colSpan={7} className="py-8 text-center text-text-tertiary">
+                            No node pools found
+                          </td>
+                        </tr>
+                      ) : (
+                        filteredNodePools.map((np) => (
+                          <tr
+                            key={`${np.provisionerType}-${np.name}`}
+                            className="border-b border-border-main/50 hover:bg-bg-hover/30 transition-colors cursor-pointer"
+                            onClick={() => setSelectedNodePool(
+                              selectedNodePool === `${np.provisionerType}-${np.name}` ? null : `${np.provisionerType}-${np.name}`
+                            )}
+                          >
+                            <td className="py-3 px-4">
+                              <input type="checkbox" className="rounded border-border-main bg-bg-hover text-primary-500 focus:ring-primary-500" />
+                            </td>
+                            <td className="py-3 px-4">
+                              <span className="font-medium text-text-primary">{np.name}</span>
+                            </td>
+                            <td className="py-3 px-4">
+                              <span className="text-text-secondary">{np.nodeClass || '-'}</span>
+                            </td>
+                            <td className="py-3 px-4">
+                              <span className="text-text-primary">{np.totalNodes}</span>
+                            </td>
+                            <td className="py-3 px-4">
+                              <span className={`text-text-primary ${np.readyNodes === np.totalNodes ? '' : 'text-amber-500'}`}>
+                                {np.readyNodes === np.totalNodes ? 'True' : 'False'}
+                              </span>
+                            </td>
+                            <td className="py-3 px-4">
+                              <span className="text-text-secondary">{formatAge(np.creationTimestamp)}</span>
+                            </td>
+                            <td className="py-3 px-2">
+                              <button className="p-1 hover:bg-bg-hover rounded">
+                                <span className="text-text-tertiary">⋮</span>
+                              </button>
+                            </td>
+                          </tr>
+                        ))
                       )}
-                    />
-                  ))}
-                  {/* Legacy Karpenter metrics (for backward compatibility) */}
-                  {data.karpenter
-                    .filter(np => selectedProvisionerType === 'all' || selectedProvisionerType === 'karpenter')
-                    .map((np) => (
-                    <div
-                      key={`legacy-${np.nodePoolName}`}
-                      className={`p-5 rounded-2xl border-2 cursor-pointer transition-all ${
-                        selectedNodePool === `legacy-${np.nodePoolName}`
-                          ? 'border-primary-500 bg-primary-500/5'
-                          : 'border-border-main hover:border-primary-500/30 bg-bg-hover/30'
-                      }`}
-                      onClick={() => setSelectedNodePool(
-                        selectedNodePool === `legacy-${np.nodePoolName}` ? null : `legacy-${np.nodePoolName}`
-                      )}
-                    >
-                      <div className="flex items-center justify-between mb-4">
-                        <div className="flex items-center gap-3">
-                          <span className="font-bold text-text-primary">{np.nodePoolName}</span>
-                          <span className="px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-500 text-[10px] font-semibold ">
-                            Karpenter
-                          </span>
-                          {np.consolidationEnabled && (
-                            <span className="px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-500 text-[10px] font-semibold ">
-                              Cost Optimized
-                            </span>
-                          )}
-                        </div>
-                        <div className="flex items-center gap-2">
-                          {np.pendingNodeClaims > 0 && (
-                            <span className="px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-500 text-[10px] font-semibold">
-                              {np.pendingNodeClaims} Pending
-                            </span>
-                          )}
-                          {np.driftedNodes > 0 && (
-                            <span className="px-2 py-0.5 rounded-full bg-rose-500/10 text-rose-500 text-[10px] font-semibold">
-                              {np.driftedNodes} Drifted
-                            </span>
-                          )}
-                          {selectedNodePool === `legacy-${np.nodePoolName}` ? (
-                            <ChevronUp className="w-4 h-4 text-text-tertiary" />
-                          ) : (
-                            <ChevronDown className="w-4 h-4 text-text-tertiary" />
-                          )}
-                        </div>
-                      </div>
+                    </tbody>
+                  </table>
+                </div>
 
-                      <div className="grid grid-cols-4 gap-4 mb-4">
-                        <div className="text-center">
-                          <p className="text-[10px] font-semibold  text-text-tertiary">Nodes</p>
-                          <p className="text-lg font-bold text-text-primary">
-                            {np.readyNodes}/{np.totalNodes}
-                          </p>
-                        </div>
-                        <div className="text-center">
-                          <p className="text-[10px] font-semibold  text-text-tertiary">Utilization</p>
-                          <p className={`text-lg font-bold ${
-                            np.utilizationPercent > 70 ? 'text-emerald-500' : 'text-amber-500'
-                          }`}>
-                            {np.utilizationPercent.toFixed(1)}%
-                          </p>
-                        </div>
-                        <div className="text-center">
-                          <p className="text-[10px] font-semibold  text-text-tertiary">Bin Packing</p>
-                          <p className={`text-lg font-bold ${
-                            np.binPackingEfficiency > 80 ? 'text-emerald-500' :
-                            np.binPackingEfficiency > 60 ? 'text-amber-500' : 'text-rose-500'
-                          }`}>
-                            {np.binPackingEfficiency.toFixed(1)}%
-                          </p>
-                        </div>
-                        <div className="text-center">
-                          <p className="text-[10px] font-semibold  text-text-tertiary">Cost/CPU</p>
-                          <p className="text-lg font-bold text-text-primary">
-                            ${np.costPerCPU.toFixed(3)}/h
-                          </p>
-                        </div>
-                      </div>
-
-                      {/* Expanded Details */}
-                      {selectedNodePool === `legacy-${np.nodePoolName}` && (
-                        <div className="mt-4 pt-4 border-t border-border-main space-y-4 animate-in fade-in slide-in-from-top-2">
-                          <div>
-                            <p className="text-[10px] font-semibold  text-text-tertiary mb-2">Instance Types</p>
-                            <div className="flex flex-wrap gap-2">
-                              {np.instanceTypes.map((it) => (
-                                <span
-                                  key={it}
-                                  className="px-2 py-1 rounded-lg bg-bg-hover text-text-secondary text-xs font-medium"
-                                >
-                                  {it}
-                                </span>
-                              ))}
-                              {np.instanceTypes.length === 0 && (
-                                <span className="text-text-tertiary text-xs">No instance types specified</span>
-                              )}
+                {/* Expanded NodePool Details */}
+                {selectedNodePool && (
+                  <div className="mt-4 p-4 border border-border-main rounded-xl bg-bg-hover/20">
+                    {(() => {
+                      const pool = filteredNodePools.find(p => `${p.provisionerType}-${p.name}` === selectedNodePool);
+                      if (!pool) return null;
+                      return (
+                        <div className="space-y-3">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="font-bold text-text-primary">{pool.name}</span>
+                            <span className="px-2 py-0.5 rounded-full bg-primary-500/10 text-primary-500 text-[10px] font-semibold">
+                              {pool.provisionerType === 'azure-nap' ? 'Azure NAP' : pool.provisionerType}
+                            </span>
+                            {pool.nodeClass && (
+                              <span className="px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-500 text-[10px] font-semibold">
+                                {pool.nodeClass}
+                              </span>
+                            )}
+                          </div>
+                          <div className="grid grid-cols-4 gap-4 text-sm">
+                            <div>
+                              <span className="text-text-tertiary">Nodes:</span>{' '}
+                              <span className="text-text-primary">{pool.readyNodes}/{pool.totalNodes}</span>
+                            </div>
+                            <div>
+                              <span className="text-text-tertiary">Utilization:</span>{' '}
+                              <span className="text-text-primary">{pool.utilizationPercent.toFixed(1)}%</span>
+                            </div>
+                            <div>
+                              <span className="text-text-tertiary">Bin Packing:</span>{' '}
+                              <span className="text-text-primary">{pool.binPackingEfficiency.toFixed(1)}%</span>
+                            </div>
+                            <div>
+                              <span className="text-text-tertiary">Cost/Month:</span>{' '}
+                              <span className="text-text-primary">${(pool.totalMonthlyCost || 0).toFixed(0)}</span>
                             </div>
                           </div>
-
-                          {Object.keys(np.disruptionBudgets).length > 0 && (
+                          {(pool.instanceTypes?.length || 0) > 0 && (
                             <div>
-                              <p className="text-[10px] font-semibold  text-text-tertiary mb-2">Disruption Budgets</p>
-                              <div className="space-y-1">
-                                {Object.entries(np.disruptionBudgets).map(([k, v]) => (
-                                  <div key={k} className="flex items-center gap-2 text-xs">
-                                    <span className="text-text-secondary">{k}:</span>
-                                    <span className="font-medium text-text-primary">{v}</span>
-                                  </div>
+                              <span className="text-text-tertiary text-sm">Instance Types:</span>
+                              <div className="flex flex-wrap gap-2 mt-1">
+                                {pool.instanceTypes?.map(it => (
+                                  <span key={it} className="px-2 py-1 rounded bg-bg-hover text-xs text-text-secondary">{it}</span>
                                 ))}
                               </div>
                             </div>
                           )}
-
-                          {np.misconfigurations && np.misconfigurations.length > 0 && (
-                            <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/20">
+                          {(pool.vmSizeNames?.length || 0) > 0 && (
+                            <div>
+                              <span className="text-text-tertiary text-sm">VM Sizes:</span>
+                              <div className="flex flex-wrap gap-2 mt-1">
+                                {pool.vmSizeNames?.map(vs => (
+                                  <span key={vs} className="px-2 py-1 rounded bg-bg-hover text-xs text-text-secondary">{vs}</span>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                          {pool.misconfigurations && pool.misconfigurations.length > 0 && (
+                            <div className="p-3 rounded-lg bg-rose-500/10 border border-rose-500/20">
                               <div className="flex items-center gap-2 mb-2">
                                 <AlertTriangle className="w-4 h-4 text-rose-500" />
                                 <span className="text-sm font-bold text-rose-500">Configuration Issues</span>
                               </div>
                               <ul className="space-y-1">
-                                {np.misconfigurations.map((m, i) => (
+                                {pool.misconfigurations.map((m, i) => (
                                   <li key={i} className="text-xs text-rose-400 flex items-start gap-2">
                                     <span className="mt-1">•</span>
                                     {m}
@@ -915,13 +655,13 @@ const UnifiedNodePoolCard: React.FC<UnifiedNodePoolCardProps> = ({ nodePool, isS
                             </div>
                           )}
                         </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
+                      );
+                    })()}
+                  </div>
+                )}
 
                 {/* Utilization Chart */}
-                {(filteredNodePools.length > 0 || data.karpenter.length > 0) && (
+                {filteredNodePools.length > 0 && (
                   <div className="h-[250px] mt-6">
                     <p className="text-[10px] font-semibold  text-text-tertiary mb-4">
                       Utilization vs Bin-Packing Efficiency
@@ -1659,7 +1399,7 @@ const UnifiedNodePoolCard: React.FC<UnifiedNodePoolCardProps> = ({ nodePool, isS
       </div>
 
       {/* Cost Analysis */}
-      {(data.karpenter.length > 0 || filteredNodePools.length > 0) && (
+      {filteredNodePools.length > 0 && (
         <div className="bg-bg-card rounded-3xl border border-border-main overflow-hidden">
           <div className="p-6 border-b border-border-main bg-bg-hover/50">
             <div className="flex items-center gap-3">

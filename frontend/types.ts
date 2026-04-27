@@ -225,6 +225,12 @@ export interface UnifiedNodePool {
   misconfigurations?: string[];
   azureConfig?: AzureNodePoolDetails;
   awsConfig?: AWSNodePoolDetails;
+
+  // Karpenter NodeClass reference
+  nodeClass?: string;
+
+  // Creation timestamp for age calculation
+  creationTimestamp?: string;
 }
 
 export interface ProvisionerSummary {

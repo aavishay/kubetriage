@@ -76,6 +76,12 @@ type NodePool struct {
 	Taints            []corev1.Taint    `json:"taints,omitempty"`
 	Misconfigurations []string          `json:"misconfigurations,omitempty"`
 
+	// Karpenter NodeClass reference
+	NodeClass         string            `json:"nodeClass,omitempty"`
+
+	// Creation timestamp for age calculation
+	CreationTimestamp time.Time         `json:"creationTimestamp,omitempty"`
+
 	// Provider-specific fields
 	AWSNodePool   *AWSNodePoolConfig   `json:"awsNodePool,omitempty"`
 	AzureNodePool *AzureNodePoolConfig `json:"azureNodePool,omitempty"`
@@ -397,13 +403,14 @@ func FetchKarpenterNodePools(ctx context.Context, client *ClusterConn) ([]NodePo
 			ProvisionerType:   ProvisionerTypeKarpenter,
 			DisruptionBudgets: make(map[string]string),
 			Labels:            make(map[string]string),
+			CreationTimestamp: np.GetCreationTimestamp().Time,
 		}
 
 		// Extract instance types from requirements
 		if spec != nil {
 			if template, ok := spec["template"].(map[string]interface{}); ok {
-				if spec, ok := template["spec"].(map[string]interface{}); ok {
-					if reqs, ok := spec["requirements"].([]interface{}); ok {
+				if templateSpec, ok := template["spec"].(map[string]interface{}); ok {
+					if reqs, ok := templateSpec["requirements"].([]interface{}); ok {
 						for _, r := range reqs {
 							if reqMap, ok := r.(map[string]interface{}); ok {
 								if key, ok := reqMap["key"].(string); ok && key == "node.kubernetes.io/instance-type" {
@@ -420,7 +427,7 @@ func FetchKarpenterNodePools(ctx context.Context, client *ClusterConn) ([]NodePo
 					}
 
 					// Check disruption budgets
-					if disruption, ok := spec["disruption"].(map[string]interface{}); ok {
+					if disruption, ok := templateSpec["disruption"].(map[string]interface{}); ok {
 						if budgets, ok := disruption["budgets"].([]interface{}); ok {
 							for _, b := range budgets {
 								if budgetMap, ok := b.(map[string]interface{}); ok {
@@ -433,6 +440,13 @@ func FetchKarpenterNodePools(ctx context.Context, client *ClusterConn) ([]NodePo
 						if consolidation, ok := disruption["consolidationPolicy"].(string); ok {
 							pool.ConsolidationEnabled = consolidation == "WhenUnderutilized" || consolidation == "WhenEmpty"
 						}
+					}
+				}
+
+				// Extract NodeClass reference from nodeClassRef
+				if nodeClassRef, ok := template["nodeClassRef"].(map[string]interface{}); ok {
+					if name, ok := nodeClassRef["name"].(string); ok && name != "" {
+						pool.NodeClass = name
 					}
 				}
 			}
@@ -551,23 +565,24 @@ func FetchAzureNAPNodePools(ctx context.Context, client *ClusterConn) ([]NodePoo
 
 	// Create NodePool for each agent pool
 	for poolName, poolNodes := range agentPoolMap {
-		// Ensure pool name is never empty
-		displayName := poolName
-		if displayName == "" {
-			displayName = "default"
+		// Skip pools with empty names (no "default" fallback)
+		if poolName == "" {
+			continue
 		}
 		pool := NodePool{
-			Name:              displayName,
+			Name:              poolName,
 			ProvisionerType:   ProvisionerTypeAzureNAP,
 			DisruptionBudgets: make(map[string]string),
 			Labels:            make(map[string]string),
 			AzureNodePool: &AzureNodePoolConfig{
 				Mode: "User", // Default
 			},
+			CreationTimestamp: time.Now(), // Will be updated to oldest node timestamp
 		}
 
 		// Extract VM sizes from node labels and calculate capacity
 		vmSizeSet := make(map[string]bool)
+		var oldestTimestamp time.Time
 		for _, node := range poolNodes {
 			if vmSize, ok := node.Labels["node.kubernetes.io/instance-type"]; ok {
 				vmSizeSet[vmSize] = true
@@ -577,6 +592,11 @@ func FetchAzureNAPNodePools(ctx context.Context, client *ClusterConn) ([]NodePoo
 				pool.AzureNodePool.Mode = "System"
 			}
 			pool.TotalNodes++
+
+			// Track oldest node timestamp for pool age
+			if oldestTimestamp.IsZero() || node.CreationTimestamp.Time.Before(oldestTimestamp) {
+				oldestTimestamp = node.CreationTimestamp.Time
+			}
 
 			// Calculate total capacity from node
 			cpuCap := int(node.Status.Capacity.Cpu().Value())
@@ -589,6 +609,11 @@ func FetchAzureNAPNodePools(ctx context.Context, client *ClusterConn) ([]NodePoo
 					pool.ReadyNodes++
 				}
 			}
+		}
+
+		// Set pool creation timestamp to oldest node
+		if !oldestTimestamp.IsZero() {
+			pool.CreationTimestamp = oldestTimestamp
 		}
 
 		for vmSize := range vmSizeSet {
