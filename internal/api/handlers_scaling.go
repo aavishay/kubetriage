@@ -202,6 +202,9 @@ type EfficiencySummary struct {
 	AvgBinPackingEfficiency  float64 `json:"avgBinPackingEfficiency"`
 	TotalCostOptimized       int     `json:"totalCostOptimized"`
 	IssuesFound              int     `json:"issuesFound"`
+	TotalMonthlyCost         float64 `json:"totalMonthlyCost"` // Total cluster cost from NodeClaims
+	TotalActiveNodes         int     `json:"totalActiveNodes"` // Nodes with Ready status from claims
+	TotalPendingNodes        int     `json:"totalPendingNodes"` // Pending/terminating nodes from claims
 }
 
 // ScalingEfficiencyHandler returns comprehensive Karpenter, Azure NAP, KEDA, and HPA efficiency metrics
@@ -323,6 +326,22 @@ func fetchKarpenterEfficiency(ctx context.Context, client *k8s.ClusterConn) []Ka
 		}
 	}
 
+	// Fetch NodeClaims for accurate cost calculation
+	allNodeClaims, _ := k8s.FetchKarpenterNodeClaims(ctx, client)
+	poolNodeClaims := make(map[string][]k8s.NodeClaim)
+	for _, claim := range allNodeClaims {
+		poolNodeClaims[claim.NodePool] = append(poolNodeClaims[claim.NodePool], claim)
+	}
+
+	// Detect provider from nodes
+	provider := "aws"
+	for _, n := range nodes.Items {
+		if _, ok := n.Labels["kubernetes.azure.com/cluster"]; ok {
+			provider = "azure"
+			break
+		}
+	}
+
 	// Process each NodePool
 	for _, np := range nps.Items {
 		npName := np.GetName()
@@ -428,10 +447,17 @@ func fetchKarpenterEfficiency(ctx context.Context, client *k8s.ClusterConn) []Ka
 			}
 		}
 
-		// Estimate costs (simplified based on common instance types)
-		metric.CostPerCPU = estimateCostPerCPU(metric.InstanceTypes)
-		metric.CostPerGBMemory = estimateCostPerMemory(metric.InstanceTypes)
-		metric.TotalMonthlyCost = float64(metric.TotalCPUs)*metric.CostPerCPU + float64(metric.TotalMemoryGB)*metric.CostPerGBMemory
+		// Calculate costs from NodeClaims for accurate instance-level pricing
+		claimsForPool := poolNodeClaims[npName]
+		if len(claimsForPool) > 0 {
+			metric.TotalMonthlyCost, metric.CostPerCPU, metric.CostPerGBMemory, metric.TotalCPUs, metric.TotalMemoryGB =
+				k8s.CalculateCostsFromNodeClaims(claimsForPool, provider)
+		} else {
+			// Fallback to estimates if no NodeClaims available
+			metric.CostPerCPU = estimateCostPerCPU(metric.InstanceTypes)
+			metric.CostPerGBMemory = estimateCostPerMemory(metric.InstanceTypes)
+			metric.TotalMonthlyCost = float64(metric.TotalCPUs)*metric.CostPerCPU + float64(metric.TotalMemoryGB)*metric.CostPerGBMemory
+		}
 
 		// Check status for issues
 		if status != nil {
@@ -845,6 +871,10 @@ func calculateEfficiencySummary(unifiedProvisioners []UnifiedProvisionerMetrics,
 				summary.TotalCostOptimized++
 			}
 			summary.IssuesFound += len(np.Misconfigurations)
+			// Aggregate costs from all node pools
+			summary.TotalMonthlyCost += np.TotalMonthlyCost
+			summary.TotalActiveNodes += np.ReadyNodes
+			summary.TotalPendingNodes += np.PendingNodes
 		}
 	}
 

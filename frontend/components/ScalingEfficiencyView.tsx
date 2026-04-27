@@ -509,7 +509,7 @@ export const ScalingEfficiencyView: React.FC<ScalingEfficiencyViewProps> = ({ cl
             </div>
           </div>
 
-          <div className="p-6">
+          <div className="p-6 space-y-6">
             {filteredNodePools.length === 0 ? (
               <div className="text-center py-12">
                 <Server className="w-12 h-12 text-text-tertiary mx-auto mb-4" />
@@ -517,137 +517,202 @@ export const ScalingEfficiencyView: React.FC<ScalingEfficiencyViewProps> = ({ cl
               </div>
             ) : (
               <>
-                {/* NodePool Table */}
-                <div className="overflow-hidden">
-                  <table className="w-full">
-                    <thead>
-                      <tr className="border-b border-border-main">
-                        <th className="text-left py-3 px-4 text-sm font-medium text-text-tertiary">
-                          <label className="flex items-center cursor-pointer">
-                            <input type="checkbox" className="rounded border-border-main bg-bg-hover text-primary-500 focus:ring-primary-500" />
-                          </label>
-                        </th>
-                        <th className="text-left py-3 px-4 text-sm font-medium text-text-tertiary">Name</th>
-                        <th className="text-left py-3 px-4 text-sm font-medium text-text-tertiary">NodeClass</th>
-                        <th className="text-left py-3 px-4 text-sm font-medium text-text-tertiary">Nodes</th>
-                        <th className="text-left py-3 px-4 text-sm font-medium text-text-tertiary">Ready</th>
-                        <th className="text-left py-3 px-4 text-sm font-medium text-text-tertiary">Age</th>
-                        <th className="w-10"></th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {filteredNodePools.length === 0 ? (
-                        <tr>
-                          <td colSpan={7} className="py-8 text-center text-text-tertiary">
-                            No node pools found
-                          </td>
-                        </tr>
-                      ) : (
-                        filteredNodePools.map((np) => (
-                          <tr
-                            key={`${np.provisionerType}-${np.name}`}
-                            className="border-b border-border-main/50 hover:bg-bg-hover/30 transition-colors cursor-pointer"
-                            onClick={() => setSelectedNodePool(
-                              selectedNodePool === `${np.provisionerType}-${np.name}` ? null : `${np.provisionerType}-${np.name}`
-                            )}
-                          >
-                            <td className="py-3 px-4">
-                              <input type="checkbox" className="rounded border-border-main bg-bg-hover text-primary-500 focus:ring-primary-500" />
-                            </td>
-                            <td className="py-3 px-4">
-                              <span className="font-medium text-text-primary">{np.name}</span>
-                            </td>
-                            <td className="py-3 px-4">
-                              <span className="text-text-secondary">{np.nodeClass || '-'}</span>
-                            </td>
-                            <td className="py-3 px-4">
-                              <span className="text-text-primary">{np.totalNodes}</span>
-                            </td>
-                            <td className="py-3 px-4">
-                              <span className={`text-text-primary ${np.readyNodes === np.totalNodes ? '' : 'text-amber-500'}`}>
-                                {np.readyNodes === np.totalNodes ? 'True' : 'False'}
-                              </span>
-                            </td>
-                            <td className="py-3 px-4">
-                              <span className="text-text-secondary">{formatAge(np.creationTimestamp)}</span>
-                            </td>
-                            <td className="py-3 px-2">
-                              <button className="p-1 hover:bg-bg-hover rounded">
-                                <span className="text-text-tertiary">⋮</span>
-                              </button>
-                            </td>
-                          </tr>
-                        ))
-                      )}
-                    </tbody>
-                  </table>
+                {/* Sort Controls */}
+                <div className="flex items-center gap-4 p-3 rounded-xl bg-bg-card/50 border border-border-main">
+                  <span className="text-xs font-semibold text-text-tertiary">Sort by:</span>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => {
+                        if (nodePoolSortBy === 'name') {
+                          setNodePoolSortOrder(nodePoolSortOrder === 'asc' ? 'desc' : 'asc');
+                        } else {
+                          setNodePoolSortBy('name');
+                          setNodePoolSortOrder('asc');
+                        }
+                      }}
+                      className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors ${
+                        nodePoolSortBy === 'name'
+                          ? 'bg-primary-500 text-white'
+                          : 'bg-bg-hover text-text-tertiary hover:bg-bg-hover/80'
+                      }`}
+                    >
+                      Name {nodePoolSortBy === 'name' && (nodePoolSortOrder === 'asc' ? '↑' : '↓')}
+                    </button>
+                    <button
+                      onClick={() => {
+                        if (nodePoolSortBy === 'utilization') {
+                          setNodePoolSortOrder(nodePoolSortOrder === 'asc' ? 'desc' : 'asc');
+                        } else {
+                          setNodePoolSortBy('utilization');
+                          setNodePoolSortOrder('desc');
+                        }
+                      }}
+                      className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors ${
+                        nodePoolSortBy === 'utilization'
+                          ? 'bg-primary-500 text-white'
+                          : 'bg-bg-hover text-text-tertiary hover:bg-bg-hover/80'
+                      }`}
+                    >
+                      Utilization {nodePoolSortBy === 'utilization' && (nodePoolSortOrder === 'asc' ? '↑' : '↓')}
+                    </button>
+                    <button
+                      onClick={() => {
+                        if (nodePoolSortBy === 'totalCost') {
+                          setNodePoolSortOrder(nodePoolSortOrder === 'asc' ? 'desc' : 'asc');
+                        } else {
+                          setNodePoolSortBy('totalCost');
+                          setNodePoolSortOrder('desc');
+                        }
+                      }}
+                      className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors ${
+                        nodePoolSortBy === 'totalCost'
+                          ? 'bg-primary-500 text-white'
+                          : 'bg-bg-hover text-text-tertiary hover:bg-bg-hover/80'
+                      }`}
+                    >
+                      Cost {nodePoolSortBy === 'totalCost' && (nodePoolSortOrder === 'asc' ? '↑' : '↓')}
+                    </button>
+                  </div>
                 </div>
 
-                {/* Expanded NodePool Details */}
-                {selectedNodePool && (
-                  <div className="mt-4 p-4 border border-border-main rounded-xl bg-bg-hover/20">
-                    {(() => {
-                      const pool = filteredNodePools.find(p => `${p.provisionerType}-${p.name}` === selectedNodePool);
-                      if (!pool) return null;
-                      return (
-                        <div className="space-y-3">
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <span className="font-bold text-text-primary">{pool.name}</span>
-                            <span className="px-2 py-0.5 rounded-full bg-primary-500/10 text-primary-500 text-[10px] font-semibold">
-                              {pool.provisionerType === 'azure-nap' ? 'Azure NAP' : pool.provisionerType}
+                {/* NodePool Cards */}
+                <div className="space-y-4">
+                  {filteredNodePools.map((np) => (
+                    <div
+                      key={`${np.provisionerType}-${np.name}`}
+                      className={`p-5 rounded-2xl border-2 cursor-pointer transition-all ${
+                        selectedNodePool === `${np.provisionerType}-${np.name}`
+                          ? 'border-primary-500 bg-primary-500/5'
+                          : 'border-border-main hover:border-primary-500/30 bg-bg-hover/30'
+                      }`}
+                      onClick={() => setSelectedNodePool(
+                        selectedNodePool === `${np.provisionerType}-${np.name}` ? null : `${np.provisionerType}-${np.name}`
+                      )}
+                    >
+                      <div className="flex items-center justify-between mb-4">
+                        <div className="flex items-center gap-3">
+                          <span className="font-bold text-text-primary">{np.name}</span>
+                          <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold ${
+                            np.provisionerType === 'karpenter'
+                              ? 'bg-primary-500/10 text-primary-500'
+                              : 'bg-cyan-500/10 text-cyan-500'
+                          }`}>
+                            {np.provisionerType === 'azure-nap' ? 'Azure NAP' : np.provisionerType === 'karpenter' ? 'Karpenter' : np.provisionerType}
+                          </span>
+                          {np.nodeClass && (
+                            <span className="px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-500 text-[10px] font-semibold">
+                              {np.nodeClass}
                             </span>
-                            {pool.nodeClass && (
-                              <span className="px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-500 text-[10px] font-semibold">
-                                {pool.nodeClass}
-                              </span>
-                            )}
+                          )}
+                          {np.readyNodes !== np.totalNodes && (
+                            <span className="px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-500 text-[10px] font-semibold">
+                              {np.totalNodes - np.readyNodes} Not Ready
+                            </span>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-bold text-text-primary">
+                            {np.readyNodes}/{np.totalNodes}
+                          </span>
+                          {selectedNodePool === `${np.provisionerType}-${np.name}` ? (
+                            <ChevronUp className="w-4 h-4 text-text-tertiary" />
+                          ) : (
+                            <ChevronDown className="w-4 h-4 text-text-tertiary" />
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-4 gap-4 mb-4">
+                        <div className="text-center">
+                          <p className="text-[10px] font-semibold text-text-tertiary">Nodes</p>
+                          <p className="text-lg font-bold text-text-primary">{np.totalNodes}</p>
+                          <p className="text-[10px] text-text-tertiary">{np.readyNodes} ready</p>
+                        </div>
+                        <div className="text-center">
+                          <p className="text-[10px] font-semibold text-text-tertiary">Utilization</p>
+                          <p className={`text-lg font-bold ${
+                            np.utilizationPercent > 70 ? 'text-emerald-500' :
+                            np.utilizationPercent > 40 ? 'text-amber-500' : 'text-rose-500'
+                          }`}>
+                            {np.utilizationPercent.toFixed(0)}%
+                          </p>
+                        </div>
+                        <div className="text-center">
+                          <p className="text-[10px] font-semibold text-text-tertiary">Bin Packing</p>
+                          <p className="text-lg font-bold text-text-primary">{np.binPackingEfficiency.toFixed(0)}%</p>
+                        </div>
+                        <div className="text-center">
+                          <p className="text-[10px] font-semibold text-text-tertiary">Cost/Month</p>
+                          <p className="text-lg font-bold text-text-primary">${(np.totalMonthlyCost || 0).toFixed(0)}</p>
+                        </div>
+                      </div>
+
+                      {/* Instance Types Preview */}
+                      {((np.instanceTypes?.length || 0) > 0 || (np.vmSizeNames?.length || 0) > 0) && (
+                        <div className="flex flex-wrap gap-2">
+                          {np.instanceTypes?.slice(0, 3).map(it => (
+                            <span key={it} className="px-2 py-1 rounded bg-bg-card text-xs text-text-secondary">{it}</span>
+                          ))}
+                          {np.vmSizeNames?.slice(0, 3).map(vs => (
+                            <span key={vs} className="px-2 py-1 rounded bg-bg-card text-xs text-text-secondary">{vs}</span>
+                          ))}
+                          {((np.instanceTypes?.length || 0) + (np.vmSizeNames?.length || 0)) > 3 && (
+                            <span className="px-2 py-1 rounded bg-bg-card text-xs text-text-tertiary">
+                              +{((np.instanceTypes?.length || 0) + (np.vmSizeNames?.length || 0)) - 3} more
+                            </span>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Expanded Details */}
+                      {selectedNodePool === `${np.provisionerType}-${np.name}` && (
+                        <div className="mt-4 pt-4 border-t border-border-main space-y-3 animate-in fade-in slide-in-from-top-2">
+                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm">
+                            <div className="p-2 rounded-lg bg-bg-card">
+                              <p className="text-[10px] font-semibold text-text-tertiary">CPUs</p>
+                              <p className="text-text-primary">{np.totalCPUs || 0}</p>
+                            </div>
+                            <div className="p-2 rounded-lg bg-bg-card">
+                              <p className="text-[10px] font-semibold text-text-tertiary">Memory</p>
+                              <p className="text-text-primary">{np.totalMemoryGB || 0} GB</p>
+                            </div>
+                            <div className="p-2 rounded-lg bg-bg-card">
+                              <p className="text-[10px] font-semibold text-text-tertiary">Cost/CPU</p>
+                              <p className="text-text-primary">${np.costPerCPU?.toFixed(2) || '-'}</p>
+                            </div>
+                            <div className="p-2 rounded-lg bg-bg-card">
+                              <p className="text-[10px] font-semibold text-text-tertiary">Age</p>
+                              <p className="text-text-primary">{formatAge(np.creationTimestamp)}</p>
+                            </div>
                           </div>
-                          <div className="grid grid-cols-4 gap-4 text-sm">
-                            <div>
-                              <span className="text-text-tertiary">Nodes:</span>{' '}
-                              <span className="text-text-primary">{pool.readyNodes}/{pool.totalNodes}</span>
-                            </div>
-                            <div>
-                              <span className="text-text-tertiary">Utilization:</span>{' '}
-                              <span className="text-text-primary">{pool.utilizationPercent.toFixed(1)}%</span>
-                            </div>
-                            <div>
-                              <span className="text-text-tertiary">Bin Packing:</span>{' '}
-                              <span className="text-text-primary">{pool.binPackingEfficiency.toFixed(1)}%</span>
-                            </div>
-                            <div>
-                              <span className="text-text-tertiary">Cost/Month:</span>{' '}
-                              <span className="text-text-primary">${(pool.totalMonthlyCost || 0).toFixed(0)}</span>
-                            </div>
-                          </div>
-                          {(pool.instanceTypes?.length || 0) > 0 && (
+                          {(np.instanceTypes?.length || 0) > 0 && (
                             <div>
                               <span className="text-text-tertiary text-sm">Instance Types:</span>
                               <div className="flex flex-wrap gap-2 mt-1">
-                                {pool.instanceTypes?.map(it => (
-                                  <span key={it} className="px-2 py-1 rounded bg-bg-hover text-xs text-text-secondary">{it}</span>
+                                {np.instanceTypes?.map(it => (
+                                  <span key={it} className="px-2 py-1 rounded bg-bg-card text-xs text-text-secondary">{it}</span>
                                 ))}
                               </div>
                             </div>
                           )}
-                          {(pool.vmSizeNames?.length || 0) > 0 && (
+                          {(np.vmSizeNames?.length || 0) > 0 && (
                             <div>
                               <span className="text-text-tertiary text-sm">VM Sizes:</span>
                               <div className="flex flex-wrap gap-2 mt-1">
-                                {pool.vmSizeNames?.map(vs => (
-                                  <span key={vs} className="px-2 py-1 rounded bg-bg-hover text-xs text-text-secondary">{vs}</span>
+                                {np.vmSizeNames?.map(vs => (
+                                  <span key={vs} className="px-2 py-1 rounded bg-bg-card text-xs text-text-secondary">{vs}</span>
                                 ))}
                               </div>
                             </div>
                           )}
-                          {pool.misconfigurations && pool.misconfigurations.length > 0 && (
-                            <div className="p-3 rounded-lg bg-rose-500/10 border border-rose-500/20">
+                          {np.misconfigurations && np.misconfigurations.length > 0 && (
+                            <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/20">
                               <div className="flex items-center gap-2 mb-2">
                                 <AlertTriangle className="w-4 h-4 text-rose-500" />
                                 <span className="text-sm font-bold text-rose-500">Configuration Issues</span>
                               </div>
                               <ul className="space-y-1">
-                                {pool.misconfigurations.map((m, i) => (
+                                {np.misconfigurations.map((m, i) => (
                                   <li key={i} className="text-xs text-rose-400 flex items-start gap-2">
                                     <span className="mt-1">•</span>
                                     {m}
@@ -657,15 +722,15 @@ export const ScalingEfficiencyView: React.FC<ScalingEfficiencyViewProps> = ({ cl
                             </div>
                           )}
                         </div>
-                      );
-                    })()}
-                  </div>
-                )}
+                      )}
+                    </div>
+                  ))}
+                </div>
 
                 {/* Utilization Chart */}
                 {filteredNodePools.length > 0 && (
                   <div className="h-[250px] mt-6">
-                    <p className="text-[10px] font-semibold  text-text-tertiary mb-4">
+                    <p className="text-[10px] font-semibold text-text-tertiary mb-4">
                       Utilization vs Bin-Packing Efficiency
                     </p>
                     <ResponsiveContainer width="100%" height="100%">

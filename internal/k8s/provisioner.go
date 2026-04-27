@@ -460,6 +460,13 @@ func FetchKarpenterNodePools(ctx context.Context, client *ClusterConn) ([]NodePo
 		return nodePools, err
 	}
 
+	// Fetch all NodeClaims once for cost calculation and status tracking
+	allNodeClaims, _ := FetchKarpenterNodeClaims(ctx, client)
+	poolNodeClaims := make(map[string][]NodeClaim)
+	for _, claim := range allNodeClaims {
+		poolNodeClaims[claim.NodePool] = append(poolNodeClaims[claim.NodePool], claim)
+	}
+
 	for _, np := range nps.Items {
 		npName := np.GetName()
 		spec, _ := np.Object["spec"].(map[string]interface{})
@@ -581,44 +588,45 @@ func FetchKarpenterNodePools(ctx context.Context, client *ClusterConn) ([]NodePo
 		pool.UtilizationPercent = calculateNodePoolUtilization(poolNodes, nodeMetricsMap)
 		pool.BinPackingEfficiency = calculateBinPackingEfficiency(poolNodes, pool.UtilizationPercent)
 
-		// Check for pending NodeClaims (try v1 first, then v1beta1)
-		var ncs *unstructured.UnstructuredList
-		gvrNCV1 := schema.GroupVersionResource{Group: "karpenter.sh", Version: "v1", Resource: "nodeclaims"}
-		ncs, err = client.DynamicClient.Resource(gvrNCV1).List(ctx, metav1.ListOptions{})
-		if err != nil {
-			gvrNC := schema.GroupVersionResource{Group: "karpenter.sh", Version: "v1beta1", Resource: "nodeclaims"}
-			ncs, _ = client.DynamicClient.Resource(gvrNC).List(ctx, metav1.ListOptions{})
+		// Detect provider from nodes for cost calculation
+		provider := "aws" // default
+		for _, node := range poolNodes {
+			if _, ok := node.Labels["kubernetes.azure.com/cluster"]; ok {
+				provider = "azure"
+				break
+			}
 		}
-		if ncs != nil {
-			for _, nc := range ncs.Items {
-			ncLabels := nc.GetLabels()
-			if ncLabels["karpenter.sh/nodepool"] == npName {
-				if ncStatus, ok := nc.Object["status"].(map[string]interface{}); ok {
-					if conditions, ok := ncStatus["conditions"].([]interface{}); ok {
-						isReady := false
-						for _, c := range conditions {
-							if cMap, ok := c.(map[string]interface{}); ok {
-								if cMap["type"] == "Ready" && cMap["status"] == "True" {
-									isReady = true
-									break
-								}
-							}
-						}
-						if !isReady {
-							pool.PendingNodes++
-						}
-						for _, c := range conditions {
-							if cMap, ok := c.(map[string]interface{}); ok {
-								if cMap["type"] == "Drifted" && cMap["status"] == "True" {
-									pool.DriftedNodes++
-									}
-							}
-						}
-					}
+
+		// Use NodeClaims data for cost calculation and status tracking
+		claimsForPool := poolNodeClaims[npName]
+		for _, claim := range claimsForPool {
+			switch claim.Status {
+			case "Pending":
+				pool.PendingNodes++
+			case "Drifted":
+				pool.DriftedNodes++
+			}
+			if len(claim.Misconfigurations) > 0 {
+				pool.Misconfigurations = append(pool.Misconfigurations, claim.Misconfigurations...)
+			}
+		}
+
+		// Calculate costs from NodeClaims for accurate instance-level pricing
+		if len(claimsForPool) > 0 {
+			pool.TotalMonthlyCost, pool.CostPerCPU, pool.CostPerGBMemory, pool.TotalCPUs, pool.TotalMemoryGB =
+				CalculateCostsFromNodeClaims(claimsForPool, provider)
+		} else {
+			// Fallback to estimates if no NodeClaims available
+			pool.CostPerCPU = estimateAzureCostPerCPU(pool.InstanceTypes)
+			pool.CostPerGBMemory = estimateAzureCostPerMemory(pool.InstanceTypes)
+			for _, node := range poolNodes {
+				if vmSize, ok := node.Labels["node.kubernetes.io/instance-type"]; ok {
+					pool.TotalMonthlyCost += estimateAzureNodeMonthlyCost(vmSize)
+					pool.TotalCPUs += int(node.Status.Capacity.Cpu().Value())
+					pool.TotalMemoryGB += int(node.Status.Capacity.Memory().Value() / (1024 * 1024 * 1024))
 				}
 			}
 		}
-	}
 
 		// Check for misconfigurations
 		if status != nil {
@@ -669,6 +677,13 @@ func FetchAKSManagedNodePools(ctx context.Context, client *ClusterConn) ([]NodeP
 				nodeMetricsMap[m.Name] = m
 			}
 		}
+	}
+
+	// Fetch Azure NAP NodeClaims for accurate cost calculation
+	allNodeClaims, _ := FetchAzureNAPNodeClaims(ctx, client)
+	poolNodeClaims := make(map[string][]NodeClaim)
+	for _, claim := range allNodeClaims {
+		poolNodeClaims[claim.NodePool] = append(poolNodeClaims[claim.NodePool], claim)
 	}
 
 	// Group nodes by agent pool
@@ -737,18 +752,35 @@ func FetchAKSManagedNodePools(ctx context.Context, client *ClusterConn) ([]NodeP
 		pool.UtilizationPercent = calculateNodePoolUtilization(poolNodes, nodeMetricsMap)
 		pool.BinPackingEfficiency = calculateBinPackingEfficiency(poolNodes, pool.UtilizationPercent)
 
-		// Estimate costs based on Azure VM sizes
-		pool.CostPerCPU = estimateAzureCostPerCPU(pool.VMSizeNames)
-		pool.CostPerGBMemory = estimateAzureCostPerMemory(pool.VMSizeNames)
+		// Calculate costs from NodeClaims for accurate instance-level pricing
+		claimsForPool := poolNodeClaims[poolName]
+		if len(claimsForPool) > 0 {
+			pool.TotalMonthlyCost, pool.CostPerCPU, pool.CostPerGBMemory, pool.TotalCPUs, pool.TotalMemoryGB =
+				CalculateCostsFromNodeClaims(claimsForPool, "azure")
+		} else {
+			// Fallback to estimates if no NodeClaims available
+			pool.CostPerCPU = estimateAzureCostPerCPU(pool.VMSizeNames)
+			pool.CostPerGBMemory = estimateAzureCostPerMemory(pool.VMSizeNames)
+			for _, node := range poolNodes {
+				if vmSize, ok := node.Labels["node.kubernetes.io/instance-type"]; ok {
+					pool.TotalMonthlyCost += estimateAzureNodeMonthlyCost(vmSize)
+				} else {
+					cpuCap := int(node.Status.Capacity.Cpu().Value())
+					memCap := int(node.Status.Capacity.Memory().Value() / (1024 * 1024 * 1024))
+					pool.TotalMonthlyCost += float64(cpuCap)*pool.CostPerCPU + float64(memCap)*pool.CostPerGBMemory
+				}
+			}
+		}
 
-		// Calculate total monthly cost
-		for _, node := range poolNodes {
-			if vmSize, ok := node.Labels["node.kubernetes.io/instance-type"]; ok {
-				pool.TotalMonthlyCost += estimateAzureNodeMonthlyCost(vmSize)
-			} else {
-				cpuCap := int(node.Status.Capacity.Cpu().Value())
-				memCap := int(node.Status.Capacity.Memory().Value() / (1024 * 1024 * 1024))
-				pool.TotalMonthlyCost += float64(cpuCap)*pool.CostPerCPU + float64(memCap)*pool.CostPerGBMemory
+		// Track pending/drifted nodes from claims
+		for _, claim := range claimsForPool {
+			switch claim.Status {
+			case "Pending":
+				pool.PendingNodes++
+			case "Drifted":
+				pool.DriftedNodes++
+			case "Terminating":
+				pool.DriftedNodes++ // Count terminating as drifted for cost purposes
 			}
 		}
 
@@ -795,6 +827,13 @@ func FetchAzureNAPNodePools(ctx context.Context, client *ClusterConn) ([]NodePoo
 				nodeMetricsMap[m.Name] = m
 			}
 		}
+	}
+
+	// Fetch Azure NAP NodeClaims for accurate cost calculation
+	allNodeClaims, _ := FetchAzureNAPNodeClaims(ctx, client)
+	poolNodeClaims := make(map[string][]NodeClaim)
+	for _, claim := range allNodeClaims {
+		poolNodeClaims[claim.NodePool] = append(poolNodeClaims[claim.NodePool], claim)
 	}
 
 	// Group nodes by agent pool
@@ -877,18 +916,35 @@ func FetchAzureNAPNodePools(ctx context.Context, client *ClusterConn) ([]NodePoo
 		pool.UtilizationPercent = calculateNodePoolUtilization(poolNodes, nodeMetricsMap)
 		pool.BinPackingEfficiency = calculateBinPackingEfficiency(poolNodes, pool.UtilizationPercent)
 
-		// Estimate costs based on Azure VM sizes
-		pool.CostPerCPU = estimateAzureCostPerCPU(pool.VMSizeNames)
-		pool.CostPerGBMemory = estimateAzureCostPerMemory(pool.VMSizeNames)
+		// Calculate costs from NodeClaims for accurate instance-level pricing
+		claimsForPool := poolNodeClaims[poolName]
+		if len(claimsForPool) > 0 {
+			pool.TotalMonthlyCost, pool.CostPerCPU, pool.CostPerGBMemory, pool.TotalCPUs, pool.TotalMemoryGB =
+				CalculateCostsFromNodeClaims(claimsForPool, "azure")
+		} else {
+			// Fallback to estimates if no NodeClaims available
+			pool.CostPerCPU = estimateAzureCostPerCPU(pool.VMSizeNames)
+			pool.CostPerGBMemory = estimateAzureCostPerMemory(pool.VMSizeNames)
+			for _, node := range poolNodes {
+				if vmSize, ok := node.Labels["node.kubernetes.io/instance-type"]; ok {
+					pool.TotalMonthlyCost += estimateAzureNodeMonthlyCost(vmSize)
+				} else {
+					cpuCap := int(node.Status.Capacity.Cpu().Value())
+					memCap := int(node.Status.Capacity.Memory().Value() / (1024 * 1024 * 1024))
+					pool.TotalMonthlyCost += float64(cpuCap)*pool.CostPerCPU + float64(memCap)*pool.CostPerGBMemory
+				}
+			}
+		}
 
-		// Calculate total monthly cost
-		for _, node := range poolNodes {
-			if vmSize, ok := node.Labels["node.kubernetes.io/instance-type"]; ok {
-				pool.TotalMonthlyCost += estimateAzureNodeMonthlyCost(vmSize)
-			} else {
-				cpuCap := int(node.Status.Capacity.Cpu().Value())
-				memCap := int(node.Status.Capacity.Memory().Value() / (1024 * 1024 * 1024))
-				pool.TotalMonthlyCost += float64(cpuCap)*pool.CostPerCPU + float64(memCap)*pool.CostPerGBMemory
+		// Track pending/drifted nodes from claims
+		for _, claim := range claimsForPool {
+			switch claim.Status {
+			case "Pending":
+				pool.PendingNodes++
+			case "Drifted":
+				pool.DriftedNodes++
+			case "Terminating":
+				pool.DriftedNodes++ // Count terminating as drifted for cost purposes
 			}
 		}
 
@@ -1236,6 +1292,229 @@ func getSeriesDefaultMemory(vmSize string) int {
 		return 56
 	default:
 		return 8
+	}
+}
+
+// CalculateCostsFromNodeClaims calculates accurate costs using NodeClaims data
+// This provides instance-level cost accuracy vs. estimates based on pool requirements
+func CalculateCostsFromNodeClaims(claims []NodeClaim, provider string) (totalCost, costPerCPU, costPerMemory float64, totalCPUs, totalMemoryGB int) {
+	if len(claims) == 0 {
+		return 0, 0, 0, 0, 0
+	}
+
+	var totalMonthlyCost float64
+	var totalCpus, totalMemory int
+
+	for _, claim := range claims {
+		// Skip pending/terminating claims for cost calculation - only count active nodes
+		if claim.Status == "Pending" || claim.Status == "Terminating" || claim.Status == "Unknown" {
+			continue
+		}
+
+		instanceType := claim.InstanceType
+		if instanceType == "" {
+			continue
+		}
+
+		var nodeCost float64
+		var nodeCPUs, nodeMemory int
+
+		switch provider {
+		case "azure":
+			// Use Azure VM pricing
+			normalizedSize := normalizeVMSize(instanceType)
+			if spec, ok := azureVMSizeMap[normalizedSize]; ok {
+				nodeCost = spec.CostUSD
+				nodeCPUs = spec.CPUs
+				nodeMemory = spec.MemoryGB
+			} else {
+				// Fallback to estimation
+				nodeCost = estimateAzureNodeMonthlyCost(instanceType)
+				nodeCPUs = getSeriesDefaultCPUs(instanceType)
+				nodeMemory = getSeriesDefaultMemory(instanceType)
+			}
+		case "aws":
+			// Use AWS EC2 pricing (simplified based on instance type)
+			nodeCost, nodeCPUs, nodeMemory = estimateAWSNodeCost(instanceType)
+		default:
+			// Generic fallback
+			nodeCost = 70.08 // Default monthly cost
+			nodeCPUs = 4
+			nodeMemory = 16
+		}
+
+		totalMonthlyCost += nodeCost
+		totalCpus += nodeCPUs
+		totalMemory += nodeMemory
+	}
+
+	// Calculate per-unit costs
+	if totalCpus > 0 {
+		costPerCPU = totalMonthlyCost / float64(totalCpus)
+	}
+	if totalMemory > 0 {
+		costPerMemory = totalMonthlyCost / float64(totalMemory)
+	}
+
+	return totalMonthlyCost, costPerCPU, costPerMemory, totalCpus, totalMemory
+}
+
+// getSeriesDefaultCPUs returns default CPU count for series
+func getSeriesDefaultCPUs(vmSize string) int {
+	size := strings.ToUpper(vmSize)
+	switch {
+	case strings.Contains(size, "STANDARD_B1"):
+		return 1
+	case strings.Contains(size, "STANDARD_B2"), strings.Contains(size, "STANDARD_D2"), strings.Contains(size, "STANDARD_E2"), strings.Contains(size, "STANDARD_F2"):
+		return 2
+	case strings.Contains(size, "STANDARD_B4"), strings.Contains(size, "STANDARD_D4"), strings.Contains(size, "STANDARD_E4"), strings.Contains(size, "STANDARD_F4"):
+		return 4
+	case strings.Contains(size, "STANDARD_B8"), strings.Contains(size, "STANDARD_D8"), strings.Contains(size, "STANDARD_E8"), strings.Contains(size, "STANDARD_F8"):
+		return 8
+	case strings.Contains(size, "STANDARD_D16"), strings.Contains(size, "STANDARD_E16"), strings.Contains(size, "STANDARD_F16"):
+		return 16
+	case strings.Contains(size, "STANDARD_D32"), strings.Contains(size, "STANDARD_E32"), strings.Contains(size, "STANDARD_F32"):
+		return 32
+	case strings.Contains(size, "STANDARD_D64"), strings.Contains(size, "STANDARD_E64"), strings.Contains(size, "STANDARD_F64"):
+		return 64
+	default:
+		return 4
+	}
+}
+
+// estimateAWSNodeCost estimates monthly cost for AWS EC2 instances
+func estimateAWSNodeCost(instanceType string) (cost float64, cpus, memory int) {
+	// AWS pricing (on-demand, us-east-1, monthly = hourly * 730)
+	switch {
+	// T3 - Burstable
+	case strings.HasPrefix(instanceType, "t3.nano"):
+		return 3.80, 2, 1
+	case strings.HasPrefix(instanceType, "t3.micro"):
+		return 7.60, 2, 1
+	case strings.HasPrefix(instanceType, "t3.small"):
+		return 15.18, 2, 2
+	case strings.HasPrefix(instanceType, "t3.medium"):
+		return 30.37, 2, 4
+	case strings.HasPrefix(instanceType, "t3.large"):
+		return 60.74, 2, 8
+	case strings.HasPrefix(instanceType, "t3.xlarge"):
+		return 121.48, 4, 16
+	case strings.HasPrefix(instanceType, "t3.2xlarge"):
+		return 242.96, 8, 32
+
+	// T3a - AMD Burstable
+	case strings.HasPrefix(instanceType, "t3a.nano"):
+		return 3.42, 2, 1
+	case strings.HasPrefix(instanceType, "t3a.micro"):
+		return 6.85, 2, 1
+	case strings.HasPrefix(instanceType, "t3a.small"):
+		return 13.69, 2, 2
+	case strings.HasPrefix(instanceType, "t3a.medium"):
+		return 27.38, 2, 4
+	case strings.HasPrefix(instanceType, "t3a.large"):
+		return 54.75, 2, 8
+	case strings.HasPrefix(instanceType, "t3a.xlarge"):
+		return 109.50, 4, 16
+	case strings.HasPrefix(instanceType, "t3a.2xlarge"):
+		return 219.00, 8, 32
+
+	// M5 - General Purpose
+	case strings.HasPrefix(instanceType, "m5.large"):
+		return 70.08, 2, 8
+	case strings.HasPrefix(instanceType, "m5.xlarge"):
+		return 140.16, 4, 16
+	case strings.HasPrefix(instanceType, "m5.2xlarge"):
+		return 280.32, 8, 32
+	case strings.HasPrefix(instanceType, "m5.4xlarge"):
+		return 560.64, 16, 64
+	case strings.HasPrefix(instanceType, "m5.8xlarge"):
+		return 1121.28, 32, 128
+	case strings.HasPrefix(instanceType, "m5.12xlarge"):
+		return 1681.92, 48, 192
+	case strings.HasPrefix(instanceType, "m5.16xlarge"):
+		return 2242.56, 64, 256
+	case strings.HasPrefix(instanceType, "m5.24xlarge"):
+		return 3363.84, 96, 384
+
+	// M5a - AMD General Purpose
+	case strings.HasPrefix(instanceType, "m5a.large"):
+		return 63.07, 2, 8
+	case strings.HasPrefix(instanceType, "m5a.xlarge"):
+		return 126.14, 4, 16
+	case strings.HasPrefix(instanceType, "m5a.2xlarge"):
+		return 252.28, 8, 32
+	case strings.HasPrefix(instanceType, "m5a.4xlarge"):
+		return 504.56, 16, 64
+	case strings.HasPrefix(instanceType, "m5a.8xlarge"):
+		return 1009.12, 32, 128
+	case strings.HasPrefix(instanceType, "m5a.12xlarge"):
+		return 1513.68, 48, 192
+	case strings.HasPrefix(instanceType, "m5a.16xlarge"):
+		return 2018.24, 64, 256
+	case strings.HasPrefix(instanceType, "m5a.24xlarge"):
+		return 3027.36, 96, 384
+
+	// C5 - Compute Optimized
+	case strings.HasPrefix(instanceType, "c5.large"):
+		return 62.05, 2, 4
+	case strings.HasPrefix(instanceType, "c5.xlarge"):
+		return 124.10, 4, 8
+	case strings.HasPrefix(instanceType, "c5.2xlarge"):
+		return 248.20, 8, 16
+	case strings.HasPrefix(instanceType, "c5.4xlarge"):
+		return 496.40, 16, 32
+	case strings.HasPrefix(instanceType, "c5.9xlarge"):
+		return 1116.90, 36, 72
+	case strings.HasPrefix(instanceType, "c5.12xlarge"):
+		return 1489.20, 48, 96
+	case strings.HasPrefix(instanceType, "c5.18xlarge"):
+		return 2233.80, 72, 144
+	case strings.HasPrefix(instanceType, "c5.24xlarge"):
+		return 2978.40, 96, 192
+
+	// R5 - Memory Optimized
+	case strings.HasPrefix(instanceType, "r5.large"):
+		return 91.98, 2, 16
+	case strings.HasPrefix(instanceType, "r5.xlarge"):
+		return 183.96, 4, 32
+	case strings.HasPrefix(instanceType, "r5.2xlarge"):
+		return 367.92, 8, 64
+	case strings.HasPrefix(instanceType, "r5.4xlarge"):
+		return 735.84, 16, 128
+	case strings.HasPrefix(instanceType, "r5.8xlarge"):
+		return 1471.68, 32, 256
+	case strings.HasPrefix(instanceType, "r5.12xlarge"):
+		return 2207.52, 48, 384
+	case strings.HasPrefix(instanceType, "r5.16xlarge"):
+		return 2943.36, 64, 512
+	case strings.HasPrefix(instanceType, "r5.24xlarge"):
+		return 4415.04, 96, 768
+
+	// Graviton2/3 (t4g, m6g, c6g, r6g)
+	case strings.HasPrefix(instanceType, "t4g.nano"):
+		return 3.42, 2, 1
+	case strings.HasPrefix(instanceType, "t4g.micro"):
+		return 6.85, 2, 1
+	case strings.HasPrefix(instanceType, "t4g.small"):
+		return 13.69, 2, 2
+	case strings.HasPrefix(instanceType, "t4g.medium"):
+		return 27.38, 2, 4
+	case strings.HasPrefix(instanceType, "t4g.large"):
+		return 54.75, 2, 8
+	case strings.HasPrefix(instanceType, "m6g.medium"):
+		return 27.38, 1, 4
+	case strings.HasPrefix(instanceType, "m6g.large"):
+		return 56.06, 2, 8
+	case strings.HasPrefix(instanceType, "m6g.xlarge"):
+		return 112.13, 4, 16
+	case strings.HasPrefix(instanceType, "c6g.large"):
+		return 50.01, 2, 4
+	case strings.HasPrefix(instanceType, "c6g.xlarge"):
+		return 100.03, 4, 8
+
+	default:
+		// Default estimate for unknown types
+		return 140.16, 4, 16 // Default to m5.xlarge equivalent
 	}
 }
 
