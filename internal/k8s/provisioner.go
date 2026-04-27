@@ -16,10 +16,11 @@ import (
 type ProvisionerType string
 
 const (
-	ProvisionerTypeKarpenter   ProvisionerType = "karpenter"
-	ProvisionerTypeAzureNAP  ProvisionerType = "azure-nap"
-	ProvisionerTypeClusterAutoscaler ProvisionerType = "cluster-autoscaler"
-	ProvisionerTypeUnknown   ProvisionerType = "unknown"
+	ProvisionerTypeKarpenter         ProvisionerType = "karpenter"
+	ProvisionerTypeAzureNAP          ProvisionerType = "azure-nap"
+	ProvisionerTypeAKSManaged        ProvisionerType = "aks-managed" // AKS managed node pools
+	ProvisionerTypeClusterAutoscaler   ProvisionerType = "cluster-autoscaler"
+	ProvisionerTypeUnknown             ProvisionerType = "unknown"
 )
 
 // NodeProvisioner represents a unified view of node provisioning systems
@@ -163,9 +164,16 @@ func DetectProvisioner(ctx context.Context, client *ClusterConn) ([]NodeProvisio
 		provisioners = append(provisioners, *karpenter)
 	}
 
-	// Check for Azure NAP
+	// Check for Azure NAP (dynamic node provisioning)
 	if azureNAP, err := detectAzureNAP(ctx, client); err == nil && azureNAP != nil {
 		provisioners = append(provisioners, *azureNAP)
+	}
+
+	// Check for AKS managed node pools (only if Karpenter is not present, to avoid duplicates)
+	if len(provisioners) == 0 {
+		if aksPools, err := detectAKSManagedPools(ctx, client); err == nil && aksPools != nil {
+			provisioners = append(provisioners, *aksPools)
+		}
 	}
 
 	// Check for Cluster Autoscaler
@@ -229,29 +237,31 @@ func detectKarpenter(ctx context.Context, client *ClusterConn) (*NodeProvisioner
 	return provisioner, nil
 }
 
-// detectAzureNAP detects if Azure Node Auto-Provisioning is enabled
+// detectAzureNAP detects if Azure Node Auto-Provisioning (NAP) is enabled
+// NAP is different from AKS managed node pools - it dynamically provisions nodes
 func detectAzureNAP(ctx context.Context, client *ClusterConn) (*NodeProvisioner, error) {
 	if client.DynamicClient == nil {
 		return nil, fmt.Errorf("dynamic client not available")
 	}
 
-	// Check for Azure-managed AKS agent pools (AKS API)
-	agentPools, err := client.ClientSet.CoreV1().Nodes().List(ctx, metav1.ListOptions{
-		LabelSelector: "kubernetes.io/os=linux",
-	})
+	// Check for actual Azure NAP by looking for specific labels/annotations
+	// that indicate dynamic provisioning is enabled
+	// NAP creates nodes with specific labels unlike regular AKS node pools
+	nodes, err := client.ClientSet.CoreV1().Nodes().List(ctx, metav1.ListOptions{})
 	if err != nil {
 		return nil, err
 	}
 
-	// Check if any nodes have Azure NAP labels
 	hasNAP := false
-	for _, node := range agentPools.Items {
-		if _, ok := node.Labels["kubernetes.azure.com/node-image-version"]; ok {
+	for _, node := range nodes.Items {
+		// Azure NAP specific labels - nodes provisioned by NAP have unique characteristics
+		// Check for kubernetes.azure.com/scaling-enabled which indicates NAP
+		if val, ok := node.Labels["kubernetes.azure.com/scaling-enabled"]; ok && val == "true" {
 			hasNAP = true
 			break
 		}
-		// Check for AKS node pool labels
-		if _, ok := node.Labels["agentpool"]; ok {
+		// Check for the node-provisioner annotation that NAP sets
+		if _, ok := node.Annotations["kubernetes.azure.com/node-provisioner"]; ok {
 			hasNAP = true
 			break
 		}
@@ -265,6 +275,58 @@ func detectAzureNAP(ctx context.Context, client *ClusterConn) (*NodeProvisioner,
 	provisioner := &NodeProvisioner{
 		Name:     "azure-nap",
 		Type:     ProvisionerTypeAzureNAP,
+		Provider: "azure",
+		Status: ProvisionerStatus{
+			Ready: true,
+		},
+	}
+
+	return provisioner, nil
+}
+
+// detectAKSManagedPools detects AKS managed node pools (not Azure NAP)
+// This is for standard AKS node pools that are managed by Azure
+func detectAKSManagedPools(ctx context.Context, client *ClusterConn) (*NodeProvisioner, error) {
+	if client.ClientSet == nil {
+		return nil, fmt.Errorf("client not available")
+	}
+
+	// Check for Azure cluster by looking at node provider IDs or labels
+	nodes, err := client.ClientSet.CoreV1().Nodes().List(ctx, metav1.ListOptions{Limit: 1})
+	if err != nil || len(nodes.Items) == 0 {
+		return nil, nil
+	}
+
+	node := nodes.Items[0]
+	providerID := node.Spec.ProviderID
+
+	// Check if this is an Azure cluster
+	if !strings.Contains(providerID, "azure://") {
+		return nil, nil
+	}
+
+	// Check if nodes have agentpool labels (indicates AKS managed node pools)
+	hasAgentPools := false
+	for _, n := range nodes.Items {
+		if _, ok := n.Labels["agentpool"]; ok {
+			hasAgentPools = true
+			break
+		}
+	}
+
+	// Also check if this is specifically AKS by looking for Azure-specific labels
+	if _, ok := node.Labels["kubernetes.azure.com/cluster"]; ok {
+		hasAgentPools = true
+	}
+
+	if !hasAgentPools {
+		return nil, nil
+	}
+
+	// AKS managed node pools detected
+	provisioner := &NodeProvisioner{
+		Name:     "aks-managed-pools",
+		Type:     ProvisionerTypeAKSManaged,
 		Provider: "azure",
 		Status: ProvisionerStatus{
 			Ready: true,
@@ -519,6 +581,132 @@ func FetchKarpenterNodePools(ctx context.Context, client *ClusterConn) ([]NodePo
 						}
 					}
 				}
+			}
+		}
+
+		nodePools = append(nodePools, pool)
+	}
+
+	return nodePools, nil
+}
+
+// FetchAKSManagedNodePools fetches AKS managed node pool details
+// These are the standard AKS node pools (not Azure NAP)
+func FetchAKSManagedNodePools(ctx context.Context, client *ClusterConn) ([]NodePool, error) {
+	var nodePools []NodePool
+
+	if client.ClientSet == nil {
+		return nodePools, nil
+	}
+
+	// AKS managed node pools use agentpool labels
+	nodes, err := client.ClientSet.CoreV1().Nodes().List(ctx, metav1.ListOptions{})
+	if err != nil {
+		return nodePools, err
+	}
+
+	// Fetch node metrics
+	var nodeMetricsMap map[string]v1beta1.NodeMetrics
+	if client.MetricsClient != nil {
+		nodeMetricsList, _ := client.MetricsClient.MetricsV1beta1().NodeMetricses().List(ctx, metav1.ListOptions{})
+		nodeMetricsMap = make(map[string]v1beta1.NodeMetrics)
+		if nodeMetricsList != nil {
+			for _, m := range nodeMetricsList.Items {
+				nodeMetricsMap[m.Name] = m
+			}
+		}
+	}
+
+	// Group nodes by agent pool
+	agentPoolMap := make(map[string][]corev1.Node)
+	for _, node := range nodes.Items {
+		// Azure AKS nodes have "agentpool" label
+		if poolName, ok := node.Labels["agentpool"]; ok && poolName != "" {
+			agentPoolMap[poolName] = append(agentPoolMap[poolName], node)
+		}
+	}
+
+	// Create NodePool for each agent pool
+	for poolName, poolNodes := range agentPoolMap {
+		pool := NodePool{
+			Name:              poolName,
+			ProvisionerType:   ProvisionerTypeAKSManaged,
+			DisruptionBudgets: make(map[string]string),
+			Labels:            make(map[string]string),
+			AzureNodePool: &AzureNodePoolConfig{
+				Mode: "User", // Default
+			},
+			CreationTimestamp: time.Now(), // Will be updated to oldest node timestamp
+		}
+
+		// Extract VM sizes from node labels and calculate capacity
+		vmSizeSet := make(map[string]bool)
+		var oldestTimestamp time.Time
+		for _, node := range poolNodes {
+			if vmSize, ok := node.Labels["node.kubernetes.io/instance-type"]; ok {
+				vmSizeSet[vmSize] = true
+			}
+			// Check if this is a system pool
+			if _, ok := node.Labels["kubernetes.azure.com/mode"]; ok {
+				pool.AzureNodePool.Mode = "System"
+			}
+			pool.TotalNodes++
+
+			// Track oldest node timestamp for pool age
+			if oldestTimestamp.IsZero() || node.CreationTimestamp.Time.Before(oldestTimestamp) {
+				oldestTimestamp = node.CreationTimestamp.Time
+			}
+
+			// Calculate total capacity from node
+			cpuCap := int(node.Status.Capacity.Cpu().Value())
+			memCap := int(node.Status.Capacity.Memory().Value() / (1024 * 1024 * 1024)) // Convert to GB
+			pool.TotalCPUs += cpuCap
+			pool.TotalMemoryGB += memCap
+
+			for _, cond := range node.Status.Conditions {
+				if cond.Type == corev1.NodeReady && cond.Status == corev1.ConditionTrue {
+					pool.ReadyNodes++
+				}
+			}
+		}
+
+		// Set pool creation timestamp to oldest node
+		if !oldestTimestamp.IsZero() {
+			pool.CreationTimestamp = oldestTimestamp
+		}
+
+		for vmSize := range vmSizeSet {
+			pool.VMSizeNames = append(pool.VMSizeNames, vmSize)
+		}
+
+		// Calculate utilization
+		pool.UtilizationPercent = calculateNodePoolUtilization(poolNodes, nodeMetricsMap)
+		pool.BinPackingEfficiency = calculateBinPackingEfficiency(poolNodes, pool.UtilizationPercent)
+
+		// Estimate costs based on Azure VM sizes
+		pool.CostPerCPU = estimateAzureCostPerCPU(pool.VMSizeNames)
+		pool.CostPerGBMemory = estimateAzureCostPerMemory(pool.VMSizeNames)
+
+		// Calculate total monthly cost
+		for _, node := range poolNodes {
+			if vmSize, ok := node.Labels["node.kubernetes.io/instance-type"]; ok {
+				pool.TotalMonthlyCost += estimateAzureNodeMonthlyCost(vmSize)
+			} else {
+				cpuCap := int(node.Status.Capacity.Cpu().Value())
+				memCap := int(node.Status.Capacity.Memory().Value() / (1024 * 1024 * 1024))
+				pool.TotalMonthlyCost += float64(cpuCap)*pool.CostPerCPU + float64(memCap)*pool.CostPerGBMemory
+			}
+		}
+
+		// Check for autoscaling
+		for _, node := range poolNodes {
+			if _, ok := node.Labels["kubernetes.azure.com/scaledown-needed"]; ok {
+				pool.Misconfigurations = append(pool.Misconfigurations,
+					"Node marked for scale-down - potential misconfiguration")
+			}
+			if _, ok := node.Labels["kubernetes.azure.com/scaling-enabled"]; ok {
+				pool.AzureNodePool.EnableAutoScaling = true
+				pool.ConsolidationEnabled = true
 			}
 		}
 

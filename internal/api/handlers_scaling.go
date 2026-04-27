@@ -970,6 +970,8 @@ func fetchUnifiedProvisionerMetrics(ctx context.Context, client *k8s.ClusterConn
 			metric.NodePools = fetchKarpenterNodePoolsUnified(ctx, client)
 		case k8s.ProvisionerTypeAzureNAP:
 			metric.NodePools = fetchAzureNAPNodePoolsUnified(ctx, client)
+		case k8s.ProvisionerTypeAKSManaged:
+			metric.NodePools = fetchAKSManagedNodePoolsUnified(ctx, client)
 		}
 
 		// Calculate summary for this provisioner
@@ -1054,6 +1056,55 @@ func fetchAzureNAPNodePoolsUnified(ctx context.Context, client *k8s.ClusterConn)
 			DisruptionBudgets:    ap.DisruptionBudgets,
 			Misconfigurations:    ap.Misconfigurations,
 			NodeClass:            "", // Azure NAP doesn't use NodeClass
+			CreationTimestamp:    ap.CreationTimestamp,
+		}
+
+		if ap.AzureNodePool != nil {
+			pool.AzureConfig = &AzureNodePoolDetails{
+				Mode:              ap.AzureNodePool.Mode,
+				OSDiskType:        ap.AzureNodePool.OSDiskType,
+				OSDiskSizeGB:      ap.AzureNodePool.OSDiskSizeGB,
+				MaxPods:           ap.AzureNodePool.MaxPods,
+				AvailabilityZones: ap.AzureNodePool.AvailabilityZones,
+				ScaleSetPriority:  ap.AzureNodePool.ScaleSetPriority,
+				EnableAutoScaling: ap.AzureNodePool.EnableAutoScaling,
+			}
+		}
+
+		pools = append(pools, pool)
+	}
+
+	return pools
+}
+
+// fetchAKSManagedNodePoolsUnified fetches AKS managed node pools in unified format
+func fetchAKSManagedNodePoolsUnified(ctx context.Context, client *k8s.ClusterConn) []UnifiedNodePool {
+	var pools []UnifiedNodePool
+
+	// Use the k8s package to fetch AKS managed node pools
+	aksPools, _ := k8s.FetchAKSManagedNodePools(ctx, client)
+
+	for _, ap := range aksPools {
+		pool := UnifiedNodePool{
+			Name:                 ap.Name,
+			ProvisionerType:      "aks-managed",
+			Provider:             "azure",
+			VMSizeNames:          ap.VMSizeNames,
+			TotalNodes:           ap.TotalNodes,
+			ReadyNodes:           ap.ReadyNodes,
+			PendingNodes:         ap.PendingNodes,
+			DriftedNodes:         ap.DriftedNodes,
+			UtilizationPercent:   ap.UtilizationPercent,
+			BinPackingEfficiency: ap.BinPackingEfficiency,
+			CostPerCPU:           ap.CostPerCPU,
+			CostPerGBMemory:      ap.CostPerGBMemory,
+			TotalMonthlyCost:     ap.TotalMonthlyCost,
+			TotalCPUs:            ap.TotalCPUs,
+			TotalMemoryGB:        ap.TotalMemoryGB,
+			ConsolidationEnabled: ap.ConsolidationEnabled,
+			DisruptionBudgets:    ap.DisruptionBudgets,
+			Misconfigurations:    ap.Misconfigurations,
+			NodeClass:            "", // AKS managed pools don't use NodeClass
 			CreationTimestamp:    ap.CreationTimestamp,
 		}
 

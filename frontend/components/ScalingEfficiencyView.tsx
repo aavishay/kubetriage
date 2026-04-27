@@ -278,6 +278,8 @@ export const ScalingEfficiencyView: React.FC<ScalingEfficiencyViewProps> = ({ cl
         return 'Karpenter';
       case 'azure-nap':
         return 'Azure NAP';
+      case 'aks-managed':
+        return 'AKS Managed';
       case 'cluster-autoscaler':
         return 'Cluster Autoscaler';
       default:

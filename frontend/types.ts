@@ -184,7 +184,7 @@ export interface KarpenterEfficiencyMetrics {
 }
 
 // Unified Provisioner Types (supports AWS Karpenter, Azure NAP, etc.)
-export type ProvisionerType = 'karpenter' | 'azure-nap' | 'cluster-autoscaler';
+export type ProvisionerType = 'karpenter' | 'azure-nap' | 'aks-managed' | 'cluster-autoscaler';
 export type CloudProvider = 'aws' | 'azure' | 'gcp';
 
 export interface AzureNodePoolDetails {
