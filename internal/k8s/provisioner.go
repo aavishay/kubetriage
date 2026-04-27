@@ -8,6 +8,7 @@ import (
 
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/metrics/pkg/apis/metrics/v1beta1"
 )
@@ -169,6 +170,11 @@ func DetectProvisioner(ctx context.Context, client *ClusterConn) ([]NodeProvisio
 		provisioners = append(provisioners, *azureNAP)
 	}
 
+	// Check for AKS managed pools (standard AKS node pools without NAP)
+	if aksManaged, err := detectAKSManagedPools(ctx, client); err == nil && aksManaged != nil {
+		provisioners = append(provisioners, *aksManaged)
+	}
+
 	// Check for Cluster Autoscaler
 	if ca, err := detectClusterAutoscaler(ctx, client); err == nil && ca != nil {
 		provisioners = append(provisioners, *ca)
@@ -183,25 +189,25 @@ func detectKarpenter(ctx context.Context, client *ClusterConn) (*NodeProvisioner
 		return nil, fmt.Errorf("dynamic client not available")
 	}
 
-	// Try v1beta1 NodePools first, then v1alpha5 Provisioners
-	gvr := schema.GroupVersionResource{
-		Group:    "karpenter.sh",
-		Version:  "v1beta1",
-		Resource: "nodepools",
+	// Try v1 NodePools first, then v1beta1, then v1alpha5 Provisioners
+	versions := []schema.GroupVersionResource{
+		{Group: "karpenter.sh", Version: "v1", Resource: "nodepools"},
+		{Group: "karpenter.sh", Version: "v1beta1", Resource: "nodepools"},
+		{Group: "karpenter.sh", Version: "v1alpha5", Resource: "provisioners"},
 	}
 
-	nps, err := client.DynamicClient.Resource(gvr).List(ctx, metav1.ListOptions{})
-	if err != nil {
-		// Fallback to v1alpha5 Provisioners
-		gvr = schema.GroupVersionResource{
-			Group:    "karpenter.sh",
-			Version:  "v1alpha5",
-			Resource: "provisioners",
-		}
+	var nps *unstructured.UnstructuredList
+	var err error
+
+	for _, gvr := range versions {
 		nps, err = client.DynamicClient.Resource(gvr).List(ctx, metav1.ListOptions{})
-		if err != nil {
-			return nil, err
+		if err == nil {
+			break
 		}
+	}
+
+	if err != nil {
+		return nil, err
 	}
 
 	if len(nps.Items) == 0 {
@@ -231,7 +237,7 @@ func detectKarpenter(ctx context.Context, client *ClusterConn) (*NodeProvisioner
 }
 
 // detectAzureNAP detects if Azure Node Auto-Provisioning (NAP) is enabled
-// NAP is AKS's dynamic node provisioning feature that creates nodes based on pod requirements
+// For AKS clusters, NAP is considered available since all agent pools support auto-scaling
 func detectAzureNAP(ctx context.Context, client *ClusterConn) (*NodeProvisioner, error) {
 	if client.ClientSet == nil {
 		return nil, fmt.Errorf("client not available")
@@ -246,12 +252,10 @@ func detectAzureNAP(ctx context.Context, client *ClusterConn) (*NodeProvisioner,
 	// Check if this is an Azure AKS cluster
 	isAKS := false
 	for _, node := range nodes.Items {
-		// Azure nodes have specific labels
 		if _, ok := node.Labels["kubernetes.azure.com/cluster"]; ok {
 			isAKS = true
 			break
 		}
-		// Check provider ID
 		if strings.Contains(node.Spec.ProviderID, "azure://") {
 			isAKS = true
 			break
@@ -262,35 +266,8 @@ func detectAzureNAP(ctx context.Context, client *ClusterConn) (*NodeProvisioner,
 		return nil, nil
 	}
 
-	// Check for Azure NAP specific indicators
-	hasNAP := false
-	hasAgentPools := false
-
-	allNodes, err := client.ClientSet.CoreV1().Nodes().List(ctx, metav1.ListOptions{})
-	if err == nil {
-		for _, node := range allNodes.Items {
-			// Check for Azure NAP specific labels
-			if val, ok := node.Labels["kubernetes.azure.com/scaling-enabled"]; ok && val == "true" {
-				hasNAP = true
-			}
-			// Check for the node-provisioner annotation that NAP sets
-			if _, ok := node.Annotations["kubernetes.azure.com/node-provisioner"]; ok {
-				hasNAP = true
-			}
-			// Check for agentpool labels (indicates managed node pools)
-			if _, ok := node.Labels["agentpool"]; ok {
-				hasAgentPools = true
-			}
-		}
-	}
-
-	// If we have agent pools, consider this as having NAP capabilities
-	// Azure NAP is essentially the auto-scaling feature of AKS node pools
-	if !hasNAP && !hasAgentPools {
-		return nil, nil
-	}
-
-	// Azure NAP detected
+	// Azure NAP is available for all AKS clusters
+	// (NAP pools will be identified by specific labels in FetchAzureNAPNodePools)
 	provisioner := &NodeProvisioner{
 		Name:     "azure-nap",
 		Type:     ProvisionerTypeAzureNAP,
@@ -463,15 +440,24 @@ func FetchKarpenterNodePools(ctx context.Context, client *ClusterConn) ([]NodePo
 		}
 	}
 
-	// Fetch NodePools (v1beta1) or Provisioners (v1alpha5)
-	gvr := schema.GroupVersionResource{Group: "karpenter.sh", Version: "v1beta1", Resource: "nodepools"}
-	nps, err := client.DynamicClient.Resource(gvr).List(ctx, metav1.ListOptions{})
-	if err != nil {
-		gvr = schema.GroupVersionResource{Group: "karpenter.sh", Version: "v1alpha5", Resource: "provisioners"}
+	// Fetch NodePools (v1 first, then v1beta1) or Provisioners (v1alpha5)
+	versions := []schema.GroupVersionResource{
+		{Group: "karpenter.sh", Version: "v1", Resource: "nodepools"},
+		{Group: "karpenter.sh", Version: "v1beta1", Resource: "nodepools"},
+		{Group: "karpenter.sh", Version: "v1alpha5", Resource: "provisioners"},
+	}
+
+	var nps *unstructured.UnstructuredList
+
+	for _, gvr := range versions {
 		nps, err = client.DynamicClient.Resource(gvr).List(ctx, metav1.ListOptions{})
-		if err != nil {
-			return nodePools, err
+		if err == nil {
+			break
 		}
+	}
+
+	if err != nil {
+		return nodePools, err
 	}
 
 	for _, np := range nps.Items {
@@ -492,17 +478,59 @@ func FetchKarpenterNodePools(ctx context.Context, client *ClusterConn) ([]NodePo
 			if template, ok := spec["template"].(map[string]interface{}); ok {
 				if templateSpec, ok := template["spec"].(map[string]interface{}); ok {
 					if reqs, ok := templateSpec["requirements"].([]interface{}); ok {
+						var azureSkuFamily, azureSkuCpu string
 						for _, r := range reqs {
 							if reqMap, ok := r.(map[string]interface{}); ok {
-								if key, ok := reqMap["key"].(string); ok && key == "node.kubernetes.io/instance-type" {
-									if vals, ok := reqMap["values"].([]interface{}); ok {
-										for _, v := range vals {
-											if vs, ok := v.(string); ok {
-												pool.InstanceTypes = append(pool.InstanceTypes, vs)
+								if key, ok := reqMap["key"].(string); ok {
+									switch key {
+									case "node.kubernetes.io/instance-type":
+										// Standard AWS/GCP instance types
+										if vals, ok := reqMap["values"].([]interface{}); ok {
+											for _, v := range vals {
+												if vs, ok := v.(string); ok {
+													pool.InstanceTypes = append(pool.InstanceTypes, vs)
+												}
+											}
+										}
+									case "karpenter.azure.com/sku-family":
+										// Azure SKU family (D, E, F, etc.)
+										if vals, ok := reqMap["values"].([]interface{}); ok && len(vals) > 0 {
+											if v, ok := vals[0].(string); ok {
+												azureSkuFamily = v
+											}
+										}
+									case "karpenter.azure.com/sku-cpu":
+										// Azure CPU counts
+										if vals, ok := reqMap["values"].([]interface{}); ok {
+											cpuVals := make([]string, 0, len(vals))
+											for _, v := range vals {
+												if vs, ok := v.(string); ok {
+													cpuVals = append(cpuVals, vs)
+												}
+											}
+											if len(cpuVals) > 0 {
+												azureSkuCpu = strings.Join(cpuVals, ",")
+											}
+										}
+								case "karpenter.azure.com/sku-name":
+										// Azure specific VM sizes (e.g., GPU instances)
+										if vals, ok := reqMap["values"].([]interface{}); ok {
+											for _, v := range vals {
+												if vs, ok := v.(string); ok {
+													pool.InstanceTypes = append(pool.InstanceTypes, vs)
+												}
 											}
 										}
 									}
 								}
+							}
+						}
+						// Build Azure instance type string from SKU family + CPU (only if no specific SKU names)
+						if len(pool.InstanceTypes) == 0 {
+							if azureSkuFamily != "" && azureSkuCpu != "" {
+								pool.InstanceTypes = append(pool.InstanceTypes, fmt.Sprintf("%s-series (%s vCPU)", azureSkuFamily, azureSkuCpu))
+							} else if azureSkuFamily != "" {
+								pool.InstanceTypes = append(pool.InstanceTypes, fmt.Sprintf("%s-series", azureSkuFamily))
 							}
 						}
 					}
@@ -553,10 +581,16 @@ func FetchKarpenterNodePools(ctx context.Context, client *ClusterConn) ([]NodePo
 		pool.UtilizationPercent = calculateNodePoolUtilization(poolNodes, nodeMetricsMap)
 		pool.BinPackingEfficiency = calculateBinPackingEfficiency(poolNodes, pool.UtilizationPercent)
 
-		// Check for pending NodeClaims
-		gvrNC := schema.GroupVersionResource{Group: "karpenter.sh", Version: "v1beta1", Resource: "nodeclaims"}
-		ncs, _ := client.DynamicClient.Resource(gvrNC).List(ctx, metav1.ListOptions{})
-		for _, nc := range ncs.Items {
+		// Check for pending NodeClaims (try v1 first, then v1beta1)
+		var ncs *unstructured.UnstructuredList
+		gvrNCV1 := schema.GroupVersionResource{Group: "karpenter.sh", Version: "v1", Resource: "nodeclaims"}
+		ncs, err = client.DynamicClient.Resource(gvrNCV1).List(ctx, metav1.ListOptions{})
+		if err != nil {
+			gvrNC := schema.GroupVersionResource{Group: "karpenter.sh", Version: "v1beta1", Resource: "nodeclaims"}
+			ncs, _ = client.DynamicClient.Resource(gvrNC).List(ctx, metav1.ListOptions{})
+		}
+		if ncs != nil {
+			for _, nc := range ncs.Items {
 			ncLabels := nc.GetLabels()
 			if ncLabels["karpenter.sh/nodepool"] == npName {
 				if ncStatus, ok := nc.Object["status"].(map[string]interface{}); ok {
@@ -584,6 +618,7 @@ func FetchKarpenterNodePools(ctx context.Context, client *ClusterConn) ([]NodePo
 				}
 			}
 		}
+	}
 
 		// Check for misconfigurations
 		if status != nil {
@@ -736,14 +771,15 @@ func FetchAKSManagedNodePools(ctx context.Context, client *ClusterConn) ([]NodeP
 }
 
 // FetchAzureNAPNodePools fetches Azure Node Auto-Provisioning pool details
+// For AKS clusters, all agent pools are considered NAP-capable
 func FetchAzureNAPNodePools(ctx context.Context, client *ClusterConn) ([]NodePool, error) {
 	var nodePools []NodePool
 
-	if client.DynamicClient == nil {
+	if client.ClientSet == nil {
 		return nodePools, nil
 	}
 
-	// Azure NAP uses AKS agent pools, which we can detect from node labels
+	// Azure NAP uses AKS agent pools
 	nodes, err := client.ClientSet.CoreV1().Nodes().List(ctx, metav1.ListOptions{})
 	if err != nil {
 		return nodePools, err
@@ -765,15 +801,14 @@ func FetchAzureNAPNodePools(ctx context.Context, client *ClusterConn) ([]NodePoo
 	agentPoolMap := make(map[string][]corev1.Node)
 	for _, node := range nodes.Items {
 		// Azure AKS nodes have "agentpool" label
-		if poolName, ok := node.Labels["agentpool"]; ok {
+		if poolName, ok := node.Labels["agentpool"]; ok && poolName != "" {
 			agentPoolMap[poolName] = append(agentPoolMap[poolName], node)
 		}
 	}
 
 	// Create NodePool for each agent pool
 	for poolName, poolNodes := range agentPoolMap {
-		// Skip pools with empty names (no "default" fallback)
-		if poolName == "" {
+		if len(poolNodes) == 0 {
 			continue
 		}
 		pool := NodePool{
@@ -785,6 +820,17 @@ func FetchAzureNAPNodePools(ctx context.Context, client *ClusterConn) ([]NodePoo
 				Mode: "User", // Default
 			},
 			CreationTimestamp: time.Now(), // Will be updated to oldest node timestamp
+		}
+
+		// Check for NAP-specific indicators on any node in the pool
+		hasNAPIndicators := false
+		for _, node := range poolNodes {
+			if val, ok := node.Labels["kubernetes.azure.com/scaling-enabled"]; ok && val == "true" {
+				hasNAPIndicators = true
+			}
+			if _, ok := node.Annotations["kubernetes.azure.com/node-provisioner"]; ok {
+				hasNAPIndicators = true
+			}
 		}
 
 		// Extract VM sizes from node labels and calculate capacity
@@ -835,28 +881,28 @@ func FetchAzureNAPNodePools(ctx context.Context, client *ClusterConn) ([]NodePoo
 		pool.CostPerCPU = estimateAzureCostPerCPU(pool.VMSizeNames)
 		pool.CostPerGBMemory = estimateAzureCostPerMemory(pool.VMSizeNames)
 
-		// Calculate total monthly cost using per-instance pricing for accuracy
-		// Sum the cost of each individual node based on its VM size
+		// Calculate total monthly cost
 		for _, node := range poolNodes {
 			if vmSize, ok := node.Labels["node.kubernetes.io/instance-type"]; ok {
 				pool.TotalMonthlyCost += estimateAzureNodeMonthlyCost(vmSize)
 			} else {
-				// Fallback: use capacity-based calculation if VM size unknown
 				cpuCap := int(node.Status.Capacity.Cpu().Value())
 				memCap := int(node.Status.Capacity.Memory().Value() / (1024 * 1024 * 1024))
 				pool.TotalMonthlyCost += float64(cpuCap)*pool.CostPerCPU + float64(memCap)*pool.CostPerGBMemory
 			}
 		}
 
-		// Check for autoscaling
+		// Mark as auto-scaling enabled if NAP indicators found
+		if hasNAPIndicators {
+			pool.AzureNodePool.EnableAutoScaling = true
+			pool.ConsolidationEnabled = true
+		}
+
+		// Check for scale-down labels
 		for _, node := range poolNodes {
 			if _, ok := node.Labels["kubernetes.azure.com/scaledown-needed"]; ok {
 				pool.Misconfigurations = append(pool.Misconfigurations,
 					"Node marked for scale-down - potential misconfiguration")
-			}
-			if _, ok := node.Labels["kubernetes.azure.com/scaling-enabled"]; ok {
-				pool.AzureNodePool.EnableAutoScaling = true
-				pool.ConsolidationEnabled = true
 			}
 		}
 

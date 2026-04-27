@@ -953,32 +953,53 @@ func getKEDAMetricName(metadata map[string]interface{}) string {
 }
 
 // fetchUnifiedProvisionerMetrics fetches metrics from all supported provisioners
+// Shows all node pools together: Karpenter, Azure NAP, and AKS managed
 func fetchUnifiedProvisionerMetrics(ctx context.Context, client *k8s.ClusterConn) []UnifiedProvisionerMetrics {
 	var unifiedMetrics []UnifiedProvisionerMetrics
 
 	// Detect provisioners
 	provisioners, _ := k8s.DetectProvisioner(ctx, client)
 
-	for _, provisioner := range provisioners {
-		metric := UnifiedProvisionerMetrics{
-			ProvisionerType: string(provisioner.Type),
-			Provider:        provisioner.Provider,
+	// Track which pool names we've already added to avoid duplicates
+	seenPoolNames := make(map[string]bool)
+
+	// Helper to add pools while avoiding duplicates
+	addPools := func(provisionerType, provider string, fetchFunc func() []UnifiedNodePool) {
+		pools := fetchFunc()
+		var uniquePools []UnifiedNodePool
+		for _, pool := range pools {
+			if !seenPoolNames[pool.Name] {
+				seenPoolNames[pool.Name] = true
+				uniquePools = append(uniquePools, pool)
+			}
 		}
 
+		if len(uniquePools) > 0 {
+			metric := UnifiedProvisionerMetrics{
+				ProvisionerType: provisionerType,
+				Provider:        provider,
+				NodePools:       uniquePools,
+			}
+			metric.Summary = calculateProvisionerSummary(uniquePools)
+			unifiedMetrics = append(unifiedMetrics, metric)
+		}
+	}
+
+	// Process all provisioners
+	for _, provisioner := range provisioners {
 		switch provisioner.Type {
 		case k8s.ProvisionerTypeKarpenter:
-			metric.NodePools = fetchKarpenterNodePoolsUnified(ctx, client)
+			addPools(string(provisioner.Type), provisioner.Provider, func() []UnifiedNodePool {
+				return fetchKarpenterNodePoolsUnified(ctx, client)
+			})
 		case k8s.ProvisionerTypeAzureNAP:
-			metric.NodePools = fetchAzureNAPNodePoolsUnified(ctx, client)
+			addPools(string(provisioner.Type), provisioner.Provider, func() []UnifiedNodePool {
+				return fetchAzureNAPNodePoolsUnified(ctx, client)
+			})
 		case k8s.ProvisionerTypeAKSManaged:
-			metric.NodePools = fetchAKSManagedNodePoolsUnified(ctx, client)
-		}
-
-		// Calculate summary for this provisioner
-		metric.Summary = calculateProvisionerSummary(metric.NodePools)
-
-		if len(metric.NodePools) > 0 {
-			unifiedMetrics = append(unifiedMetrics, metric)
+			addPools(string(provisioner.Type), provisioner.Provider, func() []UnifiedNodePool {
+				return fetchAKSManagedNodePoolsUnified(ctx, client)
+			})
 		}
 	}
 
@@ -1018,9 +1039,12 @@ func fetchKarpenterNodePoolsUnified(ctx context.Context, client *k8s.ClusterConn
 			Misconfigurations:    kp.Misconfigurations,
 			NodeClass:            kp.NodeClass,
 			CreationTimestamp:    kp.CreationTimestamp,
-			AWSConfig: &AWSNodePoolDetails{
+		}
+		// Only add AWSConfig if AWSNodePool is not nil
+		if kp.AWSNodePool != nil {
+			pool.AWSConfig = &AWSNodePoolDetails{
 				CapacityType: kp.AWSNodePool.CapacityType,
-			},
+			}
 		}
 		pools = append(pools, pool)
 	}
