@@ -128,8 +128,9 @@ const AppContent: React.FC = () => {
   return (
     <div className={isDarkMode ? 'dark' : ''}>
       <Layout>
-        <Suspense fallback={<PageSkeleton />}>
-          <Routes>
+        <ErrorBoundary>
+          <Suspense fallback={<PageSkeleton />}>
+            <Routes>
             <Route path="/" element={
               <PageTransition>
                 <Dashboard workloads={workloads} isLoading={isWorkloadsLoading} isDarkMode={isDarkMode} onTriageRequest={handleNavigateToTriage} onRefresh={refreshWorkloads} metricsWindow={metricsWindow} setMetricsWindow={setMetricsWindow} />
@@ -242,8 +243,9 @@ const AppContent: React.FC = () => {
                 <NotFound />
               </PageTransition>
             } />
-          </Routes>
-        </Suspense>
+            </Routes>
+          </Suspense>
+        </ErrorBoundary>
       </Layout>
       <OfflineIndicator />
 

@@ -368,6 +368,7 @@ export const DeveloperPortalView: React.FC = () => {
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     className="kt-input pl-10 pr-4 text-xs"
+                    aria-label="Search workloads"
                   />
                 </div>
               </div>

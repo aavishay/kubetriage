@@ -189,6 +189,14 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
         />
       )}
 
+      {/* Skip Link for Accessibility */}
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-[100] focus:px-4 focus:py-2 focus:bg-primary-600 focus:text-white focus:rounded-lg focus:shadow-lg"
+      >
+        Skip to main content
+      </a>
+
       {/* Desktop & Mobile Sidebar */}
       <aside
         id="main-sidebar"
@@ -210,7 +218,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
             transition-opacity duration-300 ${isCollapsed ? 'md:opacity-100' : 'md:opacity-0'}"></div>
 
           <div className="shrink-0 p-2 rounded-xl bg-bg-hover ring-1 ring-border-main relative z-10">
-            <img src={logo} alt="Logo" className="w-7 h-7 object-contain" />
+            <img src={logo} alt="KubeTriage" className="w-7 h-7 object-contain" />
           </div>
 
           {(!isCollapsed || isMobileMenuOpen) && (
@@ -580,7 +588,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
         )}
 
         {/* Content Container */}
-        <div className="flex-1 overflow-y-auto px-4 md:px-6 py-6 custom-scrollbar">
+        <div id="main-content" className="flex-1 overflow-y-auto px-4 md:px-6 py-6 custom-scrollbar" role="main" tabIndex={-1}>
           <div className="mx-auto max-w-[1600px] h-full">
             {children || <Outlet />}
           </div>

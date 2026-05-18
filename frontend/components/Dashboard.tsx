@@ -156,6 +156,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = tr
         <button
           onClick={() => onRefresh?.()}
           className="px-6 py-3 bg-primary-600 hover:bg-primary-500 text-white font-medium text-sm rounded-xl transition-all flex items-center gap-2"
+          aria-label="Refresh workloads"
         >
           <Activity className="w-4 h-4" /> Refresh
         </button>
@@ -222,6 +223,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = tr
               <button
                 onClick={() => onTriageRequest?.(incidents[0]?.id, 'Resource Constraints')}
                 className="bg-primary-600 text-white hover:bg-primary-500 px-6 py-3 rounded-xl text-sm font-medium transition-all flex items-center gap-2 shadow-sm"
+                aria-label="Run AI triage on first incident"
               >
                 <Sparkles className="w-4 h-4 text-white" />
                 Run AI Triage
@@ -284,8 +286,12 @@ export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = tr
                 incidents.slice(0, 5).map((w, idx) => (
                   <div
                     key={w.id}
-                    className="p-4 rounded-2xl border border-transparent bg-bg-hover/30 hover:bg-bg-hover hover:border-primary-500/10 hover:shadow-sm transition-all cursor-pointer group"
+                    className="p-4 rounded-2xl border border-transparent bg-bg-hover/30 hover:bg-bg-hover hover:border-primary-500/10 hover:shadow-sm transition-all cursor-pointer group focus-visible:ring-2 focus-visible:ring-primary-500/50 focus-visible:border-primary-500/20 outline-none"
                     onClick={() => onTriageRequest?.(w.id, 'Resource Constraints')}
+                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onTriageRequest?.(w.id, 'Resource Constraints'); } }}
+                    tabIndex={0}
+                    role="button"
+                    aria-label={`Investigate ${w.name} incident`}
                     style={{ animationDelay: `${idx * 50}ms` }}
                   >
                     <div className="flex justify-between items-start mb-2">
@@ -377,6 +383,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = tr
                         ? 'bg-primary-500/10 text-primary-600 dark:text-primary-400'
                         : 'text-text-secondary hover:text-text-primary'
                         }`}
+                      aria-label={`Set metrics window to ${win}`}
+                      aria-pressed={metricsWindow === win}
                     >
                       {win}
                     </button>
@@ -392,6 +400,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = tr
                         ? 'bg-primary-500/10 text-primary-600 dark:text-primary-400'
                         : 'text-text-secondary hover:text-text-primary'
                         }`}
+                      aria-label={`View ${type} saturation`}
+                      aria-pressed={saturationTab === type}
                     >
                       {type}
                     </button>
@@ -440,8 +450,12 @@ export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = tr
                   .map((item, idx) => (
                     <div
                       key={idx}
-                      className="flex items-center gap-3 p-3 rounded-2xl hover:bg-bg-hover transition-colors cursor-pointer group"
+                      className="flex items-center gap-3 p-3 rounded-2xl hover:bg-bg-hover transition-colors cursor-pointer group focus-visible:ring-2 focus-visible:ring-primary-500/50 focus-visible:outline-none"
                       onClick={() => onTriageRequest?.(item.name, 'General Health')}
+                      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onTriageRequest?.(item.name, 'General Health'); } }}
+                      tabIndex={0}
+                      role="button"
+                      aria-label={`View details for ${item.name}`}
                     >
                       {/* Rank Badge */}
                       <div className={`

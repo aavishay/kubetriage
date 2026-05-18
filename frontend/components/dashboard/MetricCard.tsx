@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { LucideIcon } from 'lucide-react';
 
 interface MetricCardProps {
@@ -11,7 +11,7 @@ interface MetricCardProps {
   delay?: string | number;
 }
 
-export const MetricCard: React.FC<MetricCardProps> = ({
+const MetricCardComponent: React.FC<MetricCardProps> = ({
   icon: Icon,
   iconColor = 'text-primary-500 dark:text-primary-400',
   label,
@@ -47,3 +47,5 @@ export const MetricCard: React.FC<MetricCardProps> = ({
     </div>
   );
 };
+
+export const MetricCard = memo(MetricCardComponent);

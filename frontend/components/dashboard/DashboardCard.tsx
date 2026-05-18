@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo } from 'react';
 
 interface DashboardCardProps {
   children: React.ReactNode;
@@ -13,7 +13,7 @@ const paddingMap = {
   lg: 'p-8',
 };
 
-export const DashboardCard: React.FC<DashboardCardProps> = ({
+const DashboardCardComponent: React.FC<DashboardCardProps> = ({
   children,
   className = '',
   padding = 'md',
@@ -31,3 +31,5 @@ export const DashboardCard: React.FC<DashboardCardProps> = ({
     </div>
   );
 };
+
+export const DashboardCard = memo(DashboardCardComponent);

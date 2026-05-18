@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo } from 'react';
 
 type Status = 'Healthy' | 'Warning' | 'Critical';
 
@@ -16,14 +16,16 @@ const statusStyles: Record<string, string> = {
     'bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20',
 };
 
-export const StatusBadge: React.FC<StatusBadgeProps> = ({ status, className = '' }) => {
+const StatusBadgeComponent: React.FC<StatusBadgeProps> = ({ status, className = '' }) => {
   const style = statusStyles[status] || statusStyles['Warning'];
 
   return (
     <span
-      className={`text-[10px] font-medium  px-2 py-0.5 rounded-full ${style} ${className}`}
+      className={`text-[10px] font-medium px-2 py-0.5 rounded-full ${style} ${className}`}
     >
       {status}
     </span>
   );
 };
+
+export const StatusBadge = memo(StatusBadgeComponent);

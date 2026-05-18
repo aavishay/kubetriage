@@ -27,7 +27,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLogin }) => {
         <div className="bg-bg-card border border-border-main rounded-2xl shadow-xl p-8 relative">
           <div className="flex flex-col items-center mb-8">
             <div className="mb-4 p-3 bg-bg-hover rounded-xl border border-border-main">
-              <img src={logo} alt="Logo" className="w-10 h-10 object-contain" />
+              <img src={logo} alt="KubeTriage" className="w-10 h-10 object-contain" />
             </div>
             <h1 className="text-2xl font-semibold text-text-primary mb-1 text-center">
               Kube<span className="text-primary-500">Triage</span>

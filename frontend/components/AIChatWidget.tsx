@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, memo } from 'react';
 import { X, Send, Minimize2, Maximize2, Sparkles, User, Bot } from 'lucide-react';
 import { ChatMessage, sendChatMessage } from '../services/geminiService';
 import ReactMarkdown from 'react-markdown';
@@ -13,7 +13,7 @@ interface AIChatWidgetProps {
   variant?: 'floating' | 'embedded';
 }
 
-export const AIChatWidget: React.FC<AIChatWidgetProps> = ({ isOpen, onClose, initialContext, variant = 'floating' }) => {
+const AIChatWidgetComponent: React.FC<AIChatWidgetProps> = ({ isOpen, onClose, initialContext, variant = 'floating' }) => {
   const [messages, setMessages] = useState<ChatMessage[]>([
     { role: 'model', content: 'Hello! I am your AI Ops Co-Pilot. How can I assist with cluster optimization today?', timestamp: Date.now() }
   ]);
@@ -92,27 +92,29 @@ export const AIChatWidget: React.FC<AIChatWidgetProps> = ({ isOpen, onClose, ini
               onClick={() => setIsExpanded(!isExpanded)}
               className="p-1.5 text-text-secondary hover:text-text-primary hover:bg-bg-hover rounded-lg transition-colors"
               title={isExpanded ? "Minimize" : "Maximize"}
+              aria-label={isExpanded ? "Minimize chat" : "Maximize chat"}
             >
-              {isExpanded ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
+              {isExpanded ? <Minimize2 className="w-4 h-4" aria-hidden="true" /> : <Maximize2 className="w-4 h-4" aria-hidden="true" />}
             </button>
           )}
           <button
             onClick={onClose}
             className="p-1.5 text-text-tertiary hover:text-danger hover:bg-danger-light rounded-lg transition-colors"
+            aria-label="Close chat"
           >
-            <X className="w-4 h-4" />
+            <X className="w-4 h-4" aria-hidden="true" />
           </button>
         </div>
       </div>
 
       {/* Messages Area */}
-      <div ref={scrollRef} className="flex-1 overflow-y-auto p-3 space-y-4 custom-scrollbar">
+      <div ref={scrollRef} className="flex-1 overflow-y-auto p-3 space-y-4 custom-scrollbar" role="log" aria-live="polite" aria-label="Chat messages">
         {messages.map((msg, idx) => (
           <div key={idx} className={`flex gap-3 ${msg.role === 'user' ? 'flex-row-reverse' : 'flex-row'}`}>
             <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 ${
               msg.role === 'user' ? 'bg-primary-600/20 text-primary-400' : 'bg-bg-hover text-success'
-            }`}>
-              {msg.role === 'user' ? <User className="w-3.5 h-3.5" /> : <Bot className="w-3.5 h-3.5" />}
+            }`} aria-label={msg.role === 'user' ? 'You' : 'AI Assistant'}>
+              {msg.role === 'user' ? <User className="w-3.5 h-3.5" aria-hidden="true" /> : <Bot className="w-3.5 h-3.5" aria-hidden="true" />}
             </div>
 
             <div className={`max-w-[85%] p-3 rounded-2xl text-sm ${
@@ -170,16 +172,18 @@ export const AIChatWidget: React.FC<AIChatWidgetProps> = ({ isOpen, onClose, ini
             placeholder="Ask about this workload..."
             className="kt-input flex-1"
             disabled={isTyping}
+            aria-label="AI chat input"
           />
           <button
             type="submit"
             disabled={!input.trim() || isTyping}
             className="kt-button kt-button-primary p-2.5 disabled:opacity-50 shrink-0"
+            aria-label={isTyping ? "Sending message..." : "Send message"}
           >
             {isTyping ? (
-              <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+              <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" aria-hidden="true" />
             ) : (
-              <Send className="w-4 h-4" />
+              <Send className="w-4 h-4" aria-hidden="true" />
             )}
           </button>
         </form>
@@ -190,3 +194,5 @@ export const AIChatWidget: React.FC<AIChatWidgetProps> = ({ isOpen, onClose, ini
     </div>
   );
 };
+
+export const AIChatWidget = memo(AIChatWidgetComponent);

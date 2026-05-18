@@ -21,10 +21,10 @@ export const NotFound: React.FC = () => {
                 </div>
 
                 <div className="flex items-center justify-center gap-3">
-                    <button onClick={() => window.history.back()} className="kt-button kt-button-ghost border border-border-main">
+                    <button onClick={() => window.history.back()} className="kt-button kt-button-ghost border border-border-main" aria-label="Go back to previous page">
                         <ArrowLeft className="w-4 h-4" /> Go Back
                     </button>
-                    <Link to="/" className="kt-button kt-button-primary">
+                    <Link to="/" className="kt-button kt-button-primary" aria-label="Return to dashboard">
                         <Home className="w-4 h-4" /> Dashboard
                     </Link>
                 </div>

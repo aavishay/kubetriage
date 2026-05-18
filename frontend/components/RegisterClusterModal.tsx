@@ -57,7 +57,7 @@ export const RegisterClusterModal: React.FC<RegisterClusterModalProps> = ({ isOp
     };
 
     return (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="register-modal-title">
             <div
                 className="absolute inset-0 bg-black/60 backdrop-blur-sm animate-fade-in"
                 onClick={onClose}
@@ -69,7 +69,7 @@ export const RegisterClusterModal: React.FC<RegisterClusterModalProps> = ({ isOp
                         <div className="p-2 bg-primary-500/10 rounded-lg">
                             <Cloud className="w-4 h-4 text-primary-400" />
                         </div>
-                        <h3 className="font-semibold text-text-primary">Register Cluster</h3>
+                        <h3 id="register-modal-title" className="font-semibold text-text-primary">Register Cluster</h3>
                     </div>
                     <button onClick={onClose} className="p-1.5 hover:bg-bg-hover rounded-lg transition-colors text-text-secondary hover:text-text-primary">
                         <X className="w-4 h-4" />
@@ -78,14 +78,14 @@ export const RegisterClusterModal: React.FC<RegisterClusterModalProps> = ({ isOp
 
                 <form onSubmit={handleSubmit} className="p-5 space-y-4">
                     {error && (
-                        <div className="p-3 bg-danger-light border border-danger/20 text-danger text-sm rounded-lg flex items-center gap-2 animate-fade-in">
+                        <div role="alert" className="p-3 bg-danger-light border border-danger/20 text-danger text-sm rounded-lg flex items-center gap-2 animate-fade-in">
                             <AlertCircle className="w-4 h-4 shrink-0" />
                             {error}
                         </div>
                     )}
 
                     {success && (
-                        <div className="p-3 bg-success-light border border-success/20 text-success text-sm rounded-lg flex items-center gap-2 animate-fade-in">
+                        <div role="alert" className="p-3 bg-success-light border border-success/20 text-success text-sm rounded-lg flex items-center gap-2 animate-fade-in">
                             <Check className="w-4 h-4 shrink-0" />
                             Connection established successfully
                         </div>

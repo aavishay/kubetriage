@@ -12,6 +12,7 @@ import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import { MetricsChart } from './MetricsChart';
 import { LogStreamViewer } from './LogStreamViewer';
 import { CommentsThread } from './CommentsThread';
+import { StatusBadge } from './dashboard/StatusBadge';
 
 interface TriageViewProps extends ViewPropsWithChat {
   initialWorkloadId?: string;
@@ -68,20 +69,6 @@ const CodeBlock = ({ language, children, className = "" }: { language: string, c
         {code}
       </SyntaxHighlighter>
     </div>
-  );
-};
-
-// Status Badge Component
-const StatusBadge = ({ status }: { status: string }) => {
-  const colors = {
-    Healthy: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20',
-    Warning: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20',
-    Critical: 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20',
-  };
-  return (
-    <span className={`text-[10px] font-medium  px-2 py-0.5 rounded-full border ${colors[status as keyof typeof colors] || colors.Healthy}`}>
-      {status}
-    </span>
   );
 };
 

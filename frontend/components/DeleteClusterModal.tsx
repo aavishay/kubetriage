@@ -40,7 +40,7 @@ export const DeleteClusterModal: React.FC<DeleteClusterModalProps> = ({ isOpen, 
     const isMatch = inputValue === clusterName;
 
     return (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="delete-modal-title">
             <div
                 className="absolute inset-0 bg-black/60 backdrop-blur-sm animate-fade-in"
                 onClick={onClose}
@@ -52,7 +52,7 @@ export const DeleteClusterModal: React.FC<DeleteClusterModalProps> = ({ isOpen, 
                         <div className="p-2 bg-bg-card rounded-lg">
                             <AlertTriangle className="w-4 h-4 text-danger" />
                         </div>
-                        <h3 className="font-semibold text-text-primary">Remove Cluster</h3>
+                        <h3 id="delete-modal-title" className="font-semibold text-text-primary">Remove Cluster</h3>
                     </div>
                     <button onClick={onClose} className="p-1.5 hover:bg-bg-hover rounded-lg transition-colors text-text-secondary hover:text-text-primary">
                         <X className="w-4 h-4" />
@@ -67,7 +67,7 @@ export const DeleteClusterModal: React.FC<DeleteClusterModalProps> = ({ isOpen, 
                     </p>
 
                     <div className="space-y-2">
-                        <label className="text-xs font-medium text-text-secondary">
+                        <label id="confirm-instructions" className="text-xs font-medium text-text-secondary">
                             Type <span className="text-danger font-mono">{clusterName}</span> to confirm
                         </label>
                         <input
@@ -77,6 +77,7 @@ export const DeleteClusterModal: React.FC<DeleteClusterModalProps> = ({ isOpen, 
                             placeholder={clusterName}
                             className="kt-input font-mono text-sm"
                             autoFocus
+                            aria-describedby="confirm-instructions"
                         />
                     </div>
 

@@ -1,11 +1,11 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { useLocation } from 'react-router-dom';
 
 interface PageTransitionProps {
   children: React.ReactNode;
 }
 
-export const PageTransition: React.FC<PageTransitionProps> = ({ children }) => {
+const PageTransitionComponent: React.FC<PageTransitionProps> = ({ children }) => {
   const location = useLocation();
 
   return (
@@ -14,6 +14,8 @@ export const PageTransition: React.FC<PageTransitionProps> = ({ children }) => {
     </div>
   );
 };
+
+export const PageTransition = memo(PageTransitionComponent);
 
 // Hook for scroll animations
 export const useScrollAnimation = () => {

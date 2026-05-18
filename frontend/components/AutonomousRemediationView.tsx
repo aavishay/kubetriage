@@ -830,6 +830,7 @@ export const AutonomousRemediationView: React.FC = () => {
                   className="w-full px-3 py-2 border border-border-main rounded-lg text-sm bg-bg-card text-text-primary focus:outline-none focus:ring-2 focus:ring-primary-500"
                   rows={3}
                   placeholder="Add a note about this approval decision..."
+                  aria-label="Approval comment"
                 />
               </div>
 

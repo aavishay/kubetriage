@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, memo } from 'react';
 import { KarpenterEfficiencyMetrics, KEDAEfficiencyMetrics, HPAMetrics, EfficiencySummary, UnifiedProvisionerMetrics, UnifiedNodePool, NodeClaim, NodeClaimsSummary, NodeClaimsResponse } from '../types';
 import {
   Zap, Activity, TrendingUp, AlertTriangle, CheckCircle2,
@@ -41,7 +41,7 @@ const formatAge = (timestamp?: string): string => {
   return `${diffHours}h`;
 };
 
-export const ScalingEfficiencyView: React.FC<ScalingEfficiencyViewProps> = ({ clusterId }) => {
+const ScalingEfficiencyViewComponent: React.FC<ScalingEfficiencyViewProps> = ({ clusterId }) => {
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<{
     karpenter: KarpenterEfficiencyMetrics[];
@@ -1517,3 +1517,5 @@ export const ScalingEfficiencyView: React.FC<ScalingEfficiencyViewProps> = ({ cl
     </div>
   );
 };
+
+export const ScalingEfficiencyView = memo(ScalingEfficiencyViewComponent);

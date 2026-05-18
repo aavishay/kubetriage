@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, memo } from 'react';
 import { Send, Loader2 } from 'lucide-react';
 import { Comment } from '../types';
 
@@ -11,7 +11,7 @@ interface CommentsThreadProps {
     isDarkMode?: boolean;
 }
 
-export const CommentsThread: React.FC<CommentsThreadProps> = ({
+const CommentsThreadComponent: React.FC<CommentsThreadProps> = ({
     reportID, clusterID, namespace, workloadName, isDarkMode
 }) => {
     const user = {
@@ -120,7 +120,7 @@ export const CommentsThread: React.FC<CommentsThreadProps> = ({
                                 <img
                                     src={c.AuthorAvatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${c.Author || 'local-user'}`}
                                     className="w-6 h-6 rounded-full border border-border-main bg-bg-hover"
-                                    alt="avatar"
+                                    alt={`${c.Author || 'Local Admin'} avatar`}
                                 />
                             </div>
                             <div className="flex-1">
@@ -147,6 +147,7 @@ export const CommentsThread: React.FC<CommentsThreadProps> = ({
                         onChange={e => setNewComment(e.target.value)}
                         placeholder="Add private note..."
                         className="kt-input pr-12 py-2.5 text-xs"
+                        aria-label="Add a comment"
                     />
                     <button
                         type="submit"
@@ -160,3 +161,5 @@ export const CommentsThread: React.FC<CommentsThreadProps> = ({
         </div>
     );
 };
+
+export const CommentsThread = memo(CommentsThreadComponent);

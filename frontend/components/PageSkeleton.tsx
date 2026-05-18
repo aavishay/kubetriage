@@ -2,7 +2,7 @@ import React from 'react';
 
 export const PageSkeleton: React.FC = () => {
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className="space-y-6 animate-fade-in" aria-busy="true" aria-label="Loading page content">
       {/* Header skeleton matching Layout header height */}
       <div className="h-16 bg-bg-card/50 border-b border-border-main rounded-2xl flex items-center justify-between px-6">
         <div className="flex items-center gap-4">

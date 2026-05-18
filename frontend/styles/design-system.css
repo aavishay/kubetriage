@@ -62,9 +62,9 @@
   --kt-border-main: #e5e5e5;
 
   --kt-fg-primary: #1e1e1e;
-  --kt-fg-secondary: #6e6e6e;
-  --kt-fg-tertiary: #a0a0a0;
-  --kt-fg-muted: #c8c8c8;
+  --kt-fg-secondary: #5a5a5a;
+  --kt-fg-tertiary: #767676;
+  --kt-fg-muted: #9e9e9e;
 
   /* Semantic Overlay (Glass) */
   --kt-glass-bg: rgba(255, 255, 255, 0.75);
@@ -130,8 +130,8 @@
 
   --kt-fg-primary: #cccccc;
   --kt-fg-secondary: #9cdcfe;
-  --kt-fg-tertiary: #808080;
-  --kt-fg-muted: #5c5c5c;
+  --kt-fg-tertiary: #a0a0a0;
+  --kt-fg-muted: #808080;
 
   /* Semantic Overlay (Glass) */
   --kt-glass-bg: rgba(37, 37, 38, 0.75);

@@ -460,6 +460,7 @@ export const ExternalMetricsView: React.FC = () => {
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="w-full px-4 py-2 pl-10 bg-bg-card border border-border-main rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  aria-label="Search metric sources"
                 />
                 <Database className="w-4 h-4 text-text-tertiary absolute left-3 top-2.5" />
               </div>

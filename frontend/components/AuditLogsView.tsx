@@ -103,6 +103,7 @@ export const AuditLogsView: React.FC = () => {
             value={filterAction}
             onChange={(e) => { setFilterAction(e.target.value); setOffset(0); }}
             className="bg-transparent text-sm text-text-primary outline-none cursor-pointer"
+            aria-label="Filter by action"
           >
             {actionOptions.map(opt => (
               <option key={opt.value} value={opt.value}>{opt.label}</option>
@@ -115,6 +116,7 @@ export const AuditLogsView: React.FC = () => {
             value={filterResource}
             onChange={(e) => { setFilterResource(e.target.value); setOffset(0); }}
             className="bg-transparent text-sm text-text-primary outline-none cursor-pointer"
+            aria-label="Filter by resource type"
           >
             {resourceOptions.map(opt => (
               <option key={opt.value} value={opt.value}>{opt.label}</option>
