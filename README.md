@@ -79,4 +79,4 @@ We welcome contributions! Please see `CONTRIBUTING.md` for details on how to set
 
 ## 📄 License
 
-MIT © 2026 KubeTriage Contributors
+AGPL-3.0 © 2026 KubeTriage Contributors
