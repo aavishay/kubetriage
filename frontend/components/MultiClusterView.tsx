@@ -292,22 +292,22 @@ export const MultiClusterView: React.FC = () => {
                 }`}
                 onClick={() => setSelectedCluster(selectedCluster === cluster.id ? null : cluster.id)}
               >
-                <div className="flex items-start justify-between mb-4">
-                  <div className="flex items-center gap-3">
-                    <div className={`p-2.5 rounded-xl ${getStatusBg(cluster.status)}`}>
+                <div className="flex items-start justify-between gap-3 mb-4">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className={`p-2.5 rounded-xl shrink-0 ${getStatusBg(cluster.status)}`}>
                       <Server className={`w-5 h-5 ${getStatusColor(cluster.status)}`} />
                     </div>
-                    <div>
-                      <h3 className="font-bold text-text-primary">{cluster.displayName || cluster.name}</h3>
-                      <p className="text-xs text-text-tertiary">{cluster.provider} • {cluster.region}</p>
+                    <div className="min-w-0">
+                      <h3 className="font-bold text-text-primary truncate">{cluster.displayName || cluster.name}</h3>
+                      <p className="text-xs text-text-tertiary truncate">{cluster.provider} • {cluster.region}</p>
                     </div>
                   </div>
-                  <span className={`px-2 py-1 rounded-full text-[10px] font-semibold  ${getStatusBg(cluster.status)} ${getStatusColor(cluster.status)}`}>
+                  <span className={`px-2 py-1 rounded-full text-[10px] font-semibold shrink-0 ${getStatusBg(cluster.status)} ${getStatusColor(cluster.status)}`}>
                     {cluster.status}
                   </span>
                 </div>
 
-                <div className="grid grid-cols-3 gap-3 mb-4">
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-4">
                   <div className="text-center p-2 rounded-lg bg-bg-hover">
                     <p className="text-[10px] text-text-tertiary ">Nodes</p>
                     <p className="font-bold text-text-primary">{cluster.healthyNodeCount}/{cluster.nodeCount}</p>
@@ -436,25 +436,25 @@ export const MultiClusterView: React.FC = () => {
                     key={incident.id}
                     className="p-4 rounded-xl border-2 border-rose-500/20 bg-rose-500/5"
                   >
-                    <div className="flex items-start justify-between mb-3">
-                      <div>
-                        <h4 className="font-bold text-text-primary flex items-center gap-2">
+                    <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 mb-3">
+                      <div className="min-w-0">
+                        <h4 className="font-bold text-text-primary flex flex-wrap items-center gap-2">
                           {incident.pattern === 'Cascading' && (
-                            <span className="px-2 py-0.5 rounded bg-rose-500 text-white text-[10px] font-semibold">
+                            <span className="px-2 py-0.5 rounded bg-rose-500 text-white text-[10px] font-semibold shrink-0">
                               CASCADING
                             </span>
                           )}
-                          {incident.title}
+                          <span className="truncate">{incident.title}</span>
                         </h4>
-                        <p className="text-sm text-text-secondary mt-1">{incident.description}</p>
+                        <p className="text-sm text-text-secondary mt-1 break-words">{incident.description}</p>
                       </div>
-                      <span className={`px-2 py-1 rounded-full text-[10px] font-semibold  ${
+                      <span className={`px-2 py-1 rounded-full text-[10px] font-semibold shrink-0 ${
                         incident.severity === 'Critical' ? 'bg-rose-500 text-white' : 'bg-amber-500 text-white'
                       }`}>
                         {incident.severity}
                       </span>
                     </div>
-                    <div className="flex items-center gap-4 text-xs text-text-tertiary">
+                    <div className="flex flex-wrap items-center gap-4 text-xs text-text-tertiary">
                       <span className="flex items-center gap-1">
                         <Globe className="w-3 h-3" />
                         {(incident.affectedClusters || []).length} clusters affected
@@ -513,20 +513,20 @@ export const MultiClusterView: React.FC = () => {
               {filteredWorkloads.slice(0, 50).map((workload) => (
                 <div
                   key={workload.id}
-                  className="flex items-center justify-between p-4 rounded-xl border border-border-main bg-bg-hover/30 hover:border-primary-500/30 transition-all"
+                  className="flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-xl border border-border-main bg-bg-hover/30 hover:border-primary-500/30 transition-all gap-3"
                 >
-                  <div className="flex items-center gap-4">
-                    <div className={`p-2 rounded-lg ${getStatusBg(workload.status)}`}>
+                  <div className="flex items-center gap-4 min-w-0">
+                    <div className={`p-2 rounded-lg shrink-0 ${getStatusBg(workload.status)}`}>
                       {getStatusIcon(workload.status)}
                     </div>
-                    <div>
-                      <h4 className="font-bold text-text-primary">{workload.name}</h4>
-                      <p className="text-xs text-text-tertiary">
+                    <div className="min-w-0">
+                      <h4 className="font-bold text-text-primary truncate">{workload.name}</h4>
+                      <p className="text-xs text-text-tertiary truncate">
                         {workload.namespace} • {workload.kind} • {workload.clusterName}
                       </p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-6">
+                  <div className="flex items-center gap-6 shrink-0 ml-11 sm:ml-0">
                     <div className="text-right">
                       <p className="text-sm font-bold text-text-primary">
                         {workload.availableReplicas}/{workload.replicas}
@@ -571,12 +571,12 @@ export const MultiClusterView: React.FC = () => {
                     key={incident.id}
                     className="p-5 rounded-xl border-2 border-rose-500/20 bg-rose-500/5"
                   >
-                    <div className="flex items-start justify-between mb-3">
-                      <div>
-                        <h4 className="font-bold text-text-primary text-lg">{incident.title}</h4>
-                        <p className="text-sm text-text-secondary mt-1">{incident.description}</p>
+                    <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 mb-3">
+                      <div className="min-w-0">
+                        <h4 className="font-bold text-text-primary text-lg truncate">{incident.title}</h4>
+                        <p className="text-sm text-text-secondary mt-1 break-words">{incident.description}</p>
                       </div>
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 shrink-0">
                         <span className={`px-2 py-1 rounded-full text-[10px] font-semibold  ${
                           incident.severity === 'Critical' ? 'bg-rose-500 text-white' : 'bg-amber-500 text-white'
                         }`}>
@@ -594,7 +594,7 @@ export const MultiClusterView: React.FC = () => {
                           {(incident.affectedClusters || []).map((clusterId) => (
                             <span
                               key={clusterId}
-                              className="px-2 py-1 rounded-lg bg-bg-card border border-border-main text-xs font-medium"
+                              className="px-2 py-1 rounded-lg bg-bg-card border border-border-main text-xs font-medium truncate max-w-[200px]"
                             >
                               {clusterId}
                             </span>
@@ -604,7 +604,7 @@ export const MultiClusterView: React.FC = () => {
                       {incident.rootCause && (
                         <div className="p-3 rounded-lg bg-bg-hover">
                           <p className="text-xs font-bold text-text-tertiary  mb-1">Root Cause</p>
-                          <p className="text-sm text-text-secondary">{incident.rootCause}</p>
+                          <p className="text-sm text-text-secondary break-words">{incident.rootCause}</p>
                         </div>
                       )}
                     </div>

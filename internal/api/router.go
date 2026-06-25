@@ -106,6 +106,7 @@ func SetupRouter(cfg RouterConfig) *gin.Engine {
 		// AI / Remediation
 		api.GET("/ai/models", aiHandler.GetModels)
 		api.POST("/ai/analyze", aiHandler.AnalyzeWorkload)
+		api.POST("/ai/rightsize", aiHandler.GenerateRightSizing)
 		api.POST("/ai/topology", aiHandler.GenerateTopology)
 		api.POST("/ai/chat", aiHandler.Chat)
 		api.POST("/remediate/generate", aiHandler.GenerateRemediation)

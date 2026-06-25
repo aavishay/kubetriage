@@ -200,6 +200,23 @@ type ChatRequest struct {
 	Message  string           `json:"message"`
 }
 
+func (h *AIHandler) GenerateRightSizing(c *gin.Context) {
+	var req ai.RightSizingRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
+		return
+	}
+
+	recommendation, err := h.service.GenerateRightSizing(c.Request.Context(), req)
+	if err != nil {
+		log.Printf("Error generating right-sizing recommendation: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate recommendation"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"recommendation": recommendation})
+}
+
 func (h *AIHandler) Chat(c *gin.Context) {
 	var req ChatRequest
 	if err := c.ShouldBindJSON(&req); err != nil {

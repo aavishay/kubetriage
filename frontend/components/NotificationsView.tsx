@@ -5,6 +5,7 @@ import { useMonitoring } from '../contexts/MonitoringContext';
 import { NotificationChannel, NotificationType, AlertRule, TriggeredAlert } from '../types';
 import { Bell, Plus, Search, MoreHorizontal, Slack, Mail, Webhook, Trash2, Edit2, X, Activity, Loader2, Play, Pause, Settings2, ShieldAlert, Cpu, MemoryStick, Zap, DollarSign, Filter, CheckCircle2, AlertCircle, MessageSquare, History, Clock, ArrowRight, BellRing, ChevronDown, ChevronUp } from 'lucide-react';
 import { useEscapeKey } from '../utils/useEscapeKey';
+import { IconButton } from './IconButton';
 
 interface NotificationsViewProps {
    channels: NotificationChannel[];
@@ -232,22 +233,22 @@ export const NotificationsView: React.FC<NotificationsViewProps> = ({
                <p className="text-sm text-text-secondary font-semibold max-w-sm opacity-60">Define alert thresholds and connect external notification sinks.</p>
             </div>
 
-            <div className="flex bg-bg-hover p-1.5 rounded-2xl border border-border-main">
+            <div className="flex flex-wrap bg-bg-hover p-1.5 rounded-2xl border border-border-main">
                <button
                   onClick={() => setActiveTab('rules')}
-                  className={`px-6 py-2.5 rounded-xl font-semibold text-xs   transition-all ${activeTab === 'rules' ? 'bg-bg-card text-primary-500 shadow-lg' : 'text-text-secondary hover:text-text-primary'}`}
+                  className={`px-4 py-2.5 rounded-xl font-semibold text-xs   transition-all ${activeTab === 'rules' ? 'bg-bg-card text-primary-500 shadow-lg' : 'text-text-secondary hover:text-text-primary'}`}
                >
                   Alert Logic
                </button>
                <button
                   onClick={() => setActiveTab('channels')}
-                  className={`px-6 py-2.5 rounded-xl font-semibold text-xs   transition-all ${activeTab === 'channels' ? 'bg-bg-card text-primary-500 shadow-lg' : 'text-text-secondary hover:text-text-primary'}`}
+                  className={`px-4 py-2.5 rounded-xl font-semibold text-xs   transition-all ${activeTab === 'channels' ? 'bg-bg-card text-primary-500 shadow-lg' : 'text-text-secondary hover:text-text-primary'}`}
                >
                   Global Sinks
                </button>
                <button
                   onClick={() => setActiveTab('history')}
-                  className={`px-6 py-2.5 rounded-xl font-semibold text-xs   transition-all ${activeTab === 'history' ? 'bg-bg-card text-primary-500 shadow-lg' : 'text-text-secondary hover:text-text-primary'}`}
+                  className={`px-4 py-2.5 rounded-xl font-semibold text-xs   transition-all ${activeTab === 'history' ? 'bg-bg-card text-primary-500 shadow-lg' : 'text-text-secondary hover:text-text-primary'}`}
                >
                   History
                </button>
@@ -290,7 +291,7 @@ export const NotificationsView: React.FC<NotificationsViewProps> = ({
                   <div className="h-8 w-px bg-border-main hidden sm:block" />
 
                   {/* Slider */}
-                  <div className="flex items-center gap-4 px-6 py-2 min-w-[240px]">
+                  <div className="flex items-center gap-4 px-6 py-2 min-w-0 w-full sm:min-w-[220px]">
                      <div className="flex-1 space-y-3">
                         <div className="flex justify-between items-end">
                            <span className="text-[10px] font-semibold   text-text-secondary">Cooldown</span>
@@ -361,19 +362,19 @@ export const NotificationsView: React.FC<NotificationsViewProps> = ({
                         ).map(([workloadName, alerts]) => (
                            <div key={workloadName} className="bg-bg-card rounded-[2.5rem] border border-border-main overflow-hidden shadow-sm animate-in fade-in slide-in-from-bottom-2 duration-500 mb-6 last:mb-0">
                               <div
-                                 className="px-8 py-5 border-b border-border-main bg-bg-hover/50 flex justify-between items-center cursor-pointer hover:bg-bg-hover/70 transition-colors"
+                                 className="px-4 sm:px-8 py-5 border-b border-border-main bg-bg-hover/50 flex flex-wrap justify-between items-center gap-3 cursor-pointer hover:bg-bg-hover/70 transition-colors"
                                  onClick={() => toggleGroup(workloadName)}
                               >
-                                 <div className="flex items-center gap-3">
-                                    <div className="p-2 bg-primary-500/10 rounded-xl">
+                                 <div className="flex items-center gap-3 min-w-0">
+                                    <div className="p-2 bg-primary-500/10 rounded-xl shrink-0">
                                        {expandedGroups.has(workloadName) ? <ChevronUp className="w-4 h-4 text-primary-500" /> : <ChevronDown className="w-4 h-4 text-primary-500" />}
                                     </div>
-                                    <div>
-                                       <h4 className="text-sm font-black text-text-primary  ">{workloadName}</h4>
+                                    <div className="min-w-0">
+                                       <h4 className="text-sm font-black text-text-primary truncate">{workloadName}</h4>
                                        <p className="text-[10px] font-bold text-text-tertiary  ">{alerts.length} Alert{alerts.length > 1 ? 's' : ''}</p>
                                     </div>
                                  </div>
-                                 <div className="flex items-center gap-2">
+                                 <div className="flex items-center gap-2 shrink-0">
                                     {!expandedGroups.has(workloadName) && (
                                        <div className="flex -space-x-2 mr-4">
                                           {alerts.slice(0, 3).map((a, i) => (
@@ -403,24 +404,24 @@ export const NotificationsView: React.FC<NotificationsViewProps> = ({
                                        <div
                                           key={alert.id}
                                           onClick={() => handleAlertClick(alert)}
-                                          className="p-6 flex items-center gap-8 group hover:bg-bg-hover transition-all cursor-pointer"
+                                          className="p-4 sm:p-6 flex items-center gap-4 sm:gap-8 group hover:bg-bg-hover transition-all cursor-pointer"
                                        >
-                                          <div className={`p-4 rounded-2xl shrink-0 transition-transform group-hover:scale-110 shadow-lg ${alert.severity === 'Critical' ? 'bg-red-500 text-white shadow-red-500/20' : 'bg-amber-500 text-white shadow-amber-500/20'}`}>
-                                             <BellRing className="w-6 h-6" />
+                                          <div className={`p-3 sm:p-4 rounded-2xl shrink-0 transition-transform group-hover:scale-110 shadow-lg ${alert.severity === 'Critical' ? 'bg-red-500 text-white shadow-red-500/20' : 'bg-amber-500 text-white shadow-amber-500/20'}`}>
+                                             <BellRing className="w-5 h-5 sm:w-6 sm:h-6" />
                                           </div>
                                           <div className="flex-1 min-w-0">
-                                             <div className="flex items-center gap-3 mb-2">
-                                                <span className="text-sm font-black text-text-primary   group-hover:text-primary-500 transition-colors">{alert.ruleName}</span>
+                                             <div className="flex flex-wrap items-center gap-2 mb-2">
+                                                <span className="text-sm font-black text-text-primary truncate group-hover:text-primary-500 transition-colors">{alert.ruleName}</span>
                                                 <span className={`text-[8px] font-semibold   px-2 py-0.5 rounded-full border ${alert.severity === 'Critical' ? 'bg-red-500/10 border-red-500/20 text-red-500' : 'bg-amber-500/10 border-amber-500/20 text-amber-500'
                                                    }`}>
                                                    {alert.severity}
                                                 </span>
                                              </div>
-                                             <div className="text-xs text-text-tertiary font-bold flex items-center gap-2">
+                                             <div className="text-xs text-text-tertiary font-bold flex flex-wrap items-center gap-x-2">
                                                 Metric reached <span className="font-mono text-primary-500">{alert.value}%</span> {alert.metric} utilization.
                                              </div>
                                           </div>
-                                          <div className="text-right shrink-0">
+                                          <div className="text-right shrink-0 hidden sm:block">
                                              <div className="text-[10px] font-semibold text-text-primary   mb-1.5">{formatTime(alert.timestamp)}</div>
                                              <div className="flex items-center justify-end gap-1.5 text-[9px] text-text-tertiary font-bold ">
                                                 <span className="w-1.5 h-1.5 rounded-full bg-primary-500/50" />
@@ -451,15 +452,11 @@ export const NotificationsView: React.FC<NotificationsViewProps> = ({
                                  {getTypeIcon(channel.type)}
                               </div>
                               <div className="flex gap-2">
-                                 <button onClick={() => openChannelModal(channel)} className="p-2.5 rounded-xl bg-bg-hover text-text-tertiary hover:text-primary-500 transition-colors border border-border-main">
-                                    <Edit2 className="w-4 h-4" />
-                                 </button>
-                                 <button onClick={() => onDeleteChannel(channel.id)} className="p-2.5 rounded-xl bg-bg-hover text-text-tertiary hover:text-red-500 transition-colors border border-border-main">
-                                    <Trash2 className="w-4 h-4" />
-                                 </button>
+                                 <IconButton icon={Edit2} onClick={() => openChannelModal(channel)} label="Edit channel" variant="secondary" size="lg" className="hover:text-primary-500 hover:border-primary-500/30" />
+                                 <IconButton icon={Trash2} onClick={() => onDeleteChannel(channel.id)} label="Delete channel" variant="secondary" size="lg" className="hover:text-red-500 hover:border-red-500/20" />
                               </div>
                            </div>
-                           <h3 className="text-xl font-black text-text-primary  mb-1.5">{channel.name}</h3>
+                           <h3 className="text-xl font-black text-text-primary truncate mb-1.5">{channel.name}</h3>
                            <p className="text-[10px] font-mono text-text-tertiary truncate mb-8  ">{channel.target}</p>
 
                            <div className="mt-auto space-y-6">
@@ -495,16 +492,12 @@ export const NotificationsView: React.FC<NotificationsViewProps> = ({
                                     {isActive ? <BellRing className="w-5 h-5" /> : getMetricIcon(rule.metric)}
                                  </div>
                                  <div className="flex gap-2">
-                                    <button onClick={() => openRuleModal(rule)} className="p-2.5 rounded-xl bg-bg-hover text-text-tertiary hover:text-primary-500 transition-colors border border-border-main">
-                                       <Edit2 className="w-4 h-4" />
-                                    </button>
-                                    <button onClick={() => onDeleteAlertRule(rule.id)} className="p-2.5 rounded-xl bg-bg-hover text-text-tertiary hover:text-red-500 transition-colors border border-border-main">
-                                       <Trash2 className="w-4 h-4" />
-                                    </button>
+                                    <IconButton icon={Edit2} onClick={() => openRuleModal(rule)} label="Edit rule" variant="secondary" size="lg" className="hover:text-primary-500 hover:border-primary-500/30" />
+                                    <IconButton icon={Trash2} onClick={() => onDeleteAlertRule(rule.id)} label="Delete rule" variant="secondary" size="lg" className="hover:text-red-500 hover:border-red-500/20" />
                                  </div>
                               </div>
 
-                              <h3 className="text-xl font-black text-text-primary  mb-4">{rule.name}</h3>
+                              <h3 className="text-xl font-black text-text-primary truncate mb-4">{rule.name}</h3>
 
                               <div className="space-y-6 mb-8 flex-1">
                                  <div className="flex items-center justify-between mb-2">
@@ -559,7 +552,7 @@ export const NotificationsView: React.FC<NotificationsViewProps> = ({
          {/* Channel Modal */}
          {isChannelModalOpen && (
             <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in">
-               <div className="bg-bg-card border border-border-main rounded-[3rem] shadow-2xl w-full max-w-lg overflow-hidden animate-in zoom-in-95">
+               <div className="bg-bg-card border border-border-main rounded-[3rem] shadow-2xl w-full max-w-lg max-h-[90vh] overflow-hidden animate-in zoom-in-95">
                   <div className="p-8 border-b border-border-main flex justify-between items-center bg-bg-hover/50">
                      <h3 className="text-xl font-black  text-text-primary flex items-center gap-3">
                         <Plus className="w-6 h-6 text-primary-500" />
@@ -569,7 +562,7 @@ export const NotificationsView: React.FC<NotificationsViewProps> = ({
                         <X className="w-5 h-5" />
                      </button>
                   </div>
-                  <form onSubmit={handleChannelSubmit} className="p-10 space-y-8">
+                  <form onSubmit={handleChannelSubmit} className="p-10 space-y-8 overflow-y-auto custom-scrollbar">
                      <div className="space-y-2.5">
                         <label className="text-[10px] font-semibold  text-text-tertiary ">Display Name</label>
                         <input
@@ -583,7 +576,7 @@ export const NotificationsView: React.FC<NotificationsViewProps> = ({
                      </div>
                      <div className="space-y-2.5">
                         <label className="text-[10px] font-semibold  text-text-tertiary ">Target Type</label>
-                        <div className="grid grid-cols-3 gap-3">
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                            {(['Slack', 'PagerDuty', 'Webhook', 'Email'] as NotificationType[]).map(type => (
                               <button
                                  key={type}
@@ -619,7 +612,7 @@ export const NotificationsView: React.FC<NotificationsViewProps> = ({
          {/* Rule Modal */}
          {isRuleModalOpen && (
             <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in">
-               <div className="bg-bg-card border border-border-main rounded-[3rem] shadow-2xl w-full max-w-lg overflow-hidden animate-in zoom-in-95">
+               <div className="bg-bg-card border border-border-main rounded-[3rem] shadow-2xl w-full max-w-lg max-h-[90vh] overflow-hidden animate-in zoom-in-95">
                   <div className="p-8 border-b border-border-main flex justify-between items-center bg-bg-hover/50">
                      <h3 className="text-xl font-black  text-text-primary flex items-center gap-3">
                         <Settings2 className="w-6 h-6 text-primary-500" />
@@ -629,7 +622,7 @@ export const NotificationsView: React.FC<NotificationsViewProps> = ({
                         <X className="w-5 h-5" />
                      </button>
                   </div>
-                  <form onSubmit={handleRuleSubmit} className="p-10 space-y-8">
+                  <form onSubmit={handleRuleSubmit} className="p-10 space-y-8 overflow-y-auto custom-scrollbar">
                      <div className="space-y-2.5">
                         <label className="text-[10px] font-semibold  text-text-tertiary ">Strategy Title</label>
                         <input

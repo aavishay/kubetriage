@@ -460,8 +460,8 @@ export const AutonomousRemediationView: React.FC = () => {
     <PageTransition>
       <div className="space-y-6">
         {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div className="min-w-0">
             <h1 className="text-2xl font-bold text-text-primary">Autonomous Remediation</h1>
             <p className="text-sm text-text-secondary mt-1">
               AI-generated fixes with human approval and automatic rollback safety
@@ -489,7 +489,7 @@ export const AutonomousRemediationView: React.FC = () => {
         </div>
 
         {/* Tabs */}
-        <div className="flex items-center gap-2 border-b border-border-main">
+        <div className="flex items-center gap-2 border-b border-border-main overflow-x-auto">
           {(['proposals', 'runbooks', 'scheduled'] as const).map((tab) => (
             <button
               key={tab}
@@ -522,19 +522,19 @@ export const AutonomousRemediationView: React.FC = () => {
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                   {proposals.map((proposal) => (
                     <div key={proposal.id} className="bg-bg-card rounded-xl border border-border-main p-5 hover:border-primary-500/30 transition-colors">
-                      <div className="flex items-start justify-between mb-4">
-                        <div>
-                          <h3 className="text-sm font-semibold text-text-primary flex items-center gap-2">
-                            {proposal.name}
-                            <span className="text-xs text-text-tertiary font-normal">{proposal.namespace}</span>
+                      <div className="flex items-start justify-between gap-3 mb-4">
+                        <div className="min-w-0">
+                          <h3 className="text-sm font-semibold text-text-primary flex flex-wrap items-center gap-2">
+                            <span className="truncate">{proposal.name}</span>
+                            <span className="text-xs text-text-tertiary font-normal shrink-0">{proposal.namespace}</span>
                           </h3>
-                          <p className="text-xs text-text-secondary mt-1">{proposal.issue}</p>
+                          <p className="text-xs text-text-secondary mt-1 break-words">{proposal.issue}</p>
                         </div>
-                        {getStatusBadge(proposal.status)}
+                        <div className="shrink-0">{getStatusBadge(proposal.status)}</div>
                       </div>
 
                       <div className="space-y-3 mb-4">
-                        <div className="flex items-center gap-2">
+                        <div className="flex flex-wrap items-center gap-2">
                           {getRiskBadge(proposal.riskLevel)}
                           <span className="text-xs text-text-secondary">•</span>
                           <span className="text-xs text-text-secondary">{proposal.proposedFix.type}</span>
@@ -542,8 +542,8 @@ export const AutonomousRemediationView: React.FC = () => {
 
                         <div className="bg-bg-hover/50 rounded-lg p-3">
                           <p className="text-xs font-medium text-text-secondary mb-1">Proposed Fix</p>
-                          <p className="text-sm text-text-primary">{proposal.proposedFix.description}</p>
-                          <p className="text-xs text-text-secondary mt-2 italic">"{proposal.proposedFix.reasoning}"</p>
+                          <p className="text-sm text-text-primary break-words">{proposal.proposedFix.description}</p>
+                          <p className="text-xs text-text-secondary mt-2 italic break-words">"{proposal.proposedFix.reasoning}"</p>
                         </div>
 
                         <div className="flex items-center gap-2 text-xs text-text-secondary">
@@ -633,17 +633,17 @@ export const AutonomousRemediationView: React.FC = () => {
                   {runbooks.map((runbook) => (
                     <div key={runbook.id} className="bg-bg-card rounded-xl border border-border-main overflow-hidden">
                       <div className="p-5 border-b border-border-main">
-                        <div className="flex items-start justify-between">
-                          <div>
-                            <div className="flex items-center gap-2">
-                              <h3 className="text-sm font-semibold text-text-primary">{runbook.name}</h3>
-                              <span className="inline-flex items-center px-2 py-0.5 text-xs font-medium rounded-full bg-emerald-500/10 text-emerald-600">
+                        <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
+                          <div className="min-w-0">
+                            <div className="flex flex-wrap items-center gap-2">
+                              <h3 className="text-sm font-semibold text-text-primary break-words">{runbook.name}</h3>
+                              <span className="inline-flex items-center px-2 py-0.5 text-xs font-medium rounded-full bg-emerald-500/10 text-emerald-600 shrink-0">
                                 {runbook.successRate.toFixed(1)}% success
                               </span>
                             </div>
-                            <p className="text-xs text-text-secondary mt-1">{runbook.description}</p>
+                            <p className="text-xs text-text-secondary mt-1 break-words">{runbook.description}</p>
                           </div>
-                          <button className="flex items-center gap-1.5 text-xs font-medium text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300">
+                          <button className="flex items-center gap-1.5 text-xs font-medium text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300 shrink-0">
                             <Play className="w-3.5 h-3.5" /> Execute
                           </button>
                         </div>
@@ -661,25 +661,25 @@ export const AutonomousRemediationView: React.FC = () => {
                                   <div className="w-0.5 h-8 bg-border-main mt-1" />
                                 )}
                               </div>
-                              <div className="flex-1 pb-6">
-                                <div className="flex items-start justify-between">
-                                  <div>
-                                    <h4 className="text-sm font-medium text-text-primary flex items-center gap-2">
-                                      {step.name}
+                              <div className="flex-1 pb-6 min-w-0">
+                                <div className="flex items-start justify-between gap-3">
+                                  <div className="min-w-0">
+                                    <h4 className="text-sm font-medium text-text-primary flex flex-wrap items-center gap-2">
+                                      <span className="truncate">{step.name}</span>
                                       {step.requiresApproval && (
-                                        <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-full bg-amber-500/10 text-amber-600">
+                                        <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-full bg-amber-500/10 text-amber-600 shrink-0">
                                           <User className="w-3 h-3" /> Requires Approval
                                         </span>
                                       )}
                                     </h4>
-                                    <p className="text-xs text-text-secondary mt-1">{step.description}</p>
+                                    <p className="text-xs text-text-secondary mt-1 break-words">{step.description}</p>
                                     {step.command && (
-                                      <code className="mt-2 block text-xs bg-bg-hover text-text-secondary p-2 rounded font-mono">
+                                      <code className="mt-2 block text-xs bg-bg-hover text-text-secondary p-2 rounded font-mono break-all">
                                         {step.command}
                                       </code>
                                     )}
                                   </div>
-                                  <div className="flex items-center gap-2 text-xs text-text-tertiary">
+                                  <div className="flex items-center gap-2 text-xs text-text-tertiary shrink-0">
                                     <Timer className="w-3.5 h-3.5" />
                                     <span>{step.timeout}s</span>
                                   </div>
@@ -690,8 +690,8 @@ export const AutonomousRemediationView: React.FC = () => {
                         </div>
                       </div>
 
-                      <div className="px-5 py-3 bg-bg-hover/50 border-t border-border-main flex items-center justify-between text-xs text-text-tertiary">
-                        <div className="flex items-center gap-4">
+                      <div className="px-5 py-3 bg-bg-hover/50 border-t border-border-main flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs text-text-tertiary">
+                        <div className="flex items-center gap-4 flex-wrap">
                           <span>Source: {runbook.source}</span>
                           <span>Used {runbook.usageCount} times</span>
                         </div>
@@ -717,18 +717,18 @@ export const AutonomousRemediationView: React.FC = () => {
                 <div className="space-y-4">
                   {scheduledFixes.map((fix) => (
                     <div key={fix.id} className="bg-bg-card rounded-xl border border-border-main p-5">
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-1">
-                            <h3 className="text-sm font-semibold text-text-primary">{fix.name}</h3>
+                      <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex flex-wrap items-center gap-2 mb-1">
+                            <h3 className="text-sm font-semibold text-text-primary break-words">{fix.name}</h3>
                             {getStatusBadge(fix.status)}
                             {fix.requiresApproval && (
-                              <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-full bg-amber-500/10 text-amber-600">
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-full bg-amber-500/10 text-amber-600 shrink-0">
                                 <Shield className="w-3 h-3" /> Approval Required
                               </span>
                             )}
                           </div>
-                          <p className="text-xs text-text-secondary mb-3">{fix.description}</p>
+                          <p className="text-xs text-text-secondary mb-3 break-words">{fix.description}</p>
 
                           <div className="flex flex-wrap items-center gap-4 text-xs">
                             <div className="flex items-center gap-1.5 text-text-secondary">
@@ -747,7 +747,7 @@ export const AutonomousRemediationView: React.FC = () => {
                           </div>
                         </div>
 
-                        <div className="flex items-center gap-2 ml-4">
+                        <div className="flex items-center gap-2 shrink-0">
                           {fix.status === 'pending_approval' && (
                             <button
                               onClick={() => handleApproveScheduled(fix)}
@@ -776,7 +776,7 @@ export const AutonomousRemediationView: React.FC = () => {
                         <div className="mt-4 pt-3 border-t border-border-main">
                           <div className="flex items-center gap-2 text-xs text-text-tertiary">
                             <CheckCircle className="w-3.5 h-3.5 text-emerald-500" />
-                            <span>Approved by {fix.approvedBy} {fix.approvedAt && new Date(fix.approvedAt).toLocaleString()}</span>
+                            <span className="break-words">Approved by {fix.approvedBy} {fix.approvedAt && new Date(fix.approvedAt).toLocaleString()}</span>
                           </div>
                         </div>
                       )}
@@ -791,30 +791,30 @@ export const AutonomousRemediationView: React.FC = () => {
         {/* Approval Modal */}
         {showApprovalModal && selectedProposal && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-            <div className="bg-bg-card rounded-xl border border-border-main max-w-lg w-full p-6">
+            <div className="bg-bg-card rounded-xl border border-border-main max-w-lg w-full max-h-[90vh] overflow-y-auto p-6">
               <h3 className="text-lg font-semibold text-text-primary mb-4">Review Fix Proposal</h3>
 
               <div className="space-y-4 mb-6">
                 <div>
                   <p className="text-xs font-medium text-text-tertiary ">Workload</p>
-                  <p className="text-sm text-text-primary">{selectedProposal.name} ({selectedProposal.namespace})</p>
+                  <p className="text-sm text-text-primary break-words">{selectedProposal.name} ({selectedProposal.namespace})</p>
                 </div>
                 <div>
                   <p className="text-xs font-medium text-text-tertiary ">Issue</p>
-                  <p className="text-sm text-text-primary">{selectedProposal.issue}</p>
+                  <p className="text-sm text-text-primary break-words">{selectedProposal.issue}</p>
                 </div>
                 <div>
                   <p className="text-xs font-medium text-text-tertiary ">Proposed Fix</p>
-                  <p className="text-sm text-text-primary">{selectedProposal.proposedFix.description}</p>
-                  <p className="text-xs text-text-secondary mt-1 italic">{selectedProposal.proposedFix.reasoning}</p>
+                  <p className="text-sm text-text-primary break-words">{selectedProposal.proposedFix.description}</p>
+                  <p className="text-xs text-text-secondary mt-1 italic break-words">{selectedProposal.proposedFix.reasoning}</p>
                 </div>
                 <div>
                   <p className="text-xs font-medium text-text-tertiary ">Impact</p>
-                  <p className="text-sm text-text-primary">{selectedProposal.estimatedImpact}</p>
+                  <p className="text-sm text-text-primary break-words">{selectedProposal.estimatedImpact}</p>
                 </div>
                 <div>
                   <p className="text-xs font-medium text-text-tertiary ">Rollback Plan</p>
-                  <p className="text-sm text-text-primary">
+                  <p className="text-sm text-text-primary break-words">
                     Automatic rollback if fix fails within {selectedProposal.rollbackPlan.timeout} seconds
                   </p>
                 </div>

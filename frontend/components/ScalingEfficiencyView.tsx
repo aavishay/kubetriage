@@ -351,8 +351,8 @@ const ScalingEfficiencyViewComponent: React.FC<ScalingEfficiencyViewProps> = ({ 
           <div className="kt-skeleton w-24 h-9 rounded-xl" />
         </div>
         {/* Summary cards skeleton */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {[...Array(4)].map((_, i) => (
+        <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4">
+          {[...Array(6)].map((_, i) => (
             <div key={i} className="bg-bg-card rounded-2xl p-5 border border-border-main shadow-sm space-y-3">
               <div className="flex justify-between">
                 <div className="kt-skeleton kt-skeleton-text w-20" />
@@ -445,7 +445,7 @@ const ScalingEfficiencyViewComponent: React.FC<ScalingEfficiencyViewProps> = ({ 
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4">
         {summaryCards.map((card, idx) => (
           <div
             key={idx}
@@ -589,10 +589,10 @@ const ScalingEfficiencyViewComponent: React.FC<ScalingEfficiencyViewProps> = ({ 
                         selectedNodePool === `${np.provisionerType}-${np.name}` ? null : `${np.provisionerType}-${np.name}`
                       )}
                     >
-                      <div className="flex items-center justify-between mb-4">
-                        <div className="flex items-center gap-3">
-                          <span className="font-bold text-text-primary">{np.name}</span>
-                          <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold ${
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+                        <div className="flex items-center gap-2 flex-wrap min-w-0">
+                          <span className="font-bold text-text-primary truncate">{np.name}</span>
+                          <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold shrink-0 ${
                             np.provisionerType === 'karpenter'
                               ? 'bg-primary-500/10 text-primary-500'
                               : 'bg-cyan-500/10 text-cyan-500'
@@ -600,17 +600,17 @@ const ScalingEfficiencyViewComponent: React.FC<ScalingEfficiencyViewProps> = ({ 
                             {np.provisionerType === 'azure-nap' ? 'Azure NAP' : np.provisionerType === 'karpenter' ? 'Karpenter' : np.provisionerType}
                           </span>
                           {np.nodeClass && (
-                            <span className="px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-500 text-[10px] font-semibold">
+                            <span className="px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-500 text-[10px] font-semibold shrink-0">
                               {np.nodeClass}
                             </span>
                           )}
                           {np.readyNodes !== np.totalNodes && (
-                            <span className="px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-500 text-[10px] font-semibold">
+                            <span className="px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-500 text-[10px] font-semibold shrink-0">
                               {np.totalNodes - np.readyNodes} Not Ready
                             </span>
                           )}
                         </div>
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 shrink-0 ml-11 sm:ml-0">
                           <span className="text-sm font-bold text-text-primary">
                             {np.readyNodes}/{np.totalNodes}
                           </span>
@@ -622,7 +622,7 @@ const ScalingEfficiencyViewComponent: React.FC<ScalingEfficiencyViewProps> = ({ 
                         </div>
                       </div>
 
-                      <div className="grid grid-cols-4 gap-4 mb-4">
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-4">
                         <div className="text-center">
                           <p className="text-[10px] font-semibold text-text-tertiary">Nodes</p>
                           <p className="text-lg font-bold text-text-primary">{np.totalNodes}</p>
@@ -855,22 +855,22 @@ const ScalingEfficiencyViewComponent: React.FC<ScalingEfficiencyViewProps> = ({ 
                         selectedKEDAWorkload === keda.workloadName ? null : keda.workloadName
                       )}
                     >
-                      <div className="flex items-center justify-between mb-4">
-                        <div className="flex items-center gap-3">
-                          <span className="font-bold text-text-primary">{keda.workloadName}</span>
-                          <span className="text-[10px] text-text-tertiary">{keda.namespace}</span>
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+                        <div className="flex items-center gap-2 flex-wrap min-w-0">
+                          <span className="font-bold text-text-primary truncate">{keda.workloadName}</span>
+                          <span className="text-[10px] text-text-tertiary shrink-0">{keda.namespace}</span>
                           {!keda.isReady && (
-                            <span className="px-2 py-0.5 rounded-full bg-rose-500/10 text-rose-500 text-[10px] font-semibold">
+                            <span className="px-2 py-0.5 rounded-full bg-rose-500/10 text-rose-500 text-[10px] font-semibold shrink-0">
                               Not Ready
                             </span>
                           )}
                           {keda.isFallback && (
-                            <span className="px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-500 text-[10px] font-semibold">
+                            <span className="px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-500 text-[10px] font-semibold shrink-0">
                               Fallback
                             </span>
                           )}
                         </div>
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 shrink-0 ml-11 sm:ml-0">
                           <div className="flex items-center gap-1">
                             {keda.efficiencyScore >= 80 ? (
                               <CheckCircle2 className="w-4 h-4 text-emerald-500" />
@@ -894,7 +894,7 @@ const ScalingEfficiencyViewComponent: React.FC<ScalingEfficiencyViewProps> = ({ 
                         </div>
                       </div>
 
-                      <div className="grid grid-cols-4 gap-4 mb-4">
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-4">
                         <div className="text-center">
                           <p className="text-[10px] font-semibold  text-text-tertiary">Replicas</p>
                           <p className="text-lg font-bold text-text-primary">
@@ -1128,22 +1128,22 @@ const ScalingEfficiencyViewComponent: React.FC<ScalingEfficiencyViewProps> = ({ 
                       selectedHPA === hpa.name ? null : hpa.name
                     )}
                   >
-                    <div className="flex items-center justify-between mb-4">
-                      <div className="flex items-center gap-3">
-                        <span className="font-bold text-text-primary">{hpa.name}</span>
-                        <span className="text-[10px] text-text-tertiary">{hpa.namespace}</span>
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+                      <div className="flex items-center gap-2 flex-wrap min-w-0">
+                        <span className="font-bold text-text-primary truncate">{hpa.name}</span>
+                        <span className="text-[10px] text-text-tertiary shrink-0">{hpa.namespace}</span>
                         {!hpa.isActive && (
-                          <span className="px-2 py-0.5 rounded-full bg-rose-500/10 text-rose-500 text-[10px] font-semibold">
+                          <span className="px-2 py-0.5 rounded-full bg-rose-500/10 text-rose-500 text-[10px] font-semibold shrink-0">
                             Inactive
                           </span>
                         )}
                         {hpa.scalingLimited && (
-                          <span className="px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-500 text-[10px] font-semibold">
+                          <span className="px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-500 text-[10px] font-semibold shrink-0">
                             Limited
                           </span>
                         )}
                       </div>
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 shrink-0 ml-11 sm:ml-0">
                         <div className="flex items-center gap-1">
                           {hpa.isActive ? (
                             <CheckCircle2 className="w-4 h-4 text-emerald-500" />
@@ -1162,7 +1162,7 @@ const ScalingEfficiencyViewComponent: React.FC<ScalingEfficiencyViewProps> = ({ 
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-4 gap-4 mb-4">
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-4">
                       <div className="text-center">
                         <p className="text-[10px] font-semibold  text-text-tertiary">Current</p>
                         <p className="text-lg font-bold text-text-primary">

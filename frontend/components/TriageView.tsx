@@ -508,7 +508,7 @@ export const TriageView: React.FC<TriageViewProps> = ({ workloads, isDarkMode = 
   const cardHover = "hover:border-primary-500/30 transition-all duration-200";
 
   return (
-    <div className="flex flex-col lg:flex-row gap-4 h-full relative w-full overflow-hidden">
+    <div className="flex flex-col lg:flex-row gap-4 h-[calc(100vh-7rem)] relative w-full overflow-hidden">
       {/* Sidebar */}
       <aside className={`${selectedWorkload && !isSidebarOpen ? 'hidden' : 'flex'} lg:flex flex-col ${cardBase} overflow-hidden shrink-0 transition-all duration-300 h-full min-h-0 ${
         isDesktopCollapsed ? 'lg:w-16' : 'w-full lg:w-80'
@@ -643,25 +643,27 @@ export const TriageView: React.FC<TriageViewProps> = ({ workloads, isDarkMode = 
           <div className="flex flex-col h-full overflow-hidden">
             {/* Header */}
             <header className="p-4 border-b border-border-main flex flex-wrap items-center justify-between gap-4 bg-bg-hover/30">
-              <div className="flex items-center gap-3">
-                <div className="p-2.5 bg-bg-main rounded-lg border border-border-main shadow-sm">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="p-2.5 bg-bg-main rounded-lg border border-border-main shadow-sm shrink-0">
                   <Terminal className="w-5 h-5 text-primary-500 dark:text-primary-400" />
                 </div>
-                <div>
-                  <h2 className="text-xl font-semibold text-text-primary">{selectedWorkload.name}</h2>
+                <div className="min-w-0">
+                  <h2 className="text-xl font-semibold text-text-primary truncate">{selectedWorkload.name}</h2>
                   <div className="flex items-center gap-2 text-xs text-text-tertiary">
                     <span>{selectedWorkload.namespace}</span>
                     <span className="text-border-main select-none">•</span>
                     <span>{selectedWorkload.kind}</span>
                   </div>
                 </div>
-                       <div className="flex items-center gap-3">
+              </div>
+
+              <div className="flex items-center gap-3 shrink-0">
                 <div className="flex items-center gap-2 bg-bg-main px-3 py-2 rounded-lg border border-border-main shadow-sm transition-all focus-within:border-primary-500/50 group">
-                  <Activity className="w-4 h-4 text-primary-500 dark:text-primary-400 group-hover:scale-110 transition-transform" />
+                  <Activity className="w-4 h-4 text-primary-500 dark:text-primary-400 group-hover:scale-110 transition-transform shrink-0" />
                   <select
                     value={selectedPlaybook}
                     onChange={(e) => { setSelectedPlaybook(e.target.value as DiagnosticPlaybook); setAnalysis(null); }}
-                    className="bg-transparent text-sm text-text-primary border-none focus:ring-0 cursor-pointer appearance-none pr-6"
+                    className="bg-transparent text-sm text-text-primary border-none focus:ring-0 cursor-pointer appearance-none pr-6 min-w-0"
                   >
                     <option value="General Health">General Health</option>
                     <option value="Network Connectivity">Network</option>
@@ -671,18 +673,17 @@ export const TriageView: React.FC<TriageViewProps> = ({ workloads, isDarkMode = 
                 <button
                   onClick={handleAnalyzeLogs}
                   disabled={isAnalyzing}
-                  className="bg-primary-600 hover:bg-primary-500 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all disabled:opacity-50 flex items-center gap-2 shadow-sm shadow-primary-500/20"
+                  className="bg-primary-600 hover:bg-primary-500 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all disabled:opacity-50 flex items-center gap-2 shadow-sm shadow-primary-500/20 shrink-0"
                 >
                   {isAnalyzing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
                   Analyze
                 </button>
               </div>
-      </div>
             </header>
 
             <div className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar">
               {/* Metrics Grid */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
                 <div className={`${cardBase} ${cardHover} p-4`}>
                   <p className="text-[10px] text-text-tertiary  mb-1">Replicas</p>
                   <div className="text-2xl font-semibold text-text-primary">
@@ -937,7 +938,7 @@ export const TriageView: React.FC<TriageViewProps> = ({ workloads, isDarkMode = 
                       .map((log, i) => (
                         <div key={i} className="flex gap-3 group hover:bg-bg-hover px-2 py-1 items-start transition-colors">
                           <span className="text-text-tertiary/50 select-none w-8 text-right shrink-0">{i + 1}</span>
-                          <div className={`text-text-secondary flex-1 ${isLogWrapEnabled ? 'break-all whitespace-pre-wrap' : 'whitespace-nowrap overflow-hidden'}`}>
+                          <div className={`text-text-secondary flex-1 min-w-0 ${isLogWrapEnabled ? 'break-all whitespace-pre-wrap' : 'whitespace-nowrap overflow-hidden overflow-x-auto'}`}>
                             {highlightLog(log)}
                           </div>
                           <CopyButton text={log} className="opacity-0 group-hover:opacity-100 shrink-0" />

@@ -4,6 +4,18 @@ import (
 	"time"
 )
 
+// AppResource represents a single Kubernetes resource managed by an ArgoCD Application
+type AppResource struct {
+	Group           string `json:"group,omitempty"`
+	Kind            string `json:"kind"`
+	Namespace       string `json:"namespace,omitempty"`
+	Name            string `json:"name"`
+	SyncStatus      string `json:"syncStatus"`
+	HealthStatus    string `json:"healthStatus"`
+	Message         string `json:"message,omitempty"`
+	RequiresPruning bool   `json:"requiresPruning,omitempty"`
+}
+
 // GitOpsResource represents a unified view of an ArgoCD Application or Flux resource
 type GitOpsResource struct {
 	Tool              string            `json:"tool"` // "ArgoCD" or "Flux"
@@ -21,6 +33,7 @@ type GitOpsResource struct {
 	ReadyResources    int               `json:"readyResources"`
 	SyncErrors        []string          `json:"syncErrors,omitempty"`
 	Misconfigurations []string          `json:"misconfigurations,omitempty"`
+	Resources         []AppResource     `json:"resources,omitempty"`
 }
 
 // GitOpsCondition represents a status condition on a GitOps resource

@@ -50,6 +50,8 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
 
   const clusterMenuRef = useRef<HTMLDivElement>(null);
   const clusterSearchInputRef = useRef<HTMLInputElement>(null);
+  const clusterSearchResultsRef = useRef<HTMLDivElement>(null);
+  const clusterSearchItemRefs = useRef<(HTMLButtonElement | null)[]>([]);
 
   // Scroll to top on route change
   useEffect(() => {
@@ -112,6 +114,12 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
     setIsMobileMenuOpen(false);
   }, [location.pathname]);
 
+  const filteredClusters = clusters.filter(c =>
+    (c.displayName || c.name).toLowerCase().includes(clusterSearchQuery.toLowerCase()) ||
+    c.provider.toLowerCase().includes(clusterSearchQuery.toLowerCase()) ||
+    (c.region || '').toLowerCase().includes(clusterSearchQuery.toLowerCase())
+  );
+
   // Focus search input when cluster search opens
   useEffect(() => {
     if (isClusterSearchOpen) {
@@ -119,11 +127,23 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
     }
   }, [isClusterSearchOpen]);
 
-  const filteredClusters = clusters.filter(c =>
-    (c.displayName || c.name).toLowerCase().includes(clusterSearchQuery.toLowerCase()) ||
-    c.provider.toLowerCase().includes(clusterSearchQuery.toLowerCase()) ||
-    (c.region || '').toLowerCase().includes(clusterSearchQuery.toLowerCase())
-  );
+  // Keep selected cluster visible in Command+K results
+  useEffect(() => {
+    if (!isClusterSearchOpen) return;
+    const item = clusterSearchItemRefs.current[clusterSearchIndex];
+    const container = clusterSearchResultsRef.current;
+    if (!item || !container) return;
+
+    const itemRect = item.getBoundingClientRect();
+    const containerRect = container.getBoundingClientRect();
+    const padding = 8;
+
+    if (itemRect.bottom > containerRect.bottom - padding) {
+      container.scrollTop += itemRect.bottom - containerRect.bottom + padding;
+    } else if (itemRect.top < containerRect.top + padding) {
+      container.scrollTop += itemRect.top - containerRect.top - padding;
+    }
+  }, [clusterSearchIndex, filteredClusters, isClusterSearchOpen]);
 
   const navItems = [
     { path: '/', label: 'Overview', icon: LayoutDashboard },
@@ -300,7 +320,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
 
         {/* Header */}
         <header className="h-16 border-b border-border-main bg-bg-main/50 backdrop-blur-xl flex items-center justify-between px-4 md:px-6 z-30 shrink-0">
-          <div className="flex items-center gap-4 w-full">
+          <div className="flex items-center gap-4 w-full flex-wrap">
             {/* Mobile Toggle */}
             <button
               className="p-2 md:hidden text-text-secondary hover:text-text-primary transition-colors rounded-lg hover:bg-bg-hover focus-visible:ring-2 focus-visible:ring-primary-500/50 outline-none"
@@ -313,10 +333,10 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
             </button>
 
             {/* Cluster Switcher */}
-            <div className="relative" ref={clusterMenuRef}>
+            <div className="relative min-w-0" ref={clusterMenuRef}>
               <button
                 onClick={() => setIsClusterMenuOpen(!isClusterMenuOpen)}
-                className="flex items-center gap-2.5 px-3 py-2 bg-bg-card/80 border border-border-main rounded-xl hover:border-primary-500/30 hover:bg-bg-hover/50 transition-all duration-200 group min-w-[44px] md:min-w-[200px] focus-visible:ring-2 focus-visible:ring-primary-500/50 outline-none"
+                className="flex items-center gap-2.5 px-3 py-2 bg-bg-card/80 border border-border-main rounded-xl hover:border-primary-500/30 hover:bg-bg-hover/50 transition-all duration-200 group min-w-0 md:min-w-[180px] max-w-[260px] focus-visible:ring-2 focus-visible:ring-primary-500/50 outline-none"
                 aria-expanded={isClusterMenuOpen}
                 aria-controls="cluster-dropdown"
                 aria-label="Select target cluster"
@@ -352,7 +372,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
               {isClusterMenuOpen && (
                 <div
                   id="cluster-dropdown"
-                  className="absolute top-full left-0 mt-2 w-80 bg-bg-card border border-border-main rounded-2xl shadow-2xl py-2 animate-slide-up z-50 overflow-hidden"
+                  className="absolute top-full left-0 mt-2 w-[calc(100vw-2rem)] max-w-xs sm:w-80 bg-bg-card border border-border-main rounded-2xl shadow-2xl py-2 animate-slide-up z-50 overflow-hidden"
                 >
                   <div className="px-4 py-3 border-b border-border-main bg-bg-hover">
                     <p className="text-[11px] font-semibold text-text-tertiary flex items-center gap-2">
@@ -430,19 +450,10 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
 
             {/* Action Buttons */}
             <div className="flex items-center gap-2 ml-auto lg:ml-0">
-              {/* Settings */}
-              <button
-                onClick={() => navigate('/settings')}
-                className="p-2.5 rounded-xl bg-bg-hover border border-border-main text-text-secondary hover:text-text-primary hover:border-primary-500/30 transition-all duration-200 active:translate-y-[1px] active:brightness-95 group focus-visible:ring-2 focus-visible:ring-primary-500/50 outline-none"
-                title="Settings"
-              >
-                <Settings className="w-5 h-5 group-hover:rotate-45 transition-transform" />
-              </button>
-
               {/* Notifications */}
               <button
                 onClick={() => navigate('/notifications')}
-                className="relative p-2.5 rounded-xl bg-bg-hover border border-border-main text-text-secondary hover:text-text-primary hover:border-primary-500/30 transition-all duration-200 group focus-visible:ring-2 focus-visible:ring-primary-500/50 outline-none"
+                className="relative p-2.5 rounded-xl bg-bg-hover border border-border-main text-text-secondary hover:text-text-primary hover:border-primary-500/30 transition-all duration-200 active:translate-y-[1px] active:brightness-95 group focus-visible:ring-2 focus-visible:ring-primary-500/50 outline-none"
                 aria-label="Notifications"
               >
                 <Bell className="w-5 h-5 group-hover:scale-110 transition-transform" />
@@ -505,9 +516,11 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
                   onKeyDown={(e) => {
                     if (e.key === 'ArrowDown') {
                       e.preventDefault();
+                      if (filteredClusters.length === 0) return;
                       setClusterSearchIndex(prev => Math.min(filteredClusters.length - 1, prev + 1));
                     } else if (e.key === 'ArrowUp') {
                       e.preventDefault();
+                      if (filteredClusters.length === 0) return;
                       setClusterSearchIndex(prev => Math.max(0, prev - 1));
                     } else if (e.key === 'Enter') {
                       e.preventDefault();
@@ -527,7 +540,10 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
               </div>
 
               {/* Results */}
-              <div className="max-h-[320px] overflow-y-auto custom-scrollbar p-1.5">
+              <div
+                ref={clusterSearchResultsRef}
+                className="max-h-[320px] overflow-y-auto custom-scrollbar p-1.5"
+              >
                 {filteredClusters.length === 0 ? (
                   <div className="flex flex-col items-center justify-center py-8 text-text-tertiary">
                     <Search className="w-6 h-6 mb-2 opacity-40" />
@@ -537,6 +553,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
                   filteredClusters.map((cluster, idx) => (
                     <button
                       key={cluster.id}
+                      ref={(el) => { clusterSearchItemRefs.current[idx] = el; }}
                       onClick={() => {
                         setSelectedCluster(cluster);
                         setIsClusterSearchOpen(false);
@@ -589,7 +606,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
 
         {/* Content Container */}
         <div id="main-content" className="flex-1 overflow-y-auto px-4 md:px-6 py-6 custom-scrollbar" role="main" tabIndex={-1}>
-          <div className="mx-auto max-w-[1600px] h-full">
+          <div className="mx-auto max-w-[1600px] min-h-0">
             {children || <Outlet />}
           </div>
         </div>

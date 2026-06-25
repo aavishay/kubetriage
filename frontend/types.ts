@@ -478,6 +478,17 @@ export interface GitOpsCondition {
   lastTransitionTime?: string;
 }
 
+export interface AppResource {
+  group?: string;
+  kind: string;
+  namespace?: string;
+  name: string;
+  syncStatus: string;
+  healthStatus: string;
+  message?: string;
+  requiresPruning?: boolean;
+}
+
 export interface GitOpsResource {
   tool: 'ArgoCD' | 'Flux';
   kind: string;
@@ -494,6 +505,7 @@ export interface GitOpsResource {
   readyResources: number;
   syncErrors?: string[];
   misconfigurations?: string[];
+  resources?: AppResource[];
 }
 
 export interface GitOpsSummary {

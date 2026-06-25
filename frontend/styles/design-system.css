@@ -26,6 +26,8 @@
   --color-bg-hover: var(--kt-bg-hover);
   --color-text-primary: var(--kt-fg-primary);
   --color-text-secondary: var(--kt-fg-secondary);
+  --color-text-tertiary: var(--kt-fg-tertiary);
+  --color-text-muted: var(--kt-fg-muted);
 
   /* Semantic Feedback Colors */
   --color-success: var(--kt-success);

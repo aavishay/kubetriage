@@ -5,6 +5,7 @@ interface IconButtonProps {
   icon: LucideIcon;
   onClick: () => void;
   label: string;
+  title?: string;
   variant?: 'primary' | 'secondary' | 'ghost' | 'danger';
   size?: 'sm' | 'md' | 'lg';
   disabled?: boolean;
@@ -15,16 +16,17 @@ const IconButtonComponent: React.FC<IconButtonProps> = ({
   icon: Icon,
   onClick,
   label,
+  title,
   variant = 'ghost',
   size = 'md',
   disabled = false,
   className = '',
 }) => {
-  const baseClasses = 'inline-flex items-center justify-center rounded-lg transition-all duration-200 focus-visible:ring-2 focus-visible:ring-primary-500/50 outline-none';
+  const baseClasses = 'inline-flex items-center justify-center rounded-xl transition-all duration-200 focus-visible:ring-2 focus-visible:ring-primary-500/50 outline-none';
 
   const variantClasses = {
     primary: 'bg-primary-600 text-white hover:bg-primary-500',
-    secondary: 'bg-bg-card border border-border-main text-text-secondary hover:text-text-primary hover:border-primary-500/30',
+    secondary: 'bg-bg-hover border border-border-main text-text-tertiary hover:text-text-primary hover:border-primary-500/30',
     ghost: 'text-text-secondary hover:text-text-primary hover:bg-bg-hover',
     danger: 'text-danger hover:bg-danger-light',
   };
@@ -47,6 +49,7 @@ const IconButtonComponent: React.FC<IconButtonProps> = ({
       disabled={disabled}
       className={`${baseClasses} ${variantClasses[variant]} ${sizeClasses[size]} ${disabled ? 'opacity-50 cursor-not-allowed' : ''} ${className}`}
       aria-label={label}
+      title={title ?? label}
     >
       <Icon className={iconSizes[size]} aria-hidden="true" />
     </button>

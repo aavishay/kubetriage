@@ -380,19 +380,19 @@ export const ExternalMetricsView: React.FC = () => {
     <PageTransition>
       <div className="space-y-6">
         {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div className="min-w-0">
             <h1 className="text-2xl font-bold text-text-primary">External Metrics</h1>
             <p className="text-sm text-text-secondary mt-1">
               Ingest metrics from Prometheus, Datadog, New Relic, CloudWatch, VictoriaMetrics, and other sources
             </p>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 w-full sm:w-auto">
             {/* Cluster Filter */}
             <select
               value={selectedClusterId}
               onChange={(e) => setSelectedClusterId(e.target.value)}
-              className="px-3 py-2 bg-bg-card border border-border-main rounded-lg text-sm text-text-secondary focus:outline-none focus:ring-2 focus:ring-primary-500"
+              className="px-3 py-2 bg-bg-card border border-border-main rounded-lg text-sm text-text-secondary focus:outline-none focus:ring-2 focus:ring-primary-500 min-w-0"
             >
               <option value="">All Clusters</option>
               {clusters.map(cluster => (
@@ -401,7 +401,7 @@ export const ExternalMetricsView: React.FC = () => {
             </select>
             <button
               onClick={() => setShowAddModal(true)}
-              className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors"
+              className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors shrink-0"
             >
               <Plus className="w-4 h-4" /> Add Source
             </button>
@@ -409,22 +409,22 @@ export const ExternalMetricsView: React.FC = () => {
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-4 gap-4">
-          <div className="bg-bg-card rounded-xl border border-border-main p-4">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="bg-bg-card rounded-xl border border-border-main p-4 min-w-0">
             <div className="text-sm text-text-secondary">Metric Sources</div>
             <div className="text-2xl font-bold text-text-primary mt-1">{sources.length}</div>
           </div>
-          <div className="bg-bg-card rounded-xl border border-border-main p-4">
+          <div className="bg-bg-card rounded-xl border border-border-main p-4 min-w-0">
             <div className="text-sm text-text-secondary">Active</div>
             <div className="text-2xl font-bold text-emerald-600 mt-1">
               {sources.filter(s => s.enabled).length}
             </div>
           </div>
-          <div className="bg-bg-card rounded-xl border border-border-main p-4">
+          <div className="bg-bg-card rounded-xl border border-border-main p-4 min-w-0">
             <div className="text-sm text-text-secondary">Metrics Ingested</div>
             <div className="text-2xl font-bold text-blue-600 mt-1">{metrics.length}</div>
           </div>
-          <div className="bg-bg-card rounded-xl border border-border-main p-4">
+          <div className="bg-bg-card rounded-xl border border-border-main p-4 min-w-0">
             <div className="text-sm text-text-secondary">Last Sync</div>
             <div className="text-sm font-medium text-text-secondary mt-2">
               {sources.filter(s => s.lastSyncAt).length > 0 ? '5 min ago' : 'Never'}
@@ -478,29 +478,29 @@ export const ExternalMetricsView: React.FC = () => {
                   key={source.id}
                   className={`bg-bg-card rounded-xl border ${source.enabled ? 'border-border-main' : 'border-border-main/50'} p-5 hover:border-primary-500/30 transition-colors`}
                 >
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="p-2 bg-bg-hover rounded-lg">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="p-2 bg-bg-hover rounded-lg shrink-0">
                         {getProviderIcon(source.provider)}
                       </div>
-                      <div>
-                        <h3 className={`text-sm font-semibold ${source.enabled ? 'text-text-primary' : 'text-text-secondary'}`}>
+                      <div className="min-w-0">
+                        <h3 className={`text-sm font-semibold break-words ${source.enabled ? 'text-text-primary' : 'text-text-secondary'}`}>
                           {source.name}
                         </h3>
-                        <p className="text-xs text-text-secondary">
+                        <p className="text-xs text-text-secondary break-words">
                           {getProviderName(source.provider)}
                           {source.region && ` • ${source.region}`}
                         </p>
                       </div>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 shrink-0">
                       {getStatusBadge(source.syncStatus, source.errorMessage)}
                     </div>
                   </div>
 
                   <div className="mt-4 pt-4 border-t border-border-main">
-                    <div className="flex items-center justify-between text-xs text-text-tertiary">
-                      <div className="flex items-center gap-4">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-text-tertiary">
+                      <div className="flex items-center gap-4 flex-wrap">
                         <span className="flex items-center gap-1">
                           <Calendar className="w-3 h-3" />
                           Created {new Date(source.createdAt).toLocaleDateString()}
@@ -543,7 +543,7 @@ export const ExternalMetricsView: React.FC = () => {
                   {source.errorMessage && (
                     <div className="mt-3 p-2 bg-rose-50 dark:bg-rose-900/20 border border-rose-200 dark:border-rose-800 rounded-lg flex items-start gap-2">
                       <AlertCircle className="w-4 h-4 text-rose-600 dark:text-rose-400 mt-0.5 shrink-0" />
-                      <p className="text-xs text-rose-700 dark:text-rose-300">{source.errorMessage}</p>
+                      <p className="text-xs text-rose-700 dark:text-rose-300 break-words">{source.errorMessage}</p>
                     </div>
                   )}
                 </div>
@@ -593,10 +593,10 @@ export const ExternalMetricsView: React.FC = () => {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {metrics.map((metric) => (
                 <div key={metric.name} className="bg-bg-card rounded-xl border border-border-main p-5">
-                  <div className="flex items-start justify-between mb-4">
-                    <div>
-                      <h3 className="text-sm font-semibold text-text-primary">{metric.name}</h3>
-                      <div className="flex items-center gap-2 mt-1">
+                  <div className="flex items-start justify-between gap-3 mb-4">
+                    <div className="min-w-0">
+                      <h3 className="text-sm font-semibold text-text-primary break-words">{metric.name}</h3>
+                      <div className="flex items-center gap-2 mt-1 flex-wrap">
                         {Object.entries(metric.labels).map(([key, value]) => (
                           <span key={key} className="inline-flex items-center px-2 py-0.5 text-xs font-medium rounded bg-bg-hover text-text-secondary">
                             {key}: {value}
@@ -604,7 +604,7 @@ export const ExternalMetricsView: React.FC = () => {
                         ))}
                       </div>
                     </div>
-                    <span className="text-xs text-text-tertiary">{metric.unit}</span>
+                    <span className="text-xs text-text-tertiary shrink-0">{metric.unit}</span>
                   </div>
                   <MetricsChart
                     data={metric.values.map(v => ({
@@ -630,13 +630,13 @@ export const ExternalMetricsView: React.FC = () => {
                 Build custom queries to analyze metrics across all your external sources.
                 Use PromQL-compatible syntax for advanced filtering.
               </p>
-              <div className="mt-6 flex items-center justify-center gap-3">
+              <div className="mt-6 flex flex-col sm:flex-row items-center justify-center gap-3 max-w-lg mx-auto">
                 <input
                   type="text"
                   placeholder="sum(rate(requests_total[5m])) by (service)"
-                  className="w-96 px-4 py-2 border border-border-main rounded-lg text-sm bg-bg-card focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  className="w-full max-w-md px-4 py-2 border border-border-main rounded-lg text-sm bg-bg-card focus:outline-none focus:ring-2 focus:ring-primary-500"
                 />
-                <button className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors">
+                <button className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors shrink-0">
                   Execute
                 </button>
               </div>

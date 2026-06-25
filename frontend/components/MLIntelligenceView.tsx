@@ -323,7 +323,7 @@ export const MLIntelligenceView: React.FC = () => {
                   <h4 className="font-bold text-text-primary text-sm">{insight.title}</h4>
                   <p className="text-xs text-text-secondary mt-0.5">{insight.description}</p>
                 </div>
-                <span className="text-xs font-bold text-text-tertiary">
+                <span className="text-xs font-bold text-text-tertiary shrink-0">
                   {(insight.confidence * 100).toFixed(0)}% confidence
                 </span>
               </div>
@@ -446,22 +446,22 @@ export const MLIntelligenceView: React.FC = () => {
                   }`}
                   onClick={() => setSelectedAnomaly(selectedAnomaly === anomaly.id ? null : anomaly.id)}
                 >
-                  <div className="flex items-start justify-between mb-3">
-                    <div className="flex items-center gap-3">
-                      <div className={`p-2 rounded-lg ${SEVERITY_BG[anomaly.severity]}`}>
+                  <div className="flex items-start justify-between gap-3 mb-3">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className={`p-2 rounded-lg shrink-0 ${SEVERITY_BG[anomaly.severity]}`}>
                         <ShieldAlert className={`w-4 h-4 ${SEVERITY_COLORS[anomaly.severity]}`} />
                       </div>
-                      <div>
-                        <h4 className="font-bold text-text-primary">{anomaly.workload}</h4>
-                        <p className="text-xs text-text-tertiary">{anomaly.namespace} • {anomaly.cluster}</p>
+                      <div className="min-w-0">
+                        <h4 className="font-bold text-text-primary truncate">{anomaly.workload}</h4>
+                        <p className="text-xs text-text-tertiary truncate">{anomaly.namespace} • {anomaly.cluster}</p>
                       </div>
                     </div>
-                    <span className={`px-2 py-1 rounded-full text-[10px] font-semibold  ${SEVERITY_BG[anomaly.severity]} ${SEVERITY_COLORS[anomaly.severity]}`}>
+                    <span className={`px-2 py-1 rounded-full text-[10px] font-semibold shrink-0 ${SEVERITY_BG[anomaly.severity]} ${SEVERITY_COLORS[anomaly.severity]}`}>
                       {anomaly.severity}
                     </span>
                   </div>
-                  <p className="text-sm text-text-secondary mb-3">{anomaly.description}</p>
-                  <div className="flex items-center gap-4 text-xs text-text-tertiary">
+                  <p className="text-sm text-text-secondary mb-3 break-words">{anomaly.description}</p>
+                  <div className="flex flex-wrap items-center gap-4 text-xs text-text-tertiary">
                     <span>Expected: {anomaly.expectedValue.toFixed(2)}</span>
                     <span>Actual: {anomaly.actualValue.toFixed(2)}</span>
                     <span>Deviation: {anomaly.deviation.toFixed(1)}σ</span>
@@ -500,21 +500,21 @@ export const MLIntelligenceView: React.FC = () => {
                   }`}
                   onClick={() => setSelectedPattern(selectedPattern === pattern.id ? null : pattern.id)}
                 >
-                  <div className="flex items-start justify-between mb-3">
-                    <div className="flex items-center gap-3">
-                      <div className="p-2 rounded-lg bg-emerald-500/10">
+                  <div className="flex items-start justify-between gap-3 mb-3">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="p-2 rounded-lg bg-emerald-500/10 shrink-0">
                         <TrendingUp className="w-4 h-4 text-emerald-500" />
                       </div>
-                      <div>
-                        <h4 className="font-bold text-text-primary">{pattern.name}</h4>
-                        <p className="text-xs text-text-tertiary">{pattern.incidentType}</p>
+                      <div className="min-w-0">
+                        <h4 className="font-bold text-text-primary truncate">{pattern.name}</h4>
+                        <p className="text-xs text-text-tertiary truncate">{pattern.incidentType}</p>
                       </div>
                     </div>
-                    <span className="text-xs font-bold text-text-tertiary">
+                    <span className="text-xs font-bold text-text-tertiary shrink-0">
                       {(pattern.confidence * 100).toFixed(0)}% confidence
                     </span>
                   </div>
-                  <p className="text-sm text-text-secondary mb-3">{pattern.description}</p>
+                  <p className="text-sm text-text-secondary mb-3 break-words">{pattern.description}</p>
                   <div className="flex flex-wrap items-center gap-4 text-xs text-text-tertiary mb-3">
                     <span>Occurred: {pattern.frequency} times</span>
                     <span>First seen: {new Date(pattern.firstSeen).toLocaleDateString()}</span>
@@ -525,7 +525,7 @@ export const MLIntelligenceView: React.FC = () => {
                       {(pattern.affectedWorkloads || []).slice(0, 5).map((workload) => (
                         <span
                           key={workload}
-                          className="px-2 py-1 rounded-lg bg-bg-hover text-text-secondary text-xs"
+                          className="px-2 py-1 rounded-lg bg-bg-hover text-text-secondary text-xs truncate max-w-[200px]"
                         >
                           {workload}
                         </span>
@@ -534,7 +534,7 @@ export const MLIntelligenceView: React.FC = () => {
                   )}
                   <div className="p-3 rounded-lg bg-bg-hover border border-border-main">
                     <p className="text-xs font-bold text-text-tertiary  mb-1">Suggested Fix</p>
-                    <p className="text-sm text-text-secondary">{pattern.suggestedFix}</p>
+                    <p className="text-sm text-text-secondary break-words">{pattern.suggestedFix}</p>
                   </div>
                 </div>
               ))

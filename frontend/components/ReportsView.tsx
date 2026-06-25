@@ -317,12 +317,12 @@ export const ReportsView: React.FC = () => {
                 {selectedReport && (
                     <div className="fixed inset-0 z-[101] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-fade-in" onClick={() => { notifyLeave(`report-${selectedReport.ID}`); setSelectedReport(null); }}>
                         <div className="bg-bg-card rounded-[2rem] w-full max-w-4xl h-[85vh] flex flex-col border border-border-main shadow-2xl animate-in zoom-in-95 duration-200 overflow-hidden" onClick={e => e.stopPropagation()}>
-                            <div className="flex items-center justify-between p-6 md:p-8 border-b border-border-main bg-bg-hover/30">
-                                <div className="flex-1">
-                                    <h3 className="text-2xl font-black text-text-primary mb-2">
+                            <div className="flex items-start justify-between gap-4 p-6 md:p-8 border-b border-border-main bg-bg-hover/30">
+                                <div className="flex-1 min-w-0">
+                                    <h3 className="text-2xl font-black text-text-primary mb-2 truncate">
                                         {selectedReport.WorkloadName}
                                     </h3>
-                                    <div className="flex items-center gap-3">
+                                    <div className="flex flex-wrap items-center gap-3">
                                         <span className={`px-2.5 py-0.5 rounded-lg text-[10px] font-semibold ${selectedReport.Severity === 'Critical' ? 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20' : 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20'}`}>
                                             {selectedReport.Severity}
                                         </span>
@@ -332,18 +332,21 @@ export const ReportsView: React.FC = () => {
                                         </div>
 
                                         {activeUsers[`report-${selectedReport.ID}`] && activeUsers[`report-${selectedReport.ID}`].length > 0 && (
-                                            <div className="flex items-center gap-1.5 ml-4 border-l border-border-main pl-4">
+                                            <div className="flex items-center gap-1.5 ml-0 sm:ml-4 border-0 sm:border-l border-border-main sm:pl-4">
                                                 <span className="text-[10px] font-bold text-text-tertiary opacity-70">Collaborating:</span>
                                                 <div className="flex -space-x-2">
-                                                    {activeUsers[`report-${selectedReport.ID}`].map((u) => (
+                                                    {activeUsers[`report-${selectedReport.ID}`].slice(0, 5).map((u) => (
                                                         <img key={u.userId} src={u.avatarUrl} alt={u.userName} title={u.userName} className="w-6 h-6 rounded-full border-2 border-bg-card shadow-sm" />
                                                     ))}
+                                                    {activeUsers[`report-${selectedReport.ID}`].length > 5 && (
+                                                        <span className="w-6 h-6 rounded-full border-2 border-bg-card bg-bg-hover flex items-center justify-center text-[8px] font-semibold text-text-tertiary">+{activeUsers[`report-${selectedReport.ID}`].length - 5}</span>
+                                                    )}
                                                 </div>
                                             </div>
                                         )}
                                     </div>
                                 </div>
-                                <button onClick={() => { notifyLeave(`report-${selectedReport.ID}`); setSelectedReport(null); }} className="p-3 text-text-tertiary hover:text-text-primary hover:bg-bg-hover rounded-xl transition-all active:translate-y-[1px] active:brightness-95 border border-transparent hover:border-border-main shadow-sm">
+                                <button onClick={() => { notifyLeave(`report-${selectedReport.ID}`); setSelectedReport(null); }} className="p-3 text-text-tertiary hover:text-text-primary hover:bg-bg-hover rounded-xl transition-all active:translate-y-[1px] active:brightness-95 border border-transparent hover:border-border-main shadow-sm shrink-0">
                                     <X className="w-6 h-6" />
                                 </button>
                             </div>
@@ -398,7 +401,6 @@ export const ReportsView: React.FC = () => {
                                     >
                                         <Ticket className="w-4 h-4" /> Jira Issue
                                     </button>
-                                    <button onClick={() => { notifyLeave(`report-${selectedReport.ID}`); setSelectedReport(null); }} className="bg-primary-600 hover:bg-primary-500 text-white px-6 py-2 rounded-xl text-sm font-semibold transition-all shadow-lg shadow-primary-500/20 active:translate-y-[1px] active:brightness-95 ml-2">Finalize</button>
                                 </div>
                             </div>
                         </div>
@@ -450,15 +452,15 @@ export const ReportsView: React.FC = () => {
                                             </div>
 
                                             <div className="flex-1 min-w-0">
-                                                <div className="flex items-center gap-2 mb-1">
+                                                <div className="flex flex-wrap items-center gap-2 mb-1 min-w-0">
                                                     <h4 className="text-sm font-bold text-text-primary group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors truncate">
                                                         {group.workloadName}
                                                     </h4>
-                                                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${group.criticalCount > 0 ? 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20' : 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20'}`}>
+                                                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border shrink-0 ${group.criticalCount > 0 ? 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20' : 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20'}`}>
                                                         {group.count} report{group.count !== 1 ? 's' : ''}
                                                     </span>
                                                     {group.criticalCount > 0 && (
-                                                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20">
+                                                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20 shrink-0">
                                                             {group.criticalCount} critical
                                                         </span>
                                                     )}
@@ -498,20 +500,20 @@ export const ReportsView: React.FC = () => {
                                                             </div>
 
                                                             <div className="flex-1 min-w-0">
-                                                                <div className="flex items-center gap-2">
-                                                                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-bg-card text-text-tertiary border border-border-main">
+                                                                <div className="flex items-center gap-2 min-w-0">
+                                                                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-bg-card text-text-tertiary border border-border-main shrink-0">
                                                                         {formatDate(report.CreatedAt)}
                                                                     </span>
-                                                                    <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-lg border ${report.Severity === 'Critical' ? 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20' : 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20'}`}>
+                                                                    <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-lg border shrink-0 ${report.Severity === 'Critical' ? 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20' : 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20'}`}>
                                                                         {report.Severity}
                                                                     </span>
                                                                     {report.IncidentType && (
-                                                                        <span className="text-[10px] text-text-tertiary truncate">
+                                                                        <span className="text-[10px] text-text-tertiary truncate min-w-0">
                                                                             {report.IncidentType}
                                                                         </span>
                                                                     )}
                                                                 </div>
-                                                                <p className="text-xs text-text-tertiary truncate font-medium mt-1">
+                                                                <p className="text-xs text-text-tertiary truncate font-medium mt-1 min-w-0">
                                                                     {report.Analysis ? report.Analysis.replace(/[#*`]/g, '').substring(0, 100) + "..." : 'No content'}
                                                                 </p>
                                                             </div>

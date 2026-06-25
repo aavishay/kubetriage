@@ -84,11 +84,40 @@ func ScanArgoCD(ctx context.Context, client *k8s.ClusterConn) ([]GitOpsResource,
 				res.ResourceCount = len(resources)
 				for _, r := range resources {
 					if resMap, ok := r.(map[string]interface{}); ok {
-						if healthStatus, ok := resMap["health"].(map[string]interface{}); ok {
-							if hs, ok := healthStatus["status"].(string); ok && hs == "Healthy" {
-								res.ReadyResources++
+						ar := AppResource{
+							SyncStatus:   "Unknown",
+							HealthStatus: "Unknown",
+						}
+						if g, ok := resMap["group"].(string); ok {
+							ar.Group = g
+						}
+						if k, ok := resMap["kind"].(string); ok {
+							ar.Kind = k
+						}
+						if n, ok := resMap["namespace"].(string); ok {
+							ar.Namespace = n
+						}
+						if n, ok := resMap["name"].(string); ok {
+							ar.Name = n
+						}
+						if s, ok := resMap["status"].(string); ok {
+							ar.SyncStatus = s
+						}
+						if m, ok := resMap["message"].(string); ok {
+							ar.Message = m
+						}
+						if p, ok := resMap["requiresPruning"].(bool); ok {
+							ar.RequiresPruning = p
+						}
+						if healthMap, ok := resMap["health"].(map[string]interface{}); ok {
+							if hs, ok := healthMap["status"].(string); ok {
+								ar.HealthStatus = hs
+								if hs == "Healthy" {
+									res.ReadyResources++
+								}
 							}
 						}
+						res.Resources = append(res.Resources, ar)
 					}
 				}
 			}

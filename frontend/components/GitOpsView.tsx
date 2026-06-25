@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { GitOpsResource, GitOpsSummary, GitOpsStatusResponse } from '../types';
+import { GitOpsResource, GitOpsSummary, GitOpsStatusResponse, AppResource } from '../types';
 import {
   GitBranch, CheckCircle2, AlertTriangle, XCircle, Clock, Loader2,
   ChevronDown, ChevronUp, RefreshCw, GitCommit, ExternalLink,
-  AlertCircle, Minus, Info
+  AlertCircle, Minus, Info, Trash2, GitPullRequest, Eye, EyeOff
 } from 'lucide-react';
 
 interface GitOpsViewProps {
@@ -57,6 +57,122 @@ const getStatusIcon = (status: string) => {
     default:
       return <Info className="w-3.5 h-3.5" />;
   }
+};
+
+const resourceSyncColor = (status: string) => {
+  switch (status) {
+    case 'Synced': return 'text-emerald-500';
+    case 'OutOfSync': return 'text-rose-500';
+    default: return 'text-text-tertiary';
+  }
+};
+
+const resourceHealthIcon = (status: string) => {
+  switch (status) {
+    case 'Healthy': return <CheckCircle2 className="w-3 h-3 text-emerald-500" />;
+    case 'Degraded': return <XCircle className="w-3 h-3 text-rose-500" />;
+    case 'Progressing': return <Loader2 className="w-3 h-3 text-amber-500 animate-spin" />;
+    default: return <Minus className="w-3 h-3 text-text-tertiary" />;
+  }
+};
+
+interface CompactDiffProps {
+  resources: AppResource[];
+}
+
+const CompactDiff: React.FC<CompactDiffProps> = ({ resources }) => {
+  const [showAll, setShowAll] = useState(false);
+
+  const changed = resources.filter(r => r.syncStatus !== 'Synced' || r.requiresPruning);
+  const displayed = showAll ? resources : changed;
+  const hasChanged = changed.length > 0;
+
+  const sortedDisplayed = [...displayed].sort((a, b) => {
+    const order = (r: AppResource) => {
+      if (r.requiresPruning) return 0;
+      if (r.syncStatus === 'OutOfSync') return 1;
+      if (r.healthStatus === 'Degraded') return 2;
+      return 3;
+    };
+    return order(a) - order(b);
+  });
+
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-2">
+        <div className="flex items-center gap-2">
+          <GitPullRequest className="w-3.5 h-3.5 text-text-tertiary" />
+          <span className="text-[10px] font-semibold text-text-tertiary">
+            Resource Diff
+          </span>
+          {hasChanged && (
+            <span className="px-1.5 py-0.5 rounded-full bg-rose-500/10 text-rose-500 text-[10px] font-bold">
+              {changed.length} changed
+            </span>
+          )}
+        </div>
+        <button
+          onClick={() => setShowAll(v => !v)}
+          className="flex items-center gap-1 text-[10px] text-text-tertiary hover:text-text-primary transition-colors"
+        >
+          {showAll ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
+          {showAll ? 'show changed' : `show all ${resources.length}`}
+        </button>
+      </div>
+      <div className="rounded-xl border border-border-main overflow-hidden font-mono text-[11px]">
+        <div className="overflow-x-auto custom-scrollbar">
+        {sortedDisplayed.length === 0 ? (
+          <div className="px-3 py-2 text-text-tertiary text-[11px] bg-bg-hover">
+            All {resources.length} resources in sync
+          </div>
+        ) : (
+          <div className="divide-y divide-border-main/50">
+            {sortedDisplayed.map((r, i) => {
+              const isOutOfSync = r.syncStatus !== 'Synced';
+              const isPruning = r.requiresPruning;
+              const rowBg = isPruning
+                ? 'bg-rose-500/5'
+                : isOutOfSync
+                  ? 'bg-amber-500/5'
+                  : 'bg-bg-hover/30';
+              const prefix = isPruning ? '−' : isOutOfSync ? '~' : ' ';
+              const prefixColor = isPruning
+                ? 'text-rose-500'
+                : isOutOfSync
+                  ? 'text-amber-500'
+                  : 'text-text-tertiary';
+
+              return (
+                <div key={i} className={`flex items-center gap-2 px-3 py-1.5 ${rowBg}`}>
+                  <span className={`w-3 text-center font-bold shrink-0 ${prefixColor}`}>{prefix}</span>
+                  <span className="text-text-tertiary shrink-0 w-4">{resourceHealthIcon(r.healthStatus)}</span>
+                  <span className="text-text-tertiary shrink-0 min-w-[72px]">{r.kind}</span>
+                  <span className={`flex-1 truncate ${isOutOfSync ? 'text-text-primary font-semibold' : 'text-text-secondary'}`}>
+                    {r.namespace ? `${r.namespace}/` : ''}{r.name}
+                  </span>
+                  {isPruning && (
+                    <span className="flex items-center gap-1 text-rose-500 shrink-0">
+                      <Trash2 className="w-3 h-3" />
+                      <span className="text-[10px]">prune</span>
+                    </span>
+                  )}
+                  {r.message && (
+                    <span className="text-text-tertiary truncate max-w-[140px] shrink-0 text-[10px]" title={r.message}>
+                      {r.message}
+                    </span>
+                  )}
+                  <span className={`shrink-0 text-[10px] ${resourceSyncColor(r.syncStatus)}`}>
+                    {r.syncStatus}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        )}
+        </div>
+      </div>
+    </div>
+  );
 };
 
 export const GitOpsView: React.FC<GitOpsViewProps> = ({ clusterId }) => {
@@ -193,7 +309,7 @@ export const GitOpsView: React.FC<GitOpsViewProps> = ({ clusterId }) => {
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4">
         {summaryCards.map((card, idx) => (
           <div
             key={idx}
@@ -293,18 +409,18 @@ export const GitOpsView: React.FC<GitOpsViewProps> = ({ clusterId }) => {
                       : `${resource.tool}-${resource.name}`
                   )}
                 >
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="flex items-center gap-3 flex-wrap">
-                      <span className="font-bold text-text-primary">{resource.name}</span>
+                  <div className="flex items-start justify-between gap-3 mb-3">
+                    <div className="flex items-center gap-2 flex-wrap min-w-0">
+                      <span className="font-bold text-text-primary truncate">{resource.name}</span>
                       <span className="px-2 py-0.5 rounded-full bg-primary-500/10 text-primary-500 text-[10px] font-semibold ">
                         {resource.tool}
                       </span>
                       <span className="px-2 py-0.5 rounded-md bg-bg-hover text-text-tertiary text-[10px] font-bold">
                         {resource.kind}
                       </span>
-                      <span className="text-[10px] text-text-tertiary">{resource.namespace}</span>
+                      <span className="text-[10px] text-text-tertiary truncate">{resource.namespace}</span>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 shrink-0">
                       {resource.misconfigurations && resource.misconfigurations.length > 0 && (
                         <span className="px-2 py-0.5 rounded-full bg-rose-500/10 text-rose-500 text-[10px] font-semibold">
                           {resource.misconfigurations.length} Issues
@@ -318,28 +434,28 @@ export const GitOpsView: React.FC<GitOpsViewProps> = ({ clusterId }) => {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                    <div className="flex items-center gap-2">
-                      <span className={`px-2 py-1 rounded-full text-[10px] font-semibold  border flex items-center gap-1 ${getStatusColor(resource.syncStatus)}`}>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <span className={`px-2 py-1 rounded-full text-[10px] font-semibold  border flex items-center gap-1 truncate ${getStatusColor(resource.syncStatus)}`}>
                         {getStatusIcon(resource.syncStatus)}
-                        {resource.syncStatus}
+                        <span className="truncate">{resource.syncStatus}</span>
                       </span>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <span className={`px-2 py-1 rounded-full text-[10px] font-semibold  border flex items-center gap-1 ${getStatusColor(resource.healthStatus)}`}>
+                    <div className="flex items-center gap-2 min-w-0">
+                      <span className={`px-2 py-1 rounded-full text-[10px] font-semibold  border flex items-center gap-1 truncate ${getStatusColor(resource.healthStatus)}`}>
                         {getStatusIcon(resource.healthStatus)}
-                        {resource.healthStatus}
+                        <span className="truncate">{resource.healthStatus}</span>
                       </span>
                     </div>
-                    <div className="flex items-center gap-2 text-xs">
-                      <GitCommit className="w-3.5 h-3.5 text-text-tertiary" />
-                      <span className="font-mono text-text-secondary truncate max-w-[120px]">
+                    <div className="flex items-center gap-2 text-xs min-w-0">
+                      <GitCommit className="w-3.5 h-3.5 text-text-tertiary shrink-0" />
+                      <span className="font-mono text-text-secondary truncate">
                         {resource.revision ? resource.revision.slice(0, 8) : '-'}
                       </span>
                     </div>
-                    <div className="flex items-center gap-2 text-xs">
-                      <Clock className="w-3.5 h-3.5 text-text-tertiary" />
-                      <span className="text-text-secondary">
+                    <div className="flex items-center gap-2 text-xs min-w-0">
+                      <Clock className="w-3.5 h-3.5 text-text-tertiary shrink-0" />
+                      <span className="text-text-secondary truncate">
                         {resource.lastSyncTime
                           ? new Date(resource.lastSyncTime).toLocaleTimeString()
                           : '-'}
@@ -353,13 +469,14 @@ export const GitOpsView: React.FC<GitOpsViewProps> = ({ clusterId }) => {
                   <div className="px-5 pb-5 pt-2 border-t border-border-main space-y-4 animate-in fade-in slide-in-from-top-2">
                     {/* Source URL */}
                     {resource.sourceUrl && (
-                      <div className="flex items-center gap-2 text-xs">
-                        <ExternalLink className="w-3.5 h-3.5 text-text-tertiary" />
+                      <div className="flex items-center gap-2 text-xs min-w-0">
+                        <ExternalLink className="w-3.5 h-3.5 text-text-tertiary shrink-0" />
                         <a
                           href={resource.sourceUrl}
                           target="_blank"
                           rel="noreferrer"
                           className="text-primary-500 hover:underline truncate"
+                          title={resource.sourceUrl}
                         >
                           {resource.sourceUrl}
                         </a>
@@ -370,7 +487,7 @@ export const GitOpsView: React.FC<GitOpsViewProps> = ({ clusterId }) => {
                     {resource.message && (
                       <div className="p-3 rounded-xl bg-bg-card border border-border-main">
                         <p className="text-[10px] font-semibold  text-text-tertiary mb-1">Message</p>
-                        <p className="text-xs text-text-secondary">{resource.message}</p>
+                        <p className="text-xs text-text-secondary break-words">{resource.message}</p>
                       </div>
                     )}
 
@@ -420,7 +537,7 @@ export const GitOpsView: React.FC<GitOpsViewProps> = ({ clusterId }) => {
                           {resource.syncErrors.map((err, i) => (
                             <li key={i} className="text-xs text-rose-400 flex items-start gap-2">
                               <span className="mt-1">•</span>
-                              {err}
+                              <span className="break-words">{err}</span>
                             </li>
                           ))}
                         </ul>
@@ -438,7 +555,7 @@ export const GitOpsView: React.FC<GitOpsViewProps> = ({ clusterId }) => {
                           {resource.misconfigurations.map((m, i) => (
                             <li key={i} className="text-xs text-amber-400 flex items-start gap-2">
                               <span className="mt-1">•</span>
-                              {m}
+                              <span className="break-words">{m}</span>
                             </li>
                           ))}
                         </ul>
@@ -461,6 +578,11 @@ export const GitOpsView: React.FC<GitOpsViewProps> = ({ clusterId }) => {
                           </p>
                         </div>
                       </div>
+                    )}
+
+                    {/* Compact Diff (ArgoCD only) */}
+                    {resource.tool === 'ArgoCD' && resource.resources && resource.resources.length > 0 && (
+                      <CompactDiff resources={resource.resources} />
                     )}
                   </div>
                 )}

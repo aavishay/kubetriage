@@ -311,6 +311,66 @@ func (s *AIService) AnalyzeWorkload(ctx context.Context, req AnalyzeWorkloadRequ
 	return provider.GenerateContent(ctx, prompt, req.Model)
 }
 
+type RightSizingRequest struct {
+	Provider      string `json:"provider"`
+	Model         string `json:"model"`
+	WorkloadName  string `json:"workloadName"`
+	Kind          string `json:"kind"`
+	Namespace     string `json:"namespace"`
+	CpuRequest    string `json:"cpuRequest"`
+	CpuLimit      string `json:"cpuLimit"`
+	MemoryRequest string `json:"memoryRequest"`
+	MemoryLimit   string `json:"memoryLimit"`
+	StorageRequest string `json:"storageRequest"`
+	StorageLimit  string `json:"storageLimit"`
+	Context       string `json:"context"`
+	Profile       string `json:"profile"`
+}
+
+func (s *AIService) GenerateRightSizing(ctx context.Context, req RightSizingRequest) (string, error) {
+	ctx, cancel := context.WithTimeout(ctx, 600*time.Second)
+	defer cancel()
+
+	provider, err := s.getProvider(req.Provider)
+	if err != nil {
+		return "", err
+	}
+
+	profileContext := ""
+	switch req.Profile {
+	case "Cost-Saver":
+		profileContext = "STRATEGY: MAXIMIZE COST SAVINGS. Target high utilization (85%+). Aggressively downsize underutilized CPU/RAM/Storage."
+	case "Performance":
+		profileContext = "STRATEGY: MAXIMIZE PERFORMANCE. Prioritize headroom for spikes. Ensure disk I/O and storage buffers are generous."
+	default:
+		profileContext = "STRATEGY: BALANCED. Target P95 + 20% safety margin."
+	}
+
+	prompt := fmt.Sprintf(`
+      Act as a Kubernetes Capacity Planning Expert.
+      Analyze the resource utilization for "%s" (%s).
+
+      **Optimization Strategy**: %s
+      %s
+
+      **Current Config**:
+      - CPU (Req/Lim): %s/%sc
+      - Memory (Req/Lim): %s/%sMi
+      - Storage (Req/Lim): %s/%sGi
+
+      **Simulation Results**:
+      %s
+
+      **Output Requirements**:
+      Return a highly structured Markdown report.
+      Use comparison tables including Storage/Ephemeral disk metrics.
+    `, req.WorkloadName, req.Kind, req.Profile, profileContext,
+		req.CpuRequest, req.CpuLimit, req.MemoryRequest, req.MemoryLimit,
+		req.StorageRequest, req.StorageLimit, req.Context)
+
+	return provider.GenerateContent(ctx, prompt, req.Model)
+}
+
 func (s *AIService) Chat(ctx context.Context, providerName string, model string, history []ChatMessage, message string) (string, error) {
 	provider, err := s.getProvider(providerName)
 	if err != nil {

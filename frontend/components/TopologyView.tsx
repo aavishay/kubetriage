@@ -259,14 +259,14 @@ export const TopologyView: React.FC<TopologyViewProps> = ({ workloads }) => {
                     <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 pb-20">
                         {Object.entries(groupedWorkloads).map(([namespace, items]: [string, Workload[]]) => (
                             <div key={namespace} className="bg-bg-card border border-border-main rounded-[2rem] overflow-hidden shadow-xl flex flex-col group/namespace hover:border-primary-500/30 transition-all duration-300 backdrop-blur-sm">
-                                <div className="bg-bg-hover/30 p-4 border-b border-border-main flex items-center justify-between group-hover/namespace:bg-bg-hover/50 transition-colors">
-                                    <div className="flex items-center gap-3">
-                                        <div className="p-1.5 rounded-lg bg-primary-500/10 text-primary-600 dark:text-primary-400">
+                                <div className="bg-bg-hover/30 p-4 border-b border-border-main flex items-center justify-between gap-3 group-hover/namespace:bg-bg-hover/50 transition-colors">
+                                    <div className="flex items-center gap-3 min-w-0">
+                                        <div className="p-1.5 rounded-lg bg-primary-500/10 text-primary-600 dark:text-primary-400 shrink-0">
                                             <Layers className="w-4 h-4" />
                                         </div>
-                                        <span className="text-sm font-bold text-text-primary  ">{namespace}</span>
+                                        <span className="text-sm font-bold text-text-primary truncate">{namespace}</span>
                                     </div>
-                                    <span className="text-[10px] font-bold bg-bg-main text-text-tertiary px-2.5 py-1 rounded-full border border-border-main shadow-sm">
+                                    <span className="text-[10px] font-bold bg-bg-main text-text-tertiary px-2.5 py-1 rounded-full border border-border-main shadow-sm shrink-0">
                                         {items.length} WORKLOADS
                                     </span>
                                 </div>
@@ -275,17 +275,17 @@ export const TopologyView: React.FC<TopologyViewProps> = ({ workloads }) => {
                                         <div
                                             key={w.id}
                                             onClick={() => navigate(`/triage?workload=${w.name}&playbook=General%20Health`)}
-                                            className="relative flex items-center justify-between p-4 rounded-2xl border border-border-main bg-bg-main/50 hover:bg-bg-hover transition-all cursor-pointer group hover:border-primary-500/40 shadow-sm overflow-hidden active:scale-[0.98]"
+                                            className="relative flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-2xl border border-border-main bg-bg-main/50 hover:bg-bg-hover transition-all cursor-pointer group hover:border-primary-500/40 shadow-sm overflow-hidden active:scale-[0.98] gap-3"
                                         >
                                             <div className="absolute inset-y-0 left-0 w-1 bg-gradient-to-b from-transparent via-primary-500/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
 
-                                            <div className="flex items-center gap-4 z-10">
-                                                <div className={`w-1.5 h-10 rounded-full shadow-lg transition-all group-hover:scale-110 ${w.status === 'Healthy' ? 'bg-emerald-500 shadow-emerald-500/30' :
+                                            <div className="flex items-center gap-4 z-10 min-w-0">
+                                                <div className={`w-1.5 h-10 rounded-full shadow-lg transition-all group-hover:scale-110 shrink-0 ${w.status === 'Healthy' ? 'bg-emerald-500 shadow-emerald-500/30' :
                                                     w.status === 'Warning' ? 'bg-amber-500 shadow-amber-500/30' : 'bg-rose-500 shadow-rose-500/30'
                                                     }`}></div>
-                                                <div>
-                                                    <div className="text-sm font-bold text-text-primary group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">{w.name}</div>
-                                                    <div className="text-[10px] text-text-tertiary flex items-center gap-2 mt-1 font-mono font-bold   opacity-70">
+                                                <div className="min-w-0">
+                                                    <div className="text-sm font-bold text-text-primary group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors truncate">{w.name}</div>
+                                                    <div className="text-[10px] text-text-tertiary flex flex-wrap items-center gap-x-2 mt-1 font-mono font-bold   opacity-70">
                                                         <span className="flex items-center gap-1"><Box className="w-3 h-3" /> {w.kind}</span>
                                                         <span className="opacity-30">|</span>
                                                         <span className="flex items-center gap-1"><Server className="w-3 h-3" /> {w.replicas}</span>
@@ -293,7 +293,7 @@ export const TopologyView: React.FC<TopologyViewProps> = ({ workloads }) => {
                                                 </div>
                                             </div>
 
-                                            <div className="flex flex-col items-end gap-1.5 z-10">
+                                            <div className="flex flex-col items-start sm:items-end gap-1.5 z-10 shrink-0 ml-6 sm:ml-0">
                                                 <div className="text-[10px] font-mono font-bold text-text-tertiary group-hover:text-text-primary transition-colors">
                                                     CPU: {w.metrics.cpuLimit > 0 ? Math.round((w.metrics.cpuUsage / w.metrics.cpuLimit) * 100) : 0}%
                                                 </div>

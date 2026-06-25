@@ -296,14 +296,14 @@ export const CapacityPlanningView: React.FC = () => {
                 </div>
 
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap">
+                  <div className="flex items-center gap-2 flex-wrap min-w-0">
                     <h3 className="font-bold text-text-primary text-sm truncate">
                       {formatWorkloadName(plan.workloadKey)}
                     </h3>
-                    <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${config.bg} ${config.color}`}>
+                    <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full shrink-0 ${config.bg} ${config.color}`}>
                       {plan.severity}
                     </span>
-                    <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-bg-hover text-text-tertiary">
+                    <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-bg-hover text-text-tertiary shrink-0">
                       {plan.metric}
                     </span>
                   </div>
@@ -345,22 +345,22 @@ export const CapacityPlanningView: React.FC = () => {
                 <div className="px-5 pb-5 border-t border-border-main">
                   <div className="pt-4 space-y-4">
                     {/* Metrics Grid */}
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                      <div className="bg-bg-hover/50 rounded-xl p-3">
+                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                      <div className="bg-bg-hover/50 rounded-xl p-3 min-w-0">
                         <p className="text-[10px] font-semibold   text-text-tertiary">Metric</p>
-                        <p className="text-sm font-bold text-text-primary mt-1">{plan.metric}</p>
+                        <p className="text-sm font-bold text-text-primary mt-1 truncate">{plan.metric}</p>
                       </div>
-                      <div className="bg-bg-hover/50 rounded-xl p-3">
+                      <div className="bg-bg-hover/50 rounded-xl p-3 min-w-0">
                         <p className="text-[10px] font-semibold   text-text-tertiary">Namespace</p>
-                        <p className="text-sm font-bold text-text-primary mt-1">{plan.namespace || 'default'}</p>
+                        <p className="text-sm font-bold text-text-primary mt-1 truncate">{plan.namespace || 'default'}</p>
                       </div>
-                      <div className="bg-bg-hover/50 rounded-xl p-3">
+                      <div className="bg-bg-hover/50 rounded-xl p-3 min-w-0">
                         <p className="text-[10px] font-semibold   text-text-tertiary">Confidence</p>
-                        <p className="text-sm font-bold text-text-primary mt-1">{(plan.confidence * 100).toFixed(1)}%</p>
+                        <p className="text-sm font-bold text-text-primary mt-1 truncate">{(plan.confidence * 100).toFixed(1)}%</p>
                       </div>
-                      <div className="bg-bg-hover/50 rounded-xl p-3">
+                      <div className="bg-bg-hover/50 rounded-xl p-3 min-w-0">
                         <p className="text-[10px] font-semibold   text-text-tertiary">Trend Slope</p>
-                        <p className={`text-sm font-bold mt-1 ${getTrendColor(plan.trendSlope)}`}>
+                        <p className={`text-sm font-bold mt-1 truncate ${getTrendColor(plan.trendSlope)}`}>
                           {plan.trendSlope > 0 ? '+' : ''}{plan.trendSlope.toFixed(6)}/hr
                         </p>
                       </div>

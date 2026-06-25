@@ -99,51 +99,46 @@ export const analyzeWorkload = async (
 };
 
 export const generateRightSizingRecommendation = async (workload: Workload, context: string, profile: OptimizationProfile = 'Balanced'): Promise<string> => {
-    const ai = createClient();
-
-    let profileContext = "";
-    switch (profile) {
-        case 'Cost-Saver':
-            profileContext = "STRATEGY: MAXIMIZE COST SAVINGS. Target high utilization (85%+). Aggressively downsize underutilized CPU/RAM/Storage.";
-            break;
-        case 'Performance':
-            profileContext = "STRATEGY: MAXIMIZE PERFORMANCE. Prioritize headroom for spikes. Ensure disk I/O and storage buffers are generous.";
-            break;
-        default:
-            profileContext = "STRATEGY: BALANCED. Target P95 + 20% safety margin.";
-    }
-
-    const prompt = `
-      Act as a Kubernetes Capacity Planning Expert. 
-      Analyze the resource utilization for "${workload.name}" (${workload.kind}).
-      
-      **Optimization Strategy**: ${profile}
-      ${profileContext}
-      
-      **Current Config**:
-      - CPU (Req/Lim): ${workload.metrics.cpuRequest}/${workload.metrics.cpuLimit}c
-      - Memory (Req/Lim): ${workload.metrics.memoryRequest}/${workload.metrics.memoryLimit}Mi
-      - Storage (Req/Lim): ${workload.metrics.storageRequest || 0}/${workload.metrics.storageLimit || 0}Gi
-      
-      **Simulation Results**:
-      ${context}
-
-      **Output Requirements**:
-      Return a highly structured Markdown report.
-      Use comparison tables including Storage/Ephemeral disk metrics.
-    `;
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 600000);
 
     try {
-        const response = await ai.models.generateContent({
-            model: GEMINI_PRO_MODEL,
-            contents: prompt,
-            config: {
-                thinkingConfig: { thinkingBudget: 32768 }
-            }
+        const response = await fetch('/api/ai/rightsize', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            signal: controller.signal,
+            body: JSON.stringify({
+                provider: 'gemini',
+                model: GEMINI_PRO_MODEL,
+                workloadName: workload.name,
+                kind: workload.kind,
+                namespace: workload.namespace,
+                cpuRequest: `${workload.metrics.cpuRequest}`,
+                cpuLimit: `${workload.metrics.cpuLimit}`,
+                memoryRequest: `${workload.metrics.memoryRequest}`,
+                memoryLimit: `${workload.metrics.memoryLimit}`,
+                storageRequest: `${workload.metrics.storageRequest || 0}`,
+                storageLimit: `${workload.metrics.storageLimit || 0}`,
+                context,
+                profile
+            })
         });
-        return response.text || "Unable to generate recommendation.";
+
+        clearTimeout(timeoutId);
+
+        if (!response.ok) {
+            const errData = await response.json().catch(() => ({}));
+            throw new Error(errData.error || `Backend API Error: ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        return data.recommendation || "Unable to generate recommendation.";
     } catch (error) {
-        console.error("Gemini API Error:", error);
+        clearTimeout(timeoutId);
+        console.error("Right-sizing API Error:", error);
+        if (error instanceof DOMException && error.name === 'AbortError') {
+            return "Error: Recommendation request timed out after 10 minutes.";
+        }
         return "Error generating recommendation.";
     }
 };

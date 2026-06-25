@@ -294,10 +294,10 @@ export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = tr
                     aria-label={`Investigate ${w.name} incident`}
                     style={{ animationDelay: `${idx * 50}ms` }}
                   >
-                    <div className="flex justify-between items-start mb-2">
-                      <div className="flex items-center gap-2">
-                        <div className={`w-1.5 h-1.5 rounded-full ${getStatusColor(w.status)}`} />
-                        <span className="text-sm font-semibold text-text-primary">{w.name}</span>
+                    <div className="flex justify-between items-start gap-2 mb-2">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${getStatusColor(w.status)}`} />
+                        <span className="text-sm font-semibold text-text-primary truncate">{w.name}</span>
                       </div>
                       <StatusBadge status={w.status} />
                     </div>
@@ -374,7 +374,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = tr
               </h3>
               <div className="flex flex-wrap items-center gap-2">
                 {/* Timeframe Selector */}
-                <div className="flex p-1 bg-bg-hover/50 rounded-lg border border-border-main">
+                <div className="flex flex-wrap p-1 bg-bg-hover/50 rounded-lg border border-border-main">
                   {(['5m', '15m', '30m', '1h'] as const).map((win) => (
                     <button
                       key={win}
@@ -391,7 +391,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = tr
                   ))}
                 </div>
                 {/* Resource Tab Selector */}
-                <div className="flex p-1 bg-bg-hover/50 rounded-lg border border-border-main">
+                <div className="flex flex-wrap p-1 bg-bg-hover/50 rounded-lg border border-border-main">
                   {(['CPU', 'Memory', 'Ephemeral Storage', 'GPU', 'Network'] as const).map((type) => (
                     <button
                       key={type}
@@ -468,7 +468,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = tr
                         {idx + 1}
                       </div>
 
-                      <div className="w-28 shrink-0">
+                      <div className="w-28 shrink-0 min-w-0">
                         <h4 className="text-sm font-medium text-text-primary truncate" title={item.name}>{item.name}</h4>
                         <div className="flex items-center gap-1.5 mt-1">
                           <div className={`w-1.5 h-1.5 rounded-full ${getStatusColor(item.status)}`} />

@@ -96,13 +96,13 @@ export const AuditLogsView: React.FC = () => {
       </div>
 
       {/* Filters */}
-      <div className="flex flex-col sm:flex-row gap-3">
+      <div className="flex flex-col sm:flex-row flex-wrap gap-3">
         <div className="flex items-center gap-2 bg-bg-card rounded-xl border border-border-main px-3 py-2">
           <Filter className="w-4 h-4 text-text-tertiary" />
           <select
             value={filterAction}
             onChange={(e) => { setFilterAction(e.target.value); setOffset(0); }}
-            className="bg-transparent text-sm text-text-primary outline-none cursor-pointer"
+            className="bg-transparent text-sm text-text-primary outline-none cursor-pointer min-w-0"
             aria-label="Filter by action"
           >
             {actionOptions.map(opt => (
@@ -184,23 +184,23 @@ export const AuditLogsView: React.FC = () => {
                   className="p-5 cursor-pointer"
                   onClick={() => setSelectedLog(selectedLog === log.ID ? null : log.ID)}
                 >
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="flex items-center gap-3 flex-wrap">
-                      <span className="font-bold text-text-primary">{log.Action}</span>
-                      <span className="px-2 py-0.5 rounded-full bg-primary-500/10 text-primary-500 text-[10px] font-semibold ">
+                  <div className="flex items-start justify-between gap-3 mb-3">
+                    <div className="flex items-center gap-2 flex-wrap min-w-0">
+                      <span className="font-bold text-text-primary truncate">{log.Action}</span>
+                      <span className="px-2 py-0.5 rounded-full bg-primary-500/10 text-primary-500 text-[10px] font-semibold shrink-0">
                         {log.Resource}
                       </span>
                       {log.Success ? (
-                        <span className="px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-500 text-[10px] font-bold flex items-center gap-1">
+                        <span className="px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-500 text-[10px] font-bold flex items-center gap-1 shrink-0">
                           <CheckCircle2 className="w-3 h-3" /> Success
                         </span>
                       ) : (
-                        <span className="px-2 py-0.5 rounded-full bg-rose-500/10 text-rose-500 text-[10px] font-bold flex items-center gap-1">
+                        <span className="px-2 py-0.5 rounded-full bg-rose-500/10 text-rose-500 text-[10px] font-bold flex items-center gap-1 shrink-0">
                           <XCircle className="w-3 h-3" /> Failed
                         </span>
                       )}
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 shrink-0">
                       <span className="text-[10px] text-text-tertiary">{new Date(log.CreatedAt).toLocaleString()}</span>
                       {selectedLog === log.ID ? (
                         <ChevronUp className="w-4 h-4 text-text-tertiary" />
@@ -210,25 +210,25 @@ export const AuditLogsView: React.FC = () => {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs">
+                  <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 text-xs">
                     {log.ClusterID && (
-                      <div className="text-text-secondary">
-                        <span className="text-text-tertiary">Cluster: </span>{log.ClusterID}
+                      <div className="text-text-secondary min-w-0">
+                        <span className="text-text-tertiary">Cluster: </span><span className="break-all">{log.ClusterID}</span>
                       </div>
                     )}
                     {log.Namespace && (
-                      <div className="text-text-secondary">
-                        <span className="text-text-tertiary">Namespace: </span>{log.Namespace}
+                      <div className="text-text-secondary min-w-0">
+                        <span className="text-text-tertiary">Namespace: </span><span className="break-all">{log.Namespace}</span>
                       </div>
                     )}
                     {log.ResourceID && (
-                      <div className="text-text-secondary">
-                        <span className="text-text-tertiary">Resource ID: </span>{log.ResourceID}
+                      <div className="text-text-secondary min-w-0">
+                        <span className="text-text-tertiary">Resource ID: </span><span className="break-all">{log.ResourceID}</span>
                       </div>
                     )}
                     {log.IPAddress && (
-                      <div className="text-text-secondary">
-                        <span className="text-text-tertiary">IP: </span>{log.IPAddress}
+                      <div className="text-text-secondary min-w-0">
+                        <span className="text-text-tertiary">IP: </span><span className="break-all">{log.IPAddress}</span>
                       </div>
                     )}
                   </div>
