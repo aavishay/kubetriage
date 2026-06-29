@@ -485,6 +485,7 @@ export interface AppResource {
   name: string;
   syncStatus: string;
   healthStatus: string;
+  action?: string;
   message?: string;
   requiresPruning?: boolean;
 }

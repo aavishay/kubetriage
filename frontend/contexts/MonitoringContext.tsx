@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useMemo, ReactNode } from 'react';
 import { Workload, Cluster, NotificationChannel, AlertRule, TriggeredAlert } from '../types';
 import { fetchWithOffline } from '../services/fetchWithOffline';
 
@@ -6,6 +6,7 @@ interface MonitoringContextType {
   workloads: Workload[];
   clusters: Cluster[];
   selectedCluster: Cluster | null;
+  selectedClusterIds: string[];
   notificationChannels: NotificationChannel[];
   alertRules: AlertRule[];
   triggeredAlerts: TriggeredAlert[];
@@ -34,6 +35,7 @@ interface MonitoringContextType {
   // Actions
   selectApiKey: () => Promise<void>;
   setSelectedCluster: (cluster: Cluster) => void;
+  setSelectedClusterIds: (ids: string[]) => void;
   addCluster: (cluster: Cluster) => void;
   addChannel: (channel: NotificationChannel) => void;
   updateChannel: (channel: NotificationChannel) => void;
@@ -96,18 +98,39 @@ export const MonitoringProvider: React.FC<MonitoringProviderProps> = ({ children
     return saved ? parseInt(saved, 10) : 30;
   });
   const [clusters, setClusters] = useState<Cluster[]>([]);
-  const [selectedCluster, setSelectedCluster] = useState<Cluster | null>(() => {
-    if (typeof localStorage === 'undefined' || !localStorage.getItem) return null;
-    const saved = localStorage.getItem('selected_cluster');
-    return saved ? JSON.parse(saved) : null;
+
+  // Multi-select cluster IDs. Migrate from legacy single selected_cluster if present.
+  const [selectedClusterIds, setSelectedClusterIds] = useState<string[]>(() => {
+    if (typeof localStorage === 'undefined' || !localStorage.getItem) return [];
+    const saved = localStorage.getItem('selected_cluster_ids');
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) return parsed;
+      } catch { /* ignore */ }
+    }
+    const legacy = localStorage.getItem('selected_cluster');
+    if (legacy) {
+      try {
+        const parsed = JSON.parse(legacy);
+        if (parsed?.id) return [parsed.id];
+      } catch { /* ignore */ }
+    }
+    return [];
   });
 
-  // Persist selected cluster
+  // Backward-compatible single cluster reference = first selected ID.
+  const selectedCluster = useMemo(() => {
+    if (selectedClusterIds.length === 0) return null;
+    return clusters.find(c => c.id === selectedClusterIds[0]) || null;
+  }, [clusters, selectedClusterIds]);
+
+  // Persist selected cluster IDs
   useEffect(() => {
-    if (selectedCluster) {
-      localStorage.setItem('selected_cluster', JSON.stringify(selectedCluster));
+    if (typeof localStorage !== 'undefined' && localStorage.setItem) {
+      localStorage.setItem('selected_cluster_ids', JSON.stringify(selectedClusterIds));
     }
-  }, [selectedCluster]);
+  }, [selectedClusterIds]);
 
   const [unreadReports, setUnreadReports] = useState<number>(0);
 
@@ -128,10 +151,10 @@ export const MonitoringProvider: React.FC<MonitoringProviderProps> = ({ children
 
         if (mappedClusters.length > 0) {
           setClusters(mappedClusters);
-          setSelectedCluster(prev => {
-            const stillExists = mappedClusters.find((c: any) => c.id === prev?.id);
-            if (stillExists) return stillExists;
-            return mappedClusters[0];
+          setSelectedClusterIds(prev => {
+            const stillValid = prev.filter(id => mappedClusters.some((c: any) => c.id === id));
+            if (stillValid.length > 0) return stillValid;
+            return [mappedClusters[0].id];
           });
         }
       }
@@ -309,7 +332,11 @@ export const MonitoringProvider: React.FC<MonitoringProviderProps> = ({ children
 
   const addCluster = (newCluster: Cluster) => {
     setClusters(prev => [...prev, newCluster]);
-    setSelectedCluster(newCluster);
+    setSelectedClusterIds([newCluster.id]);
+  };
+
+  const setSelectedCluster = (cluster: Cluster) => {
+    setSelectedClusterIds([cluster.id]);
   };
 
   const addChannel = (channel: NotificationChannel) => setNotificationChannels(prev => [...prev, channel]);
@@ -327,14 +354,12 @@ export const MonitoringProvider: React.FC<MonitoringProviderProps> = ({ children
       const res = await fetchWithOffline(`/api/clusters/${id}`, { method: 'DELETE' });
       if (res.ok) {
         setClusters(prev => prev.filter(c => c.id !== id));
-        if (selectedCluster?.id === id) {
-          const remaining = clusters.filter(c => c.id !== id);
-          if (remaining.length > 0) {
-            setSelectedCluster(remaining[0]);
-          } else {
-            setSelectedCluster(null);
-          }
-        }
+        setSelectedClusterIds(prev => {
+          const remaining = prev.filter(cid => cid !== id);
+          if (remaining.length > 0) return remaining;
+          const fallback = clusters.find(c => c.id !== id);
+          return fallback ? [fallback.id] : [];
+        });
       }
     } catch (e) {
       console.error("Failed to delete cluster", e);
@@ -462,6 +487,7 @@ export const MonitoringProvider: React.FC<MonitoringProviderProps> = ({ children
       workloads,
       clusters,
       selectedCluster,
+      selectedClusterIds,
       notificationChannels,
       alertRules,
       triggeredAlerts,
@@ -471,6 +497,7 @@ export const MonitoringProvider: React.FC<MonitoringProviderProps> = ({ children
       activeNotification,
       selectApiKey,
       setSelectedCluster,
+      setSelectedClusterIds,
       addCluster,
       addChannel,
       updateChannel,

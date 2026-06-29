@@ -12,6 +12,7 @@ type AppResource struct {
 	Name            string `json:"name"`
 	SyncStatus      string `json:"syncStatus"`
 	HealthStatus    string `json:"healthStatus"`
+	Action          string `json:"action,omitempty"`       // ArgoCD sync action: unchanged, configured, created, pruned
 	Message         string `json:"message,omitempty"`
 	RequiresPruning bool   `json:"requiresPruning,omitempty"`
 }
@@ -63,4 +64,41 @@ type StatusResponse struct {
 	ArgoCD    []GitOpsResource `json:"argocd"`
 	Flux      []GitOpsResource `json:"flux"`
 	Summary   Summary          `json:"summary"`
+}
+
+// ResourceDiffEntry represents a single Kubernetes resource inside an ArgoCD
+// Application diff. It reports the ArgoCD sync action (configured, unchanged,
+// created, pruned, etc.) rather than a full YAML diff.
+type ResourceDiffEntry struct {
+	Group           string `json:"group,omitempty"`
+	Kind            string `json:"kind"`
+	Namespace       string `json:"namespace,omitempty"`
+	Name            string `json:"name"`
+	SyncStatus      string `json:"syncStatus"`
+	Action          string `json:"action"`
+	HealthStatus    string `json:"healthStatus,omitempty"`
+	Message         string `json:"message,omitempty"`
+	RequiresPruning bool   `json:"requiresPruning,omitempty"`
+}
+
+// ApplicationDiff is a compact diff view of one ArgoCD Application.
+type ApplicationDiff struct {
+	Tool          string              `json:"tool"`
+	Name          string              `json:"name"`
+	Namespace     string              `json:"namespace"`
+	SyncStatus    string              `json:"syncStatus"`
+	HealthStatus  string              `json:"healthStatus"`
+	Revision      string              `json:"revision"`
+	SourceURL     string              `json:"sourceUrl"`
+	Message       string              `json:"message"`
+	ResourceCount int                 `json:"resourceCount"`
+	ChangedCount  int                 `json:"changedCount"`
+	Resources     []ResourceDiffEntry `json:"resources"`
+}
+
+// ArgoCDDiffResponse is the top-level API response for the compact diff endpoint.
+type ArgoCDDiffResponse struct {
+	ClusterID    string            `json:"clusterId"`
+	Timestamp    time.Time         `json:"timestamp"`
+	Applications []ApplicationDiff `json:"applications"`
 }

@@ -88,6 +88,7 @@ func SetupRouter(cfg RouterConfig) *gin.Engine {
 		api.GET("/gitops/status", GitOpsStatusHandler)
 		api.GET("/gitops/applications", GitOpsApplicationsHandler)
 		api.GET("/gitops/flux", GitOpsFluxHandler)
+		api.GET("/gitops/argocd/diff", GitOpsArgoCDDiffHandler)
 
 		// Reports
 		api.GET("/reports", ListReportsHandler)

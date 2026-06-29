@@ -80,6 +80,9 @@ func ScanArgoCD(ctx context.Context, client *k8s.ClusterConn) ([]GitOpsResource,
 					res.Message = phase
 				}
 			}
+			// Pre-index syncResult actions by resource key so each AppResource knows its action.
+			actions := extractSyncResultActions(status)
+
 			if resources, ok := status["resources"].([]interface{}); ok {
 				res.ResourceCount = len(resources)
 				for _, r := range resources {
@@ -116,6 +119,12 @@ func ScanArgoCD(ctx context.Context, client *k8s.ClusterConn) ([]GitOpsResource,
 									res.ReadyResources++
 								}
 							}
+						}
+						key := syncResultKey(ar.Kind, ar.Namespace, ar.Name)
+						if action, ok := actions[key]; ok {
+							ar.Action = normalizeAction(action)
+						} else {
+							ar.Action = deriveAction(ar.SyncStatus, ar.RequiresPruning)
 						}
 						res.Resources = append(res.Resources, ar)
 					}

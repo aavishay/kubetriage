@@ -124,11 +124,11 @@
 }
 
 .dark {
-  /* Base Dark Theme (Override) — VS Code Dark+ */
-  --kt-bg-main: #1e1e1e;
-  --kt-bg-card: #252526;
-  --kt-bg-hover: #2c2c2c;
-  --kt-border-main: #3e3e42;
+  /* Base Dark Theme (Override) — Deep Dark */
+  --kt-bg-main: #121212;
+  --kt-bg-card: #1c1c1e;
+  --kt-bg-hover: #252526;
+  --kt-border-main: #2c2c2e;
 
   --kt-fg-primary: #cccccc;
   --kt-fg-secondary: #9cdcfe;
@@ -136,7 +136,7 @@
   --kt-fg-muted: #808080;
 
   /* Semantic Overlay (Glass) */
-  --kt-glass-bg: rgba(37, 37, 38, 0.75);
+  --kt-glass-bg: rgba(28, 28, 30, 0.75);
   --kt-glass-border: rgba(255, 255, 255, 0.06);
 
   /* Semantic Feedback — Light variants for dark mode */
@@ -152,8 +152,8 @@
   --kt-shadow-glow-primary: 0 0 24px rgba(0, 122, 204, 0.35);
 
   /* Darker overlay variants (for dropdowns, modals, buttons) */
-  --kt-dark-lighter: #252526;
-  --kt-dark-hover: #2c2c2c;
+  --kt-dark-lighter: #1c1c1e;
+  --kt-dark-hover: #252526;
   --kt-dark-border: rgba(255, 255, 255, 0.08);
 }
 
@@ -250,6 +250,42 @@
 }
 
 .kt-input:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Selects */
+.kt-select {
+  width: 100%;
+  background: var(--kt-bg-main);
+  border: var(--kt-input-border);
+  border-radius: var(--kt-radius-lg);
+  padding: 0.625rem 1.75rem 0.625rem 0.875rem;
+  font-family: var(--font-sans);
+  font-size: var(--kt-text-sm);
+  color: var(--kt-fg-primary);
+  transition: border-color var(--kt-duration-fast) var(--kt-ease-default),
+              box-shadow var(--kt-duration-fast) var(--kt-ease-default);
+  outline: none;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.5rem center;
+  background-size: 1rem;
+}
+
+.kt-select:focus {
+  border-color: var(--kt-primary-500);
+  box-shadow: 0 0 0 3px rgba(0, 122, 204, 0.15);
+}
+
+.kt-select:hover:not(:focus):not(:disabled) {
+  border-color: var(--kt-primary-500);
+}
+
+.kt-select:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }

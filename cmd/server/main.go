@@ -2,13 +2,17 @@ package main
 
 import (
 	"os"
+	"strings"
 
 	"github.com/aavishay/kubetriage/backend/cmd/cli"
 )
 
 func main() {
-	// Delegate to the CLI's serve command
-	// This maintains backwards compatibility for existing usage
-	os.Args = append([]string{"kubetriage", "serve"}, os.Args[1:]...)
+	// Default to the "serve" command for backwards compatibility when no
+	// subcommand is provided. If a subcommand is given (e.g. "gitops"),
+	// execute it directly.
+	if len(os.Args) < 2 || strings.HasPrefix(os.Args[1], "-") {
+		os.Args = append([]string{"kubetriage", "serve"}, os.Args[1:]...)
+	}
 	cli.Execute()
 }

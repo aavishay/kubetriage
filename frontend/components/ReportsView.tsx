@@ -1,6 +1,7 @@
 
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { FileText, Download, Clock, Shield, Search, Filter, Loader2, CheckCircle2, AlertCircle, FileCheck, Activity, Trash2, MessageSquare, Ticket, Share2, X, Sparkles, ChevronRight, ChevronDown, Layers } from 'lucide-react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { FileText, Download, Clock, Shield, Search, Filter, Loader2, CheckCircle2, AlertCircle, FileCheck, Activity, Trash2, MessageSquare, Ticket, Share2, X, Sparkles, ChevronRight, ChevronDown, Layers, Plus } from 'lucide-react';
 import { useMonitoring } from '../contexts/MonitoringContext';
 import { usePresence } from '../contexts/PresenceContext';
 import { useEscapeKey } from '../utils/useEscapeKey';
@@ -11,6 +12,7 @@ import { TriageReport, isSecurityReport } from '../types';
 import ReactMarkdown from 'react-markdown';
 
 export const ReportsView: React.FC = () => {
+    const navigate = useNavigate();
     const { selectedCluster } = useMonitoring();
     const { activeUsers, notifyView, notifyLeave } = usePresence();
     const [reports, setReports] = useState<TriageReport[]>([]);
@@ -20,6 +22,7 @@ export const ReportsView: React.FC = () => {
     const [showConfirm, setShowConfirm] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
     const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
+    const historySectionRef = useRef<HTMLElement>(null);
 
     const toggleGroup = useCallback((workloadName: string) => {
         setExpandedGroups(prev => {
@@ -81,7 +84,13 @@ export const ReportsView: React.FC = () => {
             });
             if (res.ok) {
                 setReports([]); // Clear local state immediately for fast feedback
+                setExpandedGroups(new Set());
+                setSearchTerm('');
+                setSelectedReport(null);
                 await fetchReports(); // Ensure sync with backend
+                // Scroll the (now empty) Analysis History section into view so the
+                // user isn't left staring at blank background after the list shrinks.
+                historySectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
             } else {
                 console.error('Failed to clean archive');
                 alert('Failed to clean reports archive.');
@@ -174,7 +183,7 @@ export const ReportsView: React.FC = () => {
     const allExpanded = groupedReports.length > 0 && expandedGroups.size === groupedReports.length;
 
     return (
-        <div className="space-y-8 pb-20 h-full overflow-y-auto custom-scrollbar bg-bg-main animate-fade-in pr-2">
+        <div className="space-y-8 pb-20 bg-bg-main animate-fade-in pr-2">
             {/* Hero Header */}
             <div className="bg-bg-card border border-border-main rounded-2xl p-8 md:p-10 shadow-sm relative overflow-hidden group">
                 <div className="absolute top-0 right-0 w-64 h-64 bg-primary-500/5 blur-[100px] rounded-full -translate-y-1/2 translate-x-1/2 group-hover:bg-primary-500/10 transition-colors" />
@@ -239,7 +248,7 @@ export const ReportsView: React.FC = () => {
             </section>
 
             {/* History Section */}
-            <section className="space-y-6">
+            <section ref={historySectionRef} className="space-y-6 scroll-mt-6">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div className="flex items-center gap-3 px-1">
                         <div className="p-2 bg-primary-500/10 rounded-lg">
@@ -543,9 +552,15 @@ export const ReportsView: React.FC = () => {
                                 <FileText className="w-12 h-12 text-text-tertiary opacity-40" />
                             </div>
                             <h3 className="text-xl font-bold text-text-primary mb-2">No Reports Found</h3>
-                            <p className="text-sm text-text-tertiary max-w-xs mx-auto font-medium leading-relaxed">
+                            <p className="text-sm text-text-tertiary max-w-xs mx-auto font-medium leading-relaxed mb-6">
                                 No historical analysis records available in your current laboratory segment.
                             </p>
+                            <button
+                                onClick={() => navigate('/triage')}
+                                className="kt-button kt-button-primary"
+                            >
+                                <Plus className="w-4 h-4" /> Run New Triage
+                            </button>
                         </div>
                     )
                 }

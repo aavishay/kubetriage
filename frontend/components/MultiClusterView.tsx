@@ -1,16 +1,17 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, memo } from 'react';
 import {
-  Globe, Server, Activity, AlertTriangle, CheckCircle2, XCircle,
-  ArrowRight, TrendingUp, Cpu, MemoryStick, DollarSign, Box,
-  ChevronDown, ChevronUp, RefreshCw, Layers, Zap, MapPin,
-  ArrowUpRight, Clock, AlertCircle, Minus, BarChart3, Grid3X3,
-  Search, Filter, Download, Shield, Info
+  Globe, Server, AlertTriangle, CheckCircle2, XCircle,
+  DollarSign, Box, RefreshCw,
+  ArrowUpRight, Clock, AlertCircle, Minus, BarChart3,
+  Search, Filter, X
 } from 'lucide-react';
+import { useMonitoring } from '../contexts/MonitoringContext';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell, LineChart, Line, AreaChart, Area
 } from 'recharts';
 import { ClusterStatus, AggregatedWorkload, CrossClusterIncident, GlobalSummary } from '../types';
+import { MultiClusterIncidentsList } from './MultiClusterIncidentsList';
 
 interface CorrelatedEvent {
   id: string;
@@ -42,7 +43,42 @@ const COLORS = {
 
 const CHART_COLORS = ['#6366f1', '#10b981', '#f59e0b', '#f43f5e', '#8b5cf6', '#ec4899', '#14b8a6', '#f97316'];
 
+const getStatusIcon = (status: string) => {
+  switch (status.toLowerCase()) {
+    case 'healthy':
+    case 'ready':
+      return <CheckCircle2 className="w-5 h-5 text-emerald-500" />;
+    case 'degraded':
+    case 'warning':
+      return <AlertTriangle className="w-5 h-5 text-amber-500" />;
+    case 'offline':
+    case 'critical':
+      return <XCircle className="w-5 h-5 text-rose-500" />;
+    default:
+      return <Minus className="w-5 h-5 text-text-tertiary" />;
+  }
+};
+
+const getStatusColor = (status: string) => {
+  switch (status.toLowerCase()) {
+    case 'healthy': return 'text-emerald-500';
+    case 'degraded': return 'text-amber-500';
+    case 'offline': return 'text-rose-500';
+    default: return 'text-text-tertiary';
+  }
+};
+
+const getStatusBg = (status: string) => {
+  switch (status.toLowerCase()) {
+    case 'healthy': return 'bg-emerald-500/10';
+    case 'degraded': return 'bg-amber-500/10';
+    case 'offline': return 'bg-rose-500/10';
+    default: return 'bg-text-tertiary/10';
+  }
+};
+
 export const MultiClusterView: React.FC = () => {
+  const { selectedClusterIds } = useMonitoring();
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<MultiClusterData | null>(null);
   const [selectedCluster, setSelectedCluster] = useState<string | null>(null);
@@ -51,10 +87,15 @@ export const MultiClusterView: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-      const response = await fetch('/api/clusters/aggregate');
+      const params = new URLSearchParams();
+      if (selectedClusterIds.length > 0) {
+        params.set('clusters', selectedClusterIds.join(','));
+      }
+      const url = `/api/clusters/aggregate${params.toString() ? '?' + params.toString() : ''}`;
+      const response = await fetch(url);
       if (response.ok) {
         const result = await response.json();
         setData(result);
@@ -65,85 +106,120 @@ export const MultiClusterView: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [selectedClusterIds]);
 
   useEffect(() => {
     fetchData();
     const interval = setInterval(fetchData, 60000);
     return () => clearInterval(interval);
-  }, []);
+  }, [selectedClusterIds]);
+
+  const visibleClusters = useMemo(() => {
+    if (!data) return [];
+    if (selectedClusterIds.length === 0) return data.clusters;
+    return data.clusters.filter(c => selectedClusterIds.includes(c.id));
+  }, [data, selectedClusterIds]);
+
+  const visibleWorkloads = useMemo(() => {
+    if (!data || !data.workloads) return [];
+    if (selectedClusterIds.length === 0) return data.workloads;
+    return data.workloads.filter(w => selectedClusterIds.includes(w.clusterId));
+  }, [data, selectedClusterIds]);
+
+  const visibleIncidents = useMemo(() => {
+    if (!data || !data.incidents) return [];
+    if (selectedClusterIds.length === 0) return data.incidents;
+    return data.incidents.filter(i =>
+      (i.affectedClusters || []).some(id => selectedClusterIds.includes(id))
+    );
+  }, [data, selectedClusterIds]);
+
+  const derivedSummary = useMemo(() => {
+    if (!data) return null;
+    const clusters = visibleClusters;
+    const workloads = visibleWorkloads;
+    const incidents = visibleIncidents;
+    const healthyClusters = clusters.filter(c => c.status.toLowerCase() === 'healthy').length;
+    const degradedClusters = clusters.filter(c => c.status.toLowerCase() === 'degraded').length;
+    const offlineClusters = clusters.filter(c => c.status.toLowerCase() === 'offline').length;
+    const healthyWorkloads = workloads.filter(w => w.status === 'Healthy').length;
+    const warningWorkloads = workloads.filter(w => w.status === 'Warning').length;
+    const criticalWorkloads = workloads.filter(w => w.status === 'Critical').length;
+    const criticalIncidents = incidents.filter(i => i.severity === 'Critical').length;
+    const totalCpu = clusters.reduce((sum, c) => sum + c.totalCpu, 0);
+    const usedCpu = clusters.reduce((sum, c) => sum + c.usedCpu, 0);
+    const totalMemory = clusters.reduce((sum, c) => sum + c.totalMemory, 0);
+    const usedMemory = clusters.reduce((sum, c) => sum + c.usedMemory, 0);
+    return {
+      totalClusters: clusters.length,
+      healthyClusters,
+      degradedClusters,
+      offlineClusters,
+      totalWorkloads: workloads.length,
+      healthyWorkloads,
+      warningWorkloads,
+      criticalWorkloads,
+      activeIncidents: incidents.length,
+      criticalIncidents,
+      totalCpu,
+      totalMemory,
+      cpuUtilization: totalCpu > 0 ? (usedCpu / totalCpu) * 100 : 0,
+      memoryUtilization: totalMemory > 0 ? (usedMemory / totalMemory) * 100 : 0,
+      estimatedMonthlyCost: 0
+    };
+  }, [visibleClusters, visibleWorkloads, visibleIncidents, data]);
+
+  const summary = useMemo(() => {
+    if (!data) return null;
+    if (selectedClusterIds.length === 0) return data.summary;
+    const s = derivedSummary;
+    if (!s) return data.summary;
+    return {
+      ...s,
+      estimatedMonthlyCost: visibleClusters.reduce((sum, c) => {
+        // rough cost proxy: $0.05 / vCPU + $0.0065 / GB-month
+        const cpuCost = c.totalCpu * 0.05;
+        const memCost = (c.totalMemory / 1024) * 0.0065;
+        return sum + cpuCost + memCost;
+      }, 0)
+    };
+  }, [data, selectedClusterIds, derivedSummary, visibleClusters]);
 
   const filteredWorkloads = useMemo(() => {
-    if (!data || !data.workloads) return [];
-    return data.workloads.filter(w => {
+    return visibleWorkloads.filter(w => {
       const matchesSearch = w.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                            w.clusterName.toLowerCase().includes(searchTerm.toLowerCase());
       const matchesStatus = statusFilter === 'all' || w.status.toLowerCase() === statusFilter.toLowerCase();
       return matchesSearch && matchesStatus;
     });
-  }, [data, searchTerm, statusFilter]);
+  }, [visibleWorkloads, searchTerm, statusFilter]);
 
   const clusterHealthData = useMemo(() => {
-    if (!data) return [];
-    return data.clusters.map(c => ({
+    return visibleClusters.map(c => ({
       name: c.name,
       nodes: c.nodeCount,
       healthy: c.healthyNodeCount,
       utilization: c.totalCpu > 0 ? (c.usedCpu / c.totalCpu) * 100 : 0
     }));
-  }, [data]);
+  }, [visibleClusters]);
 
   const workloadDistribution = useMemo(() => {
-    if (!data || !data.workloads) return [];
     const byCluster: Record<string, number> = {};
-    data.workloads.forEach(w => {
+    visibleWorkloads.forEach(w => {
       byCluster[w.clusterName] = (byCluster[w.clusterName] || 0) + 1;
     });
     return Object.entries(byCluster).map(([name, value]) => ({ name, value }));
-  }, [data]);
+  }, [visibleWorkloads]);
 
   const statusDistribution = useMemo(() => {
-    if (!data) return [];
+    if (!summary) return [];
     return [
-      { name: 'Healthy', value: data.summary.healthyWorkloads, color: COLORS.success },
-      { name: 'Warning', value: data.summary.warningWorkloads, color: COLORS.warning },
-      { name: 'Critical', value: data.summary.criticalWorkloads, color: COLORS.danger }
+      { name: 'Healthy', value: summary.healthyWorkloads, color: COLORS.success },
+      { name: 'Warning', value: summary.warningWorkloads, color: COLORS.warning },
+      { name: 'Critical', value: summary.criticalWorkloads, color: COLORS.danger }
     ];
-  }, [data]);
+  }, [summary]);
 
-  const getStatusIcon = (status: string) => {
-    switch (status.toLowerCase()) {
-      case 'healthy':
-      case 'ready':
-        return <CheckCircle2 className="w-5 h-5 text-emerald-500" />;
-      case 'degraded':
-      case 'warning':
-        return <AlertTriangle className="w-5 h-5 text-amber-500" />;
-      case 'offline':
-      case 'critical':
-        return <XCircle className="w-5 h-5 text-rose-500" />;
-      default:
-        return <Minus className="w-5 h-5 text-text-tertiary" />;
-    }
-  };
-
-  const getStatusColor = (status: string) => {
-    switch (status.toLowerCase()) {
-      case 'healthy': return 'text-emerald-500';
-      case 'degraded': return 'text-amber-500';
-      case 'offline': return 'text-rose-500';
-      default: return 'text-text-tertiary';
-    }
-  };
-
-  const getStatusBg = (status: string) => {
-    switch (status.toLowerCase()) {
-      case 'healthy': return 'bg-emerald-500/10';
-      case 'degraded': return 'bg-amber-500/10';
-      case 'offline': return 'bg-rose-500/10';
-      default: return 'bg-text-tertiary/10';
-    }
-  };
 
   if (loading && !data) {
     return (
@@ -182,10 +258,10 @@ export const MultiClusterView: React.FC = () => {
             Multi-Cluster Federation
           </h1>
           <p className="text-text-tertiary text-sm mt-1">
-            Unified view across {data.summary.totalClusters} clusters • {data.summary.totalWorkloads} workloads
+            Unified view across {summary?.totalClusters ?? 0} clusters • {summary?.totalWorkloads ?? 0} workloads
           </p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 flex-wrap">
           <div className="flex bg-bg-card rounded-xl border border-border-main p-1">
             {(['overview', 'workloads', 'incidents'] as const).map((mode) => (
               <button
@@ -218,9 +294,9 @@ export const MultiClusterView: React.FC = () => {
           <div className="flex items-start justify-between">
             <div>
               <p className="text-[10px] font-semibold   text-text-tertiary mb-1">Clusters</p>
-              <p className="text-3xl font-black text-text-primary">{data.summary.totalClusters}</p>
+              <p className="text-3xl font-black text-text-primary">{summary?.totalClusters ?? 0}</p>
               <p className="text-xs text-emerald-500 font-semibold mt-1">
-                {data.summary.healthyClusters} healthy
+                {summary?.healthyClusters ?? 0} healthy
               </p>
             </div>
             <div className="p-3 rounded-xl bg-emerald-500/10">
@@ -233,9 +309,9 @@ export const MultiClusterView: React.FC = () => {
           <div className="flex items-start justify-between">
             <div>
               <p className="text-[10px] font-semibold   text-text-tertiary mb-1">Workloads</p>
-              <p className="text-3xl font-black text-text-primary">{data.summary.totalWorkloads}</p>
+              <p className="text-3xl font-black text-text-primary">{summary?.totalWorkloads ?? 0}</p>
               <p className="text-xs text-amber-500 font-semibold mt-1">
-                {data.summary.warningWorkloads + data.summary.criticalWorkloads} need attention
+                {(summary?.warningWorkloads ?? 0) + (summary?.criticalWorkloads ?? 0)} need attention
               </p>
             </div>
             <div className="p-3 rounded-xl bg-primary-500/10">
@@ -248,9 +324,9 @@ export const MultiClusterView: React.FC = () => {
           <div className="flex items-start justify-between">
             <div>
               <p className="text-[10px] font-semibold   text-text-tertiary mb-1">Active Incidents</p>
-              <p className="text-3xl font-black text-text-primary">{data.summary.activeIncidents}</p>
-              <p className={`text-xs font-semibold mt-1 ${data.summary.criticalIncidents > 0 ? 'text-rose-500' : 'text-emerald-500'}`}>
-                {data.summary.criticalIncidents} critical
+              <p className="text-3xl font-black text-text-primary">{summary?.activeIncidents ?? 0}</p>
+              <p className={`text-xs font-semibold mt-1 ${(summary?.criticalIncidents ?? 0) > 0 ? 'text-rose-500' : 'text-emerald-500'}`}>
+                {summary?.criticalIncidents ?? 0} critical
               </p>
             </div>
             <div className="p-3 rounded-xl bg-rose-500/10">
@@ -264,10 +340,10 @@ export const MultiClusterView: React.FC = () => {
             <div>
               <p className="text-[10px] font-semibold   text-text-tertiary mb-1">Monthly Cost</p>
               <p className="text-3xl font-black text-text-primary">
-                ${data.summary.estimatedMonthlyCost.toFixed(0)}
+                ${(summary?.estimatedMonthlyCost ?? 0).toFixed(0)}
               </p>
               <p className="text-xs text-text-tertiary font-semibold mt-1">
-                Across all clusters
+                {selectedClusterIds.length === 0 ? 'Across all clusters' : `Across ${selectedClusterIds.length} selected cluster${selectedClusterIds.length === 1 ? '' : 's'}`}
               </p>
             </div>
             <div className="p-3 rounded-xl bg-amber-500/10">
@@ -282,7 +358,7 @@ export const MultiClusterView: React.FC = () => {
         <>
           {/* Cluster Cards */}
           <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
-            {data.clusters.map((cluster) => (
+            {visibleClusters.map((cluster) => (
               <div
                 key={cluster.id}
                 className={`bg-bg-card rounded-2xl p-5 border-2 cursor-pointer transition-all ${
@@ -403,7 +479,7 @@ export const MultiClusterView: React.FC = () => {
                   <p className="text-text-tertiary">No workload data available</p>
                 )}
                 <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                  <span className="text-2xl font-black text-text-primary">{data.summary.totalWorkloads}</span>
+                  <span className="text-2xl font-black text-text-primary">{summary?.totalWorkloads ?? 0}</span>
                   <span className="text-[10px] text-text-tertiary">Workloads</span>
                 </div>
               </div>
@@ -422,56 +498,8 @@ export const MultiClusterView: React.FC = () => {
           </div>
 
           {/* Cross-Cluster Incidents */}
-          {(data.incidents || []).length > 0 && (
-            <div className="bg-bg-card rounded-3xl border border-border-main overflow-hidden">
-              <div className="p-6 border-b border-border-main bg-bg-hover/50">
-                <h3 className="text-sm font-black   text-text-primary flex items-center gap-2">
-                  <AlertTriangle className="w-4 h-4 text-rose-500" />
-                  Cross-Cluster Incidents ({(data.incidents || []).length})
-                </h3>
-              </div>
-              <div className="p-6 space-y-4">
-                {(data.incidents || []).map((incident) => (
-                  <div
-                    key={incident.id}
-                    className="p-4 rounded-xl border-2 border-rose-500/20 bg-rose-500/5"
-                  >
-                    <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 mb-3">
-                      <div className="min-w-0">
-                        <h4 className="font-bold text-text-primary flex flex-wrap items-center gap-2">
-                          {incident.pattern === 'Cascading' && (
-                            <span className="px-2 py-0.5 rounded bg-rose-500 text-white text-[10px] font-semibold shrink-0">
-                              CASCADING
-                            </span>
-                          )}
-                          <span className="truncate">{incident.title}</span>
-                        </h4>
-                        <p className="text-sm text-text-secondary mt-1 break-words">{incident.description}</p>
-                      </div>
-                      <span className={`px-2 py-1 rounded-full text-[10px] font-semibold shrink-0 ${
-                        incident.severity === 'Critical' ? 'bg-rose-500 text-white' : 'bg-amber-500 text-white'
-                      }`}>
-                        {incident.severity}
-                      </span>
-                    </div>
-                    <div className="flex flex-wrap items-center gap-4 text-xs text-text-tertiary">
-                      <span className="flex items-center gap-1">
-                        <Globe className="w-3 h-3" />
-                        {(incident.affectedClusters || []).length} clusters affected
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <Box className="w-3 h-3" />
-                        {(incident.affectedWorkloads || []).length} workloads
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <Clock className="w-3 h-3" />
-                        Started {new Date(incident.startedAt).toLocaleString()}
-                      </span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
+          {visibleIncidents.length > 0 && (
+            <MultiClusterIncidentsList incidents={visibleIncidents} />
           )}
         </>
       )}
@@ -551,69 +579,7 @@ export const MultiClusterView: React.FC = () => {
 
       {/* Incidents View */}
       {viewMode === 'incidents' && (
-        <div className="bg-bg-card rounded-3xl border border-border-main overflow-hidden">
-          <div className="p-6 border-b border-border-main bg-bg-hover/50">
-            <h3 className="text-sm font-black   text-text-primary">
-              All Incidents ({(data.incidents || []).length})
-            </h3>
-          </div>
-          <div className="p-6">
-            {(data.incidents || []).length === 0 ? (
-              <div className="text-center py-12">
-                <CheckCircle2 className="w-12 h-12 text-emerald-500 mx-auto mb-4" />
-                <h4 className="text-lg font-bold text-text-primary mb-2">No Cross-Cluster Incidents</h4>
-                <p className="text-text-tertiary">All systems operating normally across clusters</p>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {(data.incidents || []).map((incident) => (
-                  <div
-                    key={incident.id}
-                    className="p-5 rounded-xl border-2 border-rose-500/20 bg-rose-500/5"
-                  >
-                    <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 mb-3">
-                      <div className="min-w-0">
-                        <h4 className="font-bold text-text-primary text-lg truncate">{incident.title}</h4>
-                        <p className="text-sm text-text-secondary mt-1 break-words">{incident.description}</p>
-                      </div>
-                      <div className="flex items-center gap-2 shrink-0">
-                        <span className={`px-2 py-1 rounded-full text-[10px] font-semibold  ${
-                          incident.severity === 'Critical' ? 'bg-rose-500 text-white' : 'bg-amber-500 text-white'
-                        }`}>
-                          {incident.severity}
-                        </span>
-                        <span className="px-2 py-1 rounded-md text-[10px] font-semibold  bg-bg-hover text-text-secondary">
-                          {incident.pattern}
-                        </span>
-                      </div>
-                    </div>
-                    <div className="space-y-3">
-                      <div>
-                        <p className="text-xs font-bold text-text-tertiary  mb-2">Affected Clusters</p>
-                        <div className="flex flex-wrap gap-2">
-                          {(incident.affectedClusters || []).map((clusterId) => (
-                            <span
-                              key={clusterId}
-                              className="px-2 py-1 rounded-lg bg-bg-card border border-border-main text-xs font-medium truncate max-w-[200px]"
-                            >
-                              {clusterId}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-                      {incident.rootCause && (
-                        <div className="p-3 rounded-lg bg-bg-hover">
-                          <p className="text-xs font-bold text-text-tertiary  mb-1">Root Cause</p>
-                          <p className="text-sm text-text-secondary break-words">{incident.rootCause}</p>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
+        <MultiClusterIncidentsList incidents={visibleIncidents} />
       )}
 
       {/* Footer */}

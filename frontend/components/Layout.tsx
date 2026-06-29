@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { LayoutDashboard, AlertCircle, Scale, Settings, Box, ChevronLeft, ChevronRight, Sun, Moon, ChevronsUpDown, Check, Server, Plus, X, Globe, Cloud, Bell, BookOpen, Menu, Key, Zap, FileText, RefreshCw, Trash2, Activity, Brain, Users, Bot, Database, GitBranch, Shield, TrendingUp, Search, Command } from 'lucide-react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { LayoutDashboard, AlertCircle, Scale, Settings, Box, ChevronLeft, ChevronRight, Sun, Moon, ChevronsUpDown, Check, Server, Plus, X, Globe, Cloud, Bell, BookOpen, Menu, Key, Zap, FileText, RefreshCw, Trash2, Activity, Brain, Users, Bot, Database, GitBranch, Shield, TrendingUp } from 'lucide-react';
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useMonitoring } from '../contexts/MonitoringContext';
 import { Cluster } from '../types';
@@ -20,14 +20,17 @@ const ProviderIcon = ({ provider, className }: { provider: Cluster['provider'], 
 
 import { DeleteClusterModal } from './DeleteClusterModal';
 import { RegisterClusterModal } from './RegisterClusterModal';
+import { ClusterCommandPalette } from './ClusterCommandPalette';
 
 export const Layout: React.FC<LayoutProps> = ({ children }) => {
   const {
     isDarkMode,
     toggleTheme,
     selectedCluster,
+    selectedClusterIds,
     clusters,
     setSelectedCluster,
+    setSelectedClusterIds,
     unreadReports,
     isWorkloadsLoading,
     refreshWorkloads,
@@ -45,13 +48,9 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
   const [isRegisterModalOpen, setIsRegisterModalOpen] = useState(false);
   const [clusterToDelete, setClusterToDelete] = useState<Cluster | null>(null);
   const [isClusterSearchOpen, setIsClusterSearchOpen] = useState(false);
-  const [clusterSearchQuery, setClusterSearchQuery] = useState('');
-  const [clusterSearchIndex, setClusterSearchIndex] = useState(0);
+  const [draftClusterIds, setDraftClusterIds] = useState<string[]>(selectedClusterIds);
 
   const clusterMenuRef = useRef<HTMLDivElement>(null);
-  const clusterSearchInputRef = useRef<HTMLInputElement>(null);
-  const clusterSearchResultsRef = useRef<HTMLDivElement>(null);
-  const clusterSearchItemRefs = useRef<(HTMLButtonElement | null)[]>([]);
 
   // Scroll to top on route change
   useEffect(() => {
@@ -68,11 +67,6 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
         e.preventDefault();
         setIsClusterSearchOpen(true);
-        setClusterSearchQuery('');
-        setClusterSearchIndex(0);
-      }
-      if (e.key === 'Escape') {
-        setIsClusterSearchOpen(false);
       }
     };
     window.addEventListener('keydown', handleKeyDown);
@@ -114,36 +108,9 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
     setIsMobileMenuOpen(false);
   }, [location.pathname]);
 
-  const filteredClusters = clusters.filter(c =>
-    (c.displayName || c.name).toLowerCase().includes(clusterSearchQuery.toLowerCase()) ||
-    c.provider.toLowerCase().includes(clusterSearchQuery.toLowerCase()) ||
-    (c.region || '').toLowerCase().includes(clusterSearchQuery.toLowerCase())
-  );
-
-  // Focus search input when cluster search opens
-  useEffect(() => {
-    if (isClusterSearchOpen) {
-      setTimeout(() => clusterSearchInputRef.current?.focus(), 50);
-    }
-  }, [isClusterSearchOpen]);
-
-  // Keep selected cluster visible in Command+K results
-  useEffect(() => {
-    if (!isClusterSearchOpen) return;
-    const item = clusterSearchItemRefs.current[clusterSearchIndex];
-    const container = clusterSearchResultsRef.current;
-    if (!item || !container) return;
-
-    const itemRect = item.getBoundingClientRect();
-    const containerRect = container.getBoundingClientRect();
-    const padding = 8;
-
-    if (itemRect.bottom > containerRect.bottom - padding) {
-      container.scrollTop += itemRect.bottom - containerRect.bottom + padding;
-    } else if (itemRect.top < containerRect.top + padding) {
-      container.scrollTop += itemRect.top - containerRect.top - padding;
-    }
-  }, [clusterSearchIndex, filteredClusters, isClusterSearchOpen]);
+  const handleClusterSelect = useCallback((clusterId: string) => {
+    setSelectedClusterIds([clusterId]);
+  }, [setSelectedClusterIds]);
 
   const navItems = [
     { path: '/', label: 'Overview', icon: LayoutDashboard },
@@ -320,7 +287,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
 
         {/* Header */}
         <header className="h-16 border-b border-border-main bg-bg-main/50 backdrop-blur-xl flex items-center justify-between px-4 md:px-6 z-30 shrink-0">
-          <div className="flex items-center gap-4 w-full flex-wrap">
+          <div className="flex items-center gap-3 min-w-0 flex-1">
             {/* Mobile Toggle */}
             <button
               className="p-2 md:hidden text-text-secondary hover:text-text-primary transition-colors rounded-lg hover:bg-bg-hover focus-visible:ring-2 focus-visible:ring-primary-500/50 outline-none"
@@ -335,26 +302,34 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
             {/* Cluster Switcher */}
             <div className="relative min-w-0" ref={clusterMenuRef}>
               <button
-                onClick={() => setIsClusterMenuOpen(!isClusterMenuOpen)}
-                className="flex items-center gap-2.5 px-3 py-2 bg-bg-card/80 border border-border-main rounded-xl hover:border-primary-500/30 hover:bg-bg-hover/50 transition-all duration-200 group min-w-0 md:min-w-[180px] max-w-[260px] focus-visible:ring-2 focus-visible:ring-primary-500/50 outline-none"
+                onClick={() => {
+                  setDraftClusterIds(selectedClusterIds);
+                  setIsClusterMenuOpen(o => !o);
+                }}
+                className="flex items-center gap-2.5 px-3 py-2 bg-bg-card/80 border border-border-main rounded-xl hover:border-primary-500/30 hover:bg-bg-hover/50 transition-all duration-200 group min-w-0 w-full sm:w-auto sm:min-w-[200px] sm:max-w-[340px] focus-visible:ring-2 focus-visible:ring-primary-500/50 outline-none"
                 aria-expanded={isClusterMenuOpen}
                 aria-controls="cluster-dropdown"
-                aria-label="Select target cluster"
+                aria-label="Select target clusters"
               >
                 {selectedCluster ? (
                   <>
-                    <div className="p-1.5 rounded-lg bg-bg-hover group-hover:bg-primary-500/10 transition-colors">
+                    <div className="p-1.5 rounded-lg bg-bg-hover group-hover:bg-primary-500/10 transition-colors shrink-0">
                       <ProviderIcon provider={selectedCluster.provider} className="w-4 h-4 text-text-secondary group-hover:text-primary-500" />
                     </div>
                     <div className="hidden sm:block text-left flex-1 min-w-0">
                       <div className="text-[10px] font-semibold text-text-tertiary group-hover:text-primary-500 transition-colors">
                         Target cluster
                       </div>
-                      <div className="text-sm font-semibold text-text-primary truncate flex items-center gap-2">
+                      <div className="text-sm font-semibold text-text-primary truncate">
                         {selectedCluster.displayName || selectedCluster.name}
-                        <span className={`w-1.5 h-1.5 rounded-full ${getStatusColor(selectedCluster?.status || 'Active')} ${getStatusGlow(selectedCluster?.status || 'Active')}`} />
                       </div>
                     </div>
+                    {selectedClusterIds.length > 1 && (
+                      <span className="px-1.5 py-0.5 rounded-md bg-primary-500/20 text-primary-400 text-[10px] font-bold shrink-0">
+                        +{selectedClusterIds.length - 1}
+                      </span>
+                    )}
+                    <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${getStatusColor(selectedCluster?.status || 'Active')} ${getStatusGlow(selectedCluster?.status || 'Active')}`} />
                   </>
                 ) : (
                   <>
@@ -374,49 +349,89 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
                   id="cluster-dropdown"
                   className="absolute top-full left-0 mt-2 w-[calc(100vw-2rem)] max-w-xs sm:w-80 bg-bg-card border border-border-main rounded-2xl shadow-2xl py-2 animate-slide-up z-50 overflow-hidden"
                 >
-                  <div className="px-4 py-3 border-b border-border-main bg-bg-hover">
+                  <div className="flex items-center justify-between px-4 py-3 border-b border-border-main bg-bg-hover">
                     <p className="text-[11px] font-semibold text-text-tertiary flex items-center gap-2">
                       <Server className="w-3.5 h-3.5" /> Control Plane Fleet
                     </p>
+                    <button
+                      onClick={() => setDraftClusterIds([])}
+                      className="text-[10px] text-primary-400 hover:text-primary-300 font-semibold"
+                    >
+                      Reset
+                    </button>
                   </div>
-                  <div className="max-h-[280px] overflow-y-auto custom-scrollbar p-1.5 space-y-0.5">
+                  <div className="max-h-[260px] overflow-y-auto custom-scrollbar p-1.5 space-y-0.5">
+                    <label className="flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-bg-hover cursor-pointer">
+                      <input
+                        type="checkbox"
+                        className="w-4 h-4 accent-primary-500 rounded"
+                        checked={draftClusterIds.length === 0}
+                        onChange={() => setDraftClusterIds([])}
+                      />
+                      <span className="text-sm font-semibold text-text-primary">All clusters</span>
+                    </label>
                     {clusters.map(cluster => (
-                      <button
+                      <div
                         key={cluster.id}
-                        onClick={() => { setSelectedCluster(cluster); setIsClusterMenuOpen(false); }}
-                        className={`
-                          w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all text-left relative overflow-hidden group/item
-                          ${selectedCluster?.id === cluster.id
-                            ? 'bg-primary-500/8 border border-transparent'
-                            : 'hover:bg-bg-hover border border-transparent'}
-                        `}
+                        className="flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-bg-hover transition-colors group/item"
                       >
-                        <div className="p-1.5 rounded-lg bg-bg-hover text-text-secondary group-hover/item:text-text-primary transition-colors">
-                          <ProviderIcon provider={cluster.provider} className="w-4 h-4 shrink-0" />
-                        </div>
-
-                        <div className="flex-1 min-w-0">
-                          <p className={`text-sm font-semibold truncate ${selectedCluster?.id === cluster.id ? 'text-primary-500' : 'text-text-secondary group-hover/item:text-text-primary'}`}>
-                            {cluster.displayName || cluster.name}
-                          </p>
-                          <div className="flex items-center gap-2 mt-0.5">
-                            <span className={`w-1.5 h-1.5 rounded-full ${getStatusColor(cluster.status)} ${getStatusGlow(cluster.status)}`}></span>
-                            <p className="text-[10px] text-text-tertiary font-mono uppercase">{cluster.region} :: {cluster.provider}</p>
+                        <label className="flex items-center gap-3 flex-1 min-w-0 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            className="w-4 h-4 accent-primary-500 rounded"
+                            checked={draftClusterIds.includes(cluster.id)}
+                            onChange={() => {
+                              setDraftClusterIds(prev =>
+                                prev.includes(cluster.id)
+                                  ? prev.filter(id => id !== cluster.id)
+                                  : [...prev, cluster.id]
+                              );
+                            }}
+                          />
+                          <div className="p-1.5 rounded-lg bg-bg-hover text-text-secondary group-hover/item:text-text-primary transition-colors">
+                            <ProviderIcon provider={cluster.provider} className="w-4 h-4 shrink-0" />
                           </div>
-                        </div>
+
+                          <div className="flex-1 min-w-0">
+                            <p className={`text-sm font-semibold truncate ${draftClusterIds.includes(cluster.id) ? 'text-primary-500' : 'text-text-secondary group-hover/item:text-text-primary'}`}>
+                              {cluster.displayName || cluster.name}
+                            </p>
+                            <div className="flex items-center gap-2 mt-0.5">
+                              <span className={`w-1.5 h-1.5 rounded-full ${getStatusColor(cluster.status)} ${getStatusGlow(cluster.status)}`}></span>
+                              <p className="text-[10px] text-text-tertiary font-mono uppercase">{cluster.region} :: {cluster.provider}</p>
+                            </div>
+                          </div>
+                        </label>
 
                         <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setClusterToDelete(cluster);
-                          }}
+                          onClick={() => setClusterToDelete(cluster)}
                           className="p-1.5 hover:bg-danger-light rounded-lg transition-colors opacity-0 group-hover/item:opacity-100"
                           title="Remove Cluster"
                         >
                           <Trash2 className="w-3.5 h-3.5 text-text-tertiary hover:text-danger transition-colors" />
                         </button>
-                      </button>
+                      </div>
                     ))}
+                  </div>
+                  <div className="flex items-center gap-2 px-3 py-2 border-t border-border-main">
+                    <button
+                      onClick={() => {
+                        setSelectedClusterIds(draftClusterIds);
+                        setIsClusterMenuOpen(false);
+                      }}
+                      className="flex-1 kt-button kt-button-primary py-1.5 text-xs"
+                    >
+                      Apply
+                    </button>
+                    <button
+                      onClick={() => {
+                        setDraftClusterIds(selectedClusterIds);
+                        setIsClusterMenuOpen(false);
+                      }}
+                      className="flex-1 kt-button kt-button-secondary py-1.5 text-xs"
+                    >
+                      Cancel
+                    </button>
                   </div>
                   <div className="h-px bg-border-main mx-3 my-1.5" />
                   <div className="p-1.5">
@@ -431,25 +446,27 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
               )}
             </div>
 
+          </div>
+
+          {/* Right side: System status + Actions */}
+          <div className="flex items-center gap-3 shrink-0">
             {/* System Status - Desktop */}
-            <div className="hidden lg:flex items-center gap-3 ml-auto">
-              <div className="flex items-center gap-4 px-4 py-2 bg-bg-card/50 rounded-xl border border-border-main">
-                <div className="flex items-center gap-2">
-                  <span className="text-[10px] font-semibold text-text-secondary">Latency</span>
-                  <span className="text-xs font-mono text-emerald-500 tabular-nums dark:text-emerald-400">{apiLatency !== null ? `${apiLatency}ms` : '...'}</span>
-                </div>
-                <div className="w-px h-4 bg-border-main"></div>
-                <div className="flex items-center gap-2">
-                  <span className={`w-1.5 h-1.5 rounded-full ${getStatusColor(apiStatus)} ${getStatusGlow(apiStatus)}`}></span>
-                  <span className={`text-xs font-medium ${apiStatus === 'Connected' ? 'text-emerald-500 dark:text-emerald-400' : 'text-amber-500 dark:text-amber-400'}`}>
-                    {apiStatus}
-                  </span>
-                </div>
+            <div className="hidden lg:flex items-center gap-4 px-4 py-2 bg-bg-card/50 rounded-xl border border-border-main">
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] font-semibold text-text-secondary">Latency</span>
+                <span className="text-xs font-mono text-emerald-500 tabular-nums dark:text-emerald-400">{apiLatency !== null ? `${apiLatency}ms` : '...'}</span>
+              </div>
+              <div className="w-px h-4 bg-border-main"></div>
+              <div className="flex items-center gap-2">
+                <span className={`w-1.5 h-1.5 rounded-full ${getStatusColor(apiStatus)} ${getStatusGlow(apiStatus)}`}></span>
+                <span className={`text-xs font-medium ${apiStatus === 'Connected' ? 'text-emerald-500 dark:text-emerald-400' : 'text-amber-500 dark:text-amber-400'}`}>
+                  {apiStatus}
+                </span>
               </div>
             </div>
 
             {/* Action Buttons */}
-            <div className="flex items-center gap-2 ml-auto lg:ml-0">
+            <div className="flex items-center gap-2">
               {/* Notifications */}
               <button
                 onClick={() => navigate('/notifications')}
@@ -492,110 +509,13 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
         </header>
 
         {/* CMD+K Cluster Search Modal */}
-        {isClusterSearchOpen && (
-          <div
-            className="fixed inset-0 z-[100] flex items-start justify-center pt-[15vh] bg-black/40 backdrop-blur-sm animate-fade-in"
-            onClick={() => setIsClusterSearchOpen(false)}
-          >
-            <div
-              className="w-full max-w-lg bg-bg-card border border-border-main rounded-2xl shadow-2xl overflow-hidden animate-slide-up"
-              onClick={e => e.stopPropagation()}
-            >
-              {/* Search Input */}
-              <div className="flex items-center gap-3 px-4 py-3 border-b border-border-main">
-                <Search className="w-5 h-5 text-text-tertiary" />
-                <input
-                  ref={clusterSearchInputRef}
-                  type="text"
-                  placeholder="Search clusters..."
-                  value={clusterSearchQuery}
-                  onChange={(e) => {
-                    setClusterSearchQuery(e.target.value);
-                    setClusterSearchIndex(0);
-                  }}
-                  onKeyDown={(e) => {
-                    if (e.key === 'ArrowDown') {
-                      e.preventDefault();
-                      if (filteredClusters.length === 0) return;
-                      setClusterSearchIndex(prev => Math.min(filteredClusters.length - 1, prev + 1));
-                    } else if (e.key === 'ArrowUp') {
-                      e.preventDefault();
-                      if (filteredClusters.length === 0) return;
-                      setClusterSearchIndex(prev => Math.max(0, prev - 1));
-                    } else if (e.key === 'Enter') {
-                      e.preventDefault();
-                      const cluster = filteredClusters[clusterSearchIndex];
-                      if (cluster) {
-                        setSelectedCluster(cluster);
-                        setIsClusterSearchOpen(false);
-                      }
-                    }
-                  }}
-                  className="flex-1 bg-transparent text-text-primary placeholder:text-text-tertiary text-sm outline-none"
-                />
-                <div className="flex items-center gap-1 text-[10px] text-text-tertiary bg-bg-hover px-1.5 py-0.5 rounded border border-border-main">
-                  <Command className="w-3 h-3" />
-                  <span>K</span>
-                </div>
-              </div>
-
-              {/* Results */}
-              <div
-                ref={clusterSearchResultsRef}
-                className="max-h-[320px] overflow-y-auto custom-scrollbar p-1.5"
-              >
-                {filteredClusters.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center py-8 text-text-tertiary">
-                    <Search className="w-6 h-6 mb-2 opacity-40" />
-                    <p className="text-xs">No clusters found</p>
-                  </div>
-                ) : (
-                  filteredClusters.map((cluster, idx) => (
-                    <button
-                      key={cluster.id}
-                      ref={(el) => { clusterSearchItemRefs.current[idx] = el; }}
-                      onClick={() => {
-                        setSelectedCluster(cluster);
-                        setIsClusterSearchOpen(false);
-                      }}
-                      onMouseEnter={() => setClusterSearchIndex(idx)}
-                      className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all text-left ${
-                        idx === clusterSearchIndex
-                          ? 'bg-primary-500/10 text-primary-600 dark:text-primary-400'
-                          : 'hover:bg-bg-hover'
-                      }`}
-                    >
-                      <div className="p-1.5 rounded-lg bg-bg-hover">
-                        <ProviderIcon provider={cluster.provider} className="w-4 h-4 shrink-0 text-text-secondary" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className={`text-sm font-semibold truncate ${idx === clusterSearchIndex ? 'text-primary-500' : 'text-text-primary'}`}>
-                          {cluster.displayName || cluster.name}
-                        </p>
-                        <div className="flex items-center gap-2 mt-0.5">
-                          <span className={`w-1.5 h-1.5 rounded-full ${getStatusColor(cluster.status)}`}></span>
-                          <p className="text-[10px] text-text-tertiary font-mono uppercase">{cluster.region} :: {cluster.provider}</p>
-                        </div>
-                      </div>
-                      {selectedCluster?.id === cluster.id && (
-                        <Check className="w-4 h-4 text-primary-500 shrink-0" />
-                      )}
-                    </button>
-                  ))
-                )}
-              </div>
-
-              {/* Footer */}
-              <div className="px-4 py-2 border-t border-border-main bg-bg-hover flex items-center justify-between text-[10px] text-text-tertiary">
-                <div className="flex items-center gap-3">
-                  <span className="flex items-center gap-1"><span className="bg-bg-card border border-border-main px-1 rounded">↓↑</span> navigate</span>
-                  <span className="flex items-center gap-1"><span className="bg-bg-card border border-border-main px-1 rounded">↵</span> select</span>
-                </div>
-                <span>{filteredClusters.length} cluster{filteredClusters.length !== 1 ? 's' : ''}</span>
-              </div>
-            </div>
-          </div>
-        )}
+        <ClusterCommandPalette
+          clusters={clusters}
+          selectedClusterIds={selectedClusterIds}
+          isOpen={isClusterSearchOpen}
+          onClose={() => setIsClusterSearchOpen(false)}
+          onSelect={handleClusterSelect}
+        />
 
         {/* Loading Progress Bar */}
         {isWorkloadsLoading && (

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/aavishay/kubetriage/backend/internal/cache"
@@ -115,15 +116,19 @@ type CorrelatedEvent struct {
 }
 
 // MultiClusterHandler returns aggregated data from clusters
-// In VPN mode, only connects to the selected cluster on-demand
+// In VPN mode, only connects to the selected cluster(s) on-demand
 func MultiClusterHandler(c *gin.Context) {
-	// Support filtering by specific cluster ID (for VPN mode)
+	// Support filtering by specific cluster ID (legacy single-cluster mode)
 	selectedClusterID := c.Query("cluster")
+	// Support multiple selected cluster IDs (new multi-select mode)
+	selectedClusterIDs := parseClusterIDs(c.Query("clusters"))
 
 	// 1. Try Cache
 	cacheKey := "multicluster:aggregate"
 	if selectedClusterID != "" {
 		cacheKey = fmt.Sprintf("multicluster:aggregate:%s", selectedClusterID)
+	} else if len(selectedClusterIDs) > 0 {
+		cacheKey = fmt.Sprintf("multicluster:aggregate:%s", strings.Join(selectedClusterIDs, ","))
 	}
 	if val, err := cache.Get(c.Request.Context(), cacheKey); err == nil {
 		c.Header("X-Cache", "HIT")
@@ -166,6 +171,31 @@ func MultiClusterHandler(c *gin.Context) {
 		clusterStatuses = append(clusterStatuses, status)
 		workloads = append(workloads, clusterWorkloads...)
 		clusterIncidents[cluster.ID] = incidents
+	} else if len(selectedClusterIDs) > 0 {
+		// Multi-select mode: auto-connect each selected cluster and aggregate data.
+		// Clusters that fail to connect are still included with Offline status.
+		for _, id := range selectedClusterIDs {
+			cluster, err := k8s.Manager.GetOrConnectCluster(id)
+			if err != nil || cluster == nil {
+				// Include as Offline if we can at least find the registration
+				if registered, findErr := k8s.Manager.GetCluster(id); findErr == nil && registered != nil {
+					clusterStatuses = append(clusterStatuses, ClusterStatus{
+						ID:     registered.ID,
+						Name:   registered.Name,
+						Status: "Offline",
+					})
+				}
+				continue
+			}
+
+			status := fetchClusterStatus(ctx, cluster)
+			clusterWorkloads := fetchClusterWorkloads(ctx, cluster)
+			incidents := fetchClusterIncidents(cluster.ID)
+
+			clusterStatuses = append(clusterStatuses, status)
+			workloads = append(workloads, clusterWorkloads...)
+			clusterIncidents[cluster.ID] = incidents
+		}
 	} else {
 		// No specific cluster selected - list all registered clusters without connecting
 		// This returns basic info without attempting connections (for cluster selection UI)
@@ -348,6 +378,12 @@ func fetchClusterIncidents(clusterID string) []db.TriageReport {
 func analyzeCrossClusterIncidents(clusterStatuses []ClusterStatus, incidentsByCluster map[string][]db.TriageReport) []CrossClusterIncident {
 	var crossClusterIncidents []CrossClusterIncident
 
+	// Build a lookup from cluster ID to display name for nicer labels
+	clusterNameByID := make(map[string]string)
+	for _, c := range clusterStatuses {
+		clusterNameByID[c.ID] = c.Name
+	}
+
 	// Group incidents by type to find patterns
 	incidentMap := make(map[string][]db.TriageReport)
 	for _, reports := range incidentsByCluster {
@@ -361,18 +397,27 @@ func analyzeCrossClusterIncidents(clusterStatuses []ClusterStatus, incidentsByCl
 	for _, reports := range incidentMap {
 		if len(reports) > 1 {
 			// Same incident type on same workload name across multiple clusters
+			seenClusters := make(map[string]bool)
 			var affectedClusters []string
+			seenWorkloads := make(map[string]bool)
 			var affectedWorkloads []AffectedWorkload
 
 			for _, r := range reports {
-				affectedClusters = append(affectedClusters, r.ClusterID)
-				affectedWorkloads = append(affectedWorkloads, AffectedWorkload{
-					WorkloadID:   fmt.Sprintf("%s/%s", r.ClusterID, r.WorkloadName),
-					Name:         r.WorkloadName,
-					Namespace:    r.Namespace,
-					ClusterID:    r.ClusterID,
-					ClusterName:  r.ClusterID, // Could look up actual name
-				})
+				if !seenClusters[r.ClusterID] {
+					seenClusters[r.ClusterID] = true
+					affectedClusters = append(affectedClusters, r.ClusterID)
+				}
+				workloadKey := fmt.Sprintf("%s/%s/%s", r.ClusterID, r.Namespace, r.WorkloadName)
+				if !seenWorkloads[workloadKey] {
+					seenWorkloads[workloadKey] = true
+					affectedWorkloads = append(affectedWorkloads, AffectedWorkload{
+						WorkloadID:   workloadKey,
+						Name:         r.WorkloadName,
+						Namespace:    r.Namespace,
+						ClusterID:    r.ClusterID,
+						ClusterName:  clusterNameByID[r.ClusterID],
+					})
+				}
 			}
 
 			incident := CrossClusterIncident{
@@ -466,6 +511,23 @@ func calculateGlobalSummary(clusters []ClusterStatus, workloads []AggregatedWork
 	}
 
 	return summary
+}
+
+func parseClusterIDs(raw string) []string {
+	if raw == "" {
+		return nil
+	}
+	parts := strings.Split(raw, ",")
+	ids := make([]string, 0, len(parts))
+	seen := make(map[string]bool)
+	for _, p := range parts {
+		id := strings.TrimSpace(p)
+		if id != "" && !seen[id] {
+			ids = append(ids, id)
+			seen[id] = true
+		}
+	}
+	return ids
 }
 
 func detectProvider(nodeLabels map[string]string) string {

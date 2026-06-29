@@ -16,6 +16,7 @@ import (
 	"github.com/aavishay/kubetriage/backend/internal/api"
 	"github.com/aavishay/kubetriage/backend/internal/cache"
 	"github.com/aavishay/kubetriage/backend/internal/db"
+	"github.com/aavishay/kubetriage/backend/internal/gitops"
 	"github.com/aavishay/kubetriage/backend/internal/k8s"
 	"github.com/aavishay/kubetriage/backend/internal/ml"
 	"github.com/aavishay/kubetriage/backend/internal/telemetry"
@@ -25,8 +26,9 @@ import (
 )
 
 var (
-	port   string
-	noOpen bool
+	port        string
+	noOpen      bool
+	diffCluster string
 )
 
 var rootCmd = &cobra.Command{
@@ -41,10 +43,25 @@ var serveCmd = &cobra.Command{
 	RunE:  runServe,
 }
 
+var gitopsCmd = &cobra.Command{
+	Use:   "gitops",
+	Short: "GitOps inspection commands",
+}
+
+var argocdDiffCmd = &cobra.Command{
+	Use:   "argocd-diff",
+	Short: "Show compact ArgoCD application diffs",
+	Long:  `Lists every ArgoCD Application on the cluster and shows the per-resource sync action (configured, unchanged, created, pruned) from the Application CRD status.`,
+	RunE:  runArgoCDDiff,
+}
+
 func init() {
 	rootCmd.AddCommand(serveCmd)
+	rootCmd.AddCommand(gitopsCmd)
+	gitopsCmd.AddCommand(argocdDiffCmd)
 	serveCmd.Flags().StringVar(&port, "port", "3001", "Port to listen on")
 	serveCmd.Flags().BoolVar(&noOpen, "no-open", false, "Don't open browser automatically")
+	argocdDiffCmd.Flags().StringVar(&diffCluster, "cluster", "", "Cluster ID/context to use (defaults to first registered cluster)")
 }
 
 func runServe(cmd *cobra.Command, _ []string) error {
@@ -170,6 +187,84 @@ func runServe(cmd *cobra.Command, _ []string) error {
 	}
 	log.Println("Server stopped")
 	return nil
+}
+
+func runArgoCDDiff(_ *cobra.Command, _ []string) error {
+	ctx := context.Background()
+
+	if _, err := k8s.InitK8sClient(); err != nil {
+		return fmt.Errorf("failed to initialize Kubernetes client: %w", err)
+	}
+
+	var clusterID string
+	if diffCluster != "" {
+		clusterID = diffCluster
+	} else if k8s.Manager != nil && len(k8s.Manager.ListClusters()) > 0 {
+		clusterID = k8s.Manager.ListClusters()[0].ID
+	} else {
+		return fmt.Errorf("no clusters configured")
+	}
+
+	cluster, err := k8s.Manager.GetOrConnectCluster(clusterID)
+	if err != nil {
+		return fmt.Errorf("cannot connect to cluster %s: %w", clusterID, err)
+	}
+	if cluster == nil || cluster.DynamicClient == nil {
+		return fmt.Errorf("cluster %s is not reachable", clusterID)
+	}
+
+	apps, err := gitops.DiffArgoCDApplications(ctx, cluster)
+	if err != nil {
+		return fmt.Errorf("failed to diff ArgoCD applications: %w", err)
+	}
+
+	if len(apps) == 0 {
+		fmt.Println("No ArgoCD Applications found (ArgoCD may not be installed).")
+		return nil
+	}
+
+	fmt.Printf("ArgoCD diffs for cluster %s\n\n", clusterID)
+	for _, app := range apps {
+		fmt.Printf("%s/%s  sync=%s  health=%s  changed=%d/%d  rev=%s\n",
+			app.Namespace, app.Name, app.SyncStatus, app.HealthStatus,
+			app.ChangedCount, app.ResourceCount, truncateRev(app.Revision))
+		for _, r := range app.Resources {
+			if r.Action == "unchanged" && r.SyncStatus == "Synced" && !r.RequiresPruning {
+				continue
+			}
+			prefix := "  "
+			var marker string
+			switch r.Action {
+			case "created":
+				marker = "+"
+			case "pruned":
+				marker = "-"
+			case "configured", "modified":
+				marker = "~"
+			default:
+				marker = "?"
+			}
+			name := r.Name
+			if r.Namespace != "" {
+				name = fmt.Sprintf("%s/%s", r.Namespace, r.Name)
+			}
+			msg := ""
+			if r.Message != "" && r.Message != r.Action {
+				msg = fmt.Sprintf(" (%s)", r.Message)
+			}
+			fmt.Printf("%s%s %s/%s%s  %s\n", prefix, marker, r.Kind, name, msg, r.Action)
+		}
+		fmt.Println()
+	}
+
+	return nil
+}
+
+func truncateRev(rev string) string {
+	if len(rev) > 12 {
+		return rev[:12]
+	}
+	return rev
 }
 
 func Execute() {
