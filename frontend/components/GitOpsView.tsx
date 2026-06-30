@@ -90,12 +90,12 @@ const actionConfig: Record<string, { marker: string; label: string; color: strin
 };
 
 const toBrowserUrl = (gitUrl: string) => {
-  // Azure DevOps SSH: git@ssh.dev.azure.com:v3/{org}/{project}/{repoPath}
-  const sshMatch = gitUrl.match(/^git@ssh\.dev\.azure\.com:v3\/([^/]+)\/([^/]+)\/(.+)$/);
+  // Azure DevOps SSH: git@ssh.dev.azure.com:v3/{org}/{project}/{repo}/{subPath...}
+  const sshMatch = gitUrl.match(/^git@ssh\.dev\.azure\.com:v3\/([^/]+)\/([^/]+)\/([^/]+)\/?(.*)$/);
   if (sshMatch) {
-    const [, org, project, repoPath] = sshMatch;
-    const repo = repoPath.split('/').pop() || repoPath;
-    return `https://dev.azure.com/${org}/${project}/_git/${repo}`;
+    const [, org, project, repo, subPath] = sshMatch;
+    const url = `https://dev.azure.com/${org}/${project}/_git/${repo}`;
+    return subPath ? `${url}?path=/${subPath}` : url;
   }
   // Azure DevOps HTTPS clone URL: https://dev.azure.com/{org}/{project}/_git/{repo}
   if (/^https:\/\/dev\.azure\.com\//.test(gitUrl)) {
