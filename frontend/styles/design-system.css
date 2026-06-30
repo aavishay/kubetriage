@@ -41,9 +41,9 @@
   --color-info-light: var(--kt-info-light);
 
   /* Font Families */
-  --font-sans: 'Saira Condensed', system-ui, sans-serif;
-  --font-display: 'Share Tech Mono', 'Space Mono', monospace;
-  --font-mono: 'Space Mono', 'Share Tech Mono', monospace;
+  --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  --font-display: 'Bricolage Grotesque', 'Space Grotesk', 'Antonio', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
 
   /* Radius Overrides — tight, utilitarian */
   --radius-2xl: 6px;
