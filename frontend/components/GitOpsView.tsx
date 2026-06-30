@@ -32,7 +32,7 @@ interface GitOpsViewProps {
 }
 
 const COLORS = {
-  primary: '#f5a623',
+  primary: '#00c8f0',
   success: '#2ecc71',
   warning: '#f5a623',
   danger: '#e74c3c',
@@ -513,7 +513,7 @@ export const GitOpsView: React.FC<GitOpsViewProps> = ({ clusterId }) => {
                   key={`${resource.tool}-${resource.kind}-${resource.namespace}-${resource.name}`}
                   className={`border transition-all overflow-hidden ${
                     isExpanded
-                      ? 'border-primary-500 kt-amber-glow bg-bg-card'
+                      ? 'border-primary-500 kt-cyan-glow bg-bg-card'
                       : 'border-border-main hover:border-primary-500/30 bg-bg-main'
                   }`}
                 >

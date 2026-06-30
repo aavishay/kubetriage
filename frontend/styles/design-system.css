@@ -8,17 +8,17 @@
    TAILWIND v4 THEME - Industrial Tokens
    ============================================ */
 @theme {
-  /* Primary Accent — Amber CRT */
-  --color-primary-50: #fff8e6;
-  --color-primary-100: #ffeeb3;
-  --color-primary-200: #ffe380;
-  --color-primary-300: #ffd14d;
-  --color-primary-400: #ffbe1a;
-  --color-primary-500: #f5a623;
-  --color-primary-600: #c7810d;
-  --color-primary-700: #995f08;
-  --color-primary-800: #6b4104;
-  --color-primary-900: #3d2401;
+  /* Primary Accent — Cyan */
+  --color-primary-50: #e6fbff;
+  --color-primary-100: #b3f4ff;
+  --color-primary-200: #80edff;
+  --color-primary-300: #4de3ff;
+  --color-primary-400: #1ad8ff;
+  --color-primary-500: #00c8f0;
+  --color-primary-600: #00a0c2;
+  --color-primary-700: #007894;
+  --color-primary-800: #005066;
+  --color-primary-900: #002c3d;
 
   /* Themed Surface Colors (Dynamic) */
   --color-bg-main: var(--kt-bg-main);
@@ -53,10 +53,10 @@
    COLOR TOKENS & SEMANTIC SCALES
    ============================================ */
 :root {
-  /* Brand Constants — Amber CRT */
-  --kt-primary-50: #fff8e6;
-  --kt-primary-500: #f5a623;
-  --kt-primary-600: #c7810d;
+  /* Brand Constants — Cyan */
+  --kt-primary-50: #e6fbff;
+  --kt-primary-500: #00c8f0;
+  --kt-primary-600: #00a0c2;
 
   /* Industrial Dark Theme (Default) */
   --kt-bg-main: #0b0c0f;
@@ -82,6 +82,11 @@
   --kt-success-light: rgba(46, 204, 113, 0.12);
   --kt-warning: #f5a623;
   --kt-warning-light: rgba(245, 166, 35, 0.12);
+
+  /* Cyan brand glows */
+  --kt-cyan: #00c8f0;
+  --kt-cyan-light: rgba(0, 200, 240, 0.12);
+  --kt-cyan-glow: 0 0 16px rgba(0, 200, 240, 0.35);
   --kt-danger: #e74c3c;
   --kt-danger-light: rgba(231, 76, 60, 0.12);
   --kt-info: #4fc1ff;
@@ -91,7 +96,7 @@
   --kt-shadow-sm: inset 0 1px 0 0 rgba(255, 255, 255, 0.04), 0 1px 2px 0 rgba(0, 0, 0, 0.4);
   --kt-shadow-md: inset 0 1px 0 0 rgba(255, 255, 255, 0.04), 0 4px 12px -2px rgba(0, 0, 0, 0.5);
   --kt-shadow-lg: inset 0 1px 0 0 rgba(255, 255, 255, 0.04), 0 12px 24px -4px rgba(0, 0, 0, 0.6);
-  --kt-shadow-glow-primary: 0 0 16px rgba(245, 166, 35, 0.35);
+  --kt-shadow-glow-primary: 0 0 16px rgba(0, 200, 240, 0.35);
   --kt-shadow-glow-danger: 0 0 16px rgba(231, 76, 60, 0.35);
   --kt-shadow-glow-success: 0 0 16px rgba(46, 204, 113, 0.35);
 
@@ -206,6 +211,10 @@
   z-index: 1;
 }
 
+.kt-cyan-glow {
+  box-shadow: 0 0 12px rgba(0, 200, 240, 0.25), inset 0 0 8px rgba(0, 200, 240, 0.08);
+}
+
 .kt-amber-glow {
   box-shadow: 0 0 12px rgba(245, 166, 35, 0.25), inset 0 0 8px rgba(245, 166, 35, 0.08);
 }
@@ -268,7 +277,7 @@
   align-items: center;
   justify-content: space-between;
   padding: var(--kt-space-3) var(--kt-space-4);
-  background: linear-gradient(90deg, rgba(245, 166, 35, 0.06) 0%, transparent 60%);
+  background: linear-gradient(90deg, rgba(0, 200, 240, 0.06) 0%, transparent 60%);
   border-bottom: 1px solid var(--kt-panel-frame);
   font-family: var(--font-sans);
   font-size: var(--kt-text-sm);
@@ -362,7 +371,7 @@
 
 .kt-input:focus {
   border-color: var(--kt-primary-500);
-  box-shadow: 0 0 0 1px rgba(245, 166, 35, 0.25);
+  box-shadow: 0 0 0 1px rgba(0, 200, 240, 0.25);
 }
 
 .kt-input:hover:not(:focus):not(:disabled) {
@@ -392,7 +401,7 @@
 
 .kt-select:focus {
   border-color: var(--kt-primary-500);
-  box-shadow: 0 0 0 1px rgba(245, 166, 35, 0.25);
+  box-shadow: 0 0 0 1px rgba(0, 200, 240, 0.25);
 }
 
 /* ============================================
@@ -436,14 +445,14 @@
 }
 
 .kt-button-primary {
-  background: linear-gradient(180deg, #d48a0e 0%, #9a6206 100%);
+  background: linear-gradient(180deg, #00a8d0 0%, #0084a8 100%);
   color: #0b0c0f;
-  border: 1px solid #f5a623;
+  border: 1px solid #00c8f0;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25), 0 2px 4px rgba(0, 0, 0, 0.4);
 }
 
 .kt-button-primary:hover {
-  background: linear-gradient(180deg, #f5a623 0%, #c7810d 100%);
+  background: linear-gradient(180deg, #00c8f0 0%, #00a0c2 100%);
   box-shadow: var(--kt-shadow-glow-primary), inset 0 1px 0 rgba(255, 255, 255, 0.3);
 }
 

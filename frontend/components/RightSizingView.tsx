@@ -118,7 +118,7 @@ const CustomTooltip = ({ active, payload, isDarkMode, type }: any) => {
     const unit = type === 'cpu' ? 'c' : type === 'memory' ? 'Mi' : type === 'gpu' ? '%' : 'Gi';
     const valKey = type === 'cpu' ? 'cpuUsage' : type === 'memory' ? 'memoryUsage' : type === 'gpu' ? 'gpuUsage' : 'storageUsage';
     const limitKey = type === 'cpu' ? 'cpuLimit' : type === 'memory' ? 'memoryLimit' : type === 'gpu' ? 'gpuLimit' : 'storageLimit';
-    const color = type === 'cpu' ? 'text-primary-500' : type === 'memory' ? 'text-emerald-500' : type === 'gpu' ? 'text-violet-500' : 'text-amber-500';
+    const color = type === 'cpu' ? 'text-primary-500' : type === 'memory' ? 'text-emerald-500' : type === 'gpu' ? 'text-violet-500' : 'text-primary-500';
 
     return (
       <div className={`p-4 rounded-2xl border shadow-2xl text-xs min-w-[220px] backdrop-blur-md bg-bg-card border-border-main text-text-secondary font-sans`}>

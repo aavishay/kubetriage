@@ -134,7 +134,7 @@ export const TemplateLibraryView: React.FC<TemplateLibraryViewProps> = ({ onAppl
                      </div>
                   </div>
                   <div className="flex items-center gap-2 bg-bg-main p-3 rounded-lg border border-border-main">
-                     <Zap className="w-5 h-5 text-amber-500" />
+                     <Zap className="w-5 h-5 text-primary-500" />
                      <div className="text-left">
                         <p className="text-xs text-text-secondary">Automation</p>
                         <p className="text-sm font-medium text-text-primary">4 Rules</p>
@@ -222,7 +222,7 @@ export const TemplateLibraryView: React.FC<TemplateLibraryViewProps> = ({ onAppl
          {/* Automation & Security Recipes */}
          <section>
             <div className="flex items-center gap-2 mb-4">
-               <ShieldCheck className="w-5 h-5 text-amber-500" />
+               <ShieldCheck className="w-5 h-5 text-primary-500" />
                <h2 className="text-lg font-medium text-text-primary">Automation & Security</h2>
             </div>
             <p className="text-xs text-text-secondary mb-4">Proactive background guardrails & automated fixes</p>

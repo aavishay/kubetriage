@@ -84,7 +84,7 @@ const TrafficPathExplorer = ({ workload }: { workload: Workload }) => {
         </div>
         <div className="flex-1 h-px bg-gradient-to-r from-transparent via-primary-500/50 to-transparent"></div>
         <div className="flex flex-col items-center gap-2">
-          <div className="w-16 h-16 bg-primary-600 flex items-center justify-center text-white kt-amber-glow">
+          <div className="w-16 h-16 bg-primary-600 flex items-center justify-center text-white kt-cyan-glow">
             <Zap className="w-7 h-7" />
           </div>
           <span className="text-xs font-sans font-bold text-text-primary">Gateway</span>
@@ -623,7 +623,7 @@ export const TriageView: React.FC<TriageViewProps> = ({ workloads, isDarkMode = 
           </div>
         ) : (
           <div className="flex-1 flex flex-col items-center justify-center p-8 text-center animate-fade-in">
-            <div className="p-6 bg-primary-500/10 border border-primary-500/30 mb-4 kt-amber-glow"><Activity className="w-10 h-10 text-primary-500" /></div>
+            <div className="p-6 bg-primary-500/10 border border-primary-500/30 mb-4 kt-cyan-glow"><Activity className="w-10 h-10 text-primary-500" /></div>
             <h3 className="font-sans text-xl font-bold text-text-primary mb-2">Select a Workload</h3>
             <p className="text-sm text-text-tertiary max-w-sm font-sans">Choose a workload from the sidebar to begin triage analysis.</p>
           </div>

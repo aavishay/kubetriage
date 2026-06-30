@@ -452,7 +452,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = tr
                                 ? 'bg-danger shadow-[0_0_8px_#e74c3c]'
                                 : item.isWarning
                                   ? 'bg-warning shadow-[0_0_8px_#f5a623]'
-                                  : 'bg-primary-500 shadow-[0_0_8px_#f5a623]'
+                                  : 'bg-primary-500 shadow-[0_0_8px_#00c8f0]'
                             }`}
                             style={{ width: `${Math.min(100, item.saturation)}%` }}
                           />

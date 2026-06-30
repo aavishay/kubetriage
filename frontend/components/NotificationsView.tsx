@@ -216,7 +216,7 @@ export const NotificationsView: React.FC<NotificationsViewProps> = ({
          <div className="kt-panel p-5">
             <div className="flex flex-col md:flex-row items-center justify-between gap-5 relative z-10">
                <div className="flex items-center gap-4">
-                  <div className="p-3 bg-primary-600 text-white kt-amber-glow">
+                  <div className="p-3 bg-primary-600 text-white kt-cyan-glow">
                      <Settings2 className="w-6 h-6" />
                   </div>
                   <div>
@@ -458,7 +458,7 @@ export const NotificationsView: React.FC<NotificationsViewProps> = ({
                         <label className="text-[10px] text-text-tertiary font-sans font-medium">Target Type</label>
                         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                            {(['Slack', 'PagerDuty', 'Webhook', 'Email'] as NotificationType[]).map(type => (
-                              <button key={type} type="button" onClick={() => setChannelType(type)} className={`p-3 border text-[10px] font-sans font-semibold transition-all ${channelType === type ? 'bg-primary-600 border-primary-500 text-white kt-amber-glow' : 'bg-bg-card border-border-main text-text-tertiary hover:border-primary-500/30'}`}>
+                              <button key={type} type="button" onClick={() => setChannelType(type)} className={`p-3 border text-[10px] font-sans font-semibold transition-all ${channelType === type ? 'bg-primary-600 border-primary-500 text-white kt-cyan-glow' : 'bg-bg-card border-border-main text-text-tertiary hover:border-primary-500/30'}`}>
                                  {type}
                               </button>
                            ))}

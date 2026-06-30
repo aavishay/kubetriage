@@ -17,7 +17,7 @@ interface ChartPoint {
 }
 
 const COLORS = {
-  primary: '#f5a623',
+  primary: '#00c8f0',
   success: '#2ecc71',
   warning: '#f5a623',
   danger: '#e74c3c',

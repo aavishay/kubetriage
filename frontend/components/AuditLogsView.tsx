@@ -166,7 +166,7 @@ export const AuditLogsView: React.FC = () => {
                 key={log.ID}
                 className={`border transition-all ${
                   selectedLog === log.ID
-                    ? 'border-primary-500 kt-amber-glow bg-bg-card'
+                    ? 'border-primary-500 kt-cyan-glow bg-bg-card'
                     : 'border-border-main hover:border-primary-500/30 bg-bg-main'
                 }`}
               >

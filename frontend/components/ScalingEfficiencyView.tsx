@@ -16,7 +16,7 @@ interface ScalingEfficiencyViewProps {
 }
 
 const COLORS = {
-  primary: '#f5a623',
+  primary: '#00c8f0',
   success: '#2ecc71',
   warning: '#f5a623',
   danger: '#e74c3c',
@@ -24,7 +24,7 @@ const COLORS = {
   gray: '#6b6e75'
 };
 
-const CHART_COLORS = ['#f5a623', '#2ecc71', '#f5a623', '#e74c3c', '#8b5cf6', '#ec4899'];
+const CHART_COLORS = ['#00c8f0', '#2ecc71', '#00c8f0', '#e74c3c', '#8b5cf6', '#ec4899'];
 
 // Helper function to format age from timestamp
 const formatAge = (timestamp?: string): string => {
@@ -585,7 +585,7 @@ const ScalingEfficiencyViewComponent: React.FC<ScalingEfficiencyViewProps> = ({ 
                       key={`${np.provisionerType}-${np.name}`}
                       className={`p-5 rounded-xl border cursor-pointer transition-all ${
                         selectedNodePool === `${np.provisionerType}-${np.name}`
-                          ? 'border-primary-500 bg-primary-500/5 kt-amber-glow'
+                          ? 'border-primary-500 bg-primary-500/5 kt-cyan-glow'
                           : 'border-border-main hover:border-primary-500/30 bg-bg-hover/30'
                       }`}
                       onClick={() => setSelectedNodePool(
@@ -1302,7 +1302,7 @@ const ScalingEfficiencyViewComponent: React.FC<ScalingEfficiencyViewProps> = ({ 
                     key={`${claim.provisionerType}-${claim.name}`}
                     className={`rounded-xl border-2 transition-all ${
                       selectedNodeClaim === `${claim.provisionerType}-${claim.name}`
-                        ? 'border-primary-500 bg-primary-500/5 kt-amber-glow'
+                        ? 'border-primary-500 bg-primary-500/5 kt-cyan-glow'
                         : 'border-border-main hover:border-primary-500/30 bg-bg-hover/30'
                     }`}
                   >

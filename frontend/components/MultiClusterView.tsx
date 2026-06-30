@@ -35,7 +35,7 @@ interface MultiClusterData {
 }
 
 const COLORS = {
-  primary: '#f5a623',
+  primary: '#00c8f0',
   success: '#2ecc71',
   warning: '#f5a623',
   danger: '#e74c3c',
@@ -270,7 +270,7 @@ export const MultiClusterView: React.FC = () => {
         <>
           <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-3">
             {visibleClusters.map((cluster) => (
-              <div key={cluster.id} onClick={() => setSelectedCluster(selectedCluster === cluster.id ? null : cluster.id)} className={`kt-panel p-4 cursor-pointer transition-all ${selectedCluster === cluster.id ? 'border-primary-500 kt-amber-glow' : ''}`}>
+              <div key={cluster.id} onClick={() => setSelectedCluster(selectedCluster === cluster.id ? null : cluster.id)} className={`kt-panel p-4 cursor-pointer transition-all ${selectedCluster === cluster.id ? 'border-primary-500 kt-cyan-glow' : ''}`}>
                 <div className="flex items-start justify-between gap-3 mb-3 relative z-10">
                   <div className="flex items-center gap-3 min-w-0">
                     <div className={`p-2 shrink-0 border ${getStatusBg(cluster.status)}`}>

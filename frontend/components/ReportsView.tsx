@@ -224,7 +224,7 @@ export const ReportsView: React.FC = () => {
                 <div className="p-5 grid grid-cols-1 md:grid-cols-2 gap-4 relative z-10">
                     {/* SOC2 Card */}
                     <div className="kt-panel p-5 flex flex-col cursor-pointer group hover:border-primary-500/50 transition-all" onClick={handleDownloadCompliance}>
-                        <div className="p-3 w-fit mb-5 bg-bg-main border border-border-main text-primary-500 group-hover:kt-amber-glow transition-all">
+                        <div className="p-3 w-fit mb-5 bg-bg-main border border-border-main text-primary-500 group-hover:kt-cyan-glow transition-all">
                             <Shield className="w-6 h-6" />
                         </div>
                         <h3 className="font-sans text-lg font-bold text-text-primary mb-2">SOC 2 Compliance Audit</h3>

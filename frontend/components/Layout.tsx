@@ -229,7 +229,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
                   <item.icon className={`
                     w-[18px] h-[18px] shrink-0 transition-all duration-200 relative z-10
                     ${isActive
-                      ? 'text-primary-500 drop-shadow-[0_0_6px_rgba(245,166,35,0.5)]'
+                      ? 'text-primary-500 drop-shadow-[0_0_6px_rgba(0,200,240,0.5)]'
                       : 'text-text-tertiary group-hover:text-text-primary'}
                     ${isCollapsed && !isMobileMenuOpen ? 'mx-auto' : 'mr-3'}
                   `} />
@@ -244,7 +244,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
                   )}
 
                   {isActive && (
-                    <span className="absolute right-2 top-1/2 -translate-y-1/2 kt-led kt-led-primary" style={{ background: '#f5a623', boxShadow: '0 0 6px #f5a623' }} />
+                    <span className="absolute right-2 top-1/2 -translate-y-1/2 kt-led kt-led-primary" style={{ background: '#00c8f0', boxShadow: '0 0 6px #00c8f0' }} />
                   )}
                 </>
               )}
@@ -297,7 +297,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
                 aria-controls="cluster-dropdown"
                 aria-label="Select target clusters"
               >
-                <span className="kt-led shrink-0" style={{ background: selectedClusterIds.length > 0 ? '#f5a623' : '#4a4d55', boxShadow: selectedClusterIds.length > 0 ? '0 0 6px #f5a623' : 'none' }} />
+                <span className="kt-led shrink-0" style={{ background: selectedClusterIds.length > 0 ? '#00c8f0' : '#4a4d55', boxShadow: selectedClusterIds.length > 0 ? '0 0 6px #00c8f0' : 'none' }} />
                 <div className="hidden sm:block text-left flex-1 min-w-0">
                   <div className="text-[10px] text-text-tertiary group-hover:text-primary-500 transition-colors font-sans font-medium">
                     Target Cluster
@@ -478,7 +478,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
 
         {isWorkloadsLoading && (
           <div className="absolute top-0 left-0 right-0 h-[2px] z-50 overflow-hidden bg-transparent">
-            <div className="h-full bg-primary-500 shadow-[0_0_10px_#f5a623] animate-loading-bar"></div>
+            <div className="h-full bg-primary-500 shadow-[0_0_10px_#00c8f0] animate-loading-bar"></div>
           </div>
         )}
 

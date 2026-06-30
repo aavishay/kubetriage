@@ -113,7 +113,7 @@ export const SettingsView: React.FC = () => {
                                         <button
                                             key={p.key}
                                             onClick={() => { setProvider(p.key); setModel(''); }}
-                                            className={`relative p-4 border text-left transition-all duration-200 group ${active ? `${c.border} ${c.bg} kt-amber-glow` : 'border-border-main hover:border-primary-500/30 hover:bg-bg-hover'}`}
+                                            className={`relative p-4 border text-left transition-all duration-200 group ${active ? `${c.border} ${c.bg} kt-cyan-glow` : 'border-border-main hover:border-primary-500/30 hover:bg-bg-hover'}`}
                                         >
                                             <div className="flex items-center justify-between mb-2">
                                                 <span className={`font-sans font-semibold transition-colors ${active ? c.text : 'text-text-primary'}`}>{p.label}</span>
@@ -199,7 +199,7 @@ export const SettingsView: React.FC = () => {
                                 </div>
                                 <div className="flex flex-wrap gap-2 pt-2">
                                     {[10, 30, 60].map((interval) => (
-                                        <button key={interval} onClick={() => setRefreshInterval(interval)} className={`px-4 py-2 text-xs font-sans font-semibold border transition-all ${refreshInterval === interval ? 'bg-primary-500 text-black border-primary-500 kt-amber-glow' : 'bg-bg-card border-border-main text-text-secondary hover:text-text-primary hover:border-primary-500/30'}`}>
+                                        <button key={interval} onClick={() => setRefreshInterval(interval)} className={`px-4 py-2 text-xs font-sans font-semibold border transition-all ${refreshInterval === interval ? 'bg-primary-500 text-black border-primary-500 kt-cyan-glow' : 'bg-bg-card border-border-main text-text-secondary hover:text-text-primary hover:border-primary-500/30'}`}>
                                             {interval}s
                                         </button>
                                     ))}
@@ -227,7 +227,7 @@ export const SettingsView: React.FC = () => {
                                     </div>
                                     <button
                                         onClick={() => updateNotificationSettings({ ...notificationSettings, toastEnabled: !notificationSettings.toastEnabled })}
-                                        className={`w-12 h-6 rounded-sm transition-all relative border border-transparent ${notificationSettings.toastEnabled ? 'bg-primary-500 kt-amber-glow' : 'bg-bg-card border-border-main'}`}
+                                        className={`w-12 h-6 rounded-sm transition-all relative border border-transparent ${notificationSettings.toastEnabled ? 'bg-primary-500 kt-cyan-glow' : 'bg-bg-card border-border-main'}`}
                                     >
                                         <div className={`absolute top-0.5 left-0.5 w-5 h-5 bg-black shadow-sm transition-transform duration-200 ${notificationSettings.toastEnabled ? 'translate-x-[22px]' : 'translate-x-0'}`} />
                                     </button>

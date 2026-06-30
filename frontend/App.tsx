@@ -230,9 +230,9 @@ const AppContent: React.FC = () => {
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[100] w-full max-w-md p-4 animate-in slide-in-from-bottom-4 fade-in duration-300">
           <div
             onClick={() => navigate('/triage')}
-            className={`cursor-pointer hover:bg-bg-hover transition-all p-4 rounded-2xl border border-transparent shadow-md flex items-center gap-4 bg-bg-card group ${activeNotification.severity === 'Critical' ? 'border-l-4 border-l-rose-500' : 'border-l-4 border-l-amber-500'}`}
+            className={`cursor-pointer hover:bg-bg-hover transition-all p-4 rounded-2xl border border-transparent shadow-md flex items-center gap-4 bg-bg-card group ${activeNotification.severity === 'Critical' ? 'border-l-4 border-l-rose-500' : 'border-l-4 border-l-warning'}`}
           >
-            <div className={`p-3 rounded-lg shrink-0 ${activeNotification.severity === 'Critical' ? 'bg-rose-500 text-white' : 'bg-amber-500 text-white'}`}>
+            <div className={`p-3 rounded-lg shrink-0 ${activeNotification.severity === 'Critical' ? 'bg-rose-500 text-white' : 'bg-warning text-white'}`}>
               <BellRing className="w-5 h-5" />
             </div>
             <div className="flex-1 min-w-0">
@@ -240,7 +240,7 @@ const AppContent: React.FC = () => {
                 {activeNotification.severity === 'Critical' ? 'Critical Alert' : 'Warning'}
               </h4>
               <p className="text-xs text-text-secondary truncate">
-                {activeNotification.workloadName}: <span className="text-primary-500">{activeNotification.metric}</span> at <span className={activeNotification.severity === 'Critical' ? 'text-rose-500' : 'text-amber-500'}>{activeNotification.value}%</span>
+                {activeNotification.workloadName}: <span className="text-primary-500">{activeNotification.metric}</span> at <span className={activeNotification.severity === 'Critical' ? 'text-rose-500' : 'text-warning'}>{activeNotification.value}%</span>
               </p>
             </div>
             <div className="flex items-center gap-1">
