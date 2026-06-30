@@ -669,29 +669,7 @@ export const GitOpsView: React.FC<GitOpsViewProps> = ({ clusterId }) => {
                       )}
 
                       {/* Alerts */}
-                      {(resource.syncErrors?.length || resource.misconfigurations?.length) ? (
-                        <div className="space-y-3">
-                          {resource.syncErrors && resource.syncErrors.length > 0 && (
-                            <div className="p-4 bg-danger/10 border border-danger/20">
-                              <div className="flex items-center gap-2 mb-2">
-                                <AlertTriangle className="w-4 h-4 text-danger" />
-                                <span className="text-sm font-bold text-danger">Sync Errors</span>
-                              </div>
-                              <ul className="space-y-1">
-                                {resource.syncErrors.map((err, i) => (
-                                  <li
-                                    key={i}
-                                    className="text-xs text-danger flex items-start gap-2 font-sans"
-                                  >
-                                    <span className="mt-1">•</span>
-                                    <span className="break-words">{err}</span>
-                                  </li>
-                                ))}
-                              </ul>
-                            </div>
-                          )}
-
-                          {resource.misconfigurations && resource.misconfigurations.length > 0 && (
+                      {resource.misconfigurations && resource.misconfigurations.length > 0 && (
                             <div className="p-4 bg-warning/10 border border-warning/20">
                               <div className="flex items-center gap-2 mb-2">
                                 <AlertTriangle className="w-4 h-4 text-warning" />
@@ -712,8 +690,6 @@ export const GitOpsView: React.FC<GitOpsViewProps> = ({ clusterId }) => {
                               </ul>
                             </div>
                           )}
-                        </div>
-                      ) : null}
 
                       {/* Resource Diff (ArgoCD only) */}
                       {resource.tool === 'ArgoCD' && resource.resources && resource.resources.length > 0 && (
