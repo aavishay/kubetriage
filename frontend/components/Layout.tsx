@@ -273,7 +273,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
       <div className="flex-1 flex flex-col overflow-hidden relative">
 
         {/* Header Status Strip */}
-        <header className="h-16 border-b border-border-main bg-bg-card/95 backdrop-blur-sm flex items-center justify-between px-4 md:px-5 z-30 shrink-0 kt-panel">
+        <header className="h-16 border-b border-border-main bg-bg-card/95 backdrop-blur-sm flex items-center justify-between px-4 md:px-5 z-30 shrink-0">
           <div className="flex items-center gap-3 min-w-0 flex-1">
             <button
               className="p-2 md:hidden text-text-secondary hover:text-text-primary transition-colors rounded-sm hover:bg-bg-hover focus-visible:ring-2 focus-visible:ring-primary-500/50 outline-none"
