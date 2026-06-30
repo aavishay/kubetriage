@@ -16,13 +16,10 @@ import { OfflineIndicator } from './components/OfflineIndicator';
 // Route-level code splitting for all views
 const Dashboard = lazy(() => import('./components/Dashboard').then(m => ({ default: m.Dashboard })));
 const TriageView = lazy(() => import('./components/TriageView').then(m => ({ default: m.TriageView })));
-const RightSizingView = lazy(() => import('./components/RightSizingView').then(m => ({ default: m.RightSizingView })));
 const ScalingEfficiencyView = lazy(() => import('./components/ScalingEfficiencyView').then(m => ({ default: m.ScalingEfficiencyView })));
 const CapacityPlanningView = lazy(() => import('./components/CapacityPlanningView').then(m => ({ default: m.CapacityPlanningView })));
 const MultiClusterView = lazy(() => import('./components/MultiClusterView').then(m => ({ default: m.MultiClusterView })));
 const MLIntelligenceView = lazy(() => import('./components/MLIntelligenceView').then(m => ({ default: m.MLIntelligenceView })));
-const DeveloperPortalView = lazy(() => import('./components/DeveloperPortalView').then(m => ({ default: m.DeveloperPortalView })));
-const AutonomousRemediationView = lazy(() => import('./components/AutonomousRemediationView').then(m => ({ default: m.AutonomousRemediationView })));
 const ExternalMetricsView = lazy(() => import('./components/ExternalMetricsView').then(m => ({ default: m.ExternalMetricsView })));
 const TopologyView = lazy(() => import('./components/TopologyView').then(m => ({ default: m.TopologyView })));
 const GitOpsView = lazy(() => import('./components/GitOpsView').then(m => ({ default: m.GitOpsView })));
@@ -151,17 +148,6 @@ const AppContent: React.FC = () => {
                 />
               </PageTransition>
             } />
-            <Route path="/rightsizing" element={
-              <PageTransition>
-                <RightSizingView
-                  workloads={workloads}
-                  isDarkMode={isDarkMode}
-                  onOpenChat={handleOpenChat}
-                  onTriageRequest={handleNavigateToTriage}
-                  onRefresh={refreshWorkloads}
-                />
-              </PageTransition>
-            } />
             <Route path="/scaling" element={
               <PageTransition>
                 <ScalingEfficiencyView clusterId={selectedCluster?.id} />
@@ -180,16 +166,6 @@ const AppContent: React.FC = () => {
             <Route path="/ml-intelligence" element={
               <PageTransition>
                 <MLIntelligenceView />
-              </PageTransition>
-            } />
-            <Route path="/developer" element={
-              <PageTransition>
-                <DeveloperPortalView />
-              </PageTransition>
-            } />
-            <Route path="/autonomous" element={
-              <PageTransition>
-                <AutonomousRemediationView />
               </PageTransition>
             } />
             <Route path="/metrics/external" element={

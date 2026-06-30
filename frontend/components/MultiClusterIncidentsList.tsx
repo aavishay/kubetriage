@@ -273,16 +273,18 @@ export const MultiClusterIncidentsList: React.FC<MultiClusterIncidentsListProps>
 
   const filteredIncidents = useMemo(() => {
     const term = debouncedSearch.toLowerCase();
-    return incidents.filter(i => {
-      const matchesSearch = !term ||
-        i.title.toLowerCase().includes(term) ||
-        i.description.toLowerCase().includes(term) ||
-        (i.rootCause || '').toLowerCase().includes(term) ||
-        (i.affectedClusters || []).some(c => c.toLowerCase().includes(term));
-      const matchesSeverity = severityFilter === 'all' || i.severity === severityFilter;
-      const matchesPattern = patternFilter === 'all' || i.pattern === patternFilter;
-      return matchesSearch && matchesSeverity && matchesPattern;
-    });
+    return incidents
+      .filter(i => {
+        const matchesSearch = !term ||
+          i.title.toLowerCase().includes(term) ||
+          i.description.toLowerCase().includes(term) ||
+          (i.rootCause || '').toLowerCase().includes(term) ||
+          (i.affectedClusters || []).some(c => c.toLowerCase().includes(term));
+        const matchesSeverity = severityFilter === 'all' || i.severity === severityFilter;
+        const matchesPattern = patternFilter === 'all' || i.pattern === patternFilter;
+        return matchesSearch && matchesSeverity && matchesPattern;
+      })
+      .sort((a, b) => new Date(b.startedAt).getTime() - new Date(a.startedAt).getTime());
   }, [incidents, debouncedSearch, severityFilter, patternFilter]);
 
   // Reset pagination when filters change

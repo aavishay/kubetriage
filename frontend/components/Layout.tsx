@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { LayoutDashboard, AlertCircle, Scale, Settings, Box, ChevronLeft, ChevronRight, Sun, Moon, ChevronsUpDown, Check, Server, Plus, X, Globe, Cloud, Bell, BookOpen, Menu, Key, Zap, FileText, RefreshCw, Trash2, Activity, Brain, Users, Bot, Database, GitBranch, Shield, TrendingUp } from 'lucide-react';
+import { LayoutDashboard, AlertCircle, Settings, Box, ChevronLeft, ChevronRight, Sun, Moon, ChevronsUpDown, Check, Server, Plus, X, Globe, Cloud, Bell, BookOpen, Menu, Key, Zap, FileText, RefreshCw, Trash2, Activity, Brain, Database, GitBranch, Shield, TrendingUp } from 'lucide-react';
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useMonitoring } from '../contexts/MonitoringContext';
 import { Cluster } from '../types';
@@ -116,13 +116,10 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
     { path: '/', label: 'Overview', icon: LayoutDashboard },
     { path: '/templates', label: 'Runbooks', icon: BookOpen },
     { path: '/triage', label: 'Triage', icon: AlertCircle },
-    { path: '/rightsizing', label: 'Right Sizing', icon: Scale },
     { path: '/scaling', label: 'Scaling', icon: Activity },
     { path: '/capacity', label: 'Capacity', icon: TrendingUp },
     { path: '/multicluster', label: 'Multi-Cluster', icon: Globe },
     { path: '/ml-intelligence', label: 'ML Intelligence', icon: Brain },
-    { path: '/developer', label: 'Developer Portal', icon: Users },
-    { path: '/autonomous', label: 'Auto Remediation', icon: Bot },
     { path: '/metrics/external', label: 'External Metrics', icon: Database },
     { path: '/topology', label: 'Architecture', icon: Cloud },
     { path: '/gitops', label: 'GitOps', icon: GitBranch },
