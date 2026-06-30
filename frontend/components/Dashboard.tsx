@@ -20,7 +20,6 @@ interface DashboardProps {
 
 export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = true, isLoading = false, onTriageRequest, onRefresh, metricsWindow = '1h', setMetricsWindow }) => {
   const [saturationTab, setSaturationTab] = React.useState<'CPU' | 'Memory' | 'Ephemeral Storage' | 'Network' | 'GPU'>('CPU');
-  const [saturationSort, setSaturationSort] = React.useState<'Live' | 'Avg' | 'P95' | 'P99'>('Live');
   const safeWorkloads = workloads || [];
   const totalCost = safeWorkloads.reduce((acc, w) => acc + (w.costPerMonth || 0), 0);
   const criticalCount = safeWorkloads.filter(w => w.status === 'Critical').length;
@@ -31,9 +30,9 @@ export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = tr
     .reduce((acc, w) => acc + (w.costPerMonth * 0.4), 0);
 
   const statusData = [
-    { name: 'Healthy', value: safeWorkloads.filter(w => w.status === 'Healthy').length, color: '#10b981' },
-    { name: 'Warning', value: warningCount, color: '#f59e0b' },
-    { name: 'Critical', value: criticalCount, color: '#ef4444' },
+    { name: 'Healthy', value: safeWorkloads.filter(w => w.status === 'Healthy').length, color: '#2ecc71' },
+    { name: 'Warning', value: warningCount, color: '#f5a623' },
+    { name: 'Critical', value: criticalCount, color: '#e74c3c' },
   ];
 
   const incidents = useMemo(() => {
@@ -74,11 +73,10 @@ export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = tr
   }, [safeWorkloads, criticalCount, warningCount]);
 
   const budgetGaugeData = [
-    { name: 'Consumed', value: Math.max(0, isFinite(reliabilityMetrics.budgetPercentage) ? 100 - reliabilityMetrics.budgetPercentage : 100), color: reliabilityMetrics.severity === 'Critical' ? '#ef4444' : '#6366f1' },
-    { name: 'Remaining', value: Math.max(0, isFinite(reliabilityMetrics.budgetPercentage) ? reliabilityMetrics.budgetPercentage : 0), color: 'var(--kt-bg-hover)' },
+    { name: 'Consumed', value: Math.max(0, isFinite(reliabilityMetrics.budgetPercentage) ? 100 - reliabilityMetrics.budgetPercentage : 100), color: reliabilityMetrics.severity === 'Critical' ? '#e74c3c' : '#f5a623' },
+    { name: 'Remaining', value: Math.max(0, isFinite(reliabilityMetrics.budgetPercentage) ? reliabilityMetrics.budgetPercentage : 0), color: 'var(--kt-panel-inset)' },
   ];
 
-  // Status colors
   const getStatusColor = (status: string) => {
     return getMetricStatusColor(status === 'Healthy' ? 0 : status === 'Warning' ? 80 : 100);
   };
@@ -87,75 +85,71 @@ export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = tr
     backgroundColor: 'var(--kt-bg-card)',
     borderColor: 'var(--kt-border-main)',
     color: 'var(--kt-fg-primary)',
-    borderRadius: '12px',
+    borderRadius: '2px',
     border: '1px solid var(--kt-border-main)',
     fontSize: '12px',
-    fontWeight: '500',
-    padding: '10px 14px',
+    fontWeight: '700',
+    padding: '8px 12px',
+    fontFamily: 'var(--kt-font-mono)',
     boxShadow: 'var(--kt-shadow-lg)'
   };
 
   const stagger = useStaggerAnimation(10, 60);
 
-  // Loading State
   if (isLoading && safeWorkloads.length === 0) {
     return (
-      <div className="space-y-6 animate-fade-in">
-        {/* Hero skeleton */}
-        <div className="bg-bg-card border border-border-main rounded-2xl p-6">
-          <div className="flex flex-col lg:flex-row items-center gap-6">
-            <div className="kt-skeleton w-16 h-16 rounded-2xl shrink-0" />
-            <div className="flex-1 space-y-3 text-center lg:text-left">
+      <div className="space-y-5 animate-fade-in">
+        <div className="kt-panel p-5">
+          <div className="flex flex-col lg:flex-row items-center gap-5">
+            <div className="kt-skeleton w-16 h-16 shrink-0 relative z-10" />
+            <div className="flex-1 space-y-3 text-center lg:text-left relative z-10">
               <div className="kt-skeleton kt-skeleton-text w-40 mx-auto lg:mx-0" />
               <div className="kt-skeleton kt-skeleton-heading w-72 mx-auto lg:mx-0" />
               <div className="kt-skeleton kt-skeleton-text w-56 mx-auto lg:mx-0" />
             </div>
           </div>
         </div>
-        {/* Metric cards skeleton */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
           {[...Array(4)].map((_, i) => (
-            <div key={i} className="bg-bg-card border border-border-main rounded-2xl p-5 space-y-3">
-              <div className="kt-skeleton w-8 h-8 rounded-xl" />
-              <div className="kt-skeleton kt-skeleton-text w-24" />
-              <div className="kt-skeleton kt-skeleton-heading w-16" />
+            <div key={i} className="kt-panel p-4 space-y-3">
+              <div className="kt-skeleton w-8 h-8 relative z-10" />
+              <div className="kt-skeleton kt-skeleton-text w-24 relative z-10" />
+              <div className="kt-skeleton kt-skeleton-heading w-16 relative z-10" />
             </div>
           ))}
         </div>
-        {/* Content skeleton */}
-        <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
-          <div className="lg:col-span-2 bg-bg-card border border-border-main rounded-2xl p-6 space-y-3">
-            <div className="kt-skeleton kt-skeleton-text w-32" />
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-3">
+          <div className="lg:col-span-2 kt-panel p-5 space-y-3">
+            <div className="kt-skeleton kt-skeleton-text w-32 relative z-10" />
             {[...Array(3)].map((_, i) => (
-              <div key={i} className="kt-skeleton w-full h-20 rounded-xl" />
+              <div key={i} className="kt-skeleton w-full h-20 relative z-10" />
             ))}
           </div>
-          <div className="lg:col-span-3 bg-bg-card border border-border-main rounded-2xl p-6 space-y-3">
-            <div className="kt-skeleton kt-skeleton-text w-40" />
-            <div className="kt-skeleton w-full h-48 rounded-xl" />
+          <div className="lg:col-span-3 kt-panel p-5 space-y-3">
+            <div className="kt-skeleton kt-skeleton-text w-40 relative z-10" />
+            <div className="kt-skeleton w-full h-48 relative z-10" />
           </div>
         </div>
       </div>
     );
   }
 
-  // Empty State
   if (safeWorkloads.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[500px] animate-fade-in text-text-primary">
         <div className="relative mb-8">
-          <div className="absolute inset-0 bg-primary-500 rounded-full blur-3xl opacity-10"></div>
-          <div className="p-10 bg-bg-card rounded-full border border-border-main relative z-10 shadow-sm">
+          <div className="absolute inset-0 bg-primary-500 opacity-10 blur-3xl"></div>
+          <div className="p-10 kt-panel relative z-10">
             <Server className="w-12 h-12 text-text-secondary" />
           </div>
         </div>
-        <h2 className="text-2xl font-bold mb-2">No Workloads Found</h2>
-        <p className="text-text-secondary max-w-sm text-center mb-6 text-sm">
+        <h2 className="text-2xl font-display font-bold mb-2 tracking-wider uppercase">No Workloads Found</h2>
+        <p className="text-text-secondary max-w-sm text-center mb-6 text-sm font-mono">
           No active workloads detected in the current cluster. Connect a cluster to begin monitoring.
         </p>
         <button
           onClick={() => onRefresh?.()}
-          className="px-6 py-3 bg-primary-600 hover:bg-primary-500 text-white font-medium text-sm rounded-xl transition-all flex items-center gap-2"
+          className="kt-button kt-button-primary"
           aria-label="Refresh workloads"
         >
           <Activity className="w-4 h-4" /> Refresh
@@ -189,32 +183,31 @@ export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = tr
   };
 
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className="space-y-5 animate-fade-in">
 
-      {/* Hero Section - Simplified */}
+      {/* Hero Alert Panel */}
       {criticalCount > 0 && (
-        <DashboardCard padding="lg" hover={false} className="relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-r from-rose-500/5 to-transparent pointer-events-none"></div>
-          <div className="flex flex-col lg:flex-row items-center gap-6 relative z-10">
+        <DashboardCard padding="lg" hover={false} className="kt-danger-glow">
+          <div className="flex flex-col lg:flex-row items-center gap-5 relative z-10">
             <div className="relative shrink-0">
-              <div className="p-6 bg-rose-500/10 rounded-2xl border border-rose-500/20">
-                <Network className="w-10 h-10 text-rose-500 dark:text-rose-400" />
+              <div className="p-5 bg-danger/10 border border-danger/30">
+                <Network className="w-10 h-10 text-danger" />
               </div>
-              <div className="absolute -top-2 -right-2 w-6 h-6 bg-rose-500 rounded-xl flex items-center justify-center text-[10px] font-bold text-white">
+              <div className="absolute -top-2 -right-2 w-6 h-6 bg-danger flex items-center justify-center text-[10px] font-mono font-bold text-black">
                 {criticalCount}
               </div>
             </div>
 
             <div className="flex-1 text-center lg:text-left">
               <div className="flex flex-wrap justify-center lg:justify-start items-center gap-3 mb-3">
-                <span className="px-3 py-1 rounded-full bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20 text-xs font-medium">
+                <span className="kt-badge kt-badge-danger">
                   Critical Issues Detected
                 </span>
               </div>
-              <h2 className="text-2xl font-bold text-text-primary mb-2">
+              <h2 className="text-2xl font-display font-bold text-text-primary mb-2 tracking-wider uppercase">
                 {criticalCount} workload{criticalCount > 1 ? 's' : ''} require immediate attention
               </h2>
-              <p className="text-text-secondary text-sm max-w-xl">
+              <p className="text-text-secondary text-sm max-w-xl font-mono">
                 Review the active incidents below and run AI triage to identify root causes.
               </p>
             </div>
@@ -222,10 +215,10 @@ export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = tr
             <div className="shrink-0">
               <button
                 onClick={() => onTriageRequest?.(incidents[0]?.id, 'Resource Constraints')}
-                className="bg-primary-600 text-white hover:bg-primary-500 px-6 py-3 rounded-xl text-sm font-medium transition-all flex items-center gap-2 shadow-sm"
+                className="kt-button kt-button-primary"
                 aria-label="Run AI triage on first incident"
               >
-                <Sparkles className="w-4 h-4 text-white" />
+                <Sparkles className="w-4 h-4" />
                 Run AI Triage
                 <ArrowRight className="w-4 h-4" />
               </button>
@@ -235,10 +228,10 @@ export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = tr
       )}
 
       {/* Metrics Grid */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         <MetricCard
           icon={DollarSign}
-          iconColor="text-primary-500 dark:text-primary-400"
+          iconColor="text-primary-500"
           label="Monthly Cost"
           value={`$${totalCost.toLocaleString()}`}
           trend="+4.2%"
@@ -246,15 +239,15 @@ export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = tr
         />
         <MetricCard
           icon={Activity}
-          iconColor="text-emerald-600 dark:text-emerald-400"
+          iconColor="text-success"
           label="Health Score"
-          value={criticalCount === 0 ? 'Healthy' : 'Degraded'}
+          value={criticalCount === 0 ? 'HEALTHY' : 'DEGRADED'}
           trendLabel={`${Math.round((1 - (criticalCount / (safeWorkloads.length || 1))) * 100)}%`}
           delay={stagger(1).animationDelay}
         />
         <MetricCard
           icon={TrendingDown}
-          iconColor="text-primary-600 dark:text-primary-400"
+          iconColor="text-primary-500"
           label="Cost Savings"
           value={`$${Math.round(potentialSavings).toLocaleString()}`}
           trendLabel="Potential"
@@ -262,48 +255,43 @@ export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = tr
         />
         <MetricCard
           icon={Box}
-          iconColor="text-cyan-600 dark:text-cyan-400"
+          iconColor="text-info"
           label="Workloads"
-          value="Active"
+          value="ACTIVE"
           trendLabel={`${safeWorkloads.length}`}
           delay={stagger(3).animationDelay}
         />
       </div>
 
       {/* Main Content Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
 
-        {/* Left Column - Incidents & Status */}
-        <div className="lg:col-span-2 flex flex-col gap-5">
-          {/* Active Incidents */}
-          <DashboardCard padding="lg" className="flex flex-col flex-1">
-            <h3 className="text-sm font-semibold text-text-primary mb-4 flex items-center gap-2">
-              <div className="w-1.5 h-1.5 rounded-full bg-rose-500"></div>
-              Active Incidents
-            </h3>
-            <div className="space-y-3 overflow-y-auto flex-1 min-h-0 pr-2 custom-scrollbar">
+        {/* Left Column */}
+        <div className="lg:col-span-2 flex flex-col gap-4">
+          <DashboardCard padding="lg" title="Active Incidents" className="flex flex-col flex-1 min-h-[360px]">
+            <div className="space-y-2 overflow-y-auto flex-1 min-h-0 pr-1 custom-scrollbar relative z-10">
               {incidents.length > 0 ? (
                 incidents.slice(0, 5).map((w, idx) => (
                   <div
                     key={w.id}
-                    className="p-4 rounded-2xl border border-transparent bg-bg-hover/30 hover:bg-bg-hover hover:border-primary-500/10 hover:shadow-sm transition-all cursor-pointer group focus-visible:ring-2 focus-visible:ring-primary-500/50 focus-visible:border-primary-500/20 outline-none"
+                    className="p-3 border border-border-main bg-bg-main hover:border-primary-500/30 hover:bg-bg-hover transition-all cursor-pointer group focus-visible:ring-2 focus-visible:ring-primary-500/50 outline-none animate-slide-up"
+                    style={{ animationDelay: `${idx * 60}ms` }}
                     onClick={() => onTriageRequest?.(w.id, 'Resource Constraints')}
                     onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onTriageRequest?.(w.id, 'Resource Constraints'); } }}
                     tabIndex={0}
                     role="button"
                     aria-label={`Investigate ${w.name} incident`}
-                    style={{ animationDelay: `${idx * 50}ms` }}
                   >
                     <div className="flex justify-between items-start gap-2 mb-2">
                       <div className="flex items-center gap-2 min-w-0">
                         <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${getStatusColor(w.status)}`} />
-                        <span className="text-sm font-semibold text-text-primary truncate">{w.name}</span>
+                        <span className="text-sm font-mono font-bold text-text-primary truncate uppercase tracking-wide">{w.name}</span>
                       </div>
                       <StatusBadge status={w.status} />
                     </div>
-                    <p className="text-xs text-text-secondary mb-3">{getIncidentSummary(w)}</p>
+                    <p className="text-xs text-text-secondary mb-3 font-mono">{getIncidentSummary(w)}</p>
                     <div className="flex items-center justify-between">
-                      <span className="text-xs text-primary-600 dark:text-primary-400 flex items-center gap-1.5 group-hover:text-primary-500">
+                      <span className="text-xs text-primary-500 flex items-center gap-1.5 group-hover:text-primary-400 font-mono uppercase tracking-wider">
                         <Sparkles className="w-3.5 h-3.5" />
                         Investigate with AI
                       </span>
@@ -313,25 +301,20 @@ export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = tr
                 ))
               ) : (
                 <div className="p-8 text-center flex flex-col items-center">
-                  <div className="p-3 bg-emerald-500/10 rounded-full mb-3">
-                    <HeartPulse className="w-8 h-8 text-emerald-500" />
+                  <div className="p-3 bg-success/10 border border-success/30 mb-3">
+                    <HeartPulse className="w-8 h-8 text-success" />
                   </div>
-                  <p className="text-xs font-medium text-text-tertiary">All services nominal</p>
+                  <p className="text-xs font-sans font-semibold text-text-tertiary tracking-wider uppercase">All services nominal</p>
                 </div>
               )}
             </div>
           </DashboardCard>
 
-          {/* Status Distribution */}
-          <DashboardCard padding="lg">
-            <h3 className="text-sm font-semibold text-text-primary mb-4 flex items-center gap-2">
-              <Activity className="w-4 h-4 text-primary-500 dark:text-primary-400" />
-              Status Distribution
-            </h3>
-            <div className="h-44 w-full relative">
+          <DashboardCard padding="lg" title="Status Distribution">
+            <div className="h-44 w-full relative z-10">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
-                  <Pie data={statusData} cx="50%" cy="50%" innerRadius={55} outerRadius={75} paddingAngle={4} dataKey="value" stroke="none">
+                  <Pie data={statusData} cx="50%" cy="50%" innerRadius={55} outerRadius={75} paddingAngle={3} dataKey="value" stroke="none">
                     {statusData.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={entry.color} />
                     ))}
@@ -343,21 +326,21 @@ export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = tr
                 </PieChart>
               </ResponsiveContainer>
               <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                <span className="text-2xl font-bold text-text-primary">{safeWorkloads.length}</span>
-                <span className="text-[10px] text-text-tertiary">Total</span>
+                <span className="text-2xl font-mono font-bold text-text-primary">{safeWorkloads.length}</span>
+                <span className="text-[10px] text-text-tertiary font-sans font-semibold tracking-wider uppercase">Total</span>
               </div>
             </div>
-            <div className="grid grid-cols-3 gap-2 mt-3">
+            <div className="grid grid-cols-3 gap-2 mt-3 relative z-10">
               {statusData.map((item) => (
                 <div
                   key={item.name}
-                  className="flex flex-col items-center gap-1 p-2 rounded-2xl bg-bg-hover/50 border border-transparent hover:border-primary-500/10 hover:shadow-sm transition-all cursor-default"
+                  className="flex flex-col items-center gap-1 p-2 border border-border-main bg-bg-main hover:border-primary-500/20 transition-all cursor-default"
                 >
                   <div className="flex items-center gap-1.5">
                     <div className="w-2 h-2 rounded-full" style={{ backgroundColor: item.color }} />
-                    <span className="text-[10px] font-medium text-text-secondary">{item.name}</span>
+                    <span className="text-[10px] font-sans font-semibold text-text-secondary tracking-wider uppercase">{item.name}</span>
                   </div>
-                  <span className="text-lg font-bold" style={{ color: item.color }}>{item.value}</span>
+                  <span className="text-lg font-mono font-bold" style={{ color: item.color }}>{item.value}</span>
                 </div>
               ))}
             </div>
@@ -366,52 +349,44 @@ export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = tr
 
         {/* Right Column - Resource Saturation */}
         <div className="lg:col-span-3">
-          <DashboardCard padding="lg" className="flex flex-col h-full">
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
-              <h3 className="text-sm font-semibold text-text-primary flex items-center gap-2">
-                <Zap className="w-4 h-4 text-primary-500 dark:text-primary-400" />
-                Resource Saturation
-              </h3>
+          <DashboardCard padding="lg" title="Resource Saturation" className="flex flex-col h-full min-h-[360px]">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 mb-4 relative z-10">
               <div className="flex flex-wrap items-center gap-2">
-                {/* Timeframe Selector */}
-                <div className="flex flex-wrap p-1 bg-bg-hover/50 rounded-lg border border-border-main">
-                  {(['5m', '15m', '30m', '1h'] as const).map((win) => (
-                    <button
-                      key={win}
-                      onClick={() => setMetricsWindow?.(win)}
-                      className={`px-2.5 py-1 rounded-md text-xs font-medium transition-all ${metricsWindow === win
-                        ? 'bg-primary-500/10 text-primary-600 dark:text-primary-400'
-                        : 'text-text-secondary hover:text-text-primary'
-                        }`}
-                      aria-label={`Set metrics window to ${win}`}
-                      aria-pressed={metricsWindow === win}
-                    >
-                      {win}
-                    </button>
-                  ))}
-                </div>
-                {/* Resource Tab Selector */}
-                <div className="flex flex-wrap p-1 bg-bg-hover/50 rounded-lg border border-border-main">
-                  {(['CPU', 'Memory', 'Ephemeral Storage', 'GPU', 'Network'] as const).map((type) => (
-                    <button
-                      key={type}
-                      onClick={() => setSaturationTab(type)}
-                      className={`px-2.5 py-1 rounded-md text-xs font-medium transition-all ${saturationTab === type
-                        ? 'bg-primary-500/10 text-primary-600 dark:text-primary-400'
-                        : 'text-text-secondary hover:text-text-primary'
-                        }`}
-                      aria-label={`View ${type} saturation`}
-                      aria-pressed={saturationTab === type}
-                    >
-                      {type}
-                    </button>
-                  ))}
-                </div>
+                {(['5m', '15m', '30m', '1h'] as const).map((win) => (
+                  <button
+                    key={win}
+                    onClick={() => setMetricsWindow?.(win)}
+                    className={`px-2.5 py-1 text-[10px] font-mono font-bold tracking-wider uppercase border transition-all ${metricsWindow === win
+                      ? 'bg-primary-500/10 border-primary-500 text-primary-500'
+                      : 'border-border-main text-text-secondary hover:text-text-primary hover:border-text-tertiary'
+                      }`}
+                    aria-label={`Set metrics window to ${win}`}
+                    aria-pressed={metricsWindow === win}
+                  >
+                    {win}
+                  </button>
+                ))}
+              </div>
+              <div className="flex flex-wrap items-center gap-2">
+                {(['CPU', 'Memory', 'Ephemeral Storage', 'GPU', 'Network'] as const).map((type) => (
+                  <button
+                    key={type}
+                    onClick={() => setSaturationTab(type)}
+                    className={`px-2.5 py-1 text-[10px] font-mono font-bold tracking-wider uppercase border transition-all ${saturationTab === type
+                      ? 'bg-primary-500/10 border-primary-500 text-primary-500'
+                      : 'border-border-main text-text-secondary hover:text-text-primary hover:border-text-tertiary'
+                      }`}
+                    aria-label={`View ${type} saturation`}
+                    aria-pressed={saturationTab === type}
+                  >
+                    {type}
+                  </button>
+                ))}
               </div>
             </div>
 
-            <div className="flex-1 min-h-0 overflow-y-auto pr-2 custom-scrollbar">
-              <div className="space-y-3">
+            <div className="flex-1 min-h-0 overflow-y-auto pr-1 custom-scrollbar relative z-10">
+              <div className="space-y-2">
                 {workloads
                   .map((w) => {
                     const metrics = w.metrics || {} as any;
@@ -450,47 +425,46 @@ export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = tr
                   .map((item, idx) => (
                     <div
                       key={idx}
-                      className="flex items-center gap-3 p-3 rounded-2xl hover:bg-bg-hover transition-colors cursor-pointer group focus-visible:ring-2 focus-visible:ring-primary-500/50 focus-visible:outline-none"
+                      className="flex items-center gap-3 p-3 border border-border-main bg-bg-main hover:border-primary-500/30 hover:bg-bg-hover transition-all cursor-pointer group focus-visible:ring-2 focus-visible:ring-primary-500/50 focus-visible:outline-none"
                       onClick={() => onTriageRequest?.(item.name, 'General Health')}
                       onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onTriageRequest?.(item.name, 'General Health'); } }}
                       tabIndex={0}
                       role="button"
                       aria-label={`View details for ${item.name}`}
                     >
-                      {/* Rank Badge */}
                       <div className={`
-                        w-6 h-6 shrink-0 rounded-lg flex items-center justify-center text-[10px] font-bold
-                        ${idx === 0 ? 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20' :
-                          idx === 1 ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20' :
-                          idx === 2 ? 'bg-primary-500/10 text-primary-600 dark:text-primary-400 border border-primary-500/20' :
-                          'bg-bg-hover text-text-tertiary border border-border-main'}
+                        w-6 h-6 shrink-0 flex items-center justify-center text-[10px] font-mono font-bold border
+                        ${idx === 0 ? 'bg-danger/10 text-danger border-danger/30' :
+                          idx === 1 ? 'bg-warning/10 text-warning border-warning/30' :
+                          idx === 2 ? 'bg-primary-500/10 text-primary-500 border-primary-500/30' :
+                          'bg-bg-hover text-text-tertiary border-border-main'}
                       `}>
                         {idx + 1}
                       </div>
 
                       <div className="w-28 shrink-0 min-w-0">
-                        <h4 className="text-sm font-medium text-text-primary truncate" title={item.name}>{item.name}</h4>
+                        <h4 className="text-sm font-mono font-bold text-text-primary truncate uppercase tracking-wide" title={item.name}>{item.name}</h4>
                         <div className="flex items-center gap-1.5 mt-1">
                           <div className={`w-1.5 h-1.5 rounded-full ${getStatusColor(item.status)}`} />
-                          <span className="text-[10px] text-text-tertiary">{item.status}</span>
+                          <span className="text-[10px] text-text-tertiary font-mono uppercase tracking-wider">{item.status}</span>
                         </div>
                       </div>
 
                       <div className="flex-1 flex flex-col justify-center">
                         <div className="flex justify-between items-center mb-1.5">
-                          <span className="text-[10px] text-text-tertiary">{saturationTab}</span>
-                          <span className={`text-xs font-bold ${item.isCritical ? 'text-rose-500' : item.isWarning ? 'text-amber-500' : 'text-text-secondary'}`}>
+                          <span className="text-[10px] text-text-tertiary font-sans font-semibold tracking-wider uppercase">{saturationTab}</span>
+                          <span className={`text-xs font-mono font-bold ${item.isCritical ? 'text-danger' : item.isWarning ? 'text-warning' : 'text-text-secondary'}`}>
                             {item.saturation}%
                           </span>
                         </div>
-                        <div className="h-2 w-full bg-bg-hover/50 rounded-full overflow-hidden">
+                        <div className="h-2 w-full bg-bg-hover/50 rounded-sm overflow-hidden border border-border-main">
                           <div
-                            className={`h-full rounded-full transition-all duration-500 ${
+                            className={`h-full rounded-sm transition-all duration-500 ${
                               item.isCritical
-                                ? 'bg-gradient-to-r from-rose-600 to-rose-400'
+                                ? 'bg-danger shadow-[0_0_8px_#e74c3c]'
                                 : item.isWarning
-                                  ? 'bg-gradient-to-r from-amber-600 to-amber-400'
-                                  : 'bg-gradient-to-r from-primary-600 to-primary-400'
+                                  ? 'bg-warning shadow-[0_0_8px_#f5a623]'
+                                  : 'bg-primary-500 shadow-[0_0_8px_#f5a623]'
                             }`}
                             style={{ width: `${Math.min(100, item.saturation)}%` }}
                           />
@@ -498,10 +472,10 @@ export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = tr
                       </div>
 
                       <div className="w-24 shrink-0 text-right">
-                        <div className="text-xs font-mono font-medium text-text-secondary">
+                        <div className="text-xs font-mono font-bold text-text-secondary">
                           {item.used.toFixed(1)}{item.unit}
                         </div>
-                        <div className="text-[10px] text-text-tertiary">
+                        <div className="text-[10px] text-text-tertiary font-mono">
                           / {item.base.toFixed(0)}{item.unit}
                         </div>
                       </div>
@@ -509,7 +483,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = tr
                   ))}
                 {workloads.length > 10 && (
                   <div className="pt-2 pb-1 text-center">
-                    <span className="text-[11px] text-text-tertiary">
+                    <span className="text-[11px] text-text-tertiary font-mono uppercase tracking-wider">
                       Showing top 10 of {workloads.length} workloads
                     </span>
                   </div>
@@ -521,26 +495,10 @@ export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = tr
       </div>
 
       {/* Error Budget Section */}
-      <DashboardCard hover={false} className="overflow-hidden shadow-sm">
-        <div className="p-5 border-b border-border-main flex flex-col md:flex-row justify-between items-center gap-4 bg-bg-hover/30">
-          <div className="flex items-center gap-4">
-            <div className="p-3 bg-primary-500/10 rounded-xl text-primary-600 dark:text-primary-400">
-              <ShieldAlert className="w-6 h-6" />
-            </div>
-            <div>
-              <h3 className="text-lg font-bold text-text-primary">System Resilience</h3>
-              <p className="text-xs text-text-secondary">30-Day Error Budget</p>
-            </div>
-          </div>
-          <div className="text-right">
-            <p className="text-xs text-text-tertiary mb-1">Operational SLO</p>
-            <p className="text-2xl font-bold text-primary-500 dark:text-primary-400 font-mono">{reliabilityMetrics.slo}%</p>
-          </div>
-        </div>
-
-        <div className="p-5 grid grid-cols-1 lg:grid-cols-3 gap-5">
+      <DashboardCard hover={false} title="System Resilience" className="overflow-hidden">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 relative z-10">
           {/* Budget Gauge */}
-          <div className="flex flex-col items-center justify-center">
+          <div className="flex flex-col items-center justify-center p-4 border border-border-main bg-bg-main">
             <div className="relative w-48 h-48">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
@@ -562,54 +520,63 @@ export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = tr
                 </PieChart>
               </ResponsiveContainer>
               <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
-                <span className="text-[10px] text-text-tertiary mb-1">Budget</span>
-                <span className={`text-3xl font-bold ${reliabilityMetrics.severity === 'Critical' ? 'text-rose-500' : 'text-text-primary'}`}>
+                <span className="text-[10px] text-text-tertiary font-sans font-semibold tracking-wider uppercase mb-1">Budget</span>
+                <span className={`text-3xl font-mono font-bold ${reliabilityMetrics.severity === 'Critical' ? 'text-danger' : 'text-text-primary'}`}>
                   {reliabilityMetrics.budgetPercentage.toFixed(1)}%
                 </span>
-                <span className="text-[10px] text-text-tertiary">Remaining</span>
+                <span className="text-[10px] text-text-tertiary font-sans font-semibold tracking-wider uppercase">Remaining</span>
               </div>
             </div>
           </div>
 
           {/* Metrics */}
-          <div className="flex flex-col justify-center space-y-4">
-            <div className="bg-bg-hover/30 p-4 rounded-xl border border-border-main">
+          <div className="flex flex-col justify-center gap-3 p-4 border border-border-main bg-bg-main">
+            <div className="p-4 border border-border-main bg-bg-card">
               <div className="flex justify-between items-center mb-2">
                 <div className="flex items-center gap-2">
-                  <ShieldCheck className="w-4 h-4 text-emerald-500 dark:text-emerald-400" />
-                  <span className="text-xs text-text-secondary">Risk Factor</span>
+                  <ShieldCheck className="w-4 h-4 text-success" />
+                  <span className="text-[11px] font-sans font-semibold text-text-secondary tracking-wider uppercase">Risk Factor</span>
                 </div>
                 <StatusBadge status={reliabilityMetrics.severity} />
               </div>
-              <div className="text-2xl font-bold text-text-primary">{reliabilityMetrics.burnRate.toFixed(2)}x</div>
-              <p className="text-xs text-text-tertiary">Burn rate vs normal</p>
+              <div className="text-2xl font-mono font-bold text-text-primary">{reliabilityMetrics.burnRate.toFixed(2)}x</div>
+              <p className="text-[10px] text-text-tertiary font-mono uppercase tracking-wider">Burn rate vs normal</p>
             </div>
 
-            <div className="bg-bg-hover/30 p-4 rounded-xl border border-border-main">
+            <div className="p-4 border border-border-main bg-bg-card">
               <div className="flex justify-between items-center mb-2">
                 <div className="flex items-center gap-2">
-                  <Target className="w-4 h-4 text-primary-500 dark:text-primary-400" />
-                  <span className="text-xs text-text-secondary">Exhaustion Forecast</span>
+                  <Target className="w-4 h-4 text-primary-500" />
+                  <span className="text-[11px] font-sans font-semibold text-text-secondary tracking-wider uppercase">Exhaustion Forecast</span>
                 </div>
               </div>
-              <div className="text-2xl font-bold text-text-primary">{reliabilityMetrics.uptimeForecast}</div>
-              <p className="text-xs text-text-tertiary">Time until SLO breach</p>
+              <div className="text-2xl font-mono font-bold text-text-primary">{reliabilityMetrics.uptimeForecast}</div>
+              <p className="text-[10px] text-text-tertiary font-mono uppercase tracking-wider">Time until SLO breach</p>
             </div>
           </div>
 
           {/* Policy Compliance */}
-          <div className="bg-bg-hover/30 p-4 rounded-xl border border-border-main flex flex-col justify-between">
+          <div className="p-4 border border-border-main bg-bg-main flex flex-col justify-between">
             <div>
-              <h4 className="text-sm font-semibold text-text-primary mb-2">Policy Compliance</h4>
-              <p className="text-xs text-text-secondary leading-relaxed">
+              <h4 className="text-sm font-sans font-semibold text-text-primary mb-2 tracking-wider uppercase">Policy Compliance</h4>
+              <p className="text-xs text-text-secondary leading-relaxed font-mono">
                 Current resource distribution is within acceptable parameters. No immediate re-balancing required.
               </p>
             </div>
+            <div className="mt-4">
+              <div className="flex justify-between text-[10px] font-mono uppercase tracking-wider text-text-tertiary mb-1">
+                <span>SLO Target</span>
+                <span className="text-primary-500">{reliabilityMetrics.slo}%</span>
+              </div>
+              <div className="h-1.5 w-full bg-bg-hover border border-border-main rounded-sm overflow-hidden">
+                <div className="h-full bg-primary-500" style={{ width: `${reliabilityMetrics.slo}%` }} />
+              </div>
+            </div>
             <button
               onClick={() => onTriageRequest?.('policy', 'General Health')}
-              className="mt-4 w-full flex items-center justify-between p-3 bg-bg-card rounded-lg border border-border-main hover:border-primary-500/50 transition-all group shadow-sm"
+              className="mt-4 w-full flex items-center justify-between p-3 bg-bg-card border border-border-main hover:border-primary-500/50 transition-all group"
             >
-              <span className="text-xs font-medium text-text-secondary group-hover:text-primary-500">Run Compliance Audit</span>
+              <span className="text-xs font-sans font-semibold text-text-secondary tracking-wider uppercase group-hover:text-primary-500">Run Compliance Audit</span>
               <ArrowRight className="w-4 h-4 text-text-tertiary group-hover:text-primary-500" />
             </button>
           </div>

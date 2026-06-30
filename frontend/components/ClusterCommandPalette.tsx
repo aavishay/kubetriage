@@ -13,9 +13,9 @@ const ProviderIcon = ({ provider, className }: { provider: Cluster['provider']; 
 
 const getStatusColor = (status: string) => {
   switch (status) {
-    case 'Active': return 'bg-emerald-500';
-    case 'Degraded': return 'bg-amber-500';
-    default: return 'bg-red-500';
+    case 'Active': return 'bg-success';
+    case 'Degraded': return 'bg-warning';
+    default: return 'bg-danger';
   }
 };
 
@@ -52,22 +52,22 @@ const ResultItem = memo(function ResultItem({
       data-cluster-index={index}
       onClick={handleClick}
       onMouseEnter={handleMouseEnter}
-      className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all text-left ${
+      className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-sm transition-all text-left ${
         isSelected
-          ? 'bg-primary-500/10 text-primary-600 dark:text-primary-400'
-          : 'hover:bg-bg-hover'
+          ? 'bg-primary-500/10 border border-primary-500/30'
+          : 'hover:bg-bg-hover border border-transparent'
       }`}
     >
-      <div className="p-1.5 rounded-lg bg-bg-hover">
+      <div className="p-1.5 bg-bg-main border border-border-main">
         <ProviderIcon provider={cluster.provider} className="w-4 h-4 shrink-0 text-text-secondary" />
       </div>
       <div className="flex-1 min-w-0">
-        <p className={`text-sm font-semibold truncate ${isSelected ? 'text-primary-500' : 'text-text-primary'}`}>
+        <p className={`text-sm font-mono font-bold truncate uppercase tracking-wide ${isSelected ? 'text-primary-500' : 'text-text-primary'}`}>
           {cluster.displayName || cluster.name}
         </p>
         <div className="flex items-center gap-2 mt-0.5">
           <span className={`w-1.5 h-1.5 rounded-full ${getStatusColor(cluster.status)}`}></span>
-          <p className="text-[10px] text-text-tertiary font-mono uppercase">{cluster.region} :: {cluster.provider}</p>
+          <p className="text-[10px] text-text-tertiary font-mono uppercase tracking-wider">{cluster.provider}</p>
         </div>
       </div>
       {isChecked && <Check className="w-4 h-4 text-primary-500 shrink-0" />}
@@ -87,7 +87,6 @@ export const ClusterCommandPalette: React.FC<ClusterCommandPaletteProps> = ({
   const inputRef = useRef<HTMLInputElement>(null);
   const resultsRef = useRef<HTMLDivElement>(null);
 
-  // Reset state when opening
   useEffect(() => {
     if (isOpen) {
       setQuery('');
@@ -95,7 +94,6 @@ export const ClusterCommandPalette: React.FC<ClusterCommandPaletteProps> = ({
     }
   }, [isOpen]);
 
-  // Focus input when opened
   useEffect(() => {
     if (isOpen) {
       const id = window.setTimeout(() => inputRef.current?.focus(), 50);
@@ -103,7 +101,6 @@ export const ClusterCommandPalette: React.FC<ClusterCommandPaletteProps> = ({
     }
   }, [isOpen]);
 
-  // Close on Escape
   useEffect(() => {
     if (!isOpen) return;
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -126,12 +123,10 @@ export const ClusterCommandPalette: React.FC<ClusterCommandPaletteProps> = ({
     );
   }, [clusters, query]);
 
-  // Clamp selected index when results change
   useEffect(() => {
     setSelectedIndex(prev => Math.max(0, Math.min(prev, Math.max(0, filteredClusters.length - 1))));
   }, [filteredClusters.length]);
 
-  // Scroll selected item into view using data attribute (no ref array churn)
   useEffect(() => {
     if (!isOpen || filteredClusters.length === 0) return;
     const container = resultsRef.current;
@@ -192,18 +187,17 @@ export const ClusterCommandPalette: React.FC<ClusterCommandPaletteProps> = ({
 
   return (
     <div
-      className="fixed inset-0 z-[100] flex items-start justify-center pt-[15vh] bg-black/40 backdrop-blur-sm animate-fade-in"
+      className="fixed inset-0 z-[100] flex items-start justify-center pt-[15vh] bg-black/60 backdrop-blur-sm animate-fade-in"
       onClick={onClose}
       role="dialog"
       aria-modal="true"
       aria-label="Cluster search"
     >
       <div
-        className="w-full max-w-lg bg-bg-card border border-border-main rounded-2xl shadow-2xl overflow-hidden animate-slide-up"
+        className="w-full max-w-lg bg-bg-card border border-border-main rounded-sm shadow-2xl overflow-hidden animate-slide-up"
         onClick={e => e.stopPropagation()}
       >
-        {/* Search Input */}
-        <div className="flex items-center gap-3 px-4 py-3 border-b border-border-main">
+        <div className="flex items-center gap-3 px-4 py-3 border-b border-border-main bg-bg-hover">
           <Search className="w-5 h-5 text-text-tertiary shrink-0" />
           <input
             ref={inputRef}
@@ -212,17 +206,16 @@ export const ClusterCommandPalette: React.FC<ClusterCommandPaletteProps> = ({
             value={query}
             onChange={handleQueryChange}
             onKeyDown={handleKeyDown}
-            className="flex-1 bg-transparent text-text-primary placeholder:text-text-tertiary text-sm outline-none min-w-0"
+            className="flex-1 bg-transparent text-text-primary placeholder:text-text-tertiary text-sm outline-none min-w-0 font-mono"
             autoComplete="off"
             spellCheck={false}
           />
-          <div className="flex items-center gap-1 text-[10px] text-text-tertiary bg-bg-hover px-1.5 py-0.5 rounded border border-border-main shrink-0">
+          <div className="flex items-center gap-1 text-[10px] text-text-tertiary bg-bg-main px-1.5 py-0.5 border border-border-main shrink-0">
             <Command className="w-3 h-3" />
-            <span>K</span>
+            <span className="font-mono">K</span>
           </div>
         </div>
 
-        {/* Results */}
         <div
           ref={resultsRef}
           className="max-h-[320px] overflow-y-auto custom-scrollbar p-1.5"
@@ -230,7 +223,7 @@ export const ClusterCommandPalette: React.FC<ClusterCommandPaletteProps> = ({
           {filteredClusters.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-8 text-text-tertiary">
               <Search className="w-6 h-6 mb-2 opacity-40" />
-              <p className="text-xs">No clusters found</p>
+              <p className="text-xs font-mono uppercase tracking-wider">No clusters found</p>
             </div>
           ) : (
             filteredClusters.map((cluster, idx) => (
@@ -247,11 +240,10 @@ export const ClusterCommandPalette: React.FC<ClusterCommandPaletteProps> = ({
           )}
         </div>
 
-        {/* Footer */}
-        <div className="px-4 py-2 border-t border-border-main bg-bg-hover flex items-center justify-between text-[10px] text-text-tertiary">
+        <div className="px-4 py-2 border-t border-border-main bg-bg-hover flex items-center justify-between text-[10px] text-text-tertiary font-mono uppercase tracking-wider">
           <div className="flex items-center gap-3">
-            <span className="flex items-center gap-1"><span className="bg-bg-card border border-border-main px-1 rounded">↓↑</span> navigate</span>
-            <span className="flex items-center gap-1"><span className="bg-bg-card border border-border-main px-1 rounded">↵</span> select</span>
+            <span className="flex items-center gap-1"><span className="bg-bg-card border border-border-main px-1">↓↑</span> navigate</span>
+            <span className="flex items-center gap-1"><span className="bg-bg-card border border-border-main px-1">↵</span> select</span>
           </div>
           <span>{filteredClusters.length} cluster{filteredClusters.length !== 1 ? 's' : ''}</span>
         </div>

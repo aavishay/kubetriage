@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { LayoutDashboard, AlertCircle, Settings, Box, ChevronLeft, ChevronRight, Sun, Moon, ChevronsUpDown, Check, Server, Plus, X, Globe, Cloud, Bell, BookOpen, Menu, Key, Zap, FileText, RefreshCw, Trash2, Activity, Brain, Database, GitBranch, Shield, TrendingUp } from 'lucide-react';
+import {
+  LayoutDashboard, AlertCircle, Settings, Box, ChevronLeft, ChevronRight, Sun, Moon, ChevronsUpDown, Check, Server, Plus, X, Globe, Cloud, Bell, BookOpen, Menu, Key, Zap, FileText, RefreshCw, Trash2, Activity, Brain, Database, GitBranch, Shield, TrendingUp
+} from 'lucide-react';
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useMonitoring } from '../contexts/MonitoringContext';
 import { Cluster } from '../types';
@@ -29,7 +31,6 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
     selectedCluster,
     selectedClusterIds,
     clusters,
-    setSelectedCluster,
     setSelectedClusterIds,
     unreadReports,
     isWorkloadsLoading,
@@ -52,13 +53,10 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
 
   const clusterMenuRef = useRef<HTMLDivElement>(null);
 
-  // Scroll to top on route change
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [location.pathname]);
 
-  // Keyboard shortcut: '[' toggles sidebar collapse on desktop
-  // CMD+K / Ctrl+K opens cluster search
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === '[' && !e.ctrlKey && !e.metaKey && !e.altKey) {
@@ -73,7 +71,6 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
-  // Measure real API latency via health check
   useEffect(() => {
     const measureLatency = async () => {
       try {
@@ -103,7 +100,6 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Close mobile menu on route change
   useEffect(() => {
     setIsMobileMenuOpen(false);
   }, [location.pathname]);
@@ -133,23 +129,18 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
     switch (status) {
       case 'Active': return 'bg-emerald-500';
       case 'Degraded': return 'bg-amber-500';
-      default: return 'bg-red-500';
+      default: return 'bg-rose-500';
     }
   };
 
-  const getStatusGlow = (status: string) => {
-    switch (status) {
-      case 'Active': return 'shadow-[0_0_8px_rgba(16,185,129,0.5)]';
-      case 'Degraded': return 'shadow-[0_0_8px_rgba(245,158,11,0.5)]';
-      default: return 'shadow-[0_0_8px_rgba(244,63,94,0.5)]';
-    }
+  const formatSelectedLabel = () => {
+    if (selectedClusterIds.length === 0) return 'ALL CLUSTERS';
+    if (selectedClusterIds.length === 1) return selectedCluster?.displayName || selectedCluster?.name || 'SELECT';
+    return `${selectedClusterIds.length} SELECTED`;
   };
 
   return (
-    <div className="flex h-screen bg-bg-main text-text-secondary overflow-hidden flex-col md:flex-row font-sans selection:bg-primary-500/30">
-      {/* Subtle Background Pattern */}
-      <div className="fixed inset-0 pointer-events-none opacity-[0.03] dark:opacity-[0.02] z-0 bg-mesh"></div>
-
+    <div className="flex h-screen bg-bg-main text-text-secondary overflow-hidden flex-col md:flex-row font-sans selection:bg-primary-500/30 kt-scanlines kt-noise">
       <RegisterClusterModal isOpen={isRegisterModalOpen} onClose={() => setIsRegisterModalOpen(false)} />
       <DeleteClusterModal
         isOpen={!!clusterToDelete}
@@ -164,97 +155,96 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
         clusterName={clusterToDelete?.name || ''}
       />
 
-      {/* Mobile Sidebar Overlay */}
       {isMobileMenuOpen && (
         <div
-          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 md:hidden animate-fade-in"
+          className="fixed inset-0 bg-black/80 backdrop-blur-sm z-40 md:hidden animate-fade-in"
           onClick={() => setIsMobileMenuOpen(false)}
           aria-hidden="true"
         />
       )}
 
-      {/* Skip Link for Accessibility */}
       <a
         href="#main-content"
-        className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-[100] focus:px-4 focus:py-2 focus:bg-primary-600 focus:text-white focus:rounded-lg focus:shadow-lg"
+        className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-[100] focus:px-4 focus:py-2 focus:bg-primary-600 focus:text-black focus:rounded-sm focus:shadow-lg"
       >
         Skip to main content
       </a>
 
-      {/* Desktop & Mobile Sidebar */}
+      {/* Sidebar Rack */}
       <aside
         id="main-sidebar"
         aria-label="Main navigation"
         className={`
-        fixed md:static inset-y-0 left-0 z-50 md:z-auto
-        flex flex-col bg-gradient-to-b from-bg-card to-bg-hover border-r border-border-main
-        transition-all duration-300 ease-out
-        shadow-[10px_0_30px_rgba(0,0,0,0.05)] dark:shadow-[10px_0_30px_rgba(0,0,0,0.3)] md:shadow-none
-        ${isMobileMenuOpen ? 'translate-x-0 w-72' : '-translate-x-full md:translate-x-0'}
-        ${isCollapsed ? 'md:w-20' : 'md:w-72'}
-      `}>
-        {/* Logo Section */}
-        <div className={`flex items-center h-20 border-b border-border-main overflow-hidden shrink-0 relative
-          ${isCollapsed ? 'md:justify-center md:px-0' : 'gap-3 px-6'}
+          fixed md:static inset-y-0 left-0 z-50 md:z-auto
+          flex flex-col bg-bg-card border-r border-border-main
+          transition-all duration-300 ease-out
+          shadow-[10px_0_30px_rgba(0,0,0,0.3)]
+          ${isMobileMenuOpen ? 'translate-x-0 w-64' : '-translate-x-full md:translate-x-0'}
+          ${isCollapsed ? 'md:w-18' : 'md:w-64'}
         `}>
-          {/* Subtle glow behind logo */}
-          <div className="absolute top-1/2 left-6 w-8 h-8 bg-primary-500/10 blur-xl rounded-full -translate-y-1/2 pointer-events-none
-            transition-opacity duration-300 ${isCollapsed ? 'md:opacity-100' : 'md:opacity-0'}"></div>
-
-          <div className="shrink-0 p-2 rounded-xl bg-bg-hover ring-1 ring-border-main relative z-10">
+        {/* Logo Header */}
+        <div className={`flex items-center h-16 border-b border-border-main overflow-hidden shrink-0 relative
+          ${isCollapsed ? 'md:justify-center md:px-0' : 'gap-3 px-4'}
+        `}>
+          <div className="shrink-0 p-1.5 border border-border-main bg-bg-main relative z-10">
             <img src={logo} alt="KubeTriage" className="w-7 h-7 object-contain" />
           </div>
 
           {(!isCollapsed || isMobileMenuOpen) && (
             <div className="animate-slide-up">
-              <h1 className="font-display font-black text-text-primary tracking-tight text-lg">
+              <h1 className="font-display font-bold text-text-primary tracking-wider text-lg uppercase">
                 Kube<span className="text-primary-500">Triage</span>
               </h1>
-              <div className="flex items-center gap-1.5 mt-1">
-                <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse-soft"></span>
-                <p className="text-[10px] font-semibold text-text-tertiary">Online</p>
+              <div className="flex items-center gap-1.5 mt-0.5">
+                <span className="kt-led kt-led-success kt-led-pulse" />
+                <p className="text-[10px] font-semibold text-text-tertiary tracking-wider uppercase">Online</p>
               </div>
             </div>
           )}
 
-          <button className="ml-auto md:hidden p-2 text-text-secondary hover:text-text-primary transition-colors rounded-lg hover:bg-bg-hover"
+          <button className="ml-auto md:hidden p-2 text-text-secondary hover:text-text-primary transition-colors rounded-sm hover:bg-bg-hover"
             onClick={() => setIsMobileMenuOpen(false)}>
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 px-3 py-6 space-y-1 overflow-y-auto custom-scrollbar">
+        <nav className="flex-1 px-2 py-4 space-y-0.5 overflow-y-auto custom-scrollbar">
           {navItems.map((item, index) => (
             <NavLink
               key={item.path}
               to={item.path}
               className={({ isActive }) => `
-                flex items-center w-full px-3 py-3 rounded-2xl transition-all duration-200 group relative overflow-hidden focus-visible:ring-2 focus-visible:ring-primary-500/50 outline-none
+                flex items-center w-full px-3 py-2.5 rounded-sm transition-all duration-200 group relative overflow-hidden focus-visible:ring-2 focus-visible:ring-primary-500/50 outline-none
+                border-l-2
                 ${isActive
-                  ? 'bg-primary-500/8 text-primary-600 border border-transparent'
-                  : 'text-text-secondary hover:text-text-primary hover:bg-bg-hover border border-transparent'}
+                  ? 'bg-primary-500/8 border-primary-500 text-primary-500'
+                  : 'border-transparent text-text-secondary hover:text-text-primary hover:bg-bg-hover'}
               `}
               title={isCollapsed ? item.label : undefined}
-              style={{ animationDelay: `${index * 50}ms` }}
+              style={{ animationDelay: `${index * 40}ms` }}
             >
               {({ isActive }) => (
                 <>
                   <item.icon className={`
-                    w-5 h-5 shrink-0 transition-all duration-200 relative z-10
+                    w-[18px] h-[18px] shrink-0 transition-all duration-200 relative z-10
                     ${isActive
-                      ? 'text-primary-500 drop-shadow-[0_0_4px_rgba(220,95,58,0.3)]'
+                      ? 'text-primary-500 drop-shadow-[0_0_6px_rgba(245,166,35,0.5)]'
                       : 'text-text-tertiary group-hover:text-text-primary'}
                     ${isCollapsed && !isMobileMenuOpen ? 'mx-auto' : 'mr-3'}
                   `} />
 
                   {(!isCollapsed || isMobileMenuOpen) && (
                     <span className={`
-                      font-medium text-sm relative z-10 transition-colors
-                      ${isActive ? 'text-text-primary' : 'text-text-secondary group-hover:text-text-primary'}
+                      font-sans font-medium text-xs tracking-wider uppercase relative z-10 transition-colors
+                      ${isActive ? 'text-primary-500' : 'text-text-secondary group-hover:text-text-primary'}
                     `}>
                       {item.label}
                     </span>
+                  )}
+
+                  {isActive && (
+                    <span className="absolute right-2 top-1/2 -translate-y-1/2 kt-led kt-led-primary" style={{ background: '#f5a623', boxShadow: '0 0 6px #f5a623' }} />
                   )}
                 </>
               )}
@@ -263,17 +253,17 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
         </nav>
 
         {/* Collapse Toggle */}
-        <div className="p-4 hidden md:flex justify-center border-t border-border-main">
+        <div className="p-3 hidden md:flex justify-center border-t border-border-main">
           <button
             onClick={() => setIsCollapsed(!isCollapsed)}
-            className="w-10 h-10 rounded-full bg-bg-hover border border-border-main hover:bg-bg-card hover:border-primary-500/20 text-text-tertiary hover:text-text-primary transition-all duration-200 group focus-visible:ring-2 focus-visible:ring-primary-500/50 outline-none flex items-center justify-center"
+            className="w-8 h-8 rounded-sm bg-bg-hover border border-border-main hover:border-primary-500/30 text-text-tertiary hover:text-primary-500 transition-all duration-200 group focus-visible:ring-2 focus-visible:ring-primary-500/50 outline-none flex items-center justify-center"
             title={isCollapsed ? 'Expand sidebar (press [)' : 'Collapse sidebar (press [)'}
             aria-label={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
           >
             {isCollapsed ? (
-              <ChevronRight className="w-5 h-5 group-hover:translate-x-0.5 transition-transform" />
+              <ChevronRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
             ) : (
-              <ChevronLeft className="w-5 h-5 group-hover:-translate-x-0.5 transition-transform" />
+              <ChevronLeft className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" />
             )}
           </button>
         </div>
@@ -282,12 +272,11 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col overflow-hidden relative">
 
-        {/* Header */}
-        <header className="h-16 border-b border-border-main bg-bg-main/50 backdrop-blur-xl flex items-center justify-between px-4 md:px-6 z-30 shrink-0">
+        {/* Header Status Strip */}
+        <header className="h-16 border-b border-border-main bg-bg-card/95 backdrop-blur-sm flex items-center justify-between px-4 md:px-5 z-30 shrink-0 kt-panel">
           <div className="flex items-center gap-3 min-w-0 flex-1">
-            {/* Mobile Toggle */}
             <button
-              className="p-2 md:hidden text-text-secondary hover:text-text-primary transition-colors rounded-lg hover:bg-bg-hover focus-visible:ring-2 focus-visible:ring-primary-500/50 outline-none"
+              className="p-2 md:hidden text-text-secondary hover:text-text-primary transition-colors rounded-sm hover:bg-bg-hover focus-visible:ring-2 focus-visible:ring-primary-500/50 outline-none"
               onClick={() => setIsMobileMenuOpen(true)}
               aria-label="Open navigation menu"
               aria-expanded={isMobileMenuOpen}
@@ -303,79 +292,58 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
                   setDraftClusterIds(selectedClusterIds);
                   setIsClusterMenuOpen(o => !o);
                 }}
-                className="flex items-center gap-2.5 px-3 py-2 bg-bg-card/80 border border-border-main rounded-xl hover:border-primary-500/30 hover:bg-bg-hover/50 transition-all duration-200 group min-w-0 w-full sm:w-auto sm:min-w-[200px] sm:max-w-[340px] focus-visible:ring-2 focus-visible:ring-primary-500/50 outline-none"
+                className="flex items-center gap-2 px-3 py-1.5 bg-bg-main border border-border-main rounded-sm hover:border-primary-500/50 hover:bg-bg-hover transition-all duration-200 group min-w-0 w-full sm:w-auto sm:min-w-[200px] sm:max-w-[320px] focus-visible:ring-2 focus-visible:ring-primary-500/50 outline-none"
                 aria-expanded={isClusterMenuOpen}
                 aria-controls="cluster-dropdown"
                 aria-label="Select target clusters"
               >
-                {selectedCluster ? (
-                  <>
-                    <div className="p-1.5 rounded-lg bg-bg-hover group-hover:bg-primary-500/10 transition-colors shrink-0">
-                      <ProviderIcon provider={selectedCluster.provider} className="w-4 h-4 text-text-secondary group-hover:text-primary-500" />
-                    </div>
-                    <div className="hidden sm:block text-left flex-1 min-w-0">
-                      <div className="text-[10px] font-semibold text-text-tertiary group-hover:text-primary-500 transition-colors">
-                        Target cluster
-                      </div>
-                      <div className="text-sm font-semibold text-text-primary truncate">
-                        {selectedCluster.displayName || selectedCluster.name}
-                      </div>
-                    </div>
-                    {selectedClusterIds.length > 1 && (
-                      <span className="px-1.5 py-0.5 rounded-md bg-primary-500/20 text-primary-400 text-[10px] font-bold shrink-0">
-                        +{selectedClusterIds.length - 1}
-                      </span>
-                    )}
-                    <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${getStatusColor(selectedCluster?.status || 'Active')} ${getStatusGlow(selectedCluster?.status || 'Active')}`} />
-                  </>
-                ) : (
-                  <>
-                    <Cloud className="w-5 h-5 text-text-secondary" />
-                    <div className="hidden sm:block text-left">
-                      <div className="text-[10px] font-semibold text-text-tertiary">Target cluster</div>
-                      <div className="text-xs font-medium text-text-secondary">Select cluster...</div>
-                    </div>
-                  </>
-                )}
+                <span className="kt-led shrink-0" style={{ background: selectedClusterIds.length > 0 ? '#f5a623' : '#4a4d55', boxShadow: selectedClusterIds.length > 0 ? '0 0 6px #f5a623' : 'none' }} />
+                <div className="hidden sm:block text-left flex-1 min-w-0">
+                  <div className="text-[10px] font-semibold text-text-tertiary tracking-wider uppercase group-hover:text-primary-500 transition-colors">
+                    Target Cluster
+                  </div>
+                  <div className="text-sm font-mono font-bold text-text-primary truncate uppercase tracking-wide">
+                    {formatSelectedLabel()}
+                  </div>
+                </div>
                 <ChevronsUpDown className="w-4 h-4 text-text-tertiary ml-auto group-hover:text-primary-500 transition-colors" />
               </button>
 
-              {/* Cluster Dropdown */}
               {isClusterMenuOpen && (
                 <div
                   id="cluster-dropdown"
-                  className="absolute top-full left-0 mt-2 w-[calc(100vw-2rem)] max-w-xs sm:w-80 bg-bg-card border border-border-main rounded-2xl shadow-2xl py-2 animate-slide-up z-50 overflow-hidden"
+                  className="absolute top-full left-0 mt-2 w-[calc(100vw-2rem)] max-w-xs sm:w-80 bg-bg-card border border-border-main rounded-sm shadow-2xl py-1 animate-slide-up z-50 overflow-hidden"
                 >
-                  <div className="flex items-center justify-between px-4 py-3 border-b border-border-main bg-bg-hover">
-                    <p className="text-[11px] font-semibold text-text-tertiary flex items-center gap-2">
+                  <div className="flex items-center justify-between px-3 py-2 border-b border-border-main bg-bg-hover">
+                    <p className="text-[10px] font-semibold text-text-tertiary tracking-wider uppercase flex items-center gap-2">
                       <Server className="w-3.5 h-3.5" /> Control Plane Fleet
                     </p>
                     <button
                       onClick={() => setDraftClusterIds([])}
-                      className="text-[10px] text-primary-400 hover:text-primary-300 font-semibold"
+                      className="text-[10px] text-primary-400 hover:text-primary-300 font-semibold tracking-wider uppercase"
                     >
                       Reset
                     </button>
                   </div>
-                  <div className="max-h-[260px] overflow-y-auto custom-scrollbar p-1.5 space-y-0.5">
-                    <label className="flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-bg-hover cursor-pointer">
+                  <div className="max-h-[240px] overflow-y-auto custom-scrollbar p-1 space-y-0.5">
+                    <label className="flex items-center gap-3 px-3 py-2 rounded-sm hover:bg-bg-hover cursor-pointer">
                       <input
                         type="checkbox"
-                        className="w-4 h-4 accent-primary-500 rounded"
+                        className="w-4 h-4 accent-primary-500 rounded-sm"
                         checked={draftClusterIds.length === 0}
                         onChange={() => setDraftClusterIds([])}
                       />
-                      <span className="text-sm font-semibold text-text-primary">All clusters</span>
+                      <span className="text-sm font-sans font-semibold tracking-wide uppercase text-text-primary">All clusters</span>
                     </label>
                     {clusters.map(cluster => (
                       <div
                         key={cluster.id}
-                        className="flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-bg-hover transition-colors group/item"
+                        className="flex items-center gap-2 px-3 py-2 rounded-sm hover:bg-bg-hover transition-colors group/item"
                       >
                         <label className="flex items-center gap-3 flex-1 min-w-0 cursor-pointer">
                           <input
                             type="checkbox"
-                            className="w-4 h-4 accent-primary-500 rounded"
+                            className="w-4 h-4 accent-primary-500 rounded-sm"
                             checked={draftClusterIds.includes(cluster.id)}
                             onChange={() => {
                               setDraftClusterIds(prev =>
@@ -385,24 +353,24 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
                               );
                             }}
                           />
-                          <div className="p-1.5 rounded-lg bg-bg-hover text-text-secondary group-hover/item:text-text-primary transition-colors">
+                          <div className="p-1 border border-border-main bg-bg-main text-text-secondary group-hover/item:text-text-primary transition-colors">
                             <ProviderIcon provider={cluster.provider} className="w-4 h-4 shrink-0" />
                           </div>
 
                           <div className="flex-1 min-w-0">
-                            <p className={`text-sm font-semibold truncate ${draftClusterIds.includes(cluster.id) ? 'text-primary-500' : 'text-text-secondary group-hover/item:text-text-primary'}`}>
+                            <p className={`text-sm font-mono font-bold truncate uppercase tracking-wide ${draftClusterIds.includes(cluster.id) ? 'text-primary-500' : 'text-text-secondary group-hover/item:text-text-primary'}`}>
                               {cluster.displayName || cluster.name}
                             </p>
                             <div className="flex items-center gap-2 mt-0.5">
-                              <span className={`w-1.5 h-1.5 rounded-full ${getStatusColor(cluster.status)} ${getStatusGlow(cluster.status)}`}></span>
-                              <p className="text-[10px] text-text-tertiary font-mono uppercase">{cluster.region} :: {cluster.provider}</p>
+                              <span className={`w-1.5 h-1.5 rounded-full ${getStatusColor(cluster.status)}`}></span>
+                              <p className="text-[10px] text-text-tertiary font-mono uppercase tracking-wider">{cluster.provider}</p>
                             </div>
                           </div>
                         </label>
 
                         <button
                           onClick={() => setClusterToDelete(cluster)}
-                          className="p-1.5 hover:bg-danger-light rounded-lg transition-colors opacity-0 group-hover/item:opacity-100"
+                          className="p-1.5 hover:bg-danger-light rounded-sm transition-colors opacity-0 group-hover/item:opacity-100"
                           title="Remove Cluster"
                         >
                           <Trash2 className="w-3.5 h-3.5 text-text-tertiary hover:text-danger transition-colors" />
@@ -410,7 +378,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
                       </div>
                     ))}
                   </div>
-                  <div className="flex items-center gap-2 px-3 py-2 border-t border-border-main">
+                  <div className="flex items-center gap-2 px-2 py-2 border-t border-border-main">
                     <button
                       onClick={() => {
                         setSelectedClusterIds(draftClusterIds);
@@ -430,11 +398,11 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
                       Cancel
                     </button>
                   </div>
-                  <div className="h-px bg-border-main mx-3 my-1.5" />
+                  <div className="h-px bg-border-main mx-2 my-1" />
                   <div className="p-1.5">
                     <button
                       onClick={() => { setIsRegisterModalOpen(true); setIsClusterMenuOpen(false); }}
-                      className="w-full flex items-center justify-center gap-2 px-4 py-2.5 text-xs font-semibold text-white bg-primary-600 hover:bg-primary-500 rounded-xl transition-all"
+                      className="w-full flex items-center justify-center gap-2 px-4 py-2 text-xs font-sans font-semibold tracking-wider uppercase text-black bg-primary-500 hover:bg-primary-400 rounded-sm transition-all"
                     >
                       <Plus className="w-4 h-4" /> Provision New Cluster
                     </button>
@@ -442,70 +410,64 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
                 </div>
               )}
             </div>
-
           </div>
 
           {/* Right side: System status + Actions */}
-          <div className="flex items-center gap-3 shrink-0">
-            {/* System Status - Desktop */}
-            <div className="hidden lg:flex items-center gap-4 px-4 py-2 bg-bg-card/50 rounded-xl border border-border-main">
-              <div className="flex items-center gap-2">
-                <span className="text-[10px] font-semibold text-text-secondary">Latency</span>
-                <span className="text-xs font-mono text-emerald-500 tabular-nums dark:text-emerald-400">{apiLatency !== null ? `${apiLatency}ms` : '...'}</span>
+          <div className="flex items-center gap-2 md:gap-3 shrink-0">
+            {/* System Status Strip - Desktop */}
+            <div className="hidden lg:flex items-center gap-0 px-1 bg-bg-main border border-border-main rounded-sm">
+              <div className="flex items-center gap-2 px-2 py-1 border-r border-border-main">
+                <span className="text-[10px] font-sans font-semibold text-text-tertiary tracking-wider uppercase">Latency</span>
+                <span className="text-xs font-mono font-bold text-success tabular-nums">{apiLatency !== null ? `${apiLatency}ms` : '...'}</span>
               </div>
-              <div className="w-px h-4 bg-border-main"></div>
-              <div className="flex items-center gap-2">
-                <span className={`w-1.5 h-1.5 rounded-full ${getStatusColor(apiStatus)} ${getStatusGlow(apiStatus)}`}></span>
-                <span className={`text-xs font-medium ${apiStatus === 'Connected' ? 'text-emerald-500 dark:text-emerald-400' : 'text-amber-500 dark:text-amber-400'}`}>
+              <div className="flex items-center gap-2 px-2 py-1">
+                <span className={`w-1.5 h-1.5 rounded-full ${apiStatus === 'Connected' ? 'bg-success' : 'bg-warning'} ${apiStatus === 'Connected' ? 'shadow-[0_0_6px_#2ecc71]' : 'shadow-[0_0_6px_#f5a623]'}`}></span>
+                <span className={`text-xs font-mono font-bold uppercase ${apiStatus === 'Connected' ? 'text-success' : 'text-warning'}`}>
                   {apiStatus}
                 </span>
               </div>
             </div>
 
             {/* Action Buttons */}
-            <div className="flex items-center gap-2">
-              {/* Notifications */}
+            <div className="flex items-center gap-1.5">
               <button
                 onClick={() => navigate('/notifications')}
-                className="relative p-2.5 rounded-xl bg-bg-hover border border-border-main text-text-secondary hover:text-text-primary hover:border-primary-500/30 transition-all duration-200 active:translate-y-[1px] active:brightness-95 group focus-visible:ring-2 focus-visible:ring-primary-500/50 outline-none"
+                className="relative p-2 rounded-sm bg-bg-main border border-border-main text-text-secondary hover:text-text-primary hover:border-primary-500/30 transition-all duration-200 active:translate-y-[1px] active:brightness-95 group focus-visible:ring-2 focus-visible:ring-primary-500/50 outline-none"
                 aria-label="Notifications"
               >
-                <Bell className="w-5 h-5 group-hover:scale-110 transition-transform" />
+                <Bell className="w-[18px] h-[18px] group-hover:scale-110 transition-transform" />
                 {unreadReports > 0 && (
-                  <span className="absolute top-1.5 right-1.5 flex h-2 w-2">
+                  <span className="absolute top-1 right-1 flex h-2 w-2">
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-2 w-2 bg-rose-500"></span>
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-danger"></span>
                   </span>
                 )}
               </button>
 
-              {/* Refresh */}
               <button
                 onClick={refreshWorkloads}
                 disabled={isWorkloadsLoading}
-                className={`p-2.5 rounded-xl bg-bg-hover border border-border-main text-text-secondary hover:text-text-primary hover:border-primary-500/30 transition-all duration-200 focus-visible:ring-2 focus-visible:ring-primary-500/50 outline-none ${isWorkloadsLoading ? 'opacity-50' : 'active:translate-y-[1px] active:brightness-95'}`}
+                className={`p-2 rounded-sm bg-bg-main border border-border-main text-text-secondary hover:text-text-primary hover:border-primary-500/30 transition-all duration-200 focus-visible:ring-2 focus-visible:ring-primary-500/50 outline-none ${isWorkloadsLoading ? 'opacity-50' : 'active:translate-y-[1px] active:brightness-95'}`}
                 title="Refresh Telemetry"
               >
-                <RefreshCw className={`w-5 h-5 ${isWorkloadsLoading ? 'animate-spin text-primary-500' : ''}`} />
+                <RefreshCw className={`w-[18px] h-[18px] ${isWorkloadsLoading ? 'animate-spin text-primary-500' : ''}`} />
               </button>
 
-              {/* Theme Toggle */}
               <button
                 onClick={toggleTheme}
-                className="p-2.5 rounded-xl bg-bg-hover border border-border-main text-text-secondary hover:text-text-primary hover:border-primary-500/30 transition-all duration-200 active:translate-y-[1px] active:brightness-95 group focus-visible:ring-2 focus-visible:ring-primary-500/50 outline-none"
+                className="p-2 rounded-sm bg-bg-main border border-border-main text-text-secondary hover:text-text-primary hover:border-primary-500/30 transition-all duration-200 active:translate-y-[1px] active:brightness-95 group focus-visible:ring-2 focus-visible:ring-primary-500/50 outline-none"
                 title={isDarkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
               >
                 {isDarkMode ? (
-                  <Sun className="w-5 h-5 group-hover:text-amber-400 transition-colors" />
+                  <Sun className="w-[18px] h-[18px] group-hover:text-primary-500 transition-colors" />
                 ) : (
-                  <Moon className="w-5 h-5 group-hover:text-primary-500 transition-colors" />
+                  <Moon className="w-[18px] h-[18px] group-hover:text-primary-500 transition-colors" />
                 )}
               </button>
             </div>
           </div>
         </header>
 
-        {/* CMD+K Cluster Search Modal */}
         <ClusterCommandPalette
           clusters={clusters}
           selectedClusterIds={selectedClusterIds}
@@ -514,15 +476,13 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
           onSelect={handleClusterSelect}
         />
 
-        {/* Loading Progress Bar */}
         {isWorkloadsLoading && (
           <div className="absolute top-0 left-0 right-0 h-[2px] z-50 overflow-hidden bg-transparent">
-            <div className="h-full bg-gradient-to-r from-transparent via-primary-500 to-transparent w-[200%] animate-loading-bar"></div>
+            <div className="h-full bg-primary-500 shadow-[0_0_10px_#f5a623] animate-loading-bar"></div>
           </div>
         )}
 
-        {/* Content Container */}
-        <div id="main-content" className="flex-1 overflow-y-auto px-4 md:px-6 py-6 custom-scrollbar" role="main" tabIndex={-1}>
+        <div id="main-content" className="flex-1 overflow-y-auto px-4 md:px-5 py-5 custom-scrollbar" role="main" tabIndex={-1}>
           <div className="mx-auto max-w-[1600px] min-h-0">
             {children || <Outlet />}
           </div>

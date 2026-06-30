@@ -13,7 +13,7 @@ interface MetricCardProps {
 
 const MetricCardComponent: React.FC<MetricCardProps> = ({
   icon: Icon,
-  iconColor = 'text-primary-500 dark:text-primary-400',
+  iconColor = 'text-primary-500',
   label,
   value,
   trend,
@@ -24,26 +24,21 @@ const MetricCardComponent: React.FC<MetricCardProps> = ({
 
   return (
     <div
-      className="bg-bg-card border border-transparent rounded-2xl p-5 transition-all duration-300 hover:border-primary-500/10 hover:shadow-md"
+      className="kt-panel p-4 hover:border-primary-500/30 transition-all duration-300 animate-slide-up"
       style={{ animationDelay }}
     >
-      <div className="flex justify-between items-start mb-4">
-        <div className={`p-2.5 bg-primary-500/8 rounded-2xl backdrop-blur-sm ${iconColor}`}>
+      <div className="flex justify-between items-start mb-3 relative z-10">
+        <div className={`p-2 bg-bg-main border border-border-main ${iconColor}`}>
           <Icon className="w-5 h-5" />
         </div>
-        {trend && (
-          <span className="text-xs font-medium text-primary-600 dark:text-primary-400 bg-primary-500/10 px-2 py-0.5 rounded-full">
-            {trend}
-          </span>
-        )}
-        {trendLabel && !trend && (
-          <span className="text-xs font-medium text-primary-600 dark:text-primary-400 bg-primary-500/10 px-2 py-0.5 rounded-full">
-            {trendLabel}
+        {(trend || trendLabel) && (
+          <span className="text-[10px] font-mono font-bold text-primary-500 bg-primary-500/10 border border-primary-500/20 px-1.5 py-0.5 rounded-sm tracking-wider uppercase">
+            {trend || trendLabel}
           </span>
         )}
       </div>
-      <p className="text-[13px] font-semibold text-text-tertiary mb-1">{label}</p>
-      <h3 className="text-2xl font-bold text-text-primary">{value}</h3>
+      <p className="text-[11px] font-sans font-semibold text-text-tertiary tracking-wider uppercase mb-1 relative z-10">{label}</p>
+      <h3 className="text-2xl font-mono font-bold text-text-primary tracking-tight relative z-10">{value}</h3>
     </div>
   );
 };

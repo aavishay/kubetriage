@@ -1,23 +1,24 @@
-/* KubeTriage Design System v2.1 — VS Code Default Theme */
-/* Centralized tokens for consistent styling across the application */
+/* KubeTriage Design System v3 — Industrial Control Room */
+/* A tactical, high-contrast operations console aesthetic. Dark matte panels, */
+/* amber CRT accents, monospace telemetry, and precise geometric framing. */
 
 @import "tailwindcss";
 
 /* ============================================
-   TAILWIND v4 THEME - Custom Tokens
+   TAILWIND v4 THEME - Industrial Tokens
    ============================================ */
 @theme {
-  /* Primary Brand Colors (VS Code Blue) */
-  --color-primary-50: #e6f2ff;
-  --color-primary-100: #cce5ff;
-  --color-primary-200: #99cbff;
-  --color-primary-300: #66b1ff;
-  --color-primary-400: #3397ff;
-  --color-primary-500: #007acc;
-  --color-primary-600: #0062a3;
-  --color-primary-700: #00497a;
-  --color-primary-800: #003152;
-  --color-primary-900: #001829;
+  /* Primary Accent — Amber CRT */
+  --color-primary-50: #fff8e6;
+  --color-primary-100: #ffeeb3;
+  --color-primary-200: #ffe380;
+  --color-primary-300: #ffd14d;
+  --color-primary-400: #ffbe1a;
+  --color-primary-500: #f5a623;
+  --color-primary-600: #c7810d;
+  --color-primary-700: #995f08;
+  --color-primary-800: #6b4104;
+  --color-primary-900: #3d2401;
 
   /* Themed Surface Colors (Dynamic) */
   --color-bg-main: var(--kt-bg-main);
@@ -40,57 +41,69 @@
   --color-info-light: var(--kt-info-light);
 
   /* Font Families */
-  --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
-  --font-display: 'Bricolage Grotesque', sans-serif;
-  --font-mono: 'JetBrains Mono', monospace;
+  --font-sans: 'Saira Condensed', system-ui, sans-serif;
+  --font-display: 'Share Tech Mono', 'Space Mono', monospace;
+  --font-mono: 'Space Mono', 'Share Tech Mono', monospace;
 
-  /* Radius Overrides */
-  --radius-2xl: 20px;
+  /* Radius Overrides — tight, utilitarian */
+  --radius-2xl: 6px;
 }
 
 /* ============================================
    COLOR TOKENS & SEMANTIC SCALES
    ============================================ */
 :root {
-  /* Brand Constants */
-  --kt-primary-50: #e6f2ff;
-  --kt-primary-500: #007acc;
-  --kt-primary-600: #0062a3;
+  /* Brand Constants — Amber CRT */
+  --kt-primary-50: #fff8e6;
+  --kt-primary-500: #f5a623;
+  --kt-primary-600: #c7810d;
 
-  /* Base Light Theme (Default) — VS Code Light+ */
-  --kt-bg-main: #f8f8f8;
-  --kt-bg-card: #ffffff;
-  --kt-bg-hover: #f3f3f3;
-  --kt-border-main: #e5e5e5;
+  /* Industrial Dark Theme (Default) */
+  --kt-bg-main: #0b0c0f;
+  --kt-bg-card: #14151a;
+  --kt-bg-hover: #1c1d24;
+  --kt-border-main: #25262e;
 
-  --kt-fg-primary: #1e1e1e;
-  --kt-fg-secondary: #5a5a5a;
-  --kt-fg-tertiary: #767676;
-  --kt-fg-muted: #9e9e9e;
+  --kt-fg-primary: #e8e9ec;
+  --kt-fg-secondary: #9fa2a8;
+  --kt-fg-tertiary: #6b6e75;
+  --kt-fg-muted: #4a4d55;
+
+  /* Cold Steel Blue for non-critical info */
+  --kt-steel: #5f9ea0;
+  --kt-steel-light: rgba(95, 158, 160, 0.12);
 
   /* Semantic Overlay (Glass) */
-  --kt-glass-bg: rgba(255, 255, 255, 0.75);
-  --kt-glass-border: rgba(0, 0, 0, 0.06);
+  --kt-glass-bg: rgba(20, 21, 26, 0.85);
+  --kt-glass-border: rgba(255, 255, 255, 0.08);
 
-  /* Semantic Feedback — VS Code palette */
-  --kt-success: #10b981;
-  --kt-success-light: rgba(16, 185, 129, 0.08);
-  --kt-warning: #cca700;
-  --kt-warning-light: rgba(204, 167, 0, 0.08);
-  --kt-danger: #f48771;
-  --kt-danger-light: rgba(244, 135, 113, 0.08);
+  /* Semantic Feedback */
+  --kt-success: #2ecc71;
+  --kt-success-light: rgba(46, 204, 113, 0.12);
+  --kt-warning: #f5a623;
+  --kt-warning-light: rgba(245, 166, 35, 0.12);
+  --kt-danger: #e74c3c;
+  --kt-danger-light: rgba(231, 76, 60, 0.12);
   --kt-info: #4fc1ff;
-  --kt-info-light: rgba(79, 193, 255, 0.08);
+  --kt-info-light: rgba(79, 193, 255, 0.12);
 
-  /* Shadows — Cool & Neutral */
-  --kt-shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.04);
-  --kt-shadow-md: 0 4px 12px -2px rgba(0, 0, 0, 0.08), 0 2px 4px -2px rgba(0, 0, 0, 0.04);
-  --kt-shadow-lg: 0 12px 24px -4px rgba(0, 0, 0, 0.10), 0 4px 8px -4px rgba(0, 0, 0, 0.06);
-  --kt-shadow-glow-primary: 0 0 24px rgba(0, 122, 204, 0.25);
+  /* Shadows — deep, directional */
+  --kt-shadow-sm: inset 0 1px 0 0 rgba(255, 255, 255, 0.04), 0 1px 2px 0 rgba(0, 0, 0, 0.4);
+  --kt-shadow-md: inset 0 1px 0 0 rgba(255, 255, 255, 0.04), 0 4px 12px -2px rgba(0, 0, 0, 0.5);
+  --kt-shadow-lg: inset 0 1px 0 0 rgba(255, 255, 255, 0.04), 0 12px 24px -4px rgba(0, 0, 0, 0.6);
+  --kt-shadow-glow-primary: 0 0 16px rgba(245, 166, 35, 0.35);
+  --kt-shadow-glow-danger: 0 0 16px rgba(231, 76, 60, 0.35);
+  --kt-shadow-glow-success: 0 0 16px rgba(46, 204, 113, 0.35);
 
-  /* Darker overlay variants (for dropdowns, modals, etc.) */
-  --kt-dark-lighter: #252526;
-  --kt-dark-hover: #2c2c2c;
+  /* Panel / Rack Colors */
+  --kt-panel-bg: #14151a;
+  --kt-panel-inset: #0e0f12;
+  --kt-panel-frame: #1f2027;
+  --kt-panel-highlight: rgba(255, 255, 255, 0.04);
+
+  /* Darker overlay variants */
+  --kt-dark-lighter: #1c1d24;
+  --kt-dark-hover: #25262e;
   --kt-dark-border: rgba(255, 255, 255, 0.08);
 
   /* Font Weights */
@@ -98,63 +111,45 @@
   --kt-font-medium: 500;
   --kt-font-semibold: 600;
   --kt-font-bold: 700;
-  --kt-font-black: 900;
+  --kt-font-black: 700;
 
   /* Font Sizes */
-  --kt-text-xs: 0.75rem;
-  --kt-text-sm: 0.875rem;
-  --kt-text-base: 1rem;
+  --kt-text-xs: 0.6875rem;
+  --kt-text-sm: 0.8125rem;
+  --kt-text-base: 0.9375rem;
   --kt-text-lg: 1.125rem;
-  --kt-text-xl: 1.25rem;
-  --kt-text-2xl: 1.5rem;
+  --kt-text-xl: 1.375rem;
+  --kt-text-2xl: 1.75rem;
 
   /* Tracking */
-  --kt-tracking-tight: -0.025em;
-  --kt-tracking-normal: 0em;
-  --kt-tracking-wide: 0.025em;
-  --kt-tracking-wider: 0.05em;
+  --kt-tracking-tight: 0em;
+  --kt-tracking-normal: 0.03em;
+  --kt-tracking-wide: 0.08em;
+  --kt-tracking-wider: 0.12em;
 
   /* Transitions */
-  --kt-duration-fast: 150ms;
-  --kt-duration-normal: 200ms;
-  --kt-duration-slow: 300ms;
-  --kt-ease-default: ease-in-out;
-  --kt-ease-out: cubic-bezier(0.33, 1, 0.68, 1);
+  --kt-duration-fast: 120ms;
+  --kt-duration-normal: 180ms;
+  --kt-duration-slow: 280ms;
+  --kt-ease-default: ease-out;
+  --kt-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
   --kt-ease-luxury: cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .dark {
-  /* Base Dark Theme (Override) — Deep Dark */
-  --kt-bg-main: #121212;
-  --kt-bg-card: #1c1c1e;
-  --kt-bg-hover: #252526;
-  --kt-border-main: #2c2c2e;
+  /* Same dark palette is default; dark class keeps existing compatibility */
+  --kt-bg-main: #0b0c0f;
+  --kt-bg-card: #14151a;
+  --kt-bg-hover: #1c1d24;
+  --kt-border-main: #25262e;
 
-  --kt-fg-primary: #cccccc;
-  --kt-fg-secondary: #9cdcfe;
-  --kt-fg-tertiary: #a0a0a0;
-  --kt-fg-muted: #808080;
+  --kt-fg-primary: #e8e9ec;
+  --kt-fg-secondary: #9fa2a8;
+  --kt-fg-tertiary: #6b6e75;
+  --kt-fg-muted: #4a4d55;
 
-  /* Semantic Overlay (Glass) */
-  --kt-glass-bg: rgba(28, 28, 30, 0.75);
-  --kt-glass-border: rgba(255, 255, 255, 0.06);
-
-  /* Semantic Feedback — Light variants for dark mode */
-  --kt-success-light: rgba(16, 185, 129, 0.12);
-  --kt-warning-light: rgba(204, 167, 0, 0.12);
-  --kt-danger-light: rgba(244, 135, 113, 0.12);
-  --kt-info-light: rgba(79, 193, 255, 0.12);
-
-  /* Shadows — Deep & neutral */
-  --kt-shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.30);
-  --kt-shadow-md: 0 4px 12px -2px rgba(0, 0, 0, 0.40), 0 2px 4px -2px rgba(0, 0, 0, 0.30);
-  --kt-shadow-lg: 0 12px 24px -4px rgba(0, 0, 0, 0.50), 0 4px 8px -4px rgba(0, 0, 0, 0.40);
-  --kt-shadow-glow-primary: 0 0 24px rgba(0, 122, 204, 0.35);
-
-  /* Darker overlay variants (for dropdowns, modals, buttons) */
-  --kt-dark-lighter: #1c1c1e;
-  --kt-dark-hover: #252526;
-  --kt-dark-border: rgba(255, 255, 255, 0.08);
+  --kt-glass-bg: rgba(20, 21, 26, 0.85);
+  --kt-glass-border: rgba(255, 255, 255, 0.08);
 }
 
 /* ============================================
@@ -169,66 +164,192 @@
   --kt-space-6: 24px;
   --kt-space-8: 32px;
 
-  --kt-radius-md: 10px;
-  --kt-radius-lg: 12px;
-  --kt-radius-xl: 20px;
+  --kt-radius-sm: 2px;
+  --kt-radius-md: 4px;
+  --kt-radius-lg: 6px;
+  --kt-radius-xl: 8px;
   --kt-radius-full: 9999px;
+}
+
+/* ============================================
+   ATMOSPHERE & TEXTURE
+   ============================================ */
+.kt-scanlines {
+  position: relative;
+}
+.kt-scanlines::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    0deg,
+    rgba(0, 0, 0, 0) 0px,
+    rgba(0, 0, 0, 0) 1px,
+    rgba(0, 0, 0, 0.12) 1px,
+    rgba(0, 0, 0, 0.12) 2px
+  );
+  opacity: 0.35;
+  z-index: 1;
+}
+
+.kt-noise {
+  position: relative;
+}
+.kt-noise::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.04;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  z-index: 1;
+}
+
+.kt-amber-glow {
+  box-shadow: 0 0 12px rgba(245, 166, 35, 0.25), inset 0 0 8px rgba(245, 166, 35, 0.08);
+}
+
+.kt-danger-glow {
+  box-shadow: 0 0 12px rgba(231, 76, 60, 0.25), inset 0 0 8px rgba(231, 76, 60, 0.08);
+}
+
+.kt-success-glow {
+  box-shadow: 0 0 12px rgba(46, 204, 113, 0.25), inset 0 0 8px rgba(46, 204, 113, 0.08);
 }
 
 /* ============================================
    COMPONENT TOKENS (Themed)
    ============================================ */
 :root {
-  /* Card */
   --kt-card-bg: var(--kt-bg-card);
-  --kt-card-border: 1px solid transparent;
-  --kt-card-radius: var(--kt-radius-xl);
-  --kt-card-padding: var(--kt-space-6);
+  --kt-card-border: 1px solid var(--kt-border-main);
+  --kt-card-radius: var(--kt-radius-lg);
+  --kt-card-padding: var(--kt-space-5);
 
-  /* Button */
-  --kt-button-radius: var(--kt-radius-lg);
+  --kt-button-radius: var(--kt-radius-md);
 
-  /* Input */
-  --kt-input-radius: var(--kt-radius-lg);
+  --kt-input-radius: var(--kt-radius-md);
   --kt-input-border: 1px solid var(--kt-border-main);
 
-  /* Focus Ring */
-  --kt-focus-ring: 0 0 0 2px var(--kt-bg-main), 0 0 0 4px var(--kt-primary-500);
+  --kt-focus-ring: 0 0 0 1px var(--kt-bg-main), 0 0 0 3px var(--kt-primary-500);
 }
 
 /* ============================================
-   UTILITY CLASSES
+   PANEL SYSTEM
    ============================================ */
-
-/* Card Variants */
-.kt-card {
-  background: var(--kt-card-bg);
-  border: var(--kt-card-border);
-  border-radius: var(--kt-card-radius);
-  padding: var(--kt-card-padding);
-  transition: all var(--kt-duration-slow) var(--kt-ease-luxury);
+.kt-panel {
+  background: var(--kt-panel-bg);
+  border: 1px solid var(--kt-panel-frame);
+  border-radius: var(--kt-radius-md);
   box-shadow: var(--kt-shadow-sm);
+  position: relative;
+  overflow: hidden;
 }
 
-.kt-card-hover:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--kt-shadow-md);
-  border-color: rgba(0, 122, 204, 0.10);
+.kt-panel::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(180deg, var(--kt-panel-highlight) 0%, transparent 8%);
+  z-index: 0;
 }
 
-.kt-card-glow:hover {
-  box-shadow: var(--kt-shadow-glow-primary);
-  border-color: rgba(0, 122, 204, 0.20);
+.kt-panel-inset {
+  background: var(--kt-panel-inset);
+  border: 1px solid var(--kt-border-main);
+  border-radius: var(--kt-radius-sm);
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.4);
 }
 
-/* Form Inputs */
+.kt-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--kt-space-3) var(--kt-space-4);
+  background: linear-gradient(90deg, rgba(245, 166, 35, 0.06) 0%, transparent 60%);
+  border-bottom: 1px solid var(--kt-panel-frame);
+  font-family: var(--font-sans);
+  font-size: var(--kt-text-sm);
+  font-weight: var(--kt-font-semibold);
+  letter-spacing: var(--kt-tracking-wide);
+  text-transform: uppercase;
+  color: var(--kt-fg-secondary);
+}
+
+.kt-panel-header::before {
+  content: '';
+  width: 3px;
+  height: 12px;
+  background: var(--kt-primary-500);
+  margin-right: var(--kt-space-2);
+  border-radius: 1px;
+}
+
+.kt-panel-frame {
+  border: 1px solid var(--kt-panel-frame);
+  border-radius: var(--kt-radius-md);
+  padding: var(--kt-space-1);
+  background: var(--kt-bg-main);
+}
+
+/* ============================================
+   LED INDICATORS
+   ============================================ */
+.kt-led {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.5);
+  position: relative;
+}
+
+.kt-led::after {
+  content: '';
+  position: absolute;
+  top: 1px;
+  left: 1px;
+  width: 2px;
+  height: 2px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.6);
+}
+
+.kt-led-success {
+  background: var(--kt-success);
+  box-shadow: 0 0 6px var(--kt-success), inset 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+.kt-led-warning {
+  background: var(--kt-warning);
+  box-shadow: 0 0 6px var(--kt-warning), inset 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+.kt-led-danger {
+  background: var(--kt-danger);
+  box-shadow: 0 0 6px var(--kt-danger), inset 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+.kt-led-pulse {
+  animation: kt-led-pulse 1.6s ease-in-out infinite;
+}
+
+@keyframes kt-led-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.45; }
+}
+
+/* ============================================
+   FORM ELEMENTS
+   ============================================ */
 .kt-input {
   width: 100%;
-  background: var(--kt-bg-main);
+  background: var(--kt-panel-inset);
   border: var(--kt-input-border);
-  border-radius: var(--kt-radius-lg);
-  padding: 0.625rem 0.875rem;
-  font-family: var(--font-sans);
+  border-radius: var(--kt-radius-md);
+  padding: 0.5rem 0.75rem;
+  font-family: var(--font-mono);
   font-size: var(--kt-text-sm);
   color: var(--kt-fg-primary);
   transition: border-color var(--kt-duration-fast) var(--kt-ease-default),
@@ -237,31 +358,25 @@
 }
 
 .kt-input::placeholder {
-  color: var(--kt-fg-tertiary);
+  color: var(--kt-fg-muted);
 }
 
 .kt-input:focus {
   border-color: var(--kt-primary-500);
-  box-shadow: 0 0 0 3px rgba(0, 122, 204, 0.15);
+  box-shadow: 0 0 0 1px rgba(245, 166, 35, 0.25);
 }
 
 .kt-input:hover:not(:focus):not(:disabled) {
-  border-color: var(--kt-primary-500);
+  border-color: var(--kt-fg-tertiary);
 }
 
-.kt-input:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-/* Selects */
 .kt-select {
   width: 100%;
-  background: var(--kt-bg-main);
+  background: var(--kt-panel-inset);
   border: var(--kt-input-border);
-  border-radius: var(--kt-radius-lg);
-  padding: 0.625rem 1.75rem 0.625rem 0.875rem;
-  font-family: var(--font-sans);
+  border-radius: var(--kt-radius-md);
+  padding: 0.5rem 1.75rem 0.5rem 0.75rem;
+  font-family: var(--font-mono);
   font-size: var(--kt-text-sm);
   color: var(--kt-fg-primary);
   transition: border-color var(--kt-duration-fast) var(--kt-ease-default),
@@ -270,7 +385,7 @@
   cursor: pointer;
   appearance: none;
   -webkit-appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%236b6e75' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
   background-position: right 0.5rem center;
   background-size: 1rem;
@@ -278,19 +393,12 @@
 
 .kt-select:focus {
   border-color: var(--kt-primary-500);
-  box-shadow: 0 0 0 3px rgba(0, 122, 204, 0.15);
+  box-shadow: 0 0 0 1px rgba(245, 166, 35, 0.25);
 }
 
-.kt-select:hover:not(:focus):not(:disabled) {
-  border-color: var(--kt-primary-500);
-}
-
-.kt-select:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-/* Button Base */
+/* ============================================
+   BUTTONS
+   ============================================ */
 .kt-button {
   display: inline-flex;
   align-items: center;
@@ -299,11 +407,14 @@
   font-family: var(--font-sans);
   font-weight: var(--kt-font-semibold);
   font-size: var(--kt-text-sm);
+  letter-spacing: var(--kt-tracking-wide);
+  text-transform: uppercase;
   border-radius: var(--kt-button-radius);
   transition: all var(--kt-duration-fast) var(--kt-ease-default);
   cursor: pointer;
   border: none;
   outline: none;
+  padding: 0.5rem 0.875rem;
 }
 
 .kt-button:focus-visible {
@@ -312,120 +423,126 @@
 
 .kt-button:active {
   transform: translateY(1px);
-  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.10);
 }
 
-/* Button Size Variants */
 .kt-button-sm {
   font-size: var(--kt-text-xs);
-  padding: 0.375rem 0.75rem;
+  padding: 0.375rem 0.625rem;
   gap: var(--kt-space-1);
 }
 
 .kt-button-lg {
   font-size: var(--kt-text-base);
-  padding: 0.75rem 1.5rem;
+  padding: 0.625rem 1.25rem;
 }
 
-/* Button Variants */
 .kt-button-primary {
-  background: linear-gradient(135deg, var(--kt-primary-500), var(--kt-primary-600));
-  color: white;
-  box-shadow: 0 1px 2px 0 rgba(0, 122, 204, 0.20);
+  background: linear-gradient(180deg, #d48a0e 0%, #9a6206 100%);
+  color: #0b0c0f;
+  border: 1px solid #f5a623;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25), 0 2px 4px rgba(0, 0, 0, 0.4);
 }
 
 .kt-button-primary:hover {
-  background: linear-gradient(135deg, var(--kt-primary-400), var(--kt-primary-500));
-  box-shadow: var(--kt-shadow-md), 0 0 16px rgba(0, 122, 204, 0.25);
+  background: linear-gradient(180deg, #f5a623 0%, #c7810d 100%);
+  box-shadow: var(--kt-shadow-glow-primary), inset 0 1px 0 rgba(255, 255, 255, 0.3);
 }
 
 .kt-button-secondary {
-  background: var(--kt-bg-hover);
-  color: var(--kt-text-primary);
+  background: var(--kt-panel-bg);
+  color: var(--kt-fg-secondary);
   border: 1px solid var(--kt-border-main);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
 }
 
 .kt-button-secondary:hover {
-  background: var(--kt-bg-card);
+  background: var(--kt-bg-hover);
   border-color: var(--kt-primary-500);
   color: var(--kt-primary-500);
 }
 
 .kt-button-ghost {
   background: transparent;
-  color: var(--kt-text-secondary);
+  color: var(--kt-fg-secondary);
+  border: 1px solid transparent;
 }
 
 .kt-button-ghost:hover {
   background: var(--kt-bg-hover);
   color: var(--kt-fg-primary);
+  border-color: var(--kt-border-main);
 }
 
-/* Danger Button Variant */
 .kt-button-danger {
-  background: var(--kt-danger);
-  color: white;
+  background: linear-gradient(180deg, #c0392b 0%, #922b21 100%);
+  color: #fff;
+  border: 1px solid #e74c3c;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.15), 0 2px 4px rgba(0, 0, 0, 0.4);
 }
 
 .kt-button-danger:hover {
-  background: var(--kt-danger);
-  opacity: 0.9;
-  box-shadow: 0 0 20px rgba(244, 135, 113, 0.3);
+  background: linear-gradient(180deg, #e74c3c 0%, #c0392b 100%);
+  box-shadow: var(--kt-shadow-glow-danger);
 }
 
-.kt-button-danger:disabled {
-  background: var(--kt-bg-hover);
-  color: var(--kt-fg-tertiary);
-  box-shadow: none;
-  cursor: not-allowed;
-}
-
-/* Status Badges */
+/* ============================================
+   BADGES
+   ============================================ */
 .kt-badge {
   display: inline-flex;
   align-items: center;
   gap: var(--kt-space-1);
-  padding: var(--kt-space-1) var(--kt-space-3);
+  padding: 0.125rem 0.5rem;
+  font-family: var(--font-mono);
   font-size: var(--kt-text-xs);
-  font-weight: var(--kt-font-semibold);
-  border-radius: var(--kt-radius-full);
+  font-weight: var(--kt-font-bold);
+  letter-spacing: var(--kt-tracking-wide);
+  text-transform: uppercase;
+  border-radius: var(--kt-radius-sm);
+  border: 1px solid transparent;
 }
 
 .kt-badge-success {
   background: var(--kt-success-light);
   color: var(--kt-success);
-  border: 1px solid rgba(16, 185, 129, 0.18);
+  border-color: rgba(46, 204, 113, 0.25);
 }
 
 .kt-badge-warning {
   background: var(--kt-warning-light);
   color: var(--kt-warning);
-  border: 1px solid rgba(204, 167, 0, 0.18);
+  border-color: rgba(245, 166, 35, 0.25);
 }
 
 .kt-badge-danger {
   background: var(--kt-danger-light);
   color: var(--kt-danger);
-  border: 1px solid rgba(244, 135, 113, 0.18);
+  border-color: rgba(231, 76, 60, 0.25);
 }
 
 .kt-badge-info {
   background: var(--kt-info-light);
   color: var(--kt-info);
-  border: 1px solid rgba(79, 193, 255, 0.18);
+  border-color: rgba(79, 193, 255, 0.25);
 }
 
-/* Typography Utilities */
+/* ============================================
+   TYPOGRAPHY UTILITIES
+   ============================================ */
 .kt-text-display {
   font-family: var(--kt-font-display);
-  font-weight: var(--kt-font-black);
-  letter-spacing: var(--kt-tracking-tight);
+  font-weight: var(--kt-font-bold);
+  letter-spacing: var(--kt-tracking-wide);
+  text-transform: uppercase;
 }
 
 .kt-text-label {
-  font-size: 0.8125rem;
+  font-family: var(--font-sans);
+  font-size: var(--kt-text-xs);
   font-weight: var(--kt-font-semibold);
-  color: var(--kt-text-tertiary);
+  letter-spacing: var(--kt-tracking-wider);
+  text-transform: uppercase;
+  color: var(--kt-fg-tertiary);
 }
 
 .kt-text-mono {
@@ -433,7 +550,15 @@
   font-size: var(--kt-text-sm);
 }
 
-/* Glass Effect */
+.kt-text-telemetry {
+  font-family: var(--kt-font-mono);
+  font-weight: var(--kt-font-bold);
+  letter-spacing: var(--kt-tracking-tight);
+}
+
+/* ============================================
+   GLASS & SCROLLBAR
+   ============================================ */
 .kt-glass {
   background: var(--kt-glass-bg);
   backdrop-filter: blur(12px);
@@ -441,16 +566,9 @@
   border: 1px solid var(--kt-glass-border);
 }
 
-.kt-glass-strong {
-  background: var(--kt-glass-bg);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-}
-
-/* Scrollbar */
 .kt-scrollbar::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
 }
 
 .kt-scrollbar::-webkit-scrollbar-track {
@@ -459,22 +577,21 @@
 
 .kt-scrollbar::-webkit-scrollbar-thumb {
   background: var(--kt-fg-muted);
-  border-radius: var(--kt-radius-full);
+  border-radius: 0;
 }
 
 .kt-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: var(--kt-text-tertiary);
+  background: var(--kt-fg-tertiary);
 }
 
-/* Custom Scrollbar (macOS visible + cross-browser) */
 .custom-scrollbar {
   scrollbar-width: thin;
   scrollbar-color: var(--kt-fg-muted) transparent;
 }
 
 .custom-scrollbar::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
 }
 
 .custom-scrollbar::-webkit-scrollbar-track {
@@ -483,33 +600,40 @@
 
 .custom-scrollbar::-webkit-scrollbar-thumb {
   background: var(--kt-fg-muted);
-  border-radius: var(--kt-radius-full);
-  border: 2px solid transparent;
+  border-radius: 0;
+  border: 1px solid transparent;
   background-clip: padding-box;
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: var(--kt-fg-secondary);
+  background: var(--kt-fg-tertiary);
 }
 
 .custom-scrollbar::-webkit-scrollbar-corner {
   background: transparent;
 }
 
-/* Animation Utilities */
+/* ============================================
+   ANIMATION UTILITIES
+   ============================================ */
 @keyframes kt-fade-in {
   from { opacity: 0; }
   to { opacity: 1; }
 }
 
 @keyframes kt-slide-up {
-  from { opacity: 0; transform: translateY(10px); }
+  from { opacity: 0; transform: translateY(8px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
 @keyframes kt-pulse-soft {
   0%, 100% { opacity: 1; }
-  50% { opacity: 0.7; }
+  50% { opacity: 0.65; }
+}
+
+@keyframes kt-scan {
+  0% { transform: translateY(-100%); }
+  100% { transform: translateY(100%); }
 }
 
 .kt-animate-fade-in {
@@ -524,7 +648,16 @@
   animation: kt-pulse-soft 2s var(--kt-ease-default) infinite;
 }
 
-/* Skeleton Loading */
+/* Stagger helper classes */
+.kt-stagger-1 { animation-delay: 60ms; }
+.kt-stagger-2 { animation-delay: 120ms; }
+.kt-stagger-3 { animation-delay: 180ms; }
+.kt-stagger-4 { animation-delay: 240ms; }
+.kt-stagger-5 { animation-delay: 300ms; }
+
+/* ============================================
+   SKELETON LOADING
+   ============================================ */
 @keyframes kt-shimmer {
   0% { background-position: -200% 0; }
   100% { background-position: 200% 0; }
@@ -539,32 +672,34 @@
   );
   background-size: 200% 100%;
   animation: kt-shimmer 1.5s ease-in-out infinite;
-  border-radius: var(--kt-radius-md);
+  border-radius: var(--kt-radius-sm);
 }
 
 .kt-skeleton-text {
-  height: 0.875rem;
-  border-radius: 4px;
+  height: 0.75rem;
+  border-radius: 1px;
 }
 
 .kt-skeleton-heading {
-  height: 1.5rem;
-  border-radius: 6px;
+  height: 1.25rem;
+  border-radius: 1px;
 }
 
 .kt-skeleton-avatar {
-  border-radius: 50%;
+  border-radius: 0;
 }
 
-/* Page Transitions */
+/* ============================================
+   PAGE TRANSITIONS
+   ============================================ */
 @keyframes kt-page-enter {
-  from { opacity: 0; transform: translateY(6px); }
+  from { opacity: 0; transform: translateY(4px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
 @keyframes kt-page-exit {
   from { opacity: 1; transform: translateY(0); }
-  to { opacity: 0; transform: translateY(-6px); }
+  to { opacity: 0; transform: translateY(-4px); }
 }
 
 .kt-page-enter {
@@ -575,7 +710,9 @@
   animation: kt-page-exit var(--kt-duration-normal) var(--kt-ease-default) both;
 }
 
-/* Reduced Motion */
+/* ============================================
+   REDUCED MOTION
+   ============================================ */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

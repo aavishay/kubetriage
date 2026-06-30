@@ -5,12 +5,13 @@ interface DashboardCardProps {
   className?: string;
   padding?: 'sm' | 'md' | 'lg';
   hover?: boolean;
+  title?: string;
 }
 
 const paddingMap = {
-  sm: 'p-4',
-  md: 'p-6',
-  lg: 'p-8',
+  sm: 'p-3',
+  md: 'p-4',
+  lg: 'p-5',
 };
 
 const DashboardCardComponent: React.FC<DashboardCardProps> = ({
@@ -18,16 +19,18 @@ const DashboardCardComponent: React.FC<DashboardCardProps> = ({
   className = '',
   padding = 'md',
   hover = true,
+  title,
 }) => {
-  const hoverClasses = hover
-    ? 'hover:border-primary-500/10 hover:shadow-md'
-    : '';
-
   return (
     <div
-      className={`bg-bg-card border border-transparent rounded-2xl transition-all duration-300 ${paddingMap[padding]} ${hoverClasses} ${className}`}
+      className={`kt-panel ${paddingMap[padding]} ${hover ? 'hover:border-primary-500/30 transition-all duration-300' : ''} ${className}`}
     >
-      {children}
+      {title && (
+        <div className="kt-panel-header mb-4 -mx-4 -mt-4">
+          <span>{title}</span>
+        </div>
+      )}
+      <div className="relative z-10">{children}</div>
     </div>
   );
 };
