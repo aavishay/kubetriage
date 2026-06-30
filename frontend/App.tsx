@@ -96,7 +96,7 @@ const AppContent: React.FC = () => {
             <div className="w-16 h-16 bg-primary-500/10 rounded-xl flex items-center justify-center mx-auto mb-6 text-primary-500">
               <Key className="w-8 h-8" />
             </div>
-            <h1 className="text-2xl font-semibold text-text-primary mb-3">API Key Required</h1>
+            <h1 className="text-2xl font-semibold text-text-primary mb-3">API key required</h1>
             <p className="text-text-secondary mb-8 text-sm leading-relaxed max-w-xs mx-auto">
               A Gemini API key is required to use AI-powered features. Please configure your API key to continue.
             </p>
@@ -105,7 +105,7 @@ const AppContent: React.FC = () => {
                 onClick={selectApiKey}
                 className="w-full bg-primary-600 hover:bg-primary-500 text-white font-medium py-3 rounded-lg transition-colors flex items-center justify-center gap-2 text-sm"
               >
-                <Key className="w-4 h-4" /> Configure API Key
+                <Key className="w-4 h-4" /> Configure API key
               </button>
               <a
                 href="https://ai.google.dev/gemini-api/docs/billing"
@@ -237,7 +237,7 @@ const AppContent: React.FC = () => {
             </div>
             <div className="flex-1 min-w-0">
               <h4 className="font-medium text-sm text-text-primary mb-1">
-                {activeNotification.severity === 'Critical' ? 'Critical Alert' : 'Warning'}
+                {activeNotification.severity === 'Critical' ? 'Critical alert' : 'Warning'}
               </h4>
               <p className="text-xs text-text-secondary truncate">
                 {activeNotification.workloadName}: <span className="text-primary-500">{activeNotification.metric}</span> at <span className={activeNotification.severity === 'Critical' ? 'text-rose-500' : 'text-warning'}>{activeNotification.value}%</span>

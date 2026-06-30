@@ -16,7 +16,7 @@ export const OfflineIndicator: React.FC = () => {
         <div className="kt-panel w-72 kt-animate-fade-in p-4">
           <div className="flex items-center justify-between mb-3">
             <h3 className="font-sans font-bold text-sm text-text-primary">
-              Offline Status
+              Offline status
             </h3>
             <button
               onClick={() => setShowDetails(false)}
@@ -30,17 +30,17 @@ export const OfflineIndicator: React.FC = () => {
             <div className="flex items-center justify-between">
               <span className="text-text-secondary">Connection</span>
               <span className={`font-bold ${isOnline ? 'text-success' : 'text-danger'}`}>
-                {isOnline ? 'ONLINE' : 'OFFLINE'}
+                {isOnline ? 'Online' : 'Offline'}
               </span>
             </div>
 
             <div className="flex items-center justify-between">
-              <span className="text-text-secondary">Cached Entries</span>
+              <span className="text-text-secondary">Cached entries</span>
               <span className="font-bold text-text-primary">{cachedEntries}</span>
             </div>
 
             <div className="flex items-center justify-between">
-              <span className="text-text-secondary">Queued Actions</span>
+              <span className="text-text-secondary">Queued actions</span>
               <span className={`font-bold ${queuedActions > 0 ? 'text-warning' : 'text-text-primary'}`}>
                 {queuedActions}
               </span>
@@ -48,7 +48,7 @@ export const OfflineIndicator: React.FC = () => {
 
             {lastSyncAt && (
               <div className="flex items-center justify-between">
-                <span className="text-text-secondary">Last Sync</span>
+                <span className="text-text-secondary">Last sync</span>
                 <span className="text-text-tertiary">
                   {lastSyncAt.toLocaleTimeString()}
                 </span>
@@ -63,7 +63,7 @@ export const OfflineIndicator: React.FC = () => {
               className="mt-3 w-full kt-button kt-button-primary kt-button-sm"
             >
               <RefreshCw className={`w-3 h-3 ${isSyncing ? 'animate-spin' : ''}`} />
-              {isSyncing ? 'SYNCING...' : `SYNC ${queuedActions} ACTION${queuedActions !== 1 ? 'S' : ''}`}
+              {isSyncing ? 'Syncing...' : `Sync ${queuedActions} action${queuedActions !== 1 ? 's' : ''}`}
             </button>
           )}
 

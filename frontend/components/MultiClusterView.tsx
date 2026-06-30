@@ -217,7 +217,7 @@ export const MultiClusterView: React.FC = () => {
       <div className="p-6 bg-bg-hover border border-border-main mb-6 animate-pulse">
         <Globe className="w-12 h-12 text-primary-500" />
       </div>
-      <h2 className="font-sans text-2xl font-bold text-text-primary mb-2">Loading Multi-Cluster View</h2>
+      <h2 className="font-sans text-2xl font-bold text-text-primary mb-2">Loading multi-cluster view</h2>
       <p className="text-text-tertiary font-sans">Aggregating data from all connected clusters...</p>
     </div>
   );
@@ -225,7 +225,7 @@ export const MultiClusterView: React.FC = () => {
   if (!data) return (
     <div className="flex flex-col items-center justify-center min-h-[600px]">
       <AlertCircle className="w-12 h-12 text-danger mb-4" />
-      <h2 className="font-sans text-xl font-bold text-text-primary mb-2">Failed to Load Data</h2>
+      <h2 className="font-sans text-xl font-bold text-text-primary mb-2">Failed to load data</h2>
       <p className="text-text-tertiary mb-4 font-sans">Could not fetch multi-cluster information</p>
       <button onClick={fetchData} className="kt-button kt-button-primary">
         <RefreshCw className="w-4 h-4" /> Retry
@@ -239,7 +239,7 @@ export const MultiClusterView: React.FC = () => {
         <div>
           <h1 className="font-sans text-2xl font-bold text-text-primary flex items-center gap-3">
             <Globe className="w-7 h-7 text-primary-500" />
-            Multi-Cluster Federation
+            Multi-cluster federation
           </h1>
           <p className="text-text-tertiary text-sm mt-1 font-sans">
             {summary?.totalClusters ?? 0} clusters • {summary?.totalWorkloads ?? 0} workloads
@@ -262,8 +262,8 @@ export const MultiClusterView: React.FC = () => {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
         {summaryCard('Clusters', summary?.totalClusters ?? 0, <span className="text-success">{summary?.healthyClusters ?? 0} healthy</span>, Server, 'text-success')}
         {summaryCard('Workloads', summary?.totalWorkloads ?? 0, <span className="text-warning">{(summary?.warningWorkloads ?? 0) + (summary?.criticalWorkloads ?? 0)} need attention</span>, Box, 'text-primary-500')}
-        {summaryCard('Active Incidents', summary?.activeIncidents ?? 0, <span className={(summary?.criticalIncidents ?? 0) > 0 ? 'text-danger' : 'text-success'}>{summary?.criticalIncidents ?? 0} critical</span>, AlertTriangle, (summary?.criticalIncidents ?? 0) > 0 ? 'text-danger' : 'text-success')}
-        {summaryCard('Monthly Cost', `$${(summary?.estimatedMonthlyCost ?? 0).toFixed(0)}`, <span>{selectedClusterIds.length === 0 ? 'Across all clusters' : `Across ${selectedClusterIds.length} selected`}</span>, DollarSign, 'text-warning')}
+        {summaryCard('Active incidents', summary?.activeIncidents ?? 0, <span className={(summary?.criticalIncidents ?? 0) > 0 ? 'text-danger' : 'text-success'}>{summary?.criticalIncidents ?? 0} critical</span>, AlertTriangle, (summary?.criticalIncidents ?? 0) > 0 ? 'text-danger' : 'text-success')}
+        {summaryCard('Monthly cost', `$${(summary?.estimatedMonthlyCost ?? 0).toFixed(0)}`, <span>{selectedClusterIds.length === 0 ? 'Across all clusters' : `Across ${selectedClusterIds.length} selected`}</span>, DollarSign, 'text-warning')}
       </div>
 
       {viewMode === 'overview' && (
@@ -308,7 +308,7 @@ export const MultiClusterView: React.FC = () => {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             <div className="kt-panel p-5">
               <div className="kt-panel-header mb-4 -mx-5 -mt-5">
-                <BarChart3 className="w-4 h-4 text-primary-500" /> Cluster Utilization
+                <BarChart3 className="w-4 h-4 text-primary-500" /> Cluster utilization
               </div>
               <div className="h-[250px] relative z-10">
                 <ResponsiveContainer width="100%" height="100%">
@@ -326,7 +326,7 @@ export const MultiClusterView: React.FC = () => {
 
             <div className="kt-panel p-5">
               <div className="kt-panel-header mb-4 -mx-5 -mt-5">
-                <AlertTriangle className="w-4 h-4 text-primary-500" /> Workload Status Distribution
+                <AlertTriangle className="w-4 h-4 text-primary-500" /> Workload status distribution
               </div>
               <div className="h-[250px] flex items-center justify-center relative z-10">
                 {statusDistribution.some(s => s.value > 0) ? (
@@ -365,14 +365,14 @@ export const MultiClusterView: React.FC = () => {
       {viewMode === 'workloads' && (
         <div className="kt-panel overflow-hidden">
           <div className="kt-panel-header">
-            <span>All Workloads ({filteredWorkloads.length})</span>
+            <span>All workloads ({filteredWorkloads.length})</span>
             <div className="flex items-center gap-2">
               <div className="relative">
                 <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-text-tertiary" />
                 <input type="text" placeholder="Search workloads..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="kt-input pl-9 pr-3 py-1.5 text-xs w-48" />
               </div>
               <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="kt-select text-xs py-1.5">
-                <option value="all">All Status</option>
+                <option value="all">All status</option>
                 <option value="healthy">Healthy</option>
                 <option value="warning">Warning</option>
                 <option value="critical">Critical</option>

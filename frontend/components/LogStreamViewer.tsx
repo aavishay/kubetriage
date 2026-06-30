@@ -144,7 +144,7 @@ export const LogStreamViewer: React.FC<LogStreamViewerProps> = ({ clusterId, nam
                     <button
                         onClick={() => setIsPaused(!isPaused)}
                         className={`p-2.5 rounded-xl transition-all border shadow-sm ${isPaused ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30' : 'bg-bg-card border-border-main text-text-tertiary hover:text-text-primary hover:bg-bg-hover'}`}
-                        title={isPaused ? "Resume Streaming" : "Pause Streaming"}
+                        title={isPaused ? "Resume streaming" : "Pause streaming"}
                     >
                         {isPaused ? <Play className="w-4 h-4 fill-current" /> : <Pause className="w-4 h-4 fill-current" />}
                     </button>
@@ -152,7 +152,7 @@ export const LogStreamViewer: React.FC<LogStreamViewerProps> = ({ clusterId, nam
                     <button
                         onClick={downloadLogs}
                         className="p-2.5 rounded-xl bg-bg-card border border-border-main text-text-tertiary hover:text-primary-500 hover:border-primary-500/30 transition-all shadow-sm active:translate-y-[1px] active:brightness-95"
-                        title="Download Logs"
+                        title="Download logs"
                     >
                         <Download className="w-4 h-4" />
                     </button>
@@ -175,11 +175,11 @@ export const LogStreamViewer: React.FC<LogStreamViewerProps> = ({ clusterId, nam
                         {status === 'connecting' ? (
                             <>
                                 <div className="w-10 h-10 border-4 border-primary-500 border-t-transparent rounded-full animate-spin shadow-lg shadow-primary-500/20" />
-                                <p className="font-bold text-xs">Establishing Secure Uplink...</p>
+                                <p className="font-bold text-xs">Establishing secure uplink...</p>
                             </>
                         ) : status === 'error' ? (
                             <div className="text-center">
-                                <p className="text-rose-600 dark:text-rose-400 font-black mb-2">Protocol Error</p>
+                                <p className="text-rose-600 dark:text-rose-400 font-black mb-2">Protocol error</p>
                                 <p className="text-[10px]">{errorMsg}</p>
                             </div>
                         ) : (
@@ -210,11 +210,11 @@ export const LogStreamViewer: React.FC<LogStreamViewerProps> = ({ clusterId, nam
             <div className="px-5 py-2 bg-bg-hover/50 text-xs text-text-tertiary font-bold flex justify-between border-t border-border-main shadow-inner">
                 <span className="flex items-center gap-2">
                     <span className="w-1.5 h-1.5 rounded-full bg-primary-500 animate-pulse" />
-                    {logs.length} RECORDS_BUFFERED
+                    {logs.length} records buffered
                 </span>
                 <span className="flex items-center gap-4">
-                    <span>POD_ID: {selectedPod}</span>
-                    <span className={autoScroll ? 'text-emerald-500' : 'text-rose-500'}>AUTOSCROLL_{autoScroll ? 'ENABLED' : 'DISABLED'}</span>
+                    <span>Pod ID: {selectedPod}</span>
+                    <span className={autoScroll ? 'text-emerald-500' : 'text-rose-500'}>Autoscroll {autoScroll ? 'enabled' : 'disabled'}</span>
                 </span>
             </div>
         </div>

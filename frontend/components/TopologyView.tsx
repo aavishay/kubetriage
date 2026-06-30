@@ -122,7 +122,7 @@ export const TopologyView: React.FC<TopologyViewProps> = ({ workloads }) => {
                         <div className="p-2 bg-bg-main border border-border-main text-primary-500">
                             <Share2 className="w-6 h-6" />
                         </div>
-                        Architecture Topology
+                        Architecture topology
                     </h2>
                     <p className="text-sm text-text-tertiary mt-1 font-sans">
                         Visualize cluster workload distribution and neural dependencies.
@@ -141,7 +141,7 @@ export const TopologyView: React.FC<TopologyViewProps> = ({ workloads }) => {
                             onClick={() => setViewMode('graph')}
                             className={`kt-button kt-button-sm ${viewMode === 'graph' ? 'kt-button-primary' : 'kt-button-secondary'}`}
                         >
-                            <ImageIcon className="w-3.5 h-3.5" /> Neural Map
+                            <ImageIcon className="w-3.5 h-3.5" /> Neural map
                         </button>
                     </div>
 
@@ -165,7 +165,7 @@ export const TopologyView: React.FC<TopologyViewProps> = ({ workloads }) => {
                                 className="kt-button kt-button-primary kt-button-sm"
                             >
                                 {isLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}
-                                {renderedSvg ? 'Regenerate' : 'Generate Map'}
+                                {renderedSvg ? 'Regenerate' : 'Generate map'}
                             </button>
 
                             {renderedSvg && (
@@ -191,7 +191,7 @@ export const TopologyView: React.FC<TopologyViewProps> = ({ workloads }) => {
                         <div className="kt-panel w-full border-danger/30 kt-danger-glow">
                             <div className="kt-panel-header">
                                 <span className="flex items-center gap-2 text-danger">
-                                    <AlertCircle className="w-4 h-4" /> Rendering Error
+                                    <AlertCircle className="w-4 h-4" /> Rendering error
                                 </span>
                                 <button onClick={() => setError(null)} className="kt-button kt-button-ghost kt-button-sm p-1">
                                     <X className="w-4 h-4" />
@@ -201,14 +201,14 @@ export const TopologyView: React.FC<TopologyViewProps> = ({ workloads }) => {
                                 <p className="text-sm text-text-secondary font-sans">{error}</p>
                                 <div className="mt-3 flex items-center gap-2">
                                     <button onClick={() => setShowDebug(!showDebug)} className="kt-button kt-button-secondary kt-button-sm">
-                                        {showDebug ? 'Hide Code' : 'Debug'}
+                                        {showDebug ? 'Hide code' : 'Debug'}
                                     </button>
                                 </div>
                             </div>
                         </div>
                         {showDebug && diagramCode && (
                             <div className="mt-2 w-full kt-panel-inset p-4 text-xs font-mono overflow-auto max-h-96 custom-scrollbar relative">
-                                <div className="absolute top-2 right-4 text-[10px] text-text-tertiary font-sans font-medium">Mermaid Source</div>
+                                <div className="absolute top-2 right-4 text-[10px] text-text-tertiary font-sans font-medium">Mermaid source</div>
                                 <pre>{diagramCode}</pre>
                             </div>
                         )}
@@ -227,7 +227,7 @@ export const TopologyView: React.FC<TopologyViewProps> = ({ workloads }) => {
                                     </div>
                                 </div>
                                 <div>
-                                    <h3 className="font-sans text-xl font-bold text-text-primary mb-2">Constructing Neural Map...</h3>
+                                    <h3 className="font-sans text-xl font-bold text-text-primary mb-2">Constructing neural map...</h3>
                                     <p className="text-sm text-text-tertiary max-w-sm mx-auto leading-relaxed font-sans">
                                         Analyzing workload relationships and rendering high-fidelity topology via Generative AI.
                                     </p>
@@ -247,7 +247,7 @@ export const TopologyView: React.FC<TopologyViewProps> = ({ workloads }) => {
                                 <div className="w-20 h-20 bg-bg-main border border-border-main flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
                                     <Sparkles className="w-10 h-10 text-primary-500" />
                                 </div>
-                                <h3 className="font-sans text-2xl font-bold text-text-primary mb-3">Neural Map Generator</h3>
+                                <h3 className="font-sans text-2xl font-bold text-text-primary mb-3">Neural map generator</h3>
                                 <p className="text-text-tertiary mb-8 max-w-md text-sm leading-relaxed font-sans">
                                     Use Generative AI to visually reconstruct your cluster architecture. Typically visualizes namespaces, workload kinds, and inferred network traffic.
                                 </p>
@@ -255,7 +255,7 @@ export const TopologyView: React.FC<TopologyViewProps> = ({ workloads }) => {
                                     onClick={handleGenerateDiagram}
                                     className="kt-button kt-button-primary"
                                 >
-                                    <Sparkles className="w-5 h-5" /> Initialize Generation
+                                    <Sparkles className="w-5 h-5" /> Initialize generation
                                 </button>
                             </div>
                         )}
@@ -272,7 +272,7 @@ export const TopologyView: React.FC<TopologyViewProps> = ({ workloads }) => {
                                         <Layers className="w-4 h-4 text-primary-500" />
                                         <span className="truncate max-w-[180px]">{namespace}</span>
                                     </span>
-                                    <span className="kt-badge kt-badge-info">{items.length} WORKLOADS</span>
+                                    <span className="kt-badge kt-badge-info">{items.length} workloads</span>
                                 </div>
                                 <div className="p-4 relative z-10 grid grid-cols-1 gap-3">
                                     {items.map(w => (

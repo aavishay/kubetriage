@@ -69,7 +69,7 @@ export const RegisterClusterModal: React.FC<RegisterClusterModalProps> = ({ isOp
                         <div className="p-2 bg-primary-600 rounded-lg">
                             <Cloud className="w-4 h-4 text-white" />
                         </div>
-                        <h3 id="register-modal-title" className="font-sans font-bold text-text-primary">Register Cluster</h3>
+                        <h3 id="register-modal-title" className="font-sans font-bold text-text-primary">Register cluster</h3>
                     </div>
                     <button onClick={onClose} className="kt-button kt-button-ghost kt-button-sm">
                         <X className="w-4 h-4" />
@@ -93,7 +93,7 @@ export const RegisterClusterModal: React.FC<RegisterClusterModalProps> = ({ isOp
 
                     <div className="space-y-2">
                         <label className="kt-text-label">
-                            Display Name (Optional)
+                            Display name (optional)
                         </label>
                         <input
                             type="text"
@@ -120,7 +120,7 @@ export const RegisterClusterModal: React.FC<RegisterClusterModalProps> = ({ isOp
                             required
                         />
                         <div className="kt-panel-inset p-2.5 border-l-2 border-l-warning">
-                            <p className="text-[10px] text-warning font-bold mb-1 font-sans">LOCAL CLUSTERS (minikube, kind)</p>
+                            <p className="text-[10px] text-warning font-bold mb-1 font-sans">Local clusters (minikube, kind)</p>
                             <p className="text-[10px] text-text-tertiary font-sans">Use flattened kubeconfig:</p>
                             <code className="font-mono text-[10px] text-text-secondary bg-bg-hover px-2 py-1 rounded block mt-1">
                                 kubectl config view --minify --flatten --context=&lt;name&gt;

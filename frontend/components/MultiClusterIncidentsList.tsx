@@ -247,7 +247,7 @@ export const MultiClusterIncidentsList: React.FC<MultiClusterIncidentsListProps>
   return (
     <div className="kt-panel overflow-hidden">
       <div className="kt-panel-header">
-        <span>All Incidents ({filteredIncidents.length}{filteredIncidents.length !== incidents.length && ` of ${incidents.length}`})</span>
+        <span>All incidents ({filteredIncidents.length}{filteredIncidents.length !== incidents.length && ` of ${incidents.length}`})</span>
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
           <div className="relative flex-1 sm:flex-none">
             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-text-tertiary" />
@@ -261,14 +261,14 @@ export const MultiClusterIncidentsList: React.FC<MultiClusterIncidentsListProps>
           <div className="flex items-center gap-2">
             <Filter className="w-3.5 h-3.5 text-text-tertiary shrink-0" />
             <select value={severityFilter} onChange={handleSeverityChange} className="kt-select text-xs py-1.5">
-              <option value="all">All Severities</option>
+              <option value="all">All severities</option>
               <option value="Critical">Critical</option>
               <option value="High">High</option>
               <option value="Medium">Medium</option>
               <option value="Low">Low</option>
             </select>
             <select value={patternFilter} onChange={handlePatternChange} className="kt-select text-xs py-1.5">
-              <option value="all">All Patterns</option>
+              <option value="all">All patterns</option>
               <option value="Cascading">Cascading</option>
               <option value="Correlated">Correlated</option>
               <option value="Isolated">Isolated</option>
@@ -280,7 +280,7 @@ export const MultiClusterIncidentsList: React.FC<MultiClusterIncidentsListProps>
         {incidents.length === 0 ? (
           <div className="text-center py-12 px-6">
             <CheckCircle2 className="w-12 h-12 text-success mx-auto mb-4" />
-            <h4 className="font-sans text-lg font-bold text-text-primary mb-2">No Cross-Cluster Incidents</h4>
+            <h4 className="font-sans text-lg font-bold text-text-primary mb-2">No cross-cluster incidents</h4>
             <p className="text-text-tertiary text-sm font-sans">All systems operating normally across selected clusters</p>
           </div>
         ) : filteredIncidents.length === 0 ? (

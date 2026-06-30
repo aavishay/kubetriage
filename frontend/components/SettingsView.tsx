@@ -184,12 +184,12 @@ export const SettingsView: React.FC = () => {
 
                         <div className="space-y-3">
                             <label className="text-[10px] text-text-tertiary flex items-center gap-1.5 font-sans font-medium">
-                                <RefreshCw className="w-3.5 h-3.5" /> Auto Refresh
+                                <RefreshCw className="w-3.5 h-3.5" /> Auto refresh
                             </label>
                             <div className="kt-panel-inset p-4 space-y-4">
                                 <div className="flex items-center justify-between">
                                     <div>
-                                        <h3 className="text-sm font-sans font-semibold text-text-primary">Resource Refresh Interval</h3>
+                                        <h3 className="text-sm font-sans font-semibold text-text-primary">Resource refresh interval</h3>
                                         <p className="text-xs text-text-tertiary mt-1 font-sans">How often to update workload and resource data.</p>
                                     </div>
                                     <div className="flex items-center gap-2 text-xs font-medium">
@@ -222,7 +222,7 @@ export const SettingsView: React.FC = () => {
                             <div className="kt-panel-inset p-4 space-y-4">
                                 <div className="flex items-center justify-between">
                                     <div>
-                                        <h3 className="text-sm font-sans font-semibold text-text-primary">Toast Notifications</h3>
+                                        <h3 className="text-sm font-sans font-semibold text-text-primary">Toast notifications</h3>
                                         <p className="text-xs text-text-tertiary mt-1 font-sans">Display alerts when thresholds are breached.</p>
                                     </div>
                                     <button
@@ -236,7 +236,7 @@ export const SettingsView: React.FC = () => {
                                 {notificationSettings.toastEnabled && (
                                     <div className="space-y-3 pt-4 border-t border-border-main animate-fade-in">
                                         <div className="flex justify-between items-center text-xs">
-                                            <span className="text-text-secondary font-sans font-semibold opacity-80">Cooldown Frequency</span>
+                                            <span className="text-text-secondary font-sans font-semibold opacity-80">Cooldown frequency</span>
                                             <span className="font-bold text-primary-500 bg-primary-500/10 border border-primary-500/20 px-2 py-0.5 rounded-sm min-w-[3rem] text-center">{notificationSettings.toastFrequency}s</span>
                                         </div>
                                         <input type="range" min="2" max="60" step="1" value={notificationSettings.toastFrequency} onChange={(e) => updateNotificationSettings({ ...notificationSettings, toastFrequency: parseInt(e.target.value) })} className="w-full h-1.5 bg-bg-card border border-border-main rounded-sm appearance-none cursor-pointer accent-primary-500" />
@@ -249,7 +249,7 @@ export const SettingsView: React.FC = () => {
 
                         <div className="space-y-3">
                             <label className="text-[10px] text-text-tertiary flex items-center gap-1.5 font-sans font-medium">
-                                <Wifi className="w-3.5 h-3.5" /> Offline Mode
+                                <Wifi className="w-3.5 h-3.5" /> Offline mode
                             </label>
                             <div className="kt-panel-inset p-4 space-y-4">
                                 <div className="flex items-center justify-between">
@@ -258,7 +258,7 @@ export const SettingsView: React.FC = () => {
                                             {navigator.onLine ? <Wifi className="w-4 h-4" /> : <WifiOff className="w-4 h-4" />}
                                         </div>
                                         <div>
-                                            <h3 className="text-sm font-sans font-semibold text-text-primary">Offline Support</h3>
+                                            <h3 className="text-sm font-sans font-semibold text-text-primary">Offline support</h3>
                                             <p className="text-xs text-text-tertiary mt-1 font-sans">
                                                 {navigator.onLine
                                                     ? 'Connected. GET responses are cached locally; mutations queue when offline.'
@@ -275,14 +275,14 @@ export const SettingsView: React.FC = () => {
                                     <div className="kt-panel p-3">
                                         <div className="flex items-center gap-2 mb-1 relative z-10">
                                             <Database className="w-3.5 h-3.5 text-primary-500" />
-                                            <span className="text-[10px] text-text-tertiary font-sans font-medium">Cached Entries</span>
+                                            <span className="text-[10px] text-text-tertiary font-sans font-medium">Cached entries</span>
                                         </div>
                                         <p className="text-lg font-bold text-text-primary relative z-10">{offlineStats.entries}</p>
                                     </div>
                                     <div className="kt-panel p-3">
                                         <div className="flex items-center gap-2 mb-1 relative z-10">
                                             <ArrowUpCircle className="w-3.5 h-3.5 text-warning" />
-                                            <span className="text-[10px] text-text-tertiary font-sans font-medium">Queued Actions</span>
+                                            <span className="text-[10px] text-text-tertiary font-sans font-medium">Queued actions</span>
                                         </div>
                                         <p className="text-lg font-bold text-text-primary relative z-10">{offlineStats.queueSize}</p>
                                     </div>
@@ -290,7 +290,7 @@ export const SettingsView: React.FC = () => {
 
                                 <button onClick={handleClearCache} disabled={isClearing || offlineStats.entries === 0} className="kt-button kt-button-danger kt-button-sm">
                                     <Trash2 className="w-3.5 h-3.5" />
-                                    {isClearing ? 'Clearing...' : 'Clear Cache'}
+                                    {isClearing ? 'Clearing...' : 'Clear cache'}
                                 </button>
                             </div>
                         </div>
@@ -298,7 +298,7 @@ export const SettingsView: React.FC = () => {
 
                     <div className="p-4 bg-bg-hover/20 border-t border-border-main flex justify-end relative z-10">
                         <button onClick={handleSave} disabled={isSaving} className={`kt-button kt-button-primary ${isSaving ? 'animate-pulse' : ''}`}>
-                            {isSaving ? <><Loader2 className="w-4 h-4 animate-spin" /> saving...</> : <><Check className="w-4 h-4" /> Save Configuration</>}
+                            {isSaving ? <><Loader2 className="w-4 h-4 animate-spin" /> saving...</> : <><Check className="w-4 h-4" /> Save configuration</>}
                         </button>
                     </div>
                 </div>

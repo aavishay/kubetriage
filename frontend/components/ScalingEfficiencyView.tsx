@@ -125,7 +125,7 @@ const ScalingEfficiencyViewComponent: React.FC<ScalingEfficiencyViewProps> = ({ 
 
     return [
       {
-        title: 'Node Pools',
+        title: 'Node pools',
         value: data.summary.totalNodePools,
         subtext: `${data.summary.totalCostOptimized} cost-optimized`,
         icon: Server,
@@ -133,7 +133,7 @@ const ScalingEfficiencyViewComponent: React.FC<ScalingEfficiencyViewProps> = ({ 
         bgColor: 'bg-primary-500/10'
       },
       {
-        title: 'KEDA Scalers',
+        title: 'KEDA scalers',
         value: data.summary.totalKedaScalers,
         subtext: 'Active auto-scaling',
         icon: Zap,
@@ -141,7 +141,7 @@ const ScalingEfficiencyViewComponent: React.FC<ScalingEfficiencyViewProps> = ({ 
         bgColor: 'bg-success/10'
       },
       {
-        title: 'HPA Scalers',
+        title: 'HPA scalers',
         value: data.summary.totalHpaScalers,
         subtext: 'Native K8s scaling',
         icon: Scale,
@@ -149,7 +149,7 @@ const ScalingEfficiencyViewComponent: React.FC<ScalingEfficiencyViewProps> = ({ 
         bgColor: 'bg-info/10'
       },
       {
-        title: 'Avg Utilization',
+        title: 'Avg utilization',
         value: `${data.summary.avgNodeUtilization.toFixed(1)}%`,
         subtext: data.summary.avgNodeUtilization > 70 ? 'Healthy' : 'Underutilized',
         icon: Activity,
@@ -157,7 +157,7 @@ const ScalingEfficiencyViewComponent: React.FC<ScalingEfficiencyViewProps> = ({ 
         bgColor: data.summary.avgNodeUtilization > 70 ? 'bg-success/10' : 'bg-warning/10'
       },
       {
-        title: 'Bin Packing',
+        title: 'Bin packing',
         value: `${data.summary.avgBinPackingEfficiency.toFixed(1)}%`,
         subtext: 'Efficiency score',
         icon: Box,
@@ -429,7 +429,7 @@ const ScalingEfficiencyViewComponent: React.FC<ScalingEfficiencyViewProps> = ({ 
         <div>
           <h1 className="font-sans text-2xl font-bold text-text-primary flex items-center gap-3">
             <Zap className="w-7 h-7 text-primary-500" />
-            Scaling Efficiency
+            Scaling efficiency
           </h1>
           <p className="text-text-tertiary text-sm mt-1 font-sans">
             Unified node provisioning & KEDA event-driven scaling analytics
@@ -454,7 +454,7 @@ const ScalingEfficiencyViewComponent: React.FC<ScalingEfficiencyViewProps> = ({ 
               onChange={(e) => setSelectedProvisionerType(e.target.value)}
               className="kt-select text-sm"
             >
-              <option value="all">All Provisioners</option>
+              <option value="all">All provisioners</option>
               {data.unifiedProvisioners.map(p => (
                 <option key={p.provisionerType} value={p.provisionerType}>
                   {getProvisionerDisplayName(p.provisionerType)}
@@ -510,9 +510,9 @@ const ScalingEfficiencyViewComponent: React.FC<ScalingEfficiencyViewProps> = ({ 
                 className="kt-select text-xs"
               >
                 <option value="name">Name</option>
-                <option value="totalCost">Total Cost</option>
+                <option value="totalCost">Total cost</option>
                 <option value="utilization">Utilization</option>
-                <option value="binPacking">Bin Packing</option>
+                <option value="binPacking">Bin packing</option>
               </select>
               <button
                 onClick={() => setNodePoolSortOrder(prev => prev === 'asc' ? 'desc' : 'asc')}
@@ -609,7 +609,7 @@ const ScalingEfficiencyViewComponent: React.FC<ScalingEfficiencyViewProps> = ({ 
                           )}
                           {np.readyNodes !== np.totalNodes && (
                             <span className="kt-badge kt-badge-warning shrink-0">
-                              {np.totalNodes - np.readyNodes} Not Ready
+                              {np.totalNodes - np.readyNodes} not ready
                             </span>
                           )}
                         </div>
@@ -638,7 +638,7 @@ const ScalingEfficiencyViewComponent: React.FC<ScalingEfficiencyViewProps> = ({ 
                           </p>
                         </div>
                         <div className="kt-panel-inset text-center p-3">
-                          <p className="text-[10px] text-text-tertiary font-sans font-medium">Bin Packing</p>
+                          <p className="text-[10px] text-text-tertiary font-sans font-medium">Bin packing</p>
                           <p className="text-lg font-bold text-text-primary">{np.binPackingEfficiency.toFixed(0)}%</p>
                         </div>
                         <div className="kt-panel-inset text-center p-3">
@@ -687,7 +687,7 @@ const ScalingEfficiencyViewComponent: React.FC<ScalingEfficiencyViewProps> = ({ 
                           </div>
                           {(np.instanceTypes?.length || 0) > 0 && (
                             <div>
-                              <span className="text-text-tertiary text-sm font-sans font-medium">Instance Types:</span>
+                              <span className="text-text-tertiary text-sm font-sans font-medium">Instance types:</span>
                               <div className="flex flex-wrap gap-2 mt-1">
                                 {np.instanceTypes?.map(it => (
                                   <span key={it} className="px-2 py-1 bg-bg-main border border-border-main text-xs text-text-secondary font-sans">{it}</span>
@@ -709,7 +709,7 @@ const ScalingEfficiencyViewComponent: React.FC<ScalingEfficiencyViewProps> = ({ 
                             <div className="p-3 rounded-xl bg-danger/10 border border-danger/20">
                               <div className="flex items-center gap-2 mb-2">
                                 <AlertTriangle className="w-4 h-4 text-danger" />
-                                <span className="text-sm font-bold text-danger font-sans">Configuration Issues</span>
+                                <span className="text-sm font-bold text-danger font-sans">Configuration issues</span>
                               </div>
                               <ul className="space-y-1">
                                 {np.misconfigurations.map((m, i) => (
@@ -748,7 +748,7 @@ const ScalingEfficiencyViewComponent: React.FC<ScalingEfficiencyViewProps> = ({ 
                           }}
                         />
                         <Bar dataKey="utilization" name="Utilization %" fill={COLORS.primary} radius={[2, 2, 0, 0]} />
-                        <Bar dataKey="binPacking" name="Bin Packing %" fill={COLORS.success} radius={[2, 2, 0, 0]} />
+                        <Bar dataKey="binPacking" name="Bin packing %" fill={COLORS.success} radius={[2, 2, 0, 0]} />
                       </BarChart>
                     </ResponsiveContainer>
                   </div>
@@ -765,7 +765,7 @@ const ScalingEfficiencyViewComponent: React.FC<ScalingEfficiencyViewProps> = ({ 
               <Activity className="w-4 h-4 text-success" />
               <div>
                 <h2 className="font-sans text-sm font-bold text-text-primary">
-                  KEDA Event Scalers
+                  KEDA event scalers
                 </h2>
                 <p className="text-[10px] text-text-tertiary font-sans">
                   Event-driven scaling efficiency & trigger performance
@@ -898,13 +898,13 @@ const ScalingEfficiencyViewComponent: React.FC<ScalingEfficiencyViewProps> = ({ 
                           </p>
                         </div>
                         <div className="kt-panel-inset text-center p-3">
-                          <p className="text-[10px] text-text-tertiary font-sans font-medium">At Min</p>
+                          <p className="text-[10px] text-text-tertiary font-sans font-medium">At min</p>
                           <p className="text-lg font-bold text-text-primary">
                             {keda.timeAtMinPercent.toFixed(0)}%
                           </p>
                         </div>
                         <div className="kt-panel-inset text-center p-3">
-                          <p className="text-[10px] text-text-tertiary font-sans font-medium">At Max</p>
+                          <p className="text-[10px] text-text-tertiary font-sans font-medium">At max</p>
                           <p className={`text-lg font-bold ${ keda.timeAtMaxPercent > 20 ? 'text-danger' : 'text-text-primary' }`}>
                             {keda.timeAtMaxPercent.toFixed(0)}%
                           </p>
@@ -943,13 +943,13 @@ const ScalingEfficiencyViewComponent: React.FC<ScalingEfficiencyViewProps> = ({ 
 
                           <div className="grid grid-cols-2 gap-4">
                             <div className="kt-panel-inset p-3">
-                              <p className="text-[10px] text-text-tertiary mb-1 font-sans font-medium">Cooldown Efficiency</p>
+                              <p className="text-[10px] text-text-tertiary mb-1 font-sans font-medium">Cooldown efficiency</p>
                               <p className="text-xl font-bold text-text-primary">
                                 {keda.cooldownEfficiency.toFixed(0)}%
                               </p>
                             </div>
                             <div className="kt-panel-inset p-3">
-                              <p className="text-[10px] text-text-tertiary mb-1 font-sans font-medium">Scale-up Latency</p>
+                              <p className="text-[10px] text-text-tertiary mb-1 font-sans font-medium">Scale-up latency</p>
                               <p className="text-xl font-bold text-text-primary">
                                 {(keda.scaleUpLatency / 1000).toFixed(1)}s
                               </p>
@@ -960,7 +960,7 @@ const ScalingEfficiencyViewComponent: React.FC<ScalingEfficiencyViewProps> = ({ 
                             <div className="p-3 rounded-xl bg-danger/10 border border-danger/20">
                               <div className="flex items-center gap-2 mb-2">
                                 <AlertTriangle className="w-4 h-4 text-danger" />
-                                <span className="text-sm font-bold text-danger font-sans">Configuration Issues</span>
+                                <span className="text-sm font-bold text-danger font-sans">Configuration issues</span>
                               </div>
                               <ul className="space-y-1">
                                 {keda.misconfigurations.map((m, i) => (
@@ -982,7 +982,7 @@ const ScalingEfficiencyViewComponent: React.FC<ScalingEfficiencyViewProps> = ({ 
                 {kedaChartData.length > 0 && (
                   <div className="h-[250px] mt-6">
                     <p className="text-[10px] text-text-tertiary mb-4 font-sans font-medium">
-                      Scaling Efficiency by Workload
+                      Scaling efficiency by Workload
                     </p>
                     <ResponsiveContainer width="100%" height="100%">
                       <BarChart data={kedaChartData} layout="vertical">
@@ -1148,7 +1148,7 @@ const ScalingEfficiencyViewComponent: React.FC<ScalingEfficiencyViewProps> = ({ 
                         </p>
                       </div>
                       <div className="kt-panel-inset text-center p-3">
-                        <p className="text-[10px] text-text-tertiary font-sans font-medium">CPU Target</p>
+                        <p className="text-[10px] text-text-tertiary font-sans font-medium">CPU target</p>
                         <p className="text-lg font-bold text-text-primary">
                           {hpa.cpuUtilization?.targetUtilization || '-'}%
                         </p>
@@ -1159,7 +1159,7 @@ const ScalingEfficiencyViewComponent: React.FC<ScalingEfficiencyViewProps> = ({ 
                         )}
                       </div>
                       <div className="kt-panel-inset text-center p-3">
-                        <p className="text-[10px] text-text-tertiary font-sans font-medium">Memory Target</p>
+                        <p className="text-[10px] text-text-tertiary font-sans font-medium">Memory target</p>
                         <p className="text-lg font-bold text-text-primary">
                           {hpa.memoryUtilization?.targetUtilization || '-'}%
                         </p>
@@ -1176,7 +1176,7 @@ const ScalingEfficiencyViewComponent: React.FC<ScalingEfficiencyViewProps> = ({ 
                       <div className="mt-4 pt-4 border-t border-border-main space-y-4 animate-in fade-in slide-in-from-top-2">
                         <div className="grid grid-cols-2 gap-4">
                           <div>
-                            <p className="text-[10px] text-text-tertiary mb-2 font-sans font-medium">Scale Target</p>
+                            <p className="text-[10px] text-text-tertiary mb-2 font-sans font-medium">Scale target</p>
                             <div className="kt-panel-inset p-3">
                               <p className="text-sm text-text-primary font-sans">
                                 {hpa.scaleTargetRef.kind}: <span className="text-xs text-info font-sans">{hpa.scaleTargetRef.name}</span>
@@ -1189,11 +1189,11 @@ const ScalingEfficiencyViewComponent: React.FC<ScalingEfficiencyViewProps> = ({ 
                             <div className="kt-panel-inset p-3 space-y-2">
                               <div className="flex items-center gap-2">
                                 <span className={`w-2 h-2 rounded-full ${hpa.isActive ? 'bg-success' : 'bg-danger'}`} />
-                                <span className="text-xs text-text-primary font-sans">Scaling Active</span>
+                                <span className="text-xs text-text-primary font-sans">Scaling active</span>
                               </div>
                               <div className="flex items-center gap-2">
                                 <span className={`w-2 h-2 rounded-full ${hpa.ableToScale ? 'bg-success' : 'bg-danger'}`} />
-                                <span className="text-xs text-text-primary font-sans">Able to Scale</span>
+                                <span className="text-xs text-text-primary font-sans">Able to scale</span>
                               </div>
                             </div>
                           </div>
@@ -1201,7 +1201,7 @@ const ScalingEfficiencyViewComponent: React.FC<ScalingEfficiencyViewProps> = ({ 
 
                         {hpa.customMetrics && hpa.customMetrics.length > 0 && (
                           <div>
-                            <p className="text-[10px] text-text-tertiary mb-2 font-sans font-medium">Custom Metrics</p>
+                            <p className="text-[10px] text-text-tertiary mb-2 font-sans font-medium">Custom metrics</p>
                             <div className="space-y-2">
                               {hpa.customMetrics.map((metric, idx) => (
                                 <div
@@ -1230,7 +1230,7 @@ const ScalingEfficiencyViewComponent: React.FC<ScalingEfficiencyViewProps> = ({ 
                           <div className="p-3 rounded-xl bg-danger/10 border border-danger/20">
                             <div className="flex items-center gap-2 mb-2">
                               <AlertTriangle className="w-4 h-4 text-danger" />
-                              <span className="text-sm font-bold text-danger font-sans">Configuration Issues</span>
+                              <span className="text-sm font-bold text-danger font-sans">Configuration issues</span>
                             </div>
                             <ul className="space-y-1">
                               {hpa.misconfigurations.map((m, i) => (
@@ -1354,7 +1354,7 @@ const ScalingEfficiencyViewComponent: React.FC<ScalingEfficiencyViewProps> = ({ 
                         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                           {claim.instanceType && (
                             <div className="kt-panel-inset p-2">
-                              <p className="text-[10px] text-text-tertiary font-sans font-medium">Instance Type</p>
+                              <p className="text-[10px] text-text-tertiary font-sans font-medium">Instance type</p>
                               <p className="text-sm font-bold text-text-primary">{claim.instanceType}</p>
                             </div>
                           )}

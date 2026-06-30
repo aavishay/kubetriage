@@ -390,11 +390,11 @@ export const AutonomousRemediationView: React.FC = () => {
   const getRiskBadge = (risk: string) => {
     switch (risk) {
       case 'low':
-        return <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-full bg-emerald-500/10 text-emerald-600"><Shield className="w-3 h-3" /> Low Risk</span>;
+        return <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-full bg-emerald-500/10 text-emerald-600"><Shield className="w-3 h-3" /> Low risk</span>;
       case 'medium':
-        return <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-full bg-amber-500/10 text-amber-600"><ShieldAlert className="w-3 h-3" /> Medium Risk</span>;
+        return <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-full bg-amber-500/10 text-amber-600"><ShieldAlert className="w-3 h-3" /> Medium risk</span>;
       case 'high':
-        return <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-full bg-rose-500/10 text-rose-600"><AlertCircle className="w-3 h-3" /> High Risk</span>;
+        return <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-full bg-rose-500/10 text-rose-600"><AlertCircle className="w-3 h-3" /> High risk</span>;
       default:
         return null;
     }
@@ -462,7 +462,7 @@ export const AutonomousRemediationView: React.FC = () => {
         {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div className="min-w-0">
-            <h1 className="text-2xl font-bold text-text-primary">Autonomous Remediation</h1>
+            <h1 className="text-2xl font-bold text-text-primary">Autonomous remediation</h1>
             <p className="text-sm text-text-secondary mt-1">
               AI-generated fixes with human approval and automatic rollback safety
             </p>
@@ -481,7 +481,7 @@ export const AutonomousRemediationView: React.FC = () => {
         <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-4 flex items-start gap-3">
           <Shield className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-0.5 shrink-0" />
           <div>
-            <h3 className="text-sm font-medium text-blue-900 dark:text-blue-200">Safety First</h3>
+            <h3 className="text-sm font-medium text-blue-900 dark:text-blue-200">Safety first</h3>
             <p className="text-xs text-blue-700 dark:text-blue-300 mt-1">
               All autonomous actions require human approval before execution. The system automatically monitors fix health and rolls back if issues are detected.
             </p>
@@ -500,9 +500,9 @@ export const AutonomousRemediationView: React.FC = () => {
                   : 'border-transparent text-text-secondary hover:text-text-primary'
               }`}
             >
-              {tab === 'proposals' && 'Auto-Fix Proposals'}
-              {tab === 'runbooks' && 'Executable Runbooks'}
-              {tab === 'scheduled' && 'Scheduled Remediation'}
+              {tab === 'proposals' && 'Auto-fix proposals'}
+              {tab === 'runbooks' && 'Executable runbooks'}
+              {tab === 'scheduled' && 'Scheduled remediation'}
             </button>
           ))}
         </div>
@@ -515,7 +515,7 @@ export const AutonomousRemediationView: React.FC = () => {
               {proposals.length === 0 ? (
                 <div className="text-center py-12">
                   <Shield className="w-12 h-12 text-text-tertiary mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-text-primary">No Fix Proposals</h3>
+                  <h3 className="text-lg font-medium text-text-primary">No fix proposals</h3>
                   <p className="text-sm text-text-secondary mt-2">AI will generate fix proposals as issues are detected</p>
                 </div>
               ) : (
@@ -541,7 +541,7 @@ export const AutonomousRemediationView: React.FC = () => {
                         </div>
 
                         <div className="bg-bg-hover/50 rounded-lg p-3">
-                          <p className="text-xs font-medium text-text-secondary mb-1">Proposed Fix</p>
+                          <p className="text-xs font-medium text-text-secondary mb-1">Proposed fix</p>
                           <p className="text-sm text-text-primary break-words">{proposal.proposedFix.description}</p>
                           <p className="text-xs text-text-secondary mt-2 italic break-words">"{proposal.proposedFix.reasoning}"</p>
                         </div>
@@ -560,7 +560,7 @@ export const AutonomousRemediationView: React.FC = () => {
                               onClick={() => { setSelectedProposal(proposal); setShowApprovalModal(true); }}
                               className="flex-1 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium py-2 px-4 rounded-lg transition-colors flex items-center justify-center gap-1.5"
                             >
-                              <CheckCircle className="w-3.5 h-3.5" /> Review & Approve
+                              <CheckCircle className="w-3.5 h-3.5" /> Review & approve
                             </button>
                             <button
                               onClick={() => handleApprove(proposal, false)}
@@ -576,7 +576,7 @@ export const AutonomousRemediationView: React.FC = () => {
                             onClick={() => handleApply(proposal)}
                             className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-medium py-2 px-4 rounded-lg transition-colors flex items-center justify-center gap-1.5"
                           >
-                            <Play className="w-3.5 h-3.5" /> Apply Fix
+                            <Play className="w-3.5 h-3.5" /> Apply fix
                           </button>
                         )}
 
@@ -625,7 +625,7 @@ export const AutonomousRemediationView: React.FC = () => {
               {runbooks.length === 0 ? (
                 <div className="text-center py-12">
                   <FileText className="w-12 h-12 text-text-tertiary mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-text-primary">No Runbooks</h3>
+                  <h3 className="text-lg font-medium text-text-primary">No runbooks</h3>
                   <p className="text-sm text-text-secondary mt-2">Convert triage reports to executable runbooks</p>
                 </div>
               ) : (
@@ -668,7 +668,7 @@ export const AutonomousRemediationView: React.FC = () => {
                                       <span className="truncate">{step.name}</span>
                                       {step.requiresApproval && (
                                         <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-full bg-amber-500/10 text-amber-600 shrink-0">
-                                          <User className="w-3 h-3" /> Requires Approval
+                                          <User className="w-3 h-3" /> Requires approval
                                         </span>
                                       )}
                                     </h4>
@@ -710,7 +710,7 @@ export const AutonomousRemediationView: React.FC = () => {
               {scheduledFixes.length === 0 ? (
                 <div className="text-center py-12">
                   <Calendar className="w-12 h-12 text-text-tertiary mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-text-primary">No Scheduled Fixes</h3>
+                  <h3 className="text-lg font-medium text-text-primary">No scheduled fixes</h3>
                   <p className="text-sm text-text-secondary mt-2">Schedule recurring remediation actions</p>
                 </div>
               ) : (
@@ -724,7 +724,7 @@ export const AutonomousRemediationView: React.FC = () => {
                             {getStatusBadge(fix.status)}
                             {fix.requiresApproval && (
                               <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-full bg-amber-500/10 text-amber-600 shrink-0">
-                                <Shield className="w-3 h-3" /> Approval Required
+                                <Shield className="w-3 h-3" /> Approval required
                               </span>
                             )}
                           </div>
@@ -792,7 +792,7 @@ export const AutonomousRemediationView: React.FC = () => {
         {showApprovalModal && selectedProposal && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
             <div className="bg-bg-card rounded-xl border border-border-main max-w-lg w-full max-h-[90vh] overflow-y-auto p-6">
-              <h3 className="text-lg font-semibold text-text-primary mb-4">Review Fix Proposal</h3>
+              <h3 className="text-lg font-semibold text-text-primary mb-4">Review fix proposal</h3>
 
               <div className="space-y-4 mb-6">
                 <div>
@@ -804,7 +804,7 @@ export const AutonomousRemediationView: React.FC = () => {
                   <p className="text-sm text-text-primary break-words">{selectedProposal.issue}</p>
                 </div>
                 <div>
-                  <p className="text-xs font-medium text-text-tertiary">Proposed Fix</p>
+                  <p className="text-xs font-medium text-text-tertiary">Proposed fix</p>
                   <p className="text-sm text-text-primary break-words">{selectedProposal.proposedFix.description}</p>
                   <p className="text-xs text-text-secondary mt-1 italic break-words">{selectedProposal.proposedFix.reasoning}</p>
                 </div>
@@ -813,7 +813,7 @@ export const AutonomousRemediationView: React.FC = () => {
                   <p className="text-sm text-text-primary break-words">{selectedProposal.estimatedImpact}</p>
                 </div>
                 <div>
-                  <p className="text-xs font-medium text-text-tertiary">Rollback Plan</p>
+                  <p className="text-xs font-medium text-text-tertiary">Rollback plan</p>
                   <p className="text-sm text-text-primary break-words">
                     Automatic rollback if fix fails within {selectedProposal.rollbackPlan.timeout} seconds
                   </p>
@@ -839,7 +839,7 @@ export const AutonomousRemediationView: React.FC = () => {
                   onClick={() => handleApprove(selectedProposal, true)}
                   className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium py-2.5 px-4 rounded-lg transition-colors flex items-center justify-center gap-2"
                 >
-                  <CheckCircle className="w-4 h-4" /> Approve Fix
+                  <CheckCircle className="w-4 h-4" /> Approve fix
                 </button>
                 <button
                   onClick={() => handleApprove(selectedProposal, false)}

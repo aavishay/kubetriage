@@ -60,18 +60,18 @@ export const AuditLogsView: React.FC = () => {
   }, [offset, filterAction, filterResource]);
 
   const actionOptions = [
-    { value: '', label: 'All Actions' },
-    { value: 'remediation_apply', label: 'Remediation Apply' },
-    { value: 'remediation_approve', label: 'Remediation Approve' },
-    { value: 'cluster_register', label: 'Cluster Register' },
-    { value: 'cluster_delete', label: 'Cluster Delete' },
-    { value: 'runbook_execute', label: 'Runbook Execute' },
-    { value: 'comment_create', label: 'Comment Create' },
-    { value: 'settings_update_ai', label: 'Settings Update' },
+    { value: '', label: 'All actions' },
+    { value: 'remediation_apply', label: 'Remediation apply' },
+    { value: 'remediation_approve', label: 'Remediation approve' },
+    { value: 'cluster_register', label: 'Cluster register' },
+    { value: 'cluster_delete', label: 'Cluster delete' },
+    { value: 'runbook_execute', label: 'Runbook execute' },
+    { value: 'comment_create', label: 'Comment create' },
+    { value: 'settings_update_ai', label: 'Settings update' },
   ];
 
   const resourceOptions = [
-    { value: '', label: 'All Resources' },
+    { value: '', label: 'All resources' },
     { value: 'workload', label: 'Workload' },
     { value: 'cluster', label: 'Cluster' },
     { value: 'report', label: 'Report' },
@@ -87,7 +87,7 @@ export const AuditLogsView: React.FC = () => {
         <div>
           <h1 className="font-sans text-2xl font-bold text-text-primary flex items-center gap-3">
             <Shield className="w-7 h-7 text-primary-500" />
-            Audit Logs
+            Audit logs
           </h1>
           <p className="text-text-tertiary text-sm mt-1 font-sans">
             Track every action performed in KubeTriage for compliance and accountability.
@@ -127,7 +127,7 @@ export const AuditLogsView: React.FC = () => {
       <div className="kt-panel overflow-hidden">
         <div className="kt-panel-header">
           <span className="flex items-center gap-2">
-            <Shield className="w-4 h-4 text-primary-500" /> Activity Log
+            <Shield className="w-4 h-4 text-primary-500" /> Activity log
           </span>
           <span className="text-[10px] text-text-tertiary font-sans">{total} total entries</span>
         </div>

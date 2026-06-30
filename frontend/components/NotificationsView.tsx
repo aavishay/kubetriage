@@ -199,7 +199,7 @@ export const NotificationsView: React.FC<NotificationsViewProps> = ({
                   <div className="p-2 bg-primary-500/10 border border-primary-500/30">
                      <Bell className="w-6 h-6 text-primary-500" />
                   </div>
-                  <h2 className="font-sans text-2xl font-bold text-text-primary">Broadcast & Logic</h2>
+                  <h2 className="font-sans text-2xl font-bold text-text-primary">Broadcast & logic</h2>
                </div>
                <p className="text-sm text-text-secondary max-w-sm opacity-80 font-sans">Define alert thresholds and connect external notification sinks.</p>
             </div>
@@ -207,7 +207,7 @@ export const NotificationsView: React.FC<NotificationsViewProps> = ({
             <div className="flex flex-wrap bg-bg-main border border-border-main p-0.5">
                {(['rules', 'channels', 'history'] as const).map((tab) => (
                   <button key={tab} onClick={() => setActiveTab(tab)} className={`px-4 py-2 font-sans font-semibold text-xs border transition-all ${activeTab === tab ? 'bg-primary-500/10 text-primary-500 border-primary-500/30' : 'text-text-secondary hover:text-text-primary border-transparent'}`}>
-                     {tab === 'rules' ? 'Alert Logic' : tab === 'channels' ? 'Global Sinks' : 'History'}
+                     {tab === 'rules' ? 'Alert logic' : tab === 'channels' ? 'Global sinks' : 'History'}
                   </button>
                ))}
             </div>
@@ -220,9 +220,9 @@ export const NotificationsView: React.FC<NotificationsViewProps> = ({
                      <Settings2 className="w-6 h-6" />
                   </div>
                   <div>
-                     <h3 className="font-sans text-text-primary font-bold text-xl">Alert Frequency Control</h3>
+                     <h3 className="font-sans text-text-primary font-bold text-xl">Alert frequency control</h3>
                      <p className="text-xs text-text-secondary font-sans font-semibold mt-1.5 flex items-center gap-2">
-                        <span className="w-1.5 h-1.5 rounded-full bg-success animate-pulse" /> Global Toast Policy
+                        <span className="w-1.5 h-1.5 rounded-full bg-success animate-pulse" /> Global toast policy
                      </p>
                   </div>
                </div>
@@ -260,7 +260,7 @@ export const NotificationsView: React.FC<NotificationsViewProps> = ({
                {activeTab !== 'history' && (
                   <button onClick={() => activeTab === 'channels' ? openChannelModal() : openRuleModal()} className="kt-button kt-button-primary kt-button-sm">
                      <Plus className="w-4 h-4" />
-                     {activeTab === 'channels' ? 'New Integration' : 'New Rule'}
+                     {activeTab === 'channels' ? 'New integration' : 'New rule'}
                   </button>
                )}
             </div>
@@ -272,7 +272,7 @@ export const NotificationsView: React.FC<NotificationsViewProps> = ({
                         <History className="w-4 h-4 text-text-secondary" /> Threshold Breach Timeline
                      </div>
                      <button onClick={togglePause} className={`px-3 py-1 text-[10px] font-sans font-semibold border transition-all flex items-center gap-2 ${isPaused ? 'bg-warning text-black border-warning kt-amber-glow' : 'bg-bg-card text-text-tertiary hover:text-primary-500 border-border-main'}`}>
-                        {isPaused ? <><Clock className="w-3 h-3" /> Live Updates Paused</> : <><Activity className="w-3 h-3" /> Real-time</>}
+                        {isPaused ? <><Clock className="w-3 h-3" /> Live updates paused</> : <><Activity className="w-3 h-3" /> Real-time</>}
                      </button>
                   </div>
                   <div className="divide-y divide-border-main relative z-10">
@@ -311,7 +311,7 @@ export const NotificationsView: React.FC<NotificationsViewProps> = ({
                                        </div>
                                     )}
                                     <button onClick={(e) => { e.stopPropagation(); handleAlertClick(alerts[0]); }} className="px-3 py-1.5 bg-bg-card border border-border-main text-[10px] font-sans font-semibold hover:border-primary-500 transition-colors group/btn">
-                                       Triage Workload
+                                       Triage workload
                                        <ArrowRight className="w-3 h-3 inline-block ml-2 group-hover/btn:translate-x-1 transition-transform" />
                                     </button>
                                  </div>
@@ -336,7 +336,7 @@ export const NotificationsView: React.FC<NotificationsViewProps> = ({
                                              <div className="text-[10px] font-sans font-semibold text-text-primary mb-1.5">{formatTime(alert.timestamp)}</div>
                                              <div className="flex items-center justify-end gap-1.5 text-[9px] text-text-tertiary font-sans">
                                                 <span className="w-1.5 h-1.5 rounded-full bg-primary-500/50" />
-                                                {alert.channelsNotified.length} Channels Notified
+                                                {alert.channelsNotified.length} channels notified
                                              </div>
                                           </div>
                                        </div>
@@ -376,7 +376,7 @@ export const NotificationsView: React.FC<NotificationsViewProps> = ({
                                  </div>
                                  <button onClick={() => handleTest(channel.id)} disabled={testingId === channel.id} className="flex items-center gap-2 font-sans font-semibold text-[9px] text-primary-500 hover:text-primary-400 transition-colors disabled:opacity-50">
                                     {testingId === channel.id ? <Loader2 className="w-3 h-3 animate-spin" /> : (testResult?.id === channel.id ? <CheckCircle2 className="w-3 h-3 text-success" /> : <Play className="w-3 h-3" />)}
-                                    Test Sink
+                                    Test sink
                                  </button>
                               </div>
                            </div>
@@ -401,7 +401,7 @@ export const NotificationsView: React.FC<NotificationsViewProps> = ({
 
                               <div className="space-y-4 mb-6 flex-1 relative z-10">
                                  <div className="flex items-center justify-between mb-2">
-                                    <span className="text-[10px] text-text-tertiary font-sans font-medium">Saturation Threshold</span>
+                                    <span className="text-[10px] text-text-tertiary font-sans font-medium">Saturation threshold</span>
                                     <span className={`text-lg font-bold ${isActive ? 'text-danger' : 'text-text-primary'}`}>{rule.threshold}%</span>
                                  </div>
                                  <div className="w-full h-2 bg-bg-hover border border-border-main rounded-sm overflow-hidden">
@@ -445,17 +445,17 @@ export const NotificationsView: React.FC<NotificationsViewProps> = ({
                   <div className="kt-panel-header">
                      <div className="flex items-center gap-2">
                         <Plus className="w-5 h-5 text-primary-500" />
-                        {editingChannelId ? 'Edit Integration' : 'New Broadcast Sink'}
+                        {editingChannelId ? 'Edit integration' : 'New broadcast sink'}
                      </div>
                      <button onClick={() => setIsChannelModalOpen(false)} className="p-2 border border-border-main hover:border-danger/30 hover:text-danger text-text-tertiary transition-colors"><X className="w-5 h-5" /></button>
                   </div>
                   <form onSubmit={handleChannelSubmit} className="p-6 space-y-6 overflow-y-auto custom-scrollbar relative z-10">
                      <div className="space-y-2">
-                        <label className="text-[10px] text-text-tertiary font-sans font-medium">Display Name</label>
+                        <label className="text-[10px] text-text-tertiary font-sans font-medium">Display name</label>
                         <input type="text" value={channelName} onChange={(e) => setChannelName(e.target.value)} placeholder="e.g. Platform SRE Slack" className="kt-input" required />
                      </div>
                      <div className="space-y-2">
-                        <label className="text-[10px] text-text-tertiary font-sans font-medium">Target Type</label>
+                        <label className="text-[10px] text-text-tertiary font-sans font-medium">Target type</label>
                         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                            {(['Slack', 'PagerDuty', 'Webhook', 'Email'] as NotificationType[]).map(type => (
                               <button key={type} type="button" onClick={() => setChannelType(type)} className={`p-3 border text-[10px] font-sans font-semibold transition-all ${channelType === type ? 'bg-primary-600 border-primary-500 text-white kt-cyan-glow' : 'bg-bg-card border-border-main text-text-tertiary hover:border-primary-500/30'}`}>
@@ -465,12 +465,12 @@ export const NotificationsView: React.FC<NotificationsViewProps> = ({
                         </div>
                      </div>
                      <div className="space-y-2">
-                        <label className="text-[10px] text-text-tertiary font-sans font-medium">Connection String</label>
+                        <label className="text-[10px] text-text-tertiary font-sans font-medium">Connection string</label>
                         <input type="text" value={channelTarget} onChange={(e) => setChannelTarget(e.target.value)} placeholder={channelType === 'Email' ? 'admin@example.com' : 'https://hooks.slack.com/...'} className="kt-input font-sans" required />
                      </div>
                      <div className="pt-4 flex gap-3">
                         <button type="button" onClick={() => setIsChannelModalOpen(false)} className="kt-button kt-button-ghost kt-button-sm">Cancel</button>
-                        <button type="submit" className="kt-button kt-button-primary flex-[2]">Establish Sink</button>
+                        <button type="submit" className="kt-button kt-button-primary flex-[2]">Establish sink</button>
                      </div>
                   </form>
                </div>
@@ -483,13 +483,13 @@ export const NotificationsView: React.FC<NotificationsViewProps> = ({
                   <div className="kt-panel-header">
                      <div className="flex items-center gap-2">
                         <Settings2 className="w-5 h-5 text-primary-500" />
-                        {editingRuleId ? 'Edit Logic' : 'New Alert Strategy'}
+                        {editingRuleId ? 'Edit logic' : 'New alert strategy'}
                      </div>
                      <button onClick={() => setIsRuleModalOpen(false)} className="p-2 border border-border-main hover:border-danger/30 hover:text-danger text-text-tertiary transition-colors"><X className="w-5 h-5" /></button>
                   </div>
                   <form onSubmit={handleRuleSubmit} className="p-6 space-y-6 overflow-y-auto custom-scrollbar relative z-10">
                      <div className="space-y-2">
-                        <label className="text-[10px] text-text-tertiary font-sans font-medium">Strategy Title</label>
+                        <label className="text-[10px] text-text-tertiary font-sans font-medium">Strategy title</label>
                         <input type="text" value={ruleName} onChange={(e) => setRuleName(e.target.value)} placeholder="e.g. Critical CPU Pressure" className="kt-input" required />
                      </div>
 
@@ -513,14 +513,14 @@ export const NotificationsView: React.FC<NotificationsViewProps> = ({
 
                      <div className="space-y-3">
                         <div className="flex justify-between items-end">
-                           <label className="text-[10px] text-text-tertiary font-sans font-medium">Activation Threshold</label>
+                           <label className="text-[10px] text-text-tertiary font-sans font-medium">Activation threshold</label>
                            <span className="text-2xl font-bold text-primary-500">{ruleThreshold}%</span>
                         </div>
                         <input type="range" min="1" max="100" value={ruleThreshold} onChange={(e) => setRuleThreshold(parseInt(e.target.value))} className="w-full h-2 bg-bg-hover border border-border-main rounded-sm appearance-none cursor-pointer accent-primary-500" />
                      </div>
 
                      <div className="space-y-2">
-                        <label className="text-[10px] text-text-tertiary font-sans font-medium">Route To Channels</label>
+                        <label className="text-[10px] text-text-tertiary font-sans font-medium">Route to channels</label>
                         <div className="flex flex-wrap gap-2">
                            {channels.map(chan => (
                               <button key={chan.id} type="button" onClick={() => {
@@ -535,7 +535,7 @@ export const NotificationsView: React.FC<NotificationsViewProps> = ({
 
                      <div className="pt-4 flex gap-3">
                         <button type="button" onClick={() => setIsRuleModalOpen(false)} className="kt-button kt-button-ghost kt-button-sm">Cancel</button>
-                        <button type="submit" className="kt-button kt-button-primary flex-[2]">Commit Strategy</button>
+                        <button type="submit" className="kt-button kt-button-primary flex-[2]">Commit strategy</button>
                      </div>
                   </form>
                </div>

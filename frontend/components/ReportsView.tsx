@@ -195,10 +195,10 @@ export const ReportsView: React.FC = () => {
             <div className="kt-panel p-6 md:p-8 relative overflow-hidden">
                 <div className="relative z-10 max-w-2xl">
                     <div className="inline-flex items-center gap-2 kt-badge kt-badge-success mb-6">
-                        <Shield className="w-3.5 h-3.5" /> Compliance & Audit
+                        <Shield className="w-3.5 h-3.5" /> Compliance & audit
                     </div>
                     <h1 className="font-sans text-3xl font-bold text-text-primary mb-3">
-                        Reporting Center
+                        Reporting center
                     </h1>
                     <p className="text-base text-text-tertiary mb-8 leading-relaxed">
                         Generate compliance artifacts and review historical AI triage reports for your laboratory infrastructure.
@@ -208,7 +208,7 @@ export const ReportsView: React.FC = () => {
                         onClick={handleDownloadCompliance}
                         className="kt-button kt-button-primary"
                     >
-                        <Download className="w-4 h-4" /> Download SOC2 Report
+                        <Download className="w-4 h-4" /> Download SOC2 report
                     </button>
                 </div>
             </div>
@@ -217,7 +217,7 @@ export const ReportsView: React.FC = () => {
             <section className="kt-panel overflow-hidden">
                 <div className="kt-panel-header">
                     <span className="flex items-center gap-2">
-                        <FileCheck className="w-4 h-4 text-primary-500" /> Available Reports
+                        <FileCheck className="w-4 h-4 text-primary-500" /> Available reports
                     </span>
                 </div>
 
@@ -227,7 +227,7 @@ export const ReportsView: React.FC = () => {
                         <div className="p-3 w-fit mb-5 bg-bg-main border border-border-main text-primary-500 group-hover:kt-cyan-glow transition-all">
                             <Shield className="w-6 h-6" />
                         </div>
-                        <h3 className="font-sans text-lg font-bold text-text-primary mb-2">SOC 2 Compliance Audit</h3>
+                        <h3 className="font-sans text-lg font-bold text-text-primary mb-2">SOC 2 compliance audit</h3>
                         <p className="text-sm text-text-tertiary mb-6 flex-1 leading-relaxed">
                             Complete audit log of user actions, authentication events, and configuration changes securely stored.
                         </p>
@@ -241,7 +241,7 @@ export const ReportsView: React.FC = () => {
                         <div className="p-3 w-fit mb-5 bg-bg-main border border-border-main text-info">
                             <Activity className="w-6 h-6" />
                         </div>
-                        <h3 className="font-sans text-lg font-bold text-text-primary mb-2">Cluster Health Summary</h3>
+                        <h3 className="font-sans text-lg font-bold text-text-primary mb-2">Cluster health summary</h3>
                         <p className="text-sm text-text-tertiary mb-6 flex-1 leading-relaxed">
                             Monthly aggregated uptime, resource utilization, and incident frequency reports.
                         </p>
@@ -256,7 +256,7 @@ export const ReportsView: React.FC = () => {
             <section ref={historySectionRef} className="kt-panel overflow-hidden scroll-mt-6">
                 <div className="kt-panel-header">
                     <span className="flex items-center gap-2">
-                        <Clock className="w-4 h-4 text-primary-500" /> Analysis History
+                        <Clock className="w-4 h-4 text-primary-500" /> Analysis history
                     </span>
                     <span className="kt-badge kt-badge-info">{groupedReports.length} workloads</span>
                 </div>
@@ -271,7 +271,7 @@ export const ReportsView: React.FC = () => {
                                     title={allExpanded ? "Collapse all groups" : "Expand all groups"}
                                 >
                                     {allExpanded ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronRight className="w-3.5 h-3.5" />}
-                                    {allExpanded ? 'Collapse All' : 'Expand All'}
+                                    {allExpanded ? 'Collapse all' : 'Expand all'}
                                 </button>
                             )}
                         </div>
@@ -305,7 +305,7 @@ export const ReportsView: React.FC = () => {
                                 <div className="p-3 bg-danger-light text-danger border border-danger/20 w-fit mb-6">
                                     <Trash2 className="w-8 h-8" />
                                 </div>
-                                <h3 className="font-sans text-xl font-bold text-text-primary mb-3">Delete All Reports?</h3>
+                                <h3 className="font-sans text-xl font-bold text-text-primary mb-3">Delete all reports?</h3>
                                 <p className="text-sm text-text-tertiary mb-8 leading-relaxed">
                                     This will permanently delete all historical reports in your laboratory. This action <span className="text-danger font-bold">cannot be undone</span>.
                                 </p>
@@ -383,10 +383,10 @@ export const ReportsView: React.FC = () => {
                                             </div>
                                             <div className="flex flex-wrap gap-3 relative z-10">
                                                 <button onClick={() => handleApprove(selectedReport)} className="kt-button kt-button-primary">
-                                                    <CheckCircle2 className="w-4 h-4" /> Execute & Apply
+                                                    <CheckCircle2 className="w-4 h-4" /> Execute & apply
                                                 </button>
                                                 <button onClick={() => handleReject(selectedReport)} className="kt-button kt-button-secondary">
-                                                    Dismiss Patch
+                                                    Dismiss patch
                                                 </button>
                                             </div>
                                         </div>
@@ -400,20 +400,20 @@ export const ReportsView: React.FC = () => {
                                 </div>
                                 <div className="p-4 border-t border-border-main bg-bg-hover/30 flex flex-col sm:flex-row justify-between items-center gap-4 shrink-0">
                                     <div className="text-[10px] text-text-tertiary opacity-60 font-sans">
-                                        RECORD_UID: <span className="text-text-secondary">{selectedReport.ID}</span> • SEGMENT: <span className="text-text-secondary">{selectedCluster?.name || 'LAB_INFRA'}</span> • AGENT: CLUSTER_SENTINEL_V4
+                                        Record UID: <span className="text-text-secondary">{selectedReport.ID}</span> • Segment: <span className="text-text-secondary">{selectedCluster?.name || 'Lab infra'}</span> • Agent: Cluster sentinel v4
                                     </div>
                                     <div className="flex items-center gap-2">
                                         <button
                                             onClick={() => handleExport(selectedReport, 'slack')}
                                             className="kt-button kt-button-secondary kt-button-sm text-primary-500"
                                         >
-                                            <MessageSquare className="w-4 h-4" /> Slack Notify
+                                            <MessageSquare className="w-4 h-4" /> Slack notify
                                         </button>
                                         <button
                                             onClick={() => handleExport(selectedReport, 'jira')}
                                             className="kt-button kt-button-secondary kt-button-sm text-info"
                                         >
-                                            <Ticket className="w-4 h-4" /> Jira Issue
+                                            <Ticket className="w-4 h-4" /> Jira issue
                                         </button>
                                     </div>
                                 </div>
@@ -557,7 +557,7 @@ export const ReportsView: React.FC = () => {
                                 <div className="mb-6 p-6 bg-bg-hover border border-border-main group-hover:scale-110 transition-transform duration-500">
                                     <FileText className="w-12 h-12 text-text-tertiary opacity-40" />
                                 </div>
-                                <h3 className="font-sans text-xl font-bold text-text-primary mb-2">No Reports Found</h3>
+                                <h3 className="font-sans text-xl font-bold text-text-primary mb-2">No reports found</h3>
                                 <p className="text-sm text-text-tertiary max-w-xs mx-auto leading-relaxed mb-6">
                                     No historical analysis records available in your current laboratory segment.
                                 </p>
@@ -565,7 +565,7 @@ export const ReportsView: React.FC = () => {
                                     onClick={() => navigate('/triage')}
                                     className="kt-button kt-button-primary"
                                 >
-                                    <Plus className="w-4 h-4" /> Run New Triage
+                                    <Plus className="w-4 h-4" /> Run new triage
                                 </button>
                             </div>
                         )

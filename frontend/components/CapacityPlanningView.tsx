@@ -196,7 +196,7 @@ export const CapacityPlanningView: React.FC = () => {
     return (
       <div className="flex flex-col items-center justify-center min-h-[600px]">
         <AlertTriangle className="w-12 h-12 text-danger mb-4" />
-        <h2 className="font-sans text-xl font-bold text-text-primary mb-2">Failed to Load Capacity Plans</h2>
+        <h2 className="font-sans text-xl font-bold text-text-primary mb-2">Failed to load capacity plans</h2>
         <button onClick={fetchData} className="kt-button kt-button-primary">
           <RefreshCw className="w-4 h-4 mr-2" /> Retry
         </button>
@@ -235,7 +235,7 @@ export const CapacityPlanningView: React.FC = () => {
       {/* Stats Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <SummaryCard
-          label="Total Workloads"
+          label="Total workloads"
           value={stats.total}
           sub="Tracked for capacity"
           icon={BarChart3}
@@ -269,7 +269,7 @@ export const CapacityPlanningView: React.FC = () => {
         {sortedPlans.length === 0 && (
           <div className="kt-panel p-12 text-center">
             <TrendingUp className="w-12 h-12 text-text-tertiary mx-auto mb-4" />
-            <h3 className="font-sans text-lg font-bold text-text-primary mb-2">No Capacity Data Yet</h3>
+            <h3 className="font-sans text-lg font-bold text-text-primary mb-2">No capacity data yet</h3>
             <p className="text-sm text-text-secondary max-w-md mx-auto font-sans">
               Capacity planning requires at least 3 data points per workload. Metrics are ingested automatically as workloads are monitored.
             </p>
@@ -366,7 +366,7 @@ export const CapacityPlanningView: React.FC = () => {
                         <p className="text-sm font-bold text-text-primary mt-1 truncate">{(plan.confidence * 100).toFixed(1)}%</p>
                       </div>
                       <div className="kt-panel-inset p-3 min-w-0">
-                        <p className="text-[10px] text-text-tertiary font-sans font-medium">Trend Slope</p>
+                        <p className="text-[10px] text-text-tertiary font-sans font-medium">Trend slope</p>
                         <p className={`text-sm font-bold mt-1 truncate ${getTrendColor(plan.trendSlope)}`}>
                           {plan.trendSlope > 0 ? '+' : ''}{plan.trendSlope.toFixed(6)}/hr
                         </p>
@@ -384,7 +384,7 @@ export const CapacityPlanningView: React.FC = () => {
                       <div className="kt-panel-inset p-4">
                         <p className="text-xs font-bold text-text-primary mb-3 flex items-center gap-2 font-sans">
                           <BarChart3 className="w-4 h-4 text-primary-500" />
-                          Usage Trend & 72h Forecast
+                          Usage trend & 72h forecast
                         </p>
                         <div className="h-[240px]">
                           <ResponsiveContainer width="100%" height="100%">

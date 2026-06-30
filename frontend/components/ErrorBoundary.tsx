@@ -46,7 +46,7 @@ export class ErrorBoundary extends Component<Props, State> {
                         </div>
 
                         <h1 className="text-3xl font-black text-text-primary mb-4">
-                            Critical Runtime Event
+                            Critical runtime event
                         </h1>
 
                         <p className="text-text-secondary font-medium mb-8">
@@ -64,19 +64,19 @@ export class ErrorBoundary extends Component<Props, State> {
                                 onClick={this.handleReload}
                                 className="kt-button kt-button-primary"
                             >
-                                <RefreshCw className="w-4 h-4" /> System Reboot
+                                <RefreshCw className="w-4 h-4" /> System reboot
                             </button>
                             <button
                                 onClick={this.handleGoHome}
                                 className="kt-button kt-button-secondary"
                             >
-                                <Home className="w-4 h-4" /> Return to Base
+                                <Home className="w-4 h-4" /> Return to base
                             </button>
                         </div>
                     </div>
 
                     <div className="mt-8 font-semibold text-xs text-text-tertiary">
-                        KubeTriage Reliability Engine
+                        KubeTriage reliability engine
                     </div>
                 </div>
             );

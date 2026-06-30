@@ -212,7 +212,7 @@ export const MLIntelligenceView: React.FC = () => {
         </div>
         <div className="kt-panel overflow-hidden">
           <div className="kt-panel-header">
-            <span>Detected Anomalies</span>
+            <span>Detected anomalies</span>
           </div>
           <div className="p-4 space-y-3">
             {[...Array(4)].map((_, i) => (
@@ -236,7 +236,7 @@ export const MLIntelligenceView: React.FC = () => {
       <div className="flex flex-col items-center justify-center min-h-[600px]">
         <AlertTriangle className="w-12 h-12 text-danger mb-4" />
         <h2 className="font-sans text-xl font-bold text-text-primary mb-2">
-          Failed to Load ML Data
+          Failed to load ML data
         </h2>
         <button onClick={fetchData} className="kt-button kt-button-primary">
           <RefreshCw className="w-4 h-4" /> Retry
@@ -262,7 +262,7 @@ export const MLIntelligenceView: React.FC = () => {
           {(data.stats || {}).isTraining && (
             <span className="kt-badge kt-badge-warning">
               <Activity className="w-3 h-3 animate-pulse" />
-              Training Models...
+              Training models...
             </span>
           )}
           <button
@@ -279,21 +279,21 @@ export const MLIntelligenceView: React.FC = () => {
       {/* Stats Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {summaryCard(
-          'Models Trained',
+          'Models trained',
           (data.stats || {}).modelsTrained ?? 0,
           <span className="text-success">ML models active</span>,
           Brain,
           'text-primary-500'
         )}
         {summaryCard(
-          'Patterns Found',
+          'Patterns found',
           (data.stats || {}).patternsFound ?? 0,
           <span className="text-success">{highConfidencePatterns.length} high confidence</span>,
           TrendingUp,
           'text-success'
         )}
         {summaryCard(
-          'Active Anomalies',
+          'Active anomalies',
           (data.stats || {}).anomaliesActive ?? 0,
           <span className={criticalAnomalies.length > 0 ? 'text-danger' : 'text-success'}>
             {criticalAnomalies.length} critical
@@ -302,7 +302,7 @@ export const MLIntelligenceView: React.FC = () => {
           criticalAnomalies.length > 0 ? 'text-danger' : 'text-success'
         )}
         {summaryCard(
-          'ML Insights',
+          'ML insights',
           (data.insights || []).length,
           <span className="text-warning">Generated today</span>,
           Lightbulb,
@@ -316,7 +316,7 @@ export const MLIntelligenceView: React.FC = () => {
           <div className="kt-panel-header">
             <span className="flex items-center gap-2">
               <Zap className="w-4 h-4 text-primary-500" />
-              ML-Generated Insights
+              ML-generated insights
             </span>
           </div>
           <div className="p-4 space-y-3 relative z-10">
@@ -376,7 +376,7 @@ export const MLIntelligenceView: React.FC = () => {
             <div className="kt-panel-header mb-4 -mx-5 -mt-5">
               <span className="flex items-center gap-2">
                 <BarChart3 className="w-4 h-4 text-primary-500" />
-                Anomalies by Metric
+                Anomalies by metric
               </span>
             </div>
             <div className="h-[250px] relative z-10">
@@ -414,7 +414,7 @@ export const MLIntelligenceView: React.FC = () => {
             <div className="kt-panel-header mb-4 -mx-5 -mt-5">
               <span className="flex items-center gap-2">
                 <TrendingUp className="w-4 h-4 text-success" />
-                Recurring Patterns
+                Recurring patterns
               </span>
             </div>
             <div className="h-[250px] relative z-10">
@@ -453,7 +453,7 @@ export const MLIntelligenceView: React.FC = () => {
       {selectedTab === 'anomalies' && (
         <div className="kt-panel overflow-hidden">
           <div className="kt-panel-header">
-            <span>Detected Anomalies ({(data.anomalies || []).length})</span>
+            <span>Detected anomalies ({(data.anomalies || []).length})</span>
           </div>
           <div className="p-4 space-y-3 relative z-10">
             {(data.anomalies || []).length === 0 ? (
@@ -511,7 +511,7 @@ export const MLIntelligenceView: React.FC = () => {
       {selectedTab === 'patterns' && (
         <div className="kt-panel overflow-hidden">
           <div className="kt-panel-header">
-            <span>Discovered Patterns ({(data.patterns || []).length})</span>
+            <span>Discovered patterns ({(data.patterns || []).length})</span>
           </div>
           <div className="p-4 space-y-4 relative z-10">
             {(data.patterns || []).length === 0 ? (
@@ -571,7 +571,7 @@ export const MLIntelligenceView: React.FC = () => {
                   )}
                   <div className="kt-panel-inset p-3">
                     <p className="text-[11px] text-text-tertiary mb-1 font-sans font-medium">
-                      Suggested Fix
+                      Suggested fix
                     </p>
                     <p className="text-sm text-text-secondary break-words">{pattern.suggestedFix}</p>
                   </div>

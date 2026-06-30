@@ -80,7 +80,7 @@ const AIChatWidgetComponent: React.FC<AIChatWidgetProps> = ({ isOpen, onClose, i
             <h3 className="font-sans font-bold text-sm text-text-primary">AI Co-Pilot</h3>
             <div className="flex items-center gap-1.5">
               <span className="kt-led kt-led-success"></span>
-              <span className="text-[10px] text-success font-sans">ONLINE</span>
+              <span className="text-[10px] text-success font-sans">Online</span>
             </div>
           </div>
         </div>
@@ -184,7 +184,7 @@ const AIChatWidgetComponent: React.FC<AIChatWidgetProps> = ({ isOpen, onClose, i
           </button>
         </form>
         <div className="mt-2 text-center">
-          <p className="text-[10px] text-text-tertiary font-sans">AI-GENERATED INSIGHTS</p>
+          <p className="text-[10px] text-text-tertiary font-sans">AI-generated insights</p>
         </div>
       </div>
     </div>

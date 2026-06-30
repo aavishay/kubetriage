@@ -134,9 +134,9 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
   };
 
   const formatSelectedLabel = () => {
-    if (selectedClusterIds.length === 0) return 'ALL CLUSTERS';
-    if (selectedClusterIds.length === 1) return selectedCluster?.displayName || selectedCluster?.name || 'SELECT';
-    return `${selectedClusterIds.length} SELECTED`;
+    if (selectedClusterIds.length === 0) return 'All clusters';
+    if (selectedClusterIds.length === 1) return selectedCluster?.displayName || selectedCluster?.name || 'Select';
+    return `${selectedClusterIds.length} selected`;
   };
 
   return (
@@ -316,7 +316,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
                 >
                   <div className="flex items-center justify-between px-3 py-2 border-b border-border-main bg-bg-hover">
                     <p className="text-[10px] text-text-tertiary flex items-center gap-2 font-sans font-medium">
-                      <Server className="w-3.5 h-3.5" /> Control Plane Fleet
+                      <Server className="w-3.5 h-3.5" /> Control plane fleet
                     </p>
                     <button
                       onClick={() => setDraftClusterIds([])}
@@ -371,7 +371,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
                         <button
                           onClick={() => setClusterToDelete(cluster)}
                           className="p-1.5 hover:bg-danger-light rounded-sm transition-colors opacity-0 group-hover/item:opacity-100"
-                          title="Remove Cluster"
+                          title="Remove cluster"
                         >
                           <Trash2 className="w-3.5 h-3.5 text-text-tertiary hover:text-danger transition-colors" />
                         </button>
@@ -448,7 +448,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
                 onClick={refreshWorkloads}
                 disabled={isWorkloadsLoading}
                 className={`p-2 rounded-sm bg-bg-main border border-border-main text-text-secondary hover:text-text-primary hover:border-primary-500/30 transition-all duration-200 focus-visible:ring-2 focus-visible:ring-primary-500/50 outline-none ${isWorkloadsLoading ? 'opacity-50' : 'active:translate-y-[1px] active:brightness-95'}`}
-                title="Refresh Telemetry"
+                title="Refresh telemetry"
               >
                 <RefreshCw className={`w-[18px] h-[18px] ${isWorkloadsLoading ? 'animate-spin text-primary-500' : ''}`} />
               </button>
@@ -456,7 +456,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
               <button
                 onClick={toggleTheme}
                 className="p-2 rounded-sm bg-bg-main border border-border-main text-text-secondary hover:text-text-primary hover:border-primary-500/30 transition-all duration-200 active:translate-y-[1px] active:brightness-95 group focus-visible:ring-2 focus-visible:ring-primary-500/50 outline-none"
-                title={isDarkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
+                title={isDarkMode ? "Switch to light mode" : "Switch to dark mode"}
               >
                 {isDarkMode ? (
                   <Sun className="w-[18px] h-[18px] group-hover:text-primary-500 transition-colors" />

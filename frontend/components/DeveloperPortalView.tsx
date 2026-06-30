@@ -287,7 +287,7 @@ export const DeveloperPortalView: React.FC = () => {
           <div className="bg-bg-card rounded-2xl p-5 border border-border-main shadow-sm">
             <div className="flex items-start justify-between">
               <div>
-                <p className="text-[10px] font-semibold text-text-tertiary mb-1">Open Incidents</p>
+                <p className="text-[10px] font-semibold text-text-tertiary mb-1">Open incidents</p>
                 <p className="text-3xl font-black text-text-primary">{data.openIncidents.length}</p>
                 <p className={`text-xs font-semibold mt-1 ${data.openIncidents.length > 0 ? 'text-rose-500' : 'text-emerald-500'}`}>
                   {data.openIncidents.filter(i => i.severity === 'Critical').length} critical
@@ -302,7 +302,7 @@ export const DeveloperPortalView: React.FC = () => {
           <div className="bg-bg-card rounded-2xl p-5 border border-border-main shadow-sm">
             <div className="flex items-start justify-between">
               <div>
-                <p className="text-[10px] font-semibold text-text-tertiary mb-1">Monthly Cost</p>
+                <p className="text-[10px] font-semibold text-text-tertiary mb-1">Monthly cost</p>
                 <p className="text-3xl font-black text-text-primary">${data.costSummary.monthlyCost.toFixed(0)}</p>
                 <p className={`text-xs font-semibold mt-1 ${
                   data.costSummary.budgetUsedPercent > 90 ? 'text-rose-500' :
@@ -320,7 +320,7 @@ export const DeveloperPortalView: React.FC = () => {
           <div className="bg-bg-card rounded-2xl p-5 border border-border-main shadow-sm">
             <div className="flex items-start justify-between">
               <div>
-                <p className="text-[10px] font-semibold text-text-tertiary mb-1">Allowed Actions</p>
+                <p className="text-[10px] font-semibold text-text-tertiary mb-1">Allowed actions</p>
                 <p className="text-3xl font-black text-text-primary">{data.allowedActions.length}</p>
                 <p className="text-xs text-primary-500 font-semibold mt-1">
                   Self-service enabled
@@ -358,7 +358,7 @@ export const DeveloperPortalView: React.FC = () => {
             <div className="p-6 border-b border-border-main bg-bg-hover/50">
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <h3 className="text-sm font-black text-text-primary">
-                  Your Workloads ({filteredWorkloads.length})
+                  Your workloads ({filteredWorkloads.length})
                 </h3>
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-tertiary" />
@@ -377,7 +377,7 @@ export const DeveloperPortalView: React.FC = () => {
               {filteredWorkloads.length === 0 ? (
                 <div className="text-center py-12">
                   <Server className="w-12 h-12 text-text-tertiary mx-auto mb-4" />
-                  <h4 className="text-lg font-bold text-text-primary mb-2">No Workloads Found</h4>
+                  <h4 className="text-lg font-bold text-text-primary mb-2">No workloads found</h4>
                   <p className="text-text-tertiary">No workloads found for team {selectedTeam}</p>
                 </div>
               ) : (
@@ -449,7 +449,7 @@ export const DeveloperPortalView: React.FC = () => {
           <div className="space-y-6">
             <div className="bg-bg-card rounded-3xl border border-border-main p-6">
               <h3 className="text-sm font-black text-text-primary mb-4">
-                Status Distribution
+                Status distribution
               </h3>
               <div className="h-[200px]">
                 {statusDistribution.length > 0 ? (
@@ -486,14 +486,14 @@ export const DeveloperPortalView: React.FC = () => {
         <div className="bg-bg-card rounded-3xl border border-border-main overflow-hidden">
           <div className="p-6 border-b border-border-main bg-bg-hover/50">
             <h3 className="text-sm font-black text-text-primary">
-              Open Incidents ({data.openIncidents.length})
+              Open incidents ({data.openIncidents.length})
             </h3>
           </div>
           <div className="p-6 space-y-4">
             {data.openIncidents.length === 0 ? (
               <div className="text-center py-12">
                 <CheckCircle2 className="w-12 h-12 text-emerald-500 mx-auto mb-4" />
-                <h4 className="text-lg font-bold text-text-primary mb-2">All Clear!</h4>
+                <h4 className="text-lg font-bold text-text-primary mb-2">All clear!</h4>
                 <p className="text-text-tertiary">No open incidents for your team's workloads</p>
               </div>
             ) : (
@@ -540,7 +540,7 @@ export const DeveloperPortalView: React.FC = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <div className="bg-bg-card rounded-3xl border border-border-main p-6">
             <h3 className="text-sm font-black text-text-primary mb-4">
-              Cost by Namespace
+              Cost by namespace
             </h3>
             <div className="h-[300px]">
               {costBreakdown.length > 0 ? (
@@ -555,7 +555,7 @@ export const DeveloperPortalView: React.FC = () => {
                         border: '1px solid var(--kt-border-main)',
                         borderRadius: '12px'
                       }}
-                      formatter={(value: number) => [`$${value.toFixed(2)}`, 'Monthly Cost']}
+                      formatter={(value: number) => [`$${value.toFixed(2)}`, 'Monthly cost']}
                     />
                     <Bar dataKey="value" fill={COLORS.primary} radius={[0, 4, 4, 0]} />
                   </BarChart>
@@ -571,7 +571,7 @@ export const DeveloperPortalView: React.FC = () => {
           <div className="space-y-6">
             <div className="bg-bg-card rounded-2xl p-6 border border-border-main">
               <h3 className="text-sm font-black text-text-primary mb-4">
-                Budget Overview
+                Budget overview
               </h3>
               <div className="space-y-4">
                 <div>
@@ -610,7 +610,7 @@ export const DeveloperPortalView: React.FC = () => {
 
             <div className="bg-bg-card rounded-2xl p-6 border border-border-main">
               <h3 className="text-sm font-black text-text-primary mb-4">
-                Cost Optimization Tips
+                Cost optimization tips
               </h3>
               <ul className="space-y-3 text-sm text-text-secondary">
                 <li className="flex items-start gap-2">
@@ -699,7 +699,7 @@ const PreDeployModal: React.FC<{ team: string; onClose: () => void }> = ({ team,
         <div className="p-6 border-b border-border-main flex items-center justify-between">
           <h2 className="text-lg font-black text-text-primary flex items-center gap-2">
             <Code className="w-5 h-5 text-primary-500" />
-            Pre-Deploy Validation
+            Pre-deploy validation
           </h2>
           <button onClick={onClose} className="p-2 hover:bg-bg-hover rounded-lg">
             <XCircle className="w-5 h-5 text-text-tertiary" />
@@ -711,7 +711,7 @@ const PreDeployModal: React.FC<{ team: string; onClose: () => void }> = ({ team,
             <>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="text-xs font-bold text-text-tertiary">Workload Name</label>
+                  <label className="text-xs font-bold text-text-tertiary">Workload name</label>
                   <input
                     type="text"
                     value={formData.workload}
@@ -733,7 +733,7 @@ const PreDeployModal: React.FC<{ team: string; onClose: () => void }> = ({ team,
               </div>
 
               <div>
-                <label className="text-xs font-bold text-text-tertiary">Container Image</label>
+                <label className="text-xs font-bold text-text-tertiary">Container image</label>
                 <input
                   type="text"
                   value={formData.image}
@@ -755,7 +755,7 @@ const PreDeployModal: React.FC<{ team: string; onClose: () => void }> = ({ team,
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="text-xs font-bold text-text-tertiary">CPU Request</label>
+                  <label className="text-xs font-bold text-text-tertiary">CPU request</label>
                   <input
                     type="text"
                     value={formData.cpuRequest}
@@ -765,7 +765,7 @@ const PreDeployModal: React.FC<{ team: string; onClose: () => void }> = ({ team,
                   />
                 </div>
                 <div>
-                  <label className="text-xs font-bold text-text-tertiary">CPU Limit</label>
+                  <label className="text-xs font-bold text-text-tertiary">CPU limit</label>
                   <input
                     type="text"
                     value={formData.cpuLimit}
@@ -778,7 +778,7 @@ const PreDeployModal: React.FC<{ team: string; onClose: () => void }> = ({ team,
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="text-xs font-bold text-text-tertiary">Memory Request</label>
+                  <label className="text-xs font-bold text-text-tertiary">Memory request</label>
                   <input
                     type="text"
                     value={formData.memoryRequest}
@@ -788,7 +788,7 @@ const PreDeployModal: React.FC<{ team: string; onClose: () => void }> = ({ team,
                   />
                 </div>
                 <div>
-                  <label className="text-xs font-bold text-text-tertiary">Memory Limit</label>
+                  <label className="text-xs font-bold text-text-tertiary">Memory limit</label>
                   <input
                     type="text"
                     value={formData.memoryLimit}
@@ -812,7 +812,7 @@ const PreDeployModal: React.FC<{ team: string; onClose: () => void }> = ({ team,
                 ) : (
                   <>
                     <Shield className="w-4 h-4 mr-2" />
-                    Run Pre-Deploy Checks
+                    Run pre-deploy checks
                   </>
                 )}
               </button>
@@ -830,7 +830,7 @@ const PreDeployModal: React.FC<{ team: string; onClose: () => void }> = ({ team,
                   )}
                   <div>
                     <h3 className="font-bold text-text-primary">
-                      {result.canDeploy ? 'Ready to Deploy' : 'Issues Found'}
+                      {result.canDeploy ? 'Ready to deploy' : 'Issues found'}
                     </h3>
                     <p className="text-sm text-text-secondary">
                       Score: {result.score}/100 • {result.checks.filter((c: any) => c.passed).length}/{result.checks.length} checks passed
@@ -878,7 +878,7 @@ const PreDeployModal: React.FC<{ team: string; onClose: () => void }> = ({ team,
                 onClick={() => setResult(null)}
                 className="kt-button kt-button-secondary w-full"
               >
-                Check Another
+                Check another
               </button>
             </div>
           )}

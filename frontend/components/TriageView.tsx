@@ -72,8 +72,8 @@ const TrafficPathExplorer = ({ workload }: { workload: Workload }) => {
   return (
     <div className="kt-panel p-4 mb-4 overflow-hidden">
       <div className="kt-panel-header mb-4 -mx-4 -mt-4">
-        <span>Network Path Trace</span>
-        <span className="kt-badge kt-badge-danger">Degradation Detected</span>
+        <span>Network path trace</span>
+        <span className="kt-badge kt-badge-danger">Degradation detected</span>
       </div>
       <div className="flex items-center justify-between gap-4 max-w-3xl mx-auto py-4 relative z-10">
         <div className="flex flex-col items-center gap-2">
@@ -153,8 +153,8 @@ export const TriageView: React.FC<TriageViewProps> = ({ workloads, isDarkMode = 
   const handleHandover = () => {
     if (!selectedWorkload || !analysis) return;
     const summary = `
-🚨 **INCIDENT HANDOVER: ${selectedWorkload.name}**
-**Severity**: ${selectedWorkload.status === 'Critical' ? 'CRITICAL' : 'WARNING'}
+🚨 **Incident handover: ${selectedWorkload.name}**
+**Severity**: ${selectedWorkload.status === 'Critical' ? 'Critical' : 'Warning'}
 **Target**: \`${selectedWorkload.namespace}/${selectedWorkload.kind}/${selectedWorkload.name}\`
 **Time**: ${new Date().toLocaleString()}
 
@@ -164,7 +164,7 @@ export const TriageView: React.FC<TriageViewProps> = ({ workloads, isDarkMode = 
 🔗 **Triage Console**: ${window.location.origin}/triage?workload=${selectedWorkload.name}
     `.trim();
     navigator.clipboard.writeText(summary);
-    alert("Incident Summary copied to clipboard!");
+    alert("Incident summary copied to clipboard!");
   };
 
   const [patchSuggestion, setPatchSuggestion] = useState<import('../services/remediationService').PatchSuggestion | null>(null);
@@ -306,11 +306,11 @@ export const TriageView: React.FC<TriageViewProps> = ({ workloads, isDarkMode = 
 
   const handleDeepDive = () => {
     if (!selectedWorkload || !analysis) return;
-    let fullContext = `WORKLOAD ANALYSIS REPORT:\n${analysis}\n\n`;
+    let fullContext = `Workload analysis report:\n${analysis}\n\n`;
     if (enrichedContext) {
-      if (enrichedContext.yaml) fullContext += `MANIFEST YAML:\n${enrichedContext.yaml}\n\n`;
-      if (enrichedContext.metrics) fullContext += `METRIC TRENDS:\n${enrichedContext.metrics}\n\n`;
-      if (enrichedContext.events?.length > 0) fullContext += `CLUSTER EVENTS:\n${enrichedContext.events.join('\n')}\n`;
+      if (enrichedContext.yaml) fullContext += `Manifest YAML:\n${enrichedContext.yaml}\n\n`;
+      if (enrichedContext.metrics) fullContext += `Metric trends:\n${enrichedContext.metrics}\n\n`;
+      if (enrichedContext.events?.length > 0) fullContext += `Cluster events:\n${enrichedContext.events.join('\n')}\n`;
     }
     onOpenChat(fullContext);
   };
@@ -411,7 +411,7 @@ export const TriageView: React.FC<TriageViewProps> = ({ workloads, isDarkMode = 
               ))}
             </div>
             <select value={namespaceFilter} onChange={(e) => setNamespaceFilter(e.target.value)} className="kt-select py-1.5 text-xs">
-              <option value="all">All Namespaces</option>
+              <option value="all">All namespaces</option>
               {Array.from(new Set(safeWorkloads.map(w => w.namespace))).sort().map(ns => <option key={ns} value={ns}>{ns}</option>)}
             </select>
           </div>
@@ -489,7 +489,7 @@ export const TriageView: React.FC<TriageViewProps> = ({ workloads, isDarkMode = 
                   <div className="flex items-center gap-3 relative z-10">
                     <div className="p-2 bg-success/10 border border-success/30"><TrendingDown className="w-5 h-5 text-success" /></div>
                     <div>
-                      <h4 className="text-sm font-sans font-semibold text-text-primary">Optimization Available</h4>
+                      <h4 className="text-sm font-sans font-semibold text-text-primary">Optimization available</h4>
                       <p className="text-xs text-success font-sans">{selectedWorkload.recommendation.reason}</p>
                     </div>
                   </div>
@@ -503,7 +503,7 @@ export const TriageView: React.FC<TriageViewProps> = ({ workloads, isDarkMode = 
               {selectedPlaybook === 'Network Connectivity' && <TrafficPathExplorer workload={selectedWorkload} />}
 
               <div className="kt-panel overflow-hidden flex flex-col">
-                <div className="kt-panel-header"><Sparkles className="w-4 h-4 text-primary-500" /> AI Analysis</div>
+                <div className="kt-panel-header"><Sparkles className="w-4 h-4 text-primary-500" /> AI analysis</div>
                 <div className="p-4 relative z-10">
                   {isAnalyzing ? (
                     <div className="h-48 flex flex-col items-center justify-center gap-4">
@@ -517,7 +517,7 @@ export const TriageView: React.FC<TriageViewProps> = ({ workloads, isDarkMode = 
                           <div className="flex items-center gap-3">
                             <div className="p-2 bg-primary-600 text-white"><FileCheck className="w-4 h-4" /></div>
                             <div>
-                              <h4 className="text-sm font-sans font-semibold text-text-primary">Analysis Complete</h4>
+                              <h4 className="text-sm font-sans font-semibold text-text-primary">Analysis complete</h4>
                               {currentReport && (
                                 <div className="flex items-center gap-2 mt-1 flex-wrap">
                                   <span className={`kt-badge ${currentReport.Severity === 'Critical' ? 'kt-badge-danger' : currentReport.Severity === 'Warning' ? 'kt-badge-warning' : 'kt-badge-success'}`}>{currentReport.Severity}</span>
@@ -536,9 +536,9 @@ export const TriageView: React.FC<TriageViewProps> = ({ workloads, isDarkMode = 
                       <div className="mt-4 pt-3 border-t border-border-main flex flex-wrap gap-2 relative z-10">
                         {!patchSuggestion ? (
                           <>
-                            <button onClick={handleDeepDive} className="kt-button kt-button-secondary kt-button-sm"><MessageSquareShare className="w-4 h-4" /> Deep Dive</button>
+                            <button onClick={handleDeepDive} className="kt-button kt-button-secondary kt-button-sm"><MessageSquareShare className="w-4 h-4" /> Deep dive</button>
                             <button onClick={handleGenerateFix} disabled={isGeneratingFix} className="kt-button kt-button-primary kt-button-sm">
-                              {isGeneratingFix ? <Loader2 className="w-4 h-4 animate-spin" /> : <ShieldCheck className="w-4 h-4" />} Generate Fix
+                              {isGeneratingFix ? <Loader2 className="w-4 h-4 animate-spin" /> : <ShieldCheck className="w-4 h-4" />} Generate fix
                             </button>
                             <button onClick={handleHandover} className="kt-button kt-button-ghost kt-button-sm"><Share2 className="w-4 h-4" /> Export</button>
                           </>
@@ -553,7 +553,7 @@ export const TriageView: React.FC<TriageViewProps> = ({ workloads, isDarkMode = 
                             <div className="flex justify-end gap-2 mt-3">
                               <button onClick={() => setPatchSuggestion(null)} className="kt-button kt-button-ghost kt-button-sm">Discard</button>
                               <button onClick={handleApplyFix} disabled={isApplyingFix} className="kt-button kt-button-primary kt-button-sm">
-                                {isApplyingFix ? <Loader2 className="w-4 h-4 animate-spin" /> : <HardDrive className="w-4 h-4" />} Apply Fix
+                                {isApplyingFix ? <Loader2 className="w-4 h-4 animate-spin" /> : <HardDrive className="w-4 h-4" />} Apply fix
                               </button>
                             </div>
                           </div>
@@ -580,7 +580,7 @@ export const TriageView: React.FC<TriageViewProps> = ({ workloads, isDarkMode = 
                       <span className={`w-1.5 h-1.5 rounded-full ${isLogSyncEnabled ? 'bg-primary-500' : 'bg-text-tertiary'}`} /> Sync
                     </button>
                     <div className="relative"><Search className="w-3.5 h-3.5 text-text-tertiary absolute left-2.5 top-1/2 -translate-y-1/2" /><input type="text" placeholder="Search..." value={logSearchTerm} onChange={(e) => handleLogSearchChange(e.target.value)} className="kt-input pl-8 pr-3 py-1 text-xs w-40" /></div>
-                    <button onClick={handleLogWrapToggle} className={`p-1.5 rounded-sm transition-colors border ${isLogWrapEnabled ? 'bg-primary-500/10 text-primary-500 border-primary-500/30' : 'text-text-tertiary hover:text-text-primary border-border-main'}`} title={isLogWrapEnabled ? "Disable Wrap" : "Enable Wrap"}><WrapText className="w-4 h-4" /></button>
+                    <button onClick={handleLogWrapToggle} className={`p-1.5 rounded-sm transition-colors border ${isLogWrapEnabled ? 'bg-primary-500/10 text-primary-500 border-primary-500/30' : 'text-text-tertiary hover:text-text-primary border-border-main'}`} title={isLogWrapEnabled ? "Disable wrap" : "Enable wrap"}><WrapText className="w-4 h-4" /></button>
                   </div>
                 </div>
                 <div className="flex-1 overflow-auto font-mono text-xs p-3 custom-scrollbar kt-panel-inset m-4">
@@ -624,7 +624,7 @@ export const TriageView: React.FC<TriageViewProps> = ({ workloads, isDarkMode = 
         ) : (
           <div className="flex-1 flex flex-col items-center justify-center p-8 text-center animate-fade-in">
             <div className="p-6 bg-primary-500/10 border border-primary-500/30 mb-4 kt-cyan-glow"><Activity className="w-10 h-10 text-primary-500" /></div>
-            <h3 className="font-sans text-xl font-bold text-text-primary mb-2">Select a Workload</h3>
+            <h3 className="font-sans text-xl font-bold text-text-primary mb-2">Select a workload</h3>
             <p className="text-sm text-text-tertiary max-w-sm font-sans">Choose a workload from the sidebar to begin triage analysis.</p>
           </div>
         )}

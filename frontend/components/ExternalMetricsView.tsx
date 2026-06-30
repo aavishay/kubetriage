@@ -401,7 +401,7 @@ export const ExternalMetricsView: React.FC = () => {
           <div className="min-w-0">
             <h1 className="font-sans text-2xl font-bold text-text-primary flex items-center gap-3">
               <Database className="w-7 h-7 text-primary-500" />
-              External Metrics
+              External metrics
             </h1>
             <p className="text-sm text-text-tertiary mt-1 font-sans">
               Ingest metrics from Prometheus, Datadog, New Relic, CloudWatch, VictoriaMetrics, and other sources
@@ -413,7 +413,7 @@ export const ExternalMetricsView: React.FC = () => {
               onChange={(e) => setSelectedClusterId(e.target.value)}
               className="kt-select text-xs py-1.5 w-full sm:w-auto"
             >
-              <option value="">All Clusters</option>
+              <option value="">All clusters</option>
               {clusters.map(cluster => (
                 <option key={cluster.id} value={cluster.id}>{cluster.name}</option>
               ))}
@@ -422,14 +422,14 @@ export const ExternalMetricsView: React.FC = () => {
               onClick={() => setShowAddModal(true)}
               className="kt-button kt-button-primary kt-button-sm shrink-0"
             >
-              <Plus className="w-4 h-4" /> Add Source
+              <Plus className="w-4 h-4" /> Add source
             </button>
           </div>
         </div>
 
         {/* Stats */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          {summaryCard('Metric Sources', sources.length, null, Database, 'text-primary-500')}
+          {summaryCard('Metric sources', sources.length, null, Database, 'text-primary-500')}
           {summaryCard(
             'Active',
             sources.filter(s => s.enabled).length,
@@ -437,7 +437,7 @@ export const ExternalMetricsView: React.FC = () => {
             CheckCircle,
             'text-success'
           )}
-          {summaryCard('Metrics Ingested', metrics.length, null, BarChart3, 'text-info')}
+          {summaryCard('Metrics ingested', metrics.length, null, BarChart3, 'text-info')}
           {summaryCard(
             'Last Sync',
             sources.filter(s => s.lastSyncAt).length > 0 ? '5 min ago' : 'Never',
@@ -560,13 +560,13 @@ export const ExternalMetricsView: React.FC = () => {
               {filteredSources.length === 0 && (
                 <div className="col-span-full kt-panel flex flex-col items-center justify-center py-16">
                   <Database className="w-12 h-12 mb-4 text-text-muted" />
-                  <h3 className="font-sans text-lg font-bold text-text-primary">No Metric Sources</h3>
+                  <h3 className="font-sans text-lg font-bold text-text-primary">No metric sources</h3>
                   <p className="text-sm mt-2 text-text-secondary font-sans">Add a source to start ingesting external metrics.</p>
                   <button
                     onClick={() => setShowAddModal(true)}
                     className="mt-4 kt-button kt-button-primary kt-button-sm"
                   >
-                    <Plus className="w-4 h-4" /> Add Source
+                    <Plus className="w-4 h-4" /> Add source
                   </button>
                 </div>
               )}
@@ -637,7 +637,7 @@ export const ExternalMetricsView: React.FC = () => {
           <div className="kt-panel p-6">
             <div className="text-center py-12 relative z-10">
               <LineChart className="w-12 h-12 text-text-tertiary mx-auto mb-4" />
-              <h3 className="font-sans text-lg font-bold text-text-primary">Metric Query Builder</h3>
+              <h3 className="font-sans text-lg font-bold text-text-primary">Metric query builder</h3>
               <p className="text-sm text-text-secondary mt-2 max-w-md mx-auto font-sans">
                 Build custom queries to analyze metrics across all your external sources.
                 Use PromQL-compatible syntax for advanced filtering.
@@ -662,7 +662,7 @@ export const ExternalMetricsView: React.FC = () => {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="kt-panel max-w-lg w-full max-h-[90vh] overflow-y-auto rounded-xl">
             <div className="kt-panel-header">
-              <span>Add External Metrics Source</span>
+              <span>Add external metrics source</span>
               <button
                 onClick={() => setShowAddModal(false)}
                 className="text-text-tertiary hover:text-text-primary"
@@ -845,7 +845,7 @@ const AddSourceForm: React.FC<AddSourceFormProps> = ({ onClose, onSave, clusters
       )}
 
       <div>
-        <label className="kt-text-label mb-1.5 block">Source Name *</label>
+        <label className="kt-text-label mb-1.5 block">Source name *</label>
         <input
           type="text"
           value={name}
@@ -876,7 +876,7 @@ const AddSourceForm: React.FC<AddSourceFormProps> = ({ onClose, onSave, clusters
       {(provider === 'datadog' || provider === 'newrelic') && (
         <>
           <div>
-            <label className="kt-text-label mb-1.5 block">API Key *</label>
+            <label className="kt-text-label mb-1.5 block">API key *</label>
             <input
               type="password"
               value={apiKey}
@@ -932,7 +932,7 @@ const AddSourceForm: React.FC<AddSourceFormProps> = ({ onClose, onSave, clusters
             />
           </div>
           <div>
-            <label className="kt-text-label mb-1.5 block">API Key *</label>
+            <label className="kt-text-label mb-1.5 block">API key *</label>
             <input
               type="password"
               value={apiKey}
@@ -973,7 +973,7 @@ const AddSourceForm: React.FC<AddSourceFormProps> = ({ onClose, onSave, clusters
           disabled={isSubmitting || !name}
           className="kt-button kt-button-primary kt-button-sm disabled:opacity-50"
         >
-          {isSubmitting ? 'Creating...' : 'Add Source'}
+          {isSubmitting ? 'Creating...' : 'Add source'}
         </button>
       </div>
     </form>

@@ -12,42 +12,42 @@ export const TemplateLibraryView: React.FC<TemplateLibraryViewProps> = ({ onAppl
    const triageTemplates = [
       {
          id: 'General Health' as DiagnosticPlaybook,
-         title: 'Global Cluster Triage',
+         title: 'Global cluster triage',
          icon: Activity,
          color: 'text-blue-500',
          bgColor: 'bg-blue-500/10',
          description: 'The standard multi-dimensional diagnosis. Scans logs, events, and metrics to correlate CrashLoops with underlying infrastructure pressure.',
-         focus: ['Event Correlation', 'CrashLoopBackOff', 'Node Pressure'],
+         focus: ['Event correlation', 'CrashLoopBackOff', 'Node pressure'],
          view: 'triage' as ViewState
       },
       {
          id: 'Scheduling & Affinity' as DiagnosticPlaybook,
-         title: 'Scheduling & Affinity',
+         title: 'Scheduling & affinity',
          icon: Anchor,
          color: 'text-primary-500',
          bgColor: 'bg-primary-500/10',
          description: 'Targets taints, tolerations, and node affinity mismatches. Use this when pods are stuck in Pending or not scheduling on specific hardware.',
-         focus: ['Node Taints', 'Affinity Rules', 'Resource Shortage'],
+         focus: ['Node taints', 'Affinity rules', 'Resource shortage'],
          view: 'triage' as ViewState
       },
       {
          id: 'Network Connectivity' as DiagnosticPlaybook,
-         title: 'Egress/Ingress Blame',
+         title: 'Egress/ingress blame',
          icon: Network,
          color: 'text-cyan-500',
          bgColor: 'bg-cyan-500/10',
          description: 'Find why services are timing out. Analyzes DNS failures, 5xx upstream errors, and sidecar proxy connectivity bottlenecks.',
-         focus: ['DNS timeouts', '502/503/504 Errors', 'Istio/Sidecar Latency'],
+         focus: ['DNS timeouts', '502/503/504 errors', 'Istio/sidecar latency'],
          view: 'triage' as ViewState
       },
       {
          id: 'Resource Constraints' as DiagnosticPlaybook,
-         title: 'OOM/Throttling Hunter',
+         title: 'OOM/throttling hunter',
          icon: Cpu,
          color: 'text-orange-500',
          bgColor: 'bg-orange-500/10',
          description: 'Targets memory leaks and CPU quota exhaustion. Essential for workloads exhibiting erratic p99 spikes or silent kills.',
-         focus: ['OOMKilled events', 'CFS Throttling', 'GC Pauses'],
+         focus: ['OOMKilled events', 'CFS throttling', 'GC pauses'],
          view: 'triage' as ViewState
       }
    ];
@@ -55,7 +55,7 @@ export const TemplateLibraryView: React.FC<TemplateLibraryViewProps> = ({ onAppl
    const sizingTemplates = [
       {
          id: 'Balanced' as OptimizationProfile,
-         title: 'Balanced Production',
+         title: 'Balanced production',
          icon: Scale,
          color: 'text-blue-600',
          bgColor: 'bg-blue-600/10',
@@ -65,22 +65,22 @@ export const TemplateLibraryView: React.FC<TemplateLibraryViewProps> = ({ onAppl
       },
       {
          id: 'Cost-Saver' as OptimizationProfile,
-         title: 'Aggressive FinOps Mode',
+         title: 'Aggressive FinOps mode',
          icon: TrendingDown,
          color: 'text-emerald-600',
          bgColor: 'bg-emerald-600/10',
          description: 'Maximizes bin-packing. Tightens limits to observed peak. Perfect for non-production namespaces where small latencies are okay.',
-         focus: ['Max Node Density', '90%+ Utilization', 'Cost Cutting'],
+         focus: ['Max node density', '90%+ utilization', 'Cost cutting'],
          view: 'rightsizing' as ViewState
       },
       {
          id: 'Performance' as OptimizationProfile,
-         title: 'Low-Latency Hardening',
+         title: 'Low-latency hardening',
          icon: Gauge,
          color: 'text-purple-600',
          bgColor: 'bg-purple-600/10',
          description: 'Over-provisions for smooth tail latency. Sets huge buffers (50%+) so micro-bursts never cause kernel-level throttling.',
-         focus: ['Zero Throttling', 'P99 Optimization', 'High Headroom'],
+         focus: ['Zero throttling', 'P99 optimization', 'High headroom'],
          view: 'rightsizing' as ViewState
       }
    ];
@@ -112,9 +112,9 @@ export const TemplateLibraryView: React.FC<TemplateLibraryViewProps> = ({ onAppl
          <div className="bg-bg-card border border-border-main rounded-xl p-6 md:p-8">
             <div className="max-w-2xl">
                <div className="inline-flex items-center gap-1.5 bg-primary-500/10 text-primary-400 px-3 py-1 rounded-full text-xs font-medium mb-4">
-                  <Sparkles className="w-3.5 h-3.5" /> AI Integrated
+                  <Sparkles className="w-3.5 h-3.5" /> AI integrated
                </div>
-               <h1 className="text-2xl font-semibold text-text-primary mb-2">SRE Runbooks & Templates</h1>
+               <h1 className="text-2xl font-semibold text-text-primary mb-2">SRE runbooks & templates</h1>
                <p className="text-sm text-text-secondary mb-6">
                   Deploy specialized AI diagnostic models and resource strategies with a single click.
                </p>
@@ -122,14 +122,14 @@ export const TemplateLibraryView: React.FC<TemplateLibraryViewProps> = ({ onAppl
                   <div className="flex items-center gap-2 bg-bg-main p-3 rounded-lg border border-border-main">
                      <Activity className="w-5 h-5 text-primary-500" />
                      <div className="text-left">
-                        <p className="text-xs text-text-secondary">Triage Models</p>
+                        <p className="text-xs text-text-secondary">Triage models</p>
                         <p className="text-sm font-medium text-text-primary">13 Active</p>
                      </div>
                   </div>
                   <div className="flex items-center gap-2 bg-bg-main p-3 rounded-lg border border-border-main">
                      <Scale className="w-5 h-5 text-emerald-500" />
                      <div className="text-left">
-                        <p className="text-xs text-text-secondary">Sizing Profiles</p>
+                        <p className="text-xs text-text-secondary">Sizing profiles</p>
                         <p className="text-sm font-medium text-text-primary">8 Active</p>
                      </div>
                   </div>
@@ -148,7 +148,7 @@ export const TemplateLibraryView: React.FC<TemplateLibraryViewProps> = ({ onAppl
          <section>
             <div className="flex items-center gap-2 mb-4">
                <AlertCircle className="w-5 h-5 text-primary-500" />
-               <h2 className="text-lg font-medium text-text-primary">Diagnostic Triage</h2>
+               <h2 className="text-lg font-medium text-text-primary">Diagnostic triage</h2>
             </div>
             <p className="text-xs text-text-secondary mb-4">AI-driven root cause identification runbooks</p>
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
@@ -162,7 +162,7 @@ export const TemplateLibraryView: React.FC<TemplateLibraryViewProps> = ({ onAppl
                         {pb.description}
                      </p>
                      <div className="space-y-2 mb-4">
-                        <p className="text-xs text-text-tertiary">Focus Areas</p>
+                        <p className="text-xs text-text-tertiary">Focus areas</p>
                         <div className="flex flex-wrap gap-1.5">
                            {pb.focus.map(f => (
                               <span key={f} className="text-[10px] bg-bg-hover text-text-secondary px-2 py-0.5 rounded border border-border-main">
@@ -175,7 +175,7 @@ export const TemplateLibraryView: React.FC<TemplateLibraryViewProps> = ({ onAppl
                         onClick={() => onApplyTemplate(pb.view, pb.id)}
                         className="w-full flex items-center justify-center gap-2 py-2.5 bg-primary-600 hover:bg-primary-500 text-white text-xs font-medium rounded-lg transition-colors"
                      >
-                        Apply Model <ArrowRight className="w-3.5 h-3.5" />
+                        Apply model <ArrowRight className="w-3.5 h-3.5" />
                      </button>
                   </div>
                ))}
@@ -186,7 +186,7 @@ export const TemplateLibraryView: React.FC<TemplateLibraryViewProps> = ({ onAppl
          <section>
             <div className="flex items-center gap-2 mb-4">
                <Scale className="w-5 h-5 text-emerald-500" />
-               <h2 className="text-lg font-medium text-text-primary">Right Sizing Strategies</h2>
+               <h2 className="text-lg font-medium text-text-primary">Right sizing strategies</h2>
             </div>
             <p className="text-xs text-text-secondary mb-4">Resource allocation and capacity planning profiles</p>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -201,7 +201,7 @@ export const TemplateLibraryView: React.FC<TemplateLibraryViewProps> = ({ onAppl
                      </p>
                      <div className="mb-4 p-3 rounded-lg bg-bg-main border border-border-main">
                         <div className="flex justify-between items-center mb-2">
-                           <p className="text-xs text-text-secondary">Target Efficiency</p>
+                           <p className="text-xs text-text-secondary">Target efficiency</p>
                            <span className="text-xs font-medium text-text-primary">{pr.id === 'Cost-Saver' ? '92%' : pr.id === 'Balanced' ? '78%' : '55%'}</span>
                         </div>
                         <div className="w-full bg-bg-hover h-1.5 rounded-full overflow-hidden">
@@ -212,7 +212,7 @@ export const TemplateLibraryView: React.FC<TemplateLibraryViewProps> = ({ onAppl
                         onClick={() => onApplyTemplate(pr.view, pr.id)}
                         className="w-full flex items-center justify-center gap-2 py-2.5 bg-primary-600 hover:bg-primary-500 text-white text-xs font-medium rounded-lg transition-colors"
                      >
-                        Apply Strategy <ArrowRight className="w-3.5 h-3.5" />
+                        Apply strategy <ArrowRight className="w-3.5 h-3.5" />
                      </button>
                   </div>
                ))}
@@ -223,7 +223,7 @@ export const TemplateLibraryView: React.FC<TemplateLibraryViewProps> = ({ onAppl
          <section>
             <div className="flex items-center gap-2 mb-4">
                <ShieldCheck className="w-5 h-5 text-primary-500" />
-               <h2 className="text-lg font-medium text-text-primary">Automation & Security</h2>
+               <h2 className="text-lg font-medium text-text-primary">Automation & security</h2>
             </div>
             <p className="text-xs text-text-secondary mb-4">Proactive background guardrails & automated fixes</p>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

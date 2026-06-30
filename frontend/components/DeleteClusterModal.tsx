@@ -52,7 +52,7 @@ export const DeleteClusterModal: React.FC<DeleteClusterModalProps> = ({ isOpen, 
                         <div className="p-2 bg-bg-card rounded-lg">
                             <AlertTriangle className="w-4 h-4 text-danger" />
                         </div>
-                        <h3 id="delete-modal-title" className="font-sans font-bold text-text-primary">Remove Cluster</h3>
+                        <h3 id="delete-modal-title" className="font-sans font-bold text-text-primary">Remove cluster</h3>
                     </div>
                     <button onClick={onClose} className="kt-button kt-button-ghost kt-button-sm">
                         <X className="w-4 h-4" />

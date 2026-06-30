@@ -14,7 +14,7 @@ export const NotFound: React.FC = () => {
 
                 <div className="space-y-3">
                     <h1 className="font-sans font-bold text-6xl text-text-primary">404</h1>
-                    <h2 className="font-sans font-bold text-xl text-text-secondary">Page Not Found</h2>
+                    <h2 className="font-sans font-bold text-xl text-text-secondary">Page not found</h2>
                     <p className="text-sm text-text-tertiary max-w-sm mx-auto leading-relaxed">
                         The page you are looking for might have been removed or moved to a different location.
                     </p>
@@ -22,7 +22,7 @@ export const NotFound: React.FC = () => {
 
                 <div className="flex items-center justify-center gap-3">
                     <button onClick={() => window.history.back()} className="kt-button kt-button-secondary" aria-label="Go back to previous page">
-                        <ArrowLeft className="w-4 h-4" /> Go Back
+                        <ArrowLeft className="w-4 h-4" /> Go back
                     </button>
                     <Link to="/" className="kt-button kt-button-primary" aria-label="Return to dashboard">
                         <Home className="w-4 h-4" /> Dashboard

@@ -75,7 +75,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLogin }) => {
                 <Loader2 className="w-5 h-5 animate-spin" />
               ) : (
                 <>
-                  Sign In <ArrowRight className="w-4 h-4" />
+                  Sign in <ArrowRight className="w-4 h-4" />
                 </>
               )}
             </button>
@@ -113,7 +113,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLogin }) => {
           <div className="mt-6 text-center">
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-success-light border border-success/20 text-xs text-success">
               <span className="w-1.5 h-1.5 rounded-full bg-success"></span>
-              System Online v2.4.0
+              System online v2.4.0
             </div>
           </div>
         </div>

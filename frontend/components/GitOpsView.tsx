@@ -177,7 +177,7 @@ const ResourceDiff: React.FC<ResourceDiffProps> = ({ resources }) => {
     <div className="kt-panel overflow-hidden">
       <div className="kt-panel-header">
         <span className="flex items-center gap-2">
-          <FileDiff className="w-4 h-4 text-primary-500" /> Resource Diff
+          <FileDiff className="w-4 h-4 text-primary-500" /> Resource diff
         </span>
         <div className="flex items-center gap-2">
           {hasChanged && (
@@ -453,7 +453,7 @@ export const GitOpsView: React.FC<GitOpsViewProps> = ({ clusterId }) => {
               onClick={() => setActiveTab(tab)}
               className={`kt-button kt-button-sm ${activeTab === tab ? 'kt-button-primary' : 'kt-button-secondary'}`}
             >
-              {tab === 'all' ? 'All Resources' : tab}
+              {tab === 'all' ? 'All resources' : tab}
             </button>
           ))}
         </div>
@@ -469,7 +469,7 @@ export const GitOpsView: React.FC<GitOpsViewProps> = ({ clusterId }) => {
           onChange={(e) => setStatusFilter(e.target.value)}
           className="kt-select text-sm"
         >
-          <option value="all">All Statuses</option>
+          <option value="all">All statuses</option>
           <option value="healthy">Healthy</option>
           <option value="synced">Synced</option>
           <option value="degraded">Degraded</option>
@@ -483,7 +483,7 @@ export const GitOpsView: React.FC<GitOpsViewProps> = ({ clusterId }) => {
       <div className="kt-panel overflow-hidden">
         <div className="kt-panel-header">
           <span className="flex items-center gap-2">
-            <GitBranch className="w-4 h-4 text-primary-500" /> GitOps Resources
+            <GitBranch className="w-4 h-4 text-primary-500" /> GitOps resources
           </span>
           <span className="text-[10px] text-text-tertiary font-sans">
             {filteredResources.length} resources matching filters
@@ -542,7 +542,7 @@ export const GitOpsView: React.FC<GitOpsViewProps> = ({ clusterId }) => {
                       <div className="flex items-center gap-2 shrink-0">
                         {resource.misconfigurations && resource.misconfigurations.length > 0 && (
                           <span className="kt-badge kt-badge-danger">
-                            {resource.misconfigurations.length} Issues
+                            {resource.misconfigurations.length} issues
                           </span>
                         )}
                         {isExpanded ? (
@@ -657,7 +657,7 @@ export const GitOpsView: React.FC<GitOpsViewProps> = ({ clusterId }) => {
                         <div className="kt-panel p-4">
                           <div className="flex items-center gap-2 mb-1">
                             <GitCommit className="w-3.5 h-3.5 text-text-tertiary" />
-                            <span className="kt-text-label">Last Operation</span>
+                            <span className="kt-text-label">Last operation</span>
                           </div>
                           <p className="text-sm text-text-secondary font-sans">{resource.message}</p>
                         </div>

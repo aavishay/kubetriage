@@ -16,7 +16,7 @@ interface MetricsChartProps {
 
 export const MetricsChart: React.FC<MetricsChartProps> = ({ data, color = "#6366f1", height = 80, unit = "", requestValue }) => {
     if (!data || data.length === 0) {
-        return <div className="h-full w-full flex items-center justify-center text-xs text-text-tertiary font-medium">No Data</div>;
+        return <div className="h-full w-full flex items-center justify-center text-xs text-text-tertiary font-medium">No data</div>;
     }
 
     return (

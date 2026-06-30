@@ -16,7 +16,7 @@ const CommentsThreadComponent: React.FC<CommentsThreadProps> = ({
 }) => {
     const user = {
         id: 'local-user',
-        name: 'Local Admin',
+        name: 'Local admin',
         email: 'local@kubetriage',
         avatarUrl: `https://api.dicebear.com/7.x/avataaars/svg?seed=local-user`
     };
@@ -120,12 +120,12 @@ const CommentsThreadComponent: React.FC<CommentsThreadProps> = ({
                                 <img
                                     src={c.AuthorAvatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${c.Author || 'local-user'}`}
                                     className="w-6 h-6 rounded-full border border-border-main bg-bg-hover"
-                                    alt={`${c.Author || 'Local Admin'} avatar`}
+                                    alt={`${c.Author || 'Local admin'} avatar`}
                                 />
                             </div>
                             <div className="flex-1">
                                 <div className="flex items-center gap-2 mb-1">
-                                    <span className="text-[10px] font-semibold text-text-secondary">{c.Author || 'Local Admin'}</span>
+                                    <span className="text-[10px] font-semibold text-text-secondary">{c.Author || 'Local admin'}</span>
                                     <span className="text-[10px] text-text-tertiary">{new Date(c.CreatedAt).toLocaleString()}</span>
                                 </div>
                                 <div className="p-3 bg-bg-hover rounded-2xl text-xs text-text-secondary leading-relaxed break-words border border-border-main">

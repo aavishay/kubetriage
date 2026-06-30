@@ -143,7 +143,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = tr
             <Server className="w-12 h-12 text-text-secondary" />
           </div>
         </div>
-        <h2 className="font-sans text-2xl font-bold mb-2">No Workloads Found</h2>
+        <h2 className="font-sans text-2xl font-bold mb-2">No workloads found</h2>
         <p className="text-text-secondary max-w-sm text-center mb-6 text-sm font-sans">
           No active workloads detected in the current cluster. Connect a cluster to begin monitoring.
         </p>
@@ -201,7 +201,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = tr
             <div className="flex-1 text-center lg:text-left">
               <div className="flex flex-wrap justify-center lg:justify-start items-center gap-3 mb-3">
                 <span className="kt-badge kt-badge-danger">
-                  Critical Issues Detected
+                  Critical issues detected
                 </span>
               </div>
               <h2 className="font-sans text-2xl font-bold text-text-primary mb-2">
@@ -232,7 +232,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = tr
         <MetricCard
           icon={DollarSign}
           iconColor="text-primary-500"
-          label="Monthly Cost"
+          label="Monthly cost"
           value={`$${totalCost.toLocaleString()}`}
           trend="+4.2%"
           delay={stagger(0).animationDelay}
@@ -240,15 +240,15 @@ export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = tr
         <MetricCard
           icon={Activity}
           iconColor="text-success"
-          label="Health Score"
-          value={criticalCount === 0 ? 'HEALTHY' : 'DEGRADED'}
+          label="Health score"
+          value={criticalCount === 0 ? 'Healthy' : 'Degraded'}
           trendLabel={`${Math.round((1 - (criticalCount / (safeWorkloads.length || 1))) * 100)}%`}
           delay={stagger(1).animationDelay}
         />
         <MetricCard
           icon={TrendingDown}
           iconColor="text-primary-500"
-          label="Cost Savings"
+          label="Cost savings"
           value={`$${Math.round(potentialSavings).toLocaleString()}`}
           trendLabel="Potential"
           delay={stagger(2).animationDelay}
@@ -257,7 +257,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = tr
           icon={Box}
           iconColor="text-info"
           label="Workloads"
-          value="ACTIVE"
+          value="Active"
           trendLabel={`${safeWorkloads.length}`}
           delay={stagger(3).animationDelay}
         />
@@ -268,7 +268,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = tr
 
         {/* Left Column */}
         <div className="lg:col-span-2 flex flex-col gap-4">
-          <DashboardCard padding="lg" title="Active Incidents" className="flex flex-col flex-1 min-h-[360px]">
+          <DashboardCard padding="lg" title="Active incidents" className="flex flex-col flex-1 min-h-[360px]">
             <div className="space-y-2 overflow-y-auto flex-1 min-h-0 pr-1 custom-scrollbar relative z-10">
               {incidents.length > 0 ? (
                 incidents.slice(0, 5).map((w, idx) => (
@@ -310,7 +310,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = tr
             </div>
           </DashboardCard>
 
-          <DashboardCard padding="lg" title="Status Distribution">
+          <DashboardCard padding="lg" title="Status distribution">
             <div className="h-44 w-full relative z-10">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
@@ -349,7 +349,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = tr
 
         {/* Right Column - Resource Saturation */}
         <div className="lg:col-span-3">
-          <DashboardCard padding="lg" title="Resource Saturation" className="flex flex-col h-full min-h-[360px]">
+          <DashboardCard padding="lg" title="Resource saturation" className="flex flex-col h-full min-h-[360px]">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 mb-4 relative z-10">
               <div className="flex flex-wrap items-center gap-2">
                 {(['5m', '15m', '30m', '1h'] as const).map((win) => (
@@ -483,7 +483,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = tr
       </div>
 
       {/* Error Budget Section */}
-      <DashboardCard hover={false} title="System Resilience" className="overflow-hidden">
+      <DashboardCard hover={false} title="System resilience" className="overflow-hidden">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 relative z-10">
           {/* Budget Gauge */}
           <div className="flex flex-col items-center justify-center p-4 border border-border-main bg-bg-main">
@@ -523,7 +523,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = tr
               <div className="flex justify-between items-center mb-2">
                 <div className="flex items-center gap-2">
                   <ShieldCheck className="w-4 h-4 text-success" />
-                  <span className="text-[11px] font-sans font-semibold text-text-secondary">Risk Factor</span>
+                  <span className="text-[11px] font-sans font-semibold text-text-secondary">Risk factor</span>
                 </div>
                 <StatusBadge status={reliabilityMetrics.severity} />
               </div>
@@ -535,7 +535,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = tr
               <div className="flex justify-between items-center mb-2">
                 <div className="flex items-center gap-2">
                   <Target className="w-4 h-4 text-primary-500" />
-                  <span className="text-[11px] font-sans font-semibold text-text-secondary">Exhaustion Forecast</span>
+                  <span className="text-[11px] font-sans font-semibold text-text-secondary">Exhaustion forecast</span>
                 </div>
               </div>
               <div className="text-2xl font-bold text-text-primary">{reliabilityMetrics.uptimeForecast}</div>
@@ -546,7 +546,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = tr
           {/* Policy Compliance */}
           <div className="p-4 border border-border-main bg-bg-main flex flex-col justify-between">
             <div>
-              <h4 className="text-sm font-sans font-semibold text-text-primary mb-2">Policy Compliance</h4>
+              <h4 className="text-sm font-sans font-semibold text-text-primary mb-2">Policy compliance</h4>
               <p className="text-xs text-text-secondary leading-relaxed font-sans">
                 Current resource distribution is within acceptable parameters. No immediate re-balancing required.
               </p>
@@ -564,7 +564,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = tr
               onClick={() => onTriageRequest?.('policy', 'General Health')}
               className="mt-4 w-full flex items-center justify-between p-3 bg-bg-card border border-border-main hover:border-primary-500/50 transition-all group"
             >
-              <span className="text-xs font-sans font-semibold text-text-secondary group-hover:text-primary-500">Run Compliance Audit</span>
+              <span className="text-xs font-sans font-semibold text-text-secondary group-hover:text-primary-500">Run compliance audit</span>
               <ArrowRight className="w-4 h-4 text-text-tertiary group-hover:text-primary-500" />
             </button>
           </div>
