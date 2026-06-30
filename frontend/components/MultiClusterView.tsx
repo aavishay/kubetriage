@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback, memo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import {
   Globe, Server, AlertTriangle, CheckCircle2, XCircle,
   DollarSign, Box, RefreshCw,
@@ -8,10 +8,11 @@ import {
 import { useMonitoring } from '../contexts/MonitoringContext';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-  PieChart, Pie, Cell, LineChart, Line, AreaChart, Area
+  PieChart, Pie, Cell
 } from 'recharts';
 import { ClusterStatus, AggregatedWorkload, CrossClusterIncident, GlobalSummary } from '../types';
 import { MultiClusterIncidentsList } from './MultiClusterIncidentsList';
+import { StatusBadge } from './dashboard/StatusBadge';
 
 interface CorrelatedEvent {
   id: string;
@@ -34,47 +35,66 @@ interface MultiClusterData {
 }
 
 const COLORS = {
-  primary: '#6366f1',
-  success: '#10b981',
-  warning: '#f59e0b',
-  danger: '#f43f5e',
-  info: '#3b82f6'
+  primary: '#f5a623',
+  success: '#2ecc71',
+  warning: '#f5a623',
+  danger: '#e74c3c',
+  info: '#4fc1ff'
 };
-
-const CHART_COLORS = ['#6366f1', '#10b981', '#f59e0b', '#f43f5e', '#8b5cf6', '#ec4899', '#14b8a6', '#f97316'];
 
 const getStatusIcon = (status: string) => {
   switch (status.toLowerCase()) {
-    case 'healthy':
-    case 'ready':
-      return <CheckCircle2 className="w-5 h-5 text-emerald-500" />;
-    case 'degraded':
-    case 'warning':
-      return <AlertTriangle className="w-5 h-5 text-amber-500" />;
-    case 'offline':
-    case 'critical':
-      return <XCircle className="w-5 h-5 text-rose-500" />;
-    default:
-      return <Minus className="w-5 h-5 text-text-tertiary" />;
+    case 'healthy': case 'ready': return <CheckCircle2 className="w-5 h-5 text-success" />;
+    case 'degraded': case 'warning': return <AlertTriangle className="w-5 h-5 text-warning" />;
+    case 'offline': case 'critical': return <XCircle className="w-5 h-5 text-danger" />;
+    default: return <Minus className="w-5 h-5 text-text-tertiary" />;
   }
 };
 
 const getStatusColor = (status: string) => {
   switch (status.toLowerCase()) {
-    case 'healthy': return 'text-emerald-500';
-    case 'degraded': return 'text-amber-500';
-    case 'offline': return 'text-rose-500';
+    case 'healthy': return 'text-success';
+    case 'degraded': return 'text-warning';
+    case 'offline': return 'text-danger';
     default: return 'text-text-tertiary';
   }
 };
 
 const getStatusBg = (status: string) => {
   switch (status.toLowerCase()) {
-    case 'healthy': return 'bg-emerald-500/10';
-    case 'degraded': return 'bg-amber-500/10';
-    case 'offline': return 'bg-rose-500/10';
-    default: return 'bg-text-tertiary/10';
+    case 'healthy': return 'bg-success/10 border-success/20';
+    case 'degraded': return 'bg-warning/10 border-warning/20';
+    case 'offline': return 'bg-danger/10 border-danger/20';
+    default: return 'bg-text-tertiary/10 border-border-main';
   }
+};
+
+const summaryCard = (label: string, value: React.ReactNode, sub: React.ReactNode, icon: React.ElementType, iconColor: string) => (
+  <div className="kt-panel p-4">
+    <div className="flex items-start justify-between relative z-10">
+      <div>
+        <p className="text-[11px] font-sans font-semibold text-text-tertiary tracking-wider uppercase mb-1">{label}</p>
+        <p className="text-3xl font-mono font-bold text-text-primary">{value}</p>
+        <p className="text-xs mt-1 font-mono">{sub}</p>
+      </div>
+      <div className={`p-2.5 bg-bg-main border border-border-main ${iconColor}`}>
+        <icon className="w-5 h-5" />
+      </div>
+    </div>
+  </div>
+);
+
+const tooltipStyle = {
+  backgroundColor: 'var(--kt-bg-card)',
+  borderColor: 'var(--kt-border-main)',
+  color: 'var(--kt-fg-primary)',
+  borderRadius: '2px',
+  border: '1px solid var(--kt-border-main)',
+  fontSize: '12px',
+  fontWeight: '700',
+  padding: '8px 12px',
+  fontFamily: 'var(--kt-font-mono)',
+  boxShadow: 'var(--kt-shadow-lg)'
 };
 
 export const MultiClusterView: React.FC = () => {
@@ -91,9 +111,7 @@ export const MultiClusterView: React.FC = () => {
     setLoading(true);
     try {
       const params = new URLSearchParams();
-      if (selectedClusterIds.length > 0) {
-        params.set('clusters', selectedClusterIds.join(','));
-      }
+      if (selectedClusterIds.length > 0) params.set('clusters', selectedClusterIds.join(','));
       const url = `/api/clusters/aggregate${params.toString() ? '?' + params.toString() : ''}`;
       const response = await fetch(url);
       if (response.ok) {
@@ -101,11 +119,8 @@ export const MultiClusterView: React.FC = () => {
         setData(result);
         setLastRefresh(new Date());
       }
-    } catch (error) {
-      console.error('Failed to fetch multi-cluster data:', error);
-    } finally {
-      setLoading(false);
-    }
+    } catch (error) { console.error('Failed to fetch multi-cluster data:', error); }
+    finally { setLoading(false); }
   }, [selectedClusterIds]);
 
   useEffect(() => {
@@ -129,9 +144,7 @@ export const MultiClusterView: React.FC = () => {
   const visibleIncidents = useMemo(() => {
     if (!data || !data.incidents) return [];
     if (selectedClusterIds.length === 0) return data.incidents;
-    return data.incidents.filter(i =>
-      (i.affectedClusters || []).some(id => selectedClusterIds.includes(id))
-    );
+    return data.incidents.filter(i => (i.affectedClusters || []).some(id => selectedClusterIds.includes(id)));
   }, [data, selectedClusterIds]);
 
   const derivedSummary = useMemo(() => {
@@ -151,18 +164,10 @@ export const MultiClusterView: React.FC = () => {
     const totalMemory = clusters.reduce((sum, c) => sum + c.totalMemory, 0);
     const usedMemory = clusters.reduce((sum, c) => sum + c.usedMemory, 0);
     return {
-      totalClusters: clusters.length,
-      healthyClusters,
-      degradedClusters,
-      offlineClusters,
-      totalWorkloads: workloads.length,
-      healthyWorkloads,
-      warningWorkloads,
-      criticalWorkloads,
-      activeIncidents: incidents.length,
-      criticalIncidents,
-      totalCpu,
-      totalMemory,
+      totalClusters: clusters.length, healthyClusters, degradedClusters, offlineClusters,
+      totalWorkloads: workloads.length, healthyWorkloads, warningWorkloads, criticalWorkloads,
+      activeIncidents: incidents.length, criticalIncidents,
+      totalCpu, totalMemory,
       cpuUtilization: totalCpu > 0 ? (usedCpu / totalCpu) * 100 : 0,
       memoryUtilization: totalMemory > 0 ? (usedMemory / totalMemory) * 100 : 0,
       estimatedMonthlyCost: 0
@@ -177,7 +182,6 @@ export const MultiClusterView: React.FC = () => {
     return {
       ...s,
       estimatedMonthlyCost: visibleClusters.reduce((sum, c) => {
-        // rough cost proxy: $0.05 / vCPU + $0.0065 / GB-month
         const cpuCost = c.totalCpu * 0.05;
         const memCost = (c.totalMemory / 1024) * 0.0065;
         return sum + cpuCost + memCost;
@@ -187,30 +191,18 @@ export const MultiClusterView: React.FC = () => {
 
   const filteredWorkloads = useMemo(() => {
     return visibleWorkloads.filter(w => {
-      const matchesSearch = w.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                           w.clusterName.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesSearch = w.name.toLowerCase().includes(searchTerm.toLowerCase()) || w.clusterName.toLowerCase().includes(searchTerm.toLowerCase());
       const matchesStatus = statusFilter === 'all' || w.status.toLowerCase() === statusFilter.toLowerCase();
       return matchesSearch && matchesStatus;
     });
   }, [visibleWorkloads, searchTerm, statusFilter]);
 
-  const clusterHealthData = useMemo(() => {
-    return visibleClusters.map(c => ({
-      name: c.name,
-      nodes: c.nodeCount,
-      healthy: c.healthyNodeCount,
-      utilization: c.totalCpu > 0 ? (c.usedCpu / c.totalCpu) * 100 : 0
-    }));
-  }, [visibleClusters]);
-
+  const clusterHealthData = useMemo(() => visibleClusters.map(c => ({ name: c.name, nodes: c.nodeCount, healthy: c.healthyNodeCount, utilization: c.totalCpu > 0 ? (c.usedCpu / c.totalCpu) * 100 : 0 })), [visibleClusters]);
   const workloadDistribution = useMemo(() => {
     const byCluster: Record<string, number> = {};
-    visibleWorkloads.forEach(w => {
-      byCluster[w.clusterName] = (byCluster[w.clusterName] || 0) + 1;
-    });
+    visibleWorkloads.forEach(w => { byCluster[w.clusterName] = (byCluster[w.clusterName] || 0) + 1; });
     return Object.entries(byCluster).map(([name, value]) => ({ name, value }));
   }, [visibleWorkloads]);
-
   const statusDistribution = useMemo(() => {
     if (!summary) return [];
     return [
@@ -220,372 +212,203 @@ export const MultiClusterView: React.FC = () => {
     ];
   }, [summary]);
 
-
-  if (loading && !data) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-[600px]">
-        <div className="p-6 bg-bg-hover rounded-full mb-6 animate-pulse">
-          <Globe className="w-12 h-12 text-primary-500" />
-        </div>
-        <h2 className="text-2xl font-black text-text-primary   mb-2">
-          Loading Multi-Cluster View
-        </h2>
-        <p className="text-text-tertiary">Aggregating data from all connected clusters...</p>
+  if (loading && !data) return (
+    <div className="flex flex-col items-center justify-center min-h-[600px]">
+      <div className="p-6 bg-bg-hover border border-border-main mb-6 animate-pulse">
+        <Globe className="w-12 h-12 text-primary-500" />
       </div>
-    );
-  }
+      <h2 className="text-2xl font-display font-bold text-text-primary mb-2 tracking-wider uppercase">Loading Multi-Cluster View</h2>
+      <p className="text-text-tertiary font-mono">Aggregating data from all connected clusters...</p>
+    </div>
+  );
 
-  if (!data) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-[600px]">
-        <AlertCircle className="w-12 h-12 text-rose-500 mb-4" />
-        <h2 className="text-xl font-black text-text-primary mb-2">Failed to Load Data</h2>
-        <p className="text-text-tertiary mb-4">Could not fetch multi-cluster information</p>
-        <button onClick={fetchData} className="kt-button kt-button-primary">
-          <RefreshCw className="w-4 h-4 mr-2" /> Retry
-        </button>
-      </div>
-    );
-  }
+  if (!data) return (
+    <div className="flex flex-col items-center justify-center min-h-[600px]">
+      <AlertCircle className="w-12 h-12 text-danger mb-4" />
+      <h2 className="text-xl font-display font-bold text-text-primary mb-2 tracking-wider uppercase">Failed to Load Data</h2>
+      <p className="text-text-tertiary mb-4 font-mono">Could not fetch multi-cluster information</p>
+      <button onClick={fetchData} className="kt-button kt-button-primary">
+        <RefreshCw className="w-4 h-4" /> Retry
+      </button>
+    </div>
+  );
 
   return (
-    <div className="flex flex-col gap-6 p-6 font-sans animate-fade-in">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+    <div className="flex flex-col gap-5 p-0 animate-fade-in">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
         <div>
-          <h1 className="text-2xl font-black text-text-primary   flex items-center gap-3">
+          <h1 className="text-2xl font-display font-bold text-text-primary flex items-center gap-3 tracking-wider uppercase">
             <Globe className="w-7 h-7 text-primary-500" />
             Multi-Cluster Federation
           </h1>
-          <p className="text-text-tertiary text-sm mt-1">
-            Unified view across {summary?.totalClusters ?? 0} clusters • {summary?.totalWorkloads ?? 0} workloads
+          <p className="text-text-tertiary text-sm mt-1 font-mono">
+            {summary?.totalClusters ?? 0} clusters • {summary?.totalWorkloads ?? 0} workloads
           </p>
         </div>
-        <div className="flex items-center gap-3 flex-wrap">
-          <div className="flex bg-bg-card rounded-xl border border-border-main p-1">
+        <div className="flex items-center gap-2 flex-wrap">
+          <div className="flex bg-bg-card border border-border-main p-0.5">
             {(['overview', 'workloads', 'incidents'] as const).map((mode) => (
-              <button
-                key={mode}
-                onClick={() => setViewMode(mode)}
-                className={`px-4 py-2 rounded-lg text-sm font-bold  transition-all ${
-                  viewMode === mode
-                    ? 'bg-primary-600 text-white'
-                    : 'text-text-tertiary hover:text-text-primary'
-                }`}
-              >
+              <button key={mode} onClick={() => setViewMode(mode)} className={`px-3 py-1.5 text-xs font-sans font-semibold tracking-wider uppercase border transition-all ${viewMode === mode ? 'bg-primary-500/10 text-primary-500 border-primary-500/30' : 'text-text-tertiary hover:text-text-primary border-transparent'}`}>
                 {mode}
               </button>
             ))}
           </div>
-          <button
-            onClick={fetchData}
-            disabled={loading}
-            className="kt-button kt-button-secondary flex items-center gap-2"
-          >
-            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-            Refresh
+          <button onClick={fetchData} disabled={loading} className="kt-button kt-button-secondary kt-button-sm">
+            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} /> Refresh
           </button>
         </div>
       </div>
 
-      {/* Global Summary Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-bg-card rounded-2xl p-5 border border-border-main shadow-sm">
-          <div className="flex items-start justify-between">
-            <div>
-              <p className="text-[10px] font-semibold   text-text-tertiary mb-1">Clusters</p>
-              <p className="text-3xl font-black text-text-primary">{summary?.totalClusters ?? 0}</p>
-              <p className="text-xs text-emerald-500 font-semibold mt-1">
-                {summary?.healthyClusters ?? 0} healthy
-              </p>
-            </div>
-            <div className="p-3 rounded-xl bg-emerald-500/10">
-              <Server className="w-5 h-5 text-emerald-500" />
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-bg-card rounded-2xl p-5 border border-border-main shadow-sm">
-          <div className="flex items-start justify-between">
-            <div>
-              <p className="text-[10px] font-semibold   text-text-tertiary mb-1">Workloads</p>
-              <p className="text-3xl font-black text-text-primary">{summary?.totalWorkloads ?? 0}</p>
-              <p className="text-xs text-amber-500 font-semibold mt-1">
-                {(summary?.warningWorkloads ?? 0) + (summary?.criticalWorkloads ?? 0)} need attention
-              </p>
-            </div>
-            <div className="p-3 rounded-xl bg-primary-500/10">
-              <Box className="w-5 h-5 text-primary-500" />
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-bg-card rounded-2xl p-5 border border-border-main shadow-sm">
-          <div className="flex items-start justify-between">
-            <div>
-              <p className="text-[10px] font-semibold   text-text-tertiary mb-1">Active Incidents</p>
-              <p className="text-3xl font-black text-text-primary">{summary?.activeIncidents ?? 0}</p>
-              <p className={`text-xs font-semibold mt-1 ${(summary?.criticalIncidents ?? 0) > 0 ? 'text-rose-500' : 'text-emerald-500'}`}>
-                {summary?.criticalIncidents ?? 0} critical
-              </p>
-            </div>
-            <div className="p-3 rounded-xl bg-rose-500/10">
-              <AlertTriangle className="w-5 h-5 text-rose-500" />
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-bg-card rounded-2xl p-5 border border-border-main shadow-sm">
-          <div className="flex items-start justify-between">
-            <div>
-              <p className="text-[10px] font-semibold   text-text-tertiary mb-1">Monthly Cost</p>
-              <p className="text-3xl font-black text-text-primary">
-                ${(summary?.estimatedMonthlyCost ?? 0).toFixed(0)}
-              </p>
-              <p className="text-xs text-text-tertiary font-semibold mt-1">
-                {selectedClusterIds.length === 0 ? 'Across all clusters' : `Across ${selectedClusterIds.length} selected cluster${selectedClusterIds.length === 1 ? '' : 's'}`}
-              </p>
-            </div>
-            <div className="p-3 rounded-xl bg-amber-500/10">
-              <DollarSign className="w-5 h-5 text-amber-500" />
-            </div>
-          </div>
-        </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+        {summaryCard('Clusters', summary?.totalClusters ?? 0, <span className="text-success">{summary?.healthyClusters ?? 0} healthy</span>, Server, 'text-success')}
+        {summaryCard('Workloads', summary?.totalWorkloads ?? 0, <span className="text-warning">{(summary?.warningWorkloads ?? 0) + (summary?.criticalWorkloads ?? 0)} need attention</span>, Box, 'text-primary-500')}
+        {summaryCard('Active Incidents', summary?.activeIncidents ?? 0, <span className={(summary?.criticalIncidents ?? 0) > 0 ? 'text-danger' : 'text-success'}>{summary?.criticalIncidents ?? 0} critical</span>, AlertTriangle, (summary?.criticalIncidents ?? 0) > 0 ? 'text-danger' : 'text-success')}
+        {summaryCard('Monthly Cost', `$${(summary?.estimatedMonthlyCost ?? 0).toFixed(0)}`, <span>{selectedClusterIds.length === 0 ? 'Across all clusters' : `Across ${selectedClusterIds.length} selected`}</span>, DollarSign, 'text-warning')}
       </div>
 
-      {/* Cluster Health Overview */}
       {viewMode === 'overview' && (
         <>
-          {/* Cluster Cards */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-3">
             {visibleClusters.map((cluster) => (
-              <div
-                key={cluster.id}
-                className={`bg-bg-card rounded-2xl p-5 border-2 cursor-pointer transition-all ${
-                  selectedCluster === cluster.id
-                    ? 'border-primary-500 bg-primary-500/5'
-                    : 'border-border-main hover:border-primary-500/30'
-                }`}
-                onClick={() => setSelectedCluster(selectedCluster === cluster.id ? null : cluster.id)}
-              >
-                <div className="flex items-start justify-between gap-3 mb-4">
+              <div key={cluster.id} onClick={() => setSelectedCluster(selectedCluster === cluster.id ? null : cluster.id)} className={`kt-panel p-4 cursor-pointer transition-all ${selectedCluster === cluster.id ? 'border-primary-500 kt-amber-glow' : ''}`}>
+                <div className="flex items-start justify-between gap-3 mb-3 relative z-10">
                   <div className="flex items-center gap-3 min-w-0">
-                    <div className={`p-2.5 rounded-xl shrink-0 ${getStatusBg(cluster.status)}`}>
+                    <div className={`p-2 shrink-0 border ${getStatusBg(cluster.status)}`}>
                       <Server className={`w-5 h-5 ${getStatusColor(cluster.status)}`} />
                     </div>
                     <div className="min-w-0">
-                      <h3 className="font-bold text-text-primary truncate">{cluster.displayName || cluster.name}</h3>
-                      <p className="text-xs text-text-tertiary truncate">{cluster.provider} • {cluster.region}</p>
+                      <h3 className="font-sans font-semibold text-text-primary truncate tracking-wide uppercase">{cluster.displayName || cluster.name}</h3>
+                      <p className="text-xs text-text-tertiary font-mono uppercase tracking-wider">{cluster.provider} • {cluster.region}</p>
                     </div>
                   </div>
-                  <span className={`px-2 py-1 rounded-full text-[10px] font-semibold shrink-0 ${getStatusBg(cluster.status)} ${getStatusColor(cluster.status)}`}>
-                    {cluster.status}
-                  </span>
+                  <StatusBadge status={cluster.status} />
                 </div>
-
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-4">
-                  <div className="text-center p-2 rounded-lg bg-bg-hover">
-                    <p className="text-[10px] text-text-tertiary ">Nodes</p>
-                    <p className="font-bold text-text-primary">{cluster.healthyNodeCount}/{cluster.nodeCount}</p>
+                <div className="grid grid-cols-3 gap-2 mb-3 relative z-10">
+                  <div className="text-center p-2 border border-border-main bg-bg-main">
+                    <p className="text-[10px] text-text-tertiary font-sans font-semibold tracking-wider uppercase">Nodes</p>
+                    <p className="font-mono font-bold text-text-primary">{cluster.healthyNodeCount}/{cluster.nodeCount}</p>
                   </div>
-                  <div className="text-center p-2 rounded-lg bg-bg-hover">
-                    <p className="text-[10px] text-text-tertiary ">Workloads</p>
-                    <p className="font-bold text-text-primary">{cluster.workloadCount}</p>
+                  <div className="text-center p-2 border border-border-main bg-bg-main">
+                    <p className="text-[10px] text-text-tertiary font-sans font-semibold tracking-wider uppercase">Workloads</p>
+                    <p className="font-mono font-bold text-text-primary">{cluster.workloadCount}</p>
                   </div>
-                  <div className="text-center p-2 rounded-lg bg-bg-hover">
-                    <p className="text-[10px] text-text-tertiary ">Incidents</p>
-                    <p className={`font-bold ${cluster.incidentCount > 0 ? 'text-rose-500' : 'text-emerald-500'}`}>
-                      {cluster.incidentCount}
-                    </p>
+                  <div className="text-center p-2 border border-border-main bg-bg-main">
+                    <p className="text-[10px] text-text-tertiary font-sans font-semibold tracking-wider uppercase">Incidents</p>
+                    <p className={`font-mono font-bold ${cluster.incidentCount > 0 ? 'text-danger' : 'text-success'}`}>{cluster.incidentCount}</p>
                   </div>
                 </div>
-
-                <div className="flex items-center justify-between text-xs">
+                <div className="flex items-center justify-between text-xs relative z-10 font-mono uppercase tracking-wider">
                   <span className="text-text-tertiary">v{cluster.version}</span>
-                  <span className="text-text-tertiary">
-                    Last seen: {new Date(cluster.lastConnected).toLocaleTimeString()}
-                  </span>
+                  <span className="text-text-tertiary">Last seen: {new Date(cluster.lastConnected).toLocaleTimeString()}</span>
                 </div>
               </div>
             ))}
           </div>
 
-          {/* Charts Row */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Cluster Utilization Chart */}
-            <div className="bg-bg-card rounded-3xl border border-border-main p-6">
-              <h3 className="text-sm font-black   text-text-primary mb-4 flex items-center gap-2">
-                <BarChart3 className="w-4 h-4 text-primary-500" />
-                Cluster Utilization
-              </h3>
-              <div className="h-[250px]">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <div className="kt-panel p-5">
+              <div className="kt-panel-header mb-4 -mx-5 -mt-5">
+                <BarChart3 className="w-4 h-4 text-primary-500" /> Cluster Utilization
+              </div>
+              <div className="h-[250px] relative z-10">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={clusterHealthData}>
                     <CartesianGrid strokeDasharray="3 3" stroke="var(--kt-border-main)" />
                     <XAxis dataKey="name" tick={{ fill: 'var(--kt-fg-tertiary)', fontSize: 10 }} />
                     <YAxis tick={{ fill: 'var(--kt-fg-tertiary)', fontSize: 10 }} />
-                    <Tooltip
-                      contentStyle={{
-                        backgroundColor: 'var(--kt-bg-card)',
-                        border: '1px solid var(--kt-border-main)',
-                        borderRadius: '12px',
-                        color: 'var(--kt-fg-primary)'
-                      }}
-                    />
-                    <Bar dataKey="nodes" name="Total Nodes" fill={COLORS.primary} radius={[4, 4, 0, 0]} />
-                    <Bar dataKey="healthy" name="Healthy" fill={COLORS.success} radius={[4, 4, 0, 0]} />
+                    <Tooltip contentStyle={tooltipStyle} />
+                    <Bar dataKey="nodes" name="Total Nodes" fill={COLORS.primary} radius={[2, 2, 0, 0]} />
+                    <Bar dataKey="healthy" name="Healthy" fill={COLORS.success} radius={[2, 2, 0, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
             </div>
 
-            {/* Workload Status Distribution */}
-            <div className="bg-bg-card rounded-3xl border border-border-main p-6">
-              <h3 className="text-sm font-black   text-text-primary mb-4 flex items-center gap-2">
-                <PieChart className="w-4 h-4 text-primary-500" />
-                Workload Status Distribution
-              </h3>
-              <div className="h-[250px] flex items-center justify-center relative">
+            <div className="kt-panel p-5">
+              <div className="kt-panel-header mb-4 -mx-5 -mt-5">
+                <AlertTriangle className="w-4 h-4 text-primary-500" /> Workload Status Distribution
+              </div>
+              <div className="h-[250px] flex items-center justify-center relative z-10">
                 {statusDistribution.some(s => s.value > 0) ? (
                   <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
-                      <Pie
-                        data={statusDistribution}
-                        cx="50%"
-                        cy="50%"
-                        innerRadius={65}
-                        outerRadius={95}
-                        paddingAngle={4}
-                        dataKey="value"
-                        stroke="var(--kt-bg-card)"
-                        strokeWidth={2}
-                      >
-                        {statusDistribution.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={entry.color} />
-                        ))}
+                      <Pie data={statusDistribution} cx="50%" cy="50%" innerRadius={65} outerRadius={95} paddingAngle={3} dataKey="value" stroke="var(--kt-bg-card)" strokeWidth={2}>
+                        {statusDistribution.map((entry, index) => <Cell key={`cell-${index}`} fill={entry.color} />)}
                       </Pie>
-                      <Tooltip
-                        formatter={(value: number, name: string) => [`${value} workloads`, name]}
-                        contentStyle={{
-                          backgroundColor: 'var(--kt-bg-card)',
-                          border: '1px solid var(--kt-border-main)',
-                          borderRadius: '12px',
-                          color: 'var(--kt-fg-primary)'
-                        }}
-                      />
+                      <Tooltip contentStyle={tooltipStyle} formatter={(value: number, name: string) => [`${value} workloads`, name]} />
                     </PieChart>
                   </ResponsiveContainer>
-                ) : (
-                  <p className="text-text-tertiary">No workload data available</p>
-                )}
+                ) : <p className="text-text-tertiary font-mono uppercase tracking-wider">No workload data available</p>}
                 <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                  <span className="text-2xl font-black text-text-primary">{summary?.totalWorkloads ?? 0}</span>
-                  <span className="text-[10px] text-text-tertiary">Workloads</span>
+                  <span className="text-2xl font-mono font-bold text-text-primary">{summary?.totalWorkloads ?? 0}</span>
+                  <span className="text-[10px] text-text-tertiary font-sans font-semibold tracking-wider uppercase">Workloads</span>
                 </div>
               </div>
-              <div className="grid grid-cols-3 gap-2 mt-4">
+              <div className="grid grid-cols-3 gap-2 mt-4 relative z-10">
                 {statusDistribution.filter(s => s.value > 0).map(s => (
-                  <div key={s.name} className="flex flex-col items-center gap-1 p-2 rounded-xl bg-bg-hover/50 border border-border-main">
+                  <div key={s.name} className="flex flex-col items-center gap-1 p-2 border border-border-main bg-bg-main">
                     <div className="flex items-center gap-1.5">
                       <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: s.color }} />
-                      <span className="text-[10px] font-semibold text-text-secondary">{s.name}</span>
+                      <span className="text-[10px] font-sans font-semibold text-text-secondary tracking-wider uppercase">{s.name}</span>
                     </div>
-                    <span className="text-lg font-bold" style={{ color: s.color }}>{s.value}</span>
+                    <span className="text-lg font-mono font-bold" style={{ color: s.color }}>{s.value}</span>
                   </div>
                 ))}
               </div>
             </div>
           </div>
 
-          {/* Cross-Cluster Incidents */}
-          {visibleIncidents.length > 0 && (
-            <MultiClusterIncidentsList incidents={visibleIncidents} />
-          )}
+          {visibleIncidents.length > 0 && <MultiClusterIncidentsList incidents={visibleIncidents} />}
         </>
       )}
 
-      {/* Workloads View */}
       {viewMode === 'workloads' && (
-        <div className="bg-bg-card rounded-3xl border border-border-main overflow-hidden">
-          <div className="p-6 border-b border-border-main bg-bg-hover/50">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-              <h3 className="text-sm font-black   text-text-primary">
-                All Workloads ({filteredWorkloads.length})
-              </h3>
-              <div className="flex items-center gap-3">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-tertiary" />
-                  <input
-                    type="text"
-                    placeholder="Search workloads..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="kt-input pl-10 pr-4 text-xs"
-                  />
-                </div>
-                <select
-                  value={statusFilter}
-                  onChange={(e) => setStatusFilter(e.target.value)}
-                  className="kt-select text-xs"
-                >
-                  <option value="all">All Status</option>
-                  <option value="healthy">Healthy</option>
-                  <option value="warning">Warning</option>
-                  <option value="critical">Critical</option>
-                </select>
+        <div className="kt-panel overflow-hidden">
+          <div className="kt-panel-header">
+            <span>All Workloads ({filteredWorkloads.length})</span>
+            <div className="flex items-center gap-2">
+              <div className="relative">
+                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-text-tertiary" />
+                <input type="text" placeholder="Search workloads..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="kt-input pl-9 pr-3 py-1.5 text-xs w-48" />
               </div>
+              <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="kt-select text-xs py-1.5">
+                <option value="all">All Status</option>
+                <option value="healthy">Healthy</option>
+                <option value="warning">Warning</option>
+                <option value="critical">Critical</option>
+              </select>
             </div>
           </div>
-          <div className="p-6">
-            <div className="grid gap-4">
+          <div className="p-4 relative z-10">
+            <div className="grid gap-2">
               {filteredWorkloads.slice(0, 50).map((workload) => (
-                <div
-                  key={workload.id}
-                  className="flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-xl border border-border-main bg-bg-hover/30 hover:border-primary-500/30 transition-all gap-3"
-                >
-                  <div className="flex items-center gap-4 min-w-0">
-                    <div className={`p-2 rounded-lg shrink-0 ${getStatusBg(workload.status)}`}>
-                      {getStatusIcon(workload.status)}
-                    </div>
+                <div key={workload.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-3 border border-border-main bg-bg-main hover:border-primary-500/30 transition-all gap-3">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className={`p-2 shrink-0 border ${getStatusBg(workload.status)}`}>{getStatusIcon(workload.status)}</div>
                     <div className="min-w-0">
-                      <h4 className="font-bold text-text-primary truncate">{workload.name}</h4>
-                      <p className="text-xs text-text-tertiary truncate">
-                        {workload.namespace} • {workload.kind} • {workload.clusterName}
-                      </p>
+                      <h4 className="font-mono font-bold text-text-primary truncate uppercase tracking-wide">{workload.name}</h4>
+                      <p className="text-xs text-text-tertiary font-mono uppercase tracking-wider">{workload.namespace} • {workload.kind} • {workload.clusterName}</p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-6 shrink-0 ml-11 sm:ml-0">
+                  <div className="flex items-center gap-5 shrink-0 ml-10 sm:ml-0">
                     <div className="text-right">
-                      <p className="text-sm font-bold text-text-primary">
-                        {workload.availableReplicas}/{workload.replicas}
-                      </p>
-                      <p className="text-[10px] text-text-tertiary ">Replicas</p>
+                      <p className="text-sm font-mono font-bold text-text-primary">{workload.availableReplicas}/{workload.replicas}</p>
+                      <p className="text-[10px] text-text-tertiary font-sans font-semibold tracking-wider uppercase">Replicas</p>
                     </div>
-                    <button className="p-2 rounded-lg hover:bg-bg-hover text-text-tertiary hover:text-primary-500 transition-colors">
-                      <ArrowUpRight className="w-4 h-4" />
-                    </button>
+                    <button className="p-2 border border-border-main hover:border-primary-500/30 hover:text-primary-500 text-text-tertiary transition-colors"><ArrowUpRight className="w-4 h-4" /></button>
                   </div>
                 </div>
               ))}
             </div>
-            {filteredWorkloads.length > 50 && (
-              <p className="text-center text-text-tertiary text-sm mt-4">
-                Showing 50 of {filteredWorkloads.length} workloads
-              </p>
-            )}
+            {filteredWorkloads.length > 50 && <p className="text-center text-text-tertiary text-sm mt-4 font-mono uppercase tracking-wider">Showing 50 of {filteredWorkloads.length} workloads</p>}
           </div>
         </div>
       )}
 
-      {/* Incidents View */}
-      {viewMode === 'incidents' && (
-        <MultiClusterIncidentsList incidents={visibleIncidents} />
-      )}
+      {viewMode === 'incidents' && <MultiClusterIncidentsList incidents={visibleIncidents} />}
 
-      {/* Footer */}
-      <div className="flex items-center justify-center gap-2 text-text-tertiary text-xs">
-        <Clock className="w-3 h-3" />
-        Last updated: {lastRefresh.toLocaleTimeString()}
+      <div className="flex items-center justify-center gap-2 text-text-tertiary text-xs font-mono uppercase tracking-wider">
+        <Clock className="w-3 h-3" /> Last updated: {lastRefresh.toLocaleTimeString()}
       </div>
     </div>
   );
