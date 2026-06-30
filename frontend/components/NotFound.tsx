@@ -13,8 +13,8 @@ export const NotFound: React.FC = () => {
                 </div>
 
                 <div className="space-y-3">
-                    <h1 className="font-display font-bold tracking-wider uppercase text-6xl text-text-primary">404</h1>
-                    <h2 className="font-display font-bold tracking-wider uppercase text-xl text-text-secondary">Page Not Found</h2>
+                    <h1 className="font-display font-bold text-6xl text-text-primary">404</h1>
+                    <h2 className="font-display font-bold text-xl text-text-secondary">Page Not Found</h2>
                     <p className="text-sm text-text-tertiary max-w-sm mx-auto leading-relaxed">
                         The page you are looking for might have been removed or moved to a different location.
                     </p>

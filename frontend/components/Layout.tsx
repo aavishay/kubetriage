@@ -192,12 +192,12 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
 
           {(!isCollapsed || isMobileMenuOpen) && (
             <div className="animate-slide-up">
-              <h1 className="font-display font-bold text-text-primary tracking-wider text-lg uppercase">
+              <h1 className="font-display font-bold text-text-primary text-lg">
                 Kube<span className="text-primary-500">Triage</span>
               </h1>
               <div className="flex items-center gap-1.5 mt-0.5">
                 <span className="kt-led kt-led-success kt-led-pulse" />
-                <p className="text-[10px] font-semibold text-text-tertiary tracking-wider uppercase">Online</p>
+                <p className="text-[10px] text-text-tertiary font-sans font-medium uppercase">Online</p>
               </div>
             </div>
           )}
@@ -236,7 +236,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
 
                   {(!isCollapsed || isMobileMenuOpen) && (
                     <span className={`
-                      font-sans font-medium text-xs tracking-wider uppercase relative z-10 transition-colors
+                      font-sans font-medium text-xs relative z-10 transition-colors
                       ${isActive ? 'text-primary-500' : 'text-text-secondary group-hover:text-text-primary'}
                     `}>
                       {item.label}
@@ -299,10 +299,10 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
               >
                 <span className="kt-led shrink-0" style={{ background: selectedClusterIds.length > 0 ? '#f5a623' : '#4a4d55', boxShadow: selectedClusterIds.length > 0 ? '0 0 6px #f5a623' : 'none' }} />
                 <div className="hidden sm:block text-left flex-1 min-w-0">
-                  <div className="text-[10px] font-semibold text-text-tertiary tracking-wider uppercase group-hover:text-primary-500 transition-colors">
+                  <div className="text-[10px] text-text-tertiary group-hover:text-primary-500 transition-colors font-sans font-medium uppercase">
                     Target Cluster
                   </div>
-                  <div className="text-sm font-mono font-bold text-text-primary truncate uppercase tracking-wide">
+                  <div className="text-sm font-sans font-medium text-text-primary truncate">
                     {formatSelectedLabel()}
                   </div>
                 </div>
@@ -315,12 +315,12 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
                   className="absolute top-full left-0 mt-2 w-[calc(100vw-2rem)] max-w-xs sm:w-80 bg-bg-card border border-border-main rounded-sm shadow-2xl py-1 animate-slide-up z-50 overflow-hidden"
                 >
                   <div className="flex items-center justify-between px-3 py-2 border-b border-border-main bg-bg-hover">
-                    <p className="text-[10px] font-semibold text-text-tertiary tracking-wider uppercase flex items-center gap-2">
+                    <p className="text-[10px] text-text-tertiary flex items-center gap-2 font-sans font-medium uppercase">
                       <Server className="w-3.5 h-3.5" /> Control Plane Fleet
                     </p>
                     <button
                       onClick={() => setDraftClusterIds([])}
-                      className="text-[10px] text-primary-400 hover:text-primary-300 font-semibold tracking-wider uppercase"
+                      className="text-[10px] text-primary-400 hover:text-primary-300 font-sans font-medium"
                     >
                       Reset
                     </button>
@@ -333,7 +333,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
                         checked={draftClusterIds.length === 0}
                         onChange={() => setDraftClusterIds([])}
                       />
-                      <span className="text-sm font-sans font-semibold tracking-wide uppercase text-text-primary">All clusters</span>
+                      <span className="text-sm font-sans font-medium text-text-primary">All clusters</span>
                     </label>
                     {clusters.map(cluster => (
                       <div
@@ -358,12 +358,12 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
                           </div>
 
                           <div className="flex-1 min-w-0">
-                            <p className={`text-sm font-mono font-bold truncate uppercase tracking-wide ${draftClusterIds.includes(cluster.id) ? 'text-primary-500' : 'text-text-secondary group-hover/item:text-text-primary'}`}>
+                            <p className={`text-sm font-sans font-medium truncate ${draftClusterIds.includes(cluster.id) ? 'text-primary-500' : 'text-text-secondary group-hover/item:text-text-primary'}`}>
                               {cluster.displayName || cluster.name}
                             </p>
                             <div className="flex items-center gap-2 mt-0.5">
                               <span className={`w-1.5 h-1.5 rounded-full ${getStatusColor(cluster.status)}`}></span>
-                              <p className="text-[10px] text-text-tertiary font-mono uppercase tracking-wider">{cluster.provider}</p>
+                              <p className="text-[10px] text-text-tertiary font-sans font-medium">{cluster.provider}</p>
                             </div>
                           </div>
                         </label>
@@ -402,9 +402,9 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
                   <div className="p-1.5">
                     <button
                       onClick={() => { setIsRegisterModalOpen(true); setIsClusterMenuOpen(false); }}
-                      className="w-full flex items-center justify-center gap-2 px-4 py-2 text-xs font-sans font-semibold tracking-wider uppercase text-black bg-primary-500 hover:bg-primary-400 rounded-sm transition-all"
+                      className="w-full flex items-center justify-center gap-2 px-4 py-2 text-xs font-sans font-semibold text-black bg-primary-500 hover:bg-primary-400 rounded-sm transition-all"
                     >
-                      <Plus className="w-4 h-4" /> Provision New Cluster
+                      <Plus className="w-4 h-4" /> Provision new cluster
                     </button>
                   </div>
                 </div>
@@ -417,12 +417,12 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
             {/* System Status Strip - Desktop */}
             <div className="hidden lg:flex items-center gap-0 px-1 bg-bg-main border border-border-main rounded-sm">
               <div className="flex items-center gap-2 px-2 py-1 border-r border-border-main">
-                <span className="text-[10px] font-sans font-semibold text-text-tertiary tracking-wider uppercase">Latency</span>
+                <span className="text-[10px] text-text-tertiary font-sans font-medium uppercase">Latency</span>
                 <span className="text-xs font-mono font-bold text-success tabular-nums">{apiLatency !== null ? `${apiLatency}ms` : '...'}</span>
               </div>
               <div className="flex items-center gap-2 px-2 py-1">
                 <span className={`w-1.5 h-1.5 rounded-full ${apiStatus === 'Connected' ? 'bg-success' : 'bg-warning'} ${apiStatus === 'Connected' ? 'shadow-[0_0_6px_#2ecc71]' : 'shadow-[0_0_6px_#f5a623]'}`}></span>
-                <span className={`text-xs font-mono font-bold uppercase ${apiStatus === 'Connected' ? 'text-success' : 'text-warning'}`}>
+                <span className={`text-xs font-mono font-bold ${apiStatus === 'Connected' ? 'text-success' : 'text-warning'}`}>
                   {apiStatus}
                 </span>
               </div>

@@ -80,21 +80,21 @@ const TrafficPathExplorer = ({ workload }: { workload: Workload }) => {
           <div className="w-14 h-14 bg-bg-main border border-border-main flex items-center justify-center text-text-tertiary">
             <Globe className="w-6 h-6" />
           </div>
-          <span className="text-[10px] text-text-tertiary font-mono uppercase tracking-wider">Ingress</span>
+          <span className="text-[10px] text-text-tertiary font-sans font-medium uppercase">Ingress</span>
         </div>
         <div className="flex-1 h-px bg-gradient-to-r from-transparent via-primary-500/50 to-transparent"></div>
         <div className="flex flex-col items-center gap-2">
           <div className="w-16 h-16 bg-primary-600 flex items-center justify-center text-white kt-amber-glow">
             <Zap className="w-7 h-7" />
           </div>
-          <span className="text-xs font-mono font-bold text-text-primary uppercase tracking-wide">Gateway</span>
+          <span className="text-xs font-sans font-bold text-text-primary">Gateway</span>
         </div>
         <div className="flex-1 h-px bg-gradient-to-r from-transparent via-danger/50 to-transparent"></div>
         <div className="flex flex-col items-center gap-2">
           <div className="w-14 h-14 bg-bg-main border border-danger/30 flex items-center justify-center text-danger">
             <Terminal className="w-6 h-6" />
           </div>
-          <span className="text-[10px] text-danger font-mono uppercase tracking-wider">Backend</span>
+          <span className="text-[10px] text-danger font-sans">Backend</span>
         </div>
       </div>
     </div>
@@ -365,9 +365,9 @@ export const TriageView: React.FC<TriageViewProps> = ({ workloads, isDarkMode = 
 
   const metricCard = (label: string, value: string | number, critical = false, sub?: string) => (
     <div className="kt-panel p-4 hover:border-primary-500/30 transition-all">
-      <p className="text-[10px] font-sans font-semibold text-text-tertiary tracking-wider uppercase mb-1">{label}</p>
+      <p className="text-[10px] font-sans font-semibold text-text-tertiary mb-1">{label}</p>
       <div className={`text-2xl font-mono font-bold ${critical ? 'text-danger' : 'text-text-primary'}`}>{value}</div>
-      {sub && <div className="text-[10px] text-text-tertiary font-mono mt-1">{sub}</div>}
+      {sub && <div className="text-[10px] text-text-tertiary mt-1 font-sans">{sub}</div>}
     </div>
   );
 
@@ -378,7 +378,7 @@ export const TriageView: React.FC<TriageViewProps> = ({ workloads, isDarkMode = 
         ? <CodeBlock language={match[1]}>{children}</CodeBlock>
         : <code className="bg-primary-500/10 text-primary-500 px-1.5 py-0.5 rounded-sm font-mono text-xs" {...props}>{children}</code>;
     },
-    h2({ children, ...props }: any) { return <h2 className="text-lg font-display font-bold text-text-primary mb-4 mt-6 pb-2 border-b border-border-main tracking-wider uppercase" {...props}>{children}</h2>; },
+    h2({ children, ...props }: any) { return <h2 className="text-lg font-display font-bold text-text-primary mb-4 mt-6 pb-2 border-b border-border-main" {...props}>{children}</h2>; },
     ul({ children, ...props }: any) { return <ul className="space-y-2 my-4 list-none pl-0" {...props}>{children}</ul>; },
     li({ children, ...props }: any) { return <li className="flex gap-3 items-start text-text-secondary text-sm" {...props}><span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-primary-500/50 shrink-0" /><span className="flex-1">{children}</span></li>; },
     strong({ children, ...props }: any) { return <strong className="font-bold text-text-primary" {...props}>{children}</strong>; }
@@ -404,16 +404,9 @@ export const TriageView: React.FC<TriageViewProps> = ({ workloads, isDarkMode = 
             </div>
             <div className="flex items-center gap-1.5">
               {(['all', 'Healthy', 'Warning', 'Critical'] as const).map((s) => (
-                <button key={s} onClick={() => setStatusFilter(s)} className={`px-2 py-1 text-[10px] font-sans font-semibold tracking-wider uppercase border transition-all ${
-                  statusFilter === s
-                    ? s === 'all' ? 'bg-primary-500/10 text-primary-500 border-primary-500/30' :
-                      s === 'Healthy' ? 'bg-success/10 text-success border-success/30' :
-                      s === 'Warning' ? 'bg-warning/10 text-warning border-warning/30' :
-                      'bg-danger/10 text-danger border-danger/30'
-                    : 'bg-bg-hover text-text-tertiary border-transparent hover:text-text-secondary hover:border-border-main'
-                }`}>
+                <button key={s} onClick={() => setStatusFilter(s)} className={`px-2 py-1 text-[10px] font-sans font-semibold border transition-all ${ statusFilter === s ? s === 'all' ? 'bg-primary-500/10 text-primary-500 border-primary-500/30' : s === 'Healthy' ? 'bg-success/10 text-success border-success/30' : s === 'Warning' ? 'bg-warning/10 text-warning border-warning/30' : 'bg-danger/10 text-danger border-danger/30' : 'bg-bg-hover text-text-tertiary border-transparent hover:text-text-secondary hover:border-border-main' }`}>
                   {s === 'all' ? 'All' : s}
-                  <span className="ml-1 opacity-60 font-mono">{s === 'all' ? safeWorkloads.length : safeWorkloads.filter(w => w.status === s).length}</span>
+                  <span className="ml-1 opacity-60 font-sans">{s === 'all' ? safeWorkloads.length : safeWorkloads.filter(w => w.status === s).length}</span>
                 </button>
               ))}
             </div>
@@ -427,7 +420,7 @@ export const TriageView: React.FC<TriageViewProps> = ({ workloads, isDarkMode = 
           {filteredWorkloads.length === 0 && (
             <div className="flex flex-col items-center justify-center py-12 text-text-tertiary">
               <Search className="w-8 h-8 mb-3 opacity-30" />
-              <p className="text-xs font-mono uppercase tracking-wider">No workloads match</p>
+              <p className="text-xs font-sans">No workloads match</p>
             </div>
           )}
           {filteredWorkloads.map(w => (
@@ -436,14 +429,14 @@ export const TriageView: React.FC<TriageViewProps> = ({ workloads, isDarkMode = 
               setSelectedWorkload(w); notifyView(`workload-${w.id}`); setAnalysis(null); setPatchSuggestion(null); setIsSidebarOpen(false);
             }} className={`group p-2.5 cursor-pointer transition-all border ${selectedWorkload?.id === w.id ? 'bg-primary-500/10 border-primary-500/30' : 'hover:bg-bg-hover border-transparent'}`}>
               <div className="flex items-center justify-between mb-1">
-                <span className={`text-sm font-mono font-bold truncate uppercase tracking-wide ${selectedWorkload?.id === w.id ? 'text-text-primary' : 'text-text-secondary'}`}>{w.name}</span>
+                <span className={`text-sm font-mono font-bold truncate ${selectedWorkload?.id === w.id ? 'text-text-primary' : 'text-text-secondary'}`}>{w.name}</span>
                 <span className={`w-2 h-2 rounded-full shrink-0 ${getMetricStatusColor(w.status === 'Healthy' ? 0 : w.status === 'Warning' ? 80 : 100)}`} />
               </div>
               {!isDesktopCollapsed && (
                 <div className="flex items-center gap-2">
-                  <span className="text-[10px] text-text-tertiary font-mono uppercase tracking-wider">{w.kind}</span>
+                  <span className="text-[10px] text-text-tertiary font-sans">{w.kind}</span>
                   <span className="text-[10px] text-text-tertiary/70 select-none">•</span>
-                  <span className="text-[10px] text-text-tertiary font-mono uppercase tracking-wider">{w.namespace}</span>
+                  <span className="text-[10px] text-text-tertiary font-sans">{w.namespace}</span>
                 </div>
               )}
             </div>
@@ -459,8 +452,8 @@ export const TriageView: React.FC<TriageViewProps> = ({ workloads, isDarkMode = 
                 <button onClick={() => setIsSidebarOpen(true)} className="lg:hidden p-2 bg-bg-main border border-border-main text-text-secondary"><ChevronLeft className="w-4 h-4" /></button>
                 <div className="p-2 bg-bg-main border border-border-main shrink-0"><Terminal className="w-5 h-5 text-primary-500" /></div>
                 <div className="min-w-0">
-                  <h2 className="text-lg font-display font-bold text-text-primary truncate tracking-wider uppercase">{selectedWorkload.name}</h2>
-                  <div className="flex items-center gap-2 text-xs text-text-tertiary font-mono uppercase tracking-wider">
+                  <h2 className="text-lg font-display font-bold text-text-primary truncate">{selectedWorkload.name}</h2>
+                  <div className="flex items-center gap-2 text-xs text-text-tertiary font-sans">
                     <span>{selectedWorkload.namespace}</span>
                     <span>•</span>
                     <span>{selectedWorkload.kind}</span>
@@ -470,7 +463,7 @@ export const TriageView: React.FC<TriageViewProps> = ({ workloads, isDarkMode = 
               <div className="flex items-center gap-2 shrink-0">
                 <div className="flex items-center gap-2 bg-bg-main px-2 py-1 border border-border-main">
                   <Activity className="w-4 h-4 text-primary-500" />
-                  <select value={selectedPlaybook} onChange={(e) => { setSelectedPlaybook(e.target.value as DiagnosticPlaybook); setAnalysis(null); }} className="bg-transparent text-xs font-mono text-text-primary border-none focus:ring-0 cursor-pointer appearance-none pr-5 min-w-0 uppercase tracking-wider">
+                  <select value={selectedPlaybook} onChange={(e) => { setSelectedPlaybook(e.target.value as DiagnosticPlaybook); setAnalysis(null); }} className="bg-transparent text-xs text-text-primary border-none focus:ring-0 cursor-pointer appearance-none pr-5 min-w-0 font-sans">
                     <option value="General Health">General Health</option>
                     <option value="Network Connectivity">Network</option>
                     <option value="Resource Constraints">Resources</option>
@@ -496,13 +489,13 @@ export const TriageView: React.FC<TriageViewProps> = ({ workloads, isDarkMode = 
                   <div className="flex items-center gap-3 relative z-10">
                     <div className="p-2 bg-success/10 border border-success/30"><TrendingDown className="w-5 h-5 text-success" /></div>
                     <div>
-                      <h4 className="text-sm font-sans font-semibold text-text-primary tracking-wide uppercase">Optimization Available</h4>
-                      <p className="text-xs text-success font-mono">{selectedWorkload.recommendation.reason}</p>
+                      <h4 className="text-sm font-sans font-semibold text-text-primary">Optimization Available</h4>
+                      <p className="text-xs text-success font-sans">{selectedWorkload.recommendation.reason}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-4 relative z-10">
                     <span className="text-sm font-mono font-bold text-text-primary">{selectedWorkload.recommendation.action}</span>
-                    <span className="text-xs text-text-tertiary font-mono">{selectedWorkload.recommendation.confidence}% confidence</span>
+                    <span className="text-xs text-text-tertiary font-sans">{selectedWorkload.recommendation.confidence}% confidence</span>
                   </div>
                 </div>
               )}
@@ -515,7 +508,7 @@ export const TriageView: React.FC<TriageViewProps> = ({ workloads, isDarkMode = 
                   {isAnalyzing ? (
                     <div className="h-48 flex flex-col items-center justify-center gap-4">
                       <Loader2 className="w-8 h-8 text-primary-500 animate-spin" />
-                      <p className="text-sm text-text-tertiary font-mono uppercase tracking-wider">Analyzing workload...</p>
+                      <p className="text-sm text-text-tertiary font-sans font-medium">Analyzing workload...</p>
                     </div>
                   ) : analysis ? (
                     <div className="animate-fade-in">
@@ -524,17 +517,17 @@ export const TriageView: React.FC<TriageViewProps> = ({ workloads, isDarkMode = 
                           <div className="flex items-center gap-3">
                             <div className="p-2 bg-primary-600 text-white"><FileCheck className="w-4 h-4" /></div>
                             <div>
-                              <h4 className="text-sm font-sans font-semibold text-text-primary tracking-wide uppercase">Analysis Complete</h4>
+                              <h4 className="text-sm font-sans font-semibold text-text-primary">Analysis Complete</h4>
                               {currentReport && (
                                 <div className="flex items-center gap-2 mt-1 flex-wrap">
                                   <span className={`kt-badge ${currentReport.Severity === 'Critical' ? 'kt-badge-danger' : currentReport.Severity === 'Warning' ? 'kt-badge-warning' : 'kt-badge-success'}`}>{currentReport.Severity}</span>
-                                  {currentReport.IncidentType && <span className="text-[10px] text-text-secondary font-mono uppercase tracking-wider border border-border-main px-1.5 py-0.5 bg-bg-hover">{currentReport.IncidentType}</span>}
+                                  {currentReport.IncidentType && <span className="text-[10px] text-text-secondary border border-border-main px-1.5 py-0.5 bg-bg-hover font-sans">{currentReport.IncidentType}</span>}
                                   <span className="text-[10px] text-text-tertiary font-mono">{new Date(currentReport.CreatedAt).toLocaleString()}</span>
                                 </div>
                               )}
                             </div>
                           </div>
-                          <Link to="/reports" className="text-xs text-primary-500 hover:text-primary-400 font-mono uppercase tracking-wider border border-primary-500/30 px-3 py-1.5 bg-primary-500/10 transition-colors shrink-0">View in Reports →</Link>
+                          <Link to="/reports" className="text-xs text-primary-500 hover:text-primary-400 border border-primary-500/30 px-3 py-1.5 bg-primary-500/10 transition-colors shrink-0 font-sans">View in Reports →</Link>
                         </div>
                       </div>
 
@@ -552,10 +545,10 @@ export const TriageView: React.FC<TriageViewProps> = ({ workloads, isDarkMode = 
                         ) : (
                           <div className="w-full kt-panel-inset p-4">
                             <div className="flex items-center justify-between mb-3">
-                              <h4 className="text-sm font-sans font-semibold text-text-primary tracking-wide uppercase flex items-center gap-2"><Sparkles className="w-4 h-4 text-primary-500" /> Proposed Fix</h4>
+                              <h4 className="text-sm font-sans font-semibold text-text-primary flex items-center gap-2"><Sparkles className="w-4 h-4 text-primary-500" /> Proposed Fix</h4>
                               <span className={`kt-badge ${patchSuggestion.risk === 'High' ? 'kt-badge-danger' : 'kt-badge-success'}`}>Risk: {patchSuggestion.risk}</span>
                             </div>
-                            <p className="text-xs text-text-tertiary mb-3 font-mono">{patchSuggestion.reasoning}</p>
+                            <p className="text-xs text-text-tertiary mb-3 font-sans">{patchSuggestion.reasoning}</p>
                             <CodeBlock language="yaml">{patchSuggestion.patchContent}</CodeBlock>
                             <div className="flex justify-end gap-2 mt-3">
                               <button onClick={() => setPatchSuggestion(null)} className="kt-button kt-button-ghost kt-button-sm">Discard</button>
@@ -567,13 +560,13 @@ export const TriageView: React.FC<TriageViewProps> = ({ workloads, isDarkMode = 
                         )}
                       </div>
 
-                      {fixStatus === 'success' && <div className="mt-3 p-3 bg-success/10 text-success text-sm text-center border border-success/20 font-mono uppercase tracking-wider">Fix applied successfully</div>}
-                      {fixStatus === 'error' && <div className="mt-3 p-3 bg-danger/10 text-danger text-sm text-center border border-danger/20 font-mono uppercase tracking-wider">Failed to apply fix</div>}
+                      {fixStatus === 'success' && <div className="mt-3 p-3 bg-success/10 text-success text-sm text-center border border-success/20 font-sans">Fix applied successfully</div>}
+                      {fixStatus === 'error' && <div className="mt-3 p-3 bg-danger/10 text-danger text-sm text-center border border-danger/20 font-sans">Failed to apply fix</div>}
                     </div>
                   ) : (
                     <div className="h-48 flex flex-col items-center justify-center text-text-tertiary gap-3">
                       <Info className="w-8 h-8" />
-                      <p className="text-sm font-mono uppercase tracking-wider">Click "Analyze" to generate AI insights</p>
+                      <p className="text-sm font-sans">Click "Analyze" to generate AI insights</p>
                     </div>
                   )}
                 </div>
@@ -583,7 +576,7 @@ export const TriageView: React.FC<TriageViewProps> = ({ workloads, isDarkMode = 
                 <div className="kt-panel-header">
                   <div className="flex items-center gap-2"><span className="kt-led kt-led-success kt-led-pulse" /><Terminal className="w-4 h-4 text-text-secondary" /> Logs</div>
                   <div className="flex items-center gap-2">
-                    <button onClick={() => setIsLogSyncEnabled(!isLogSyncEnabled)} className={`flex items-center gap-1.5 px-2 py-1 text-[10px] font-mono uppercase tracking-wider border transition-all ${isLogSyncEnabled ? 'bg-primary-500/10 text-primary-500 border-primary-500/30' : 'text-text-tertiary hover:text-text-secondary border-border-main'}`}>
+                    <button onClick={() => setIsLogSyncEnabled(!isLogSyncEnabled)} className={`flex items-center gap-1.5 px-2 py-1 text-[10px] border transition-all ${isLogSyncEnabled ? 'bg-primary-500/10 text-primary-500 border-primary-500/30' : 'text-text-tertiary hover:text-text-secondary border-border-main'} font-sans`}>
                       <span className={`w-1.5 h-1.5 rounded-full ${isLogSyncEnabled ? 'bg-primary-500' : 'bg-text-tertiary'}`} /> Sync
                     </button>
                     <div className="relative"><Search className="w-3.5 h-3.5 text-text-tertiary absolute left-2.5 top-1/2 -translate-y-1/2" /><input type="text" placeholder="Search..." value={logSearchTerm} onChange={(e) => handleLogSearchChange(e.target.value)} className="kt-input pl-8 pr-3 py-1 text-xs w-40" /></div>
@@ -592,11 +585,11 @@ export const TriageView: React.FC<TriageViewProps> = ({ workloads, isDarkMode = 
                 </div>
                 <div className="flex-1 overflow-auto font-mono text-xs p-3 custom-scrollbar kt-panel-inset m-4">
                   {(!selectedWorkload.recentLogs || selectedWorkload.recentLogs.length === 0) ? (
-                    <div className="h-full flex flex-col items-center justify-center text-text-tertiary/50 gap-3"><Terminal className="w-8 h-8 opacity-20" /><p className="text-xs font-mono uppercase tracking-wider">No logs available</p></div>
+                    <div className="h-full flex flex-col items-center justify-center text-text-tertiary/50 gap-3"><Terminal className="w-8 h-8 opacity-20" /><p className="text-xs font-sans">No logs available</p></div>
                   ) : (
                     selectedWorkload.recentLogs.filter(log => !logSearchTerm || log.toLowerCase().includes(logSearchTerm.toLowerCase())).map((log, i) => (
                       <div key={i} className="flex gap-3 group hover:bg-bg-hover px-2 py-1 items-start transition-colors">
-                        <span className="text-text-tertiary/50 select-none w-8 text-right shrink-0 font-mono">{i + 1}</span>
+                        <span className="text-text-tertiary/50 select-none w-8 text-right shrink-0 font-sans">{i + 1}</span>
                         <div className={`text-text-secondary flex-1 min-w-0 ${isLogWrapEnabled ? 'break-all whitespace-pre-wrap' : 'whitespace-nowrap overflow-hidden overflow-x-auto'}`}>{highlightLog(log)}</div>
                         <CopyButton text={log} className="opacity-0 group-hover:opacity-100 shrink-0" />
                       </div>
@@ -616,10 +609,10 @@ export const TriageView: React.FC<TriageViewProps> = ({ workloads, isDarkMode = 
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-3 mb-1 flex-wrap">
-                            <span className="text-sm font-mono font-bold text-text-primary uppercase tracking-wide">{event.reason}</span>
-                            <span className="text-[10px] text-text-tertiary font-mono">{event.lastSeen}</span>
+                            <span className="text-sm font-sans font-bold text-text-primary">{event.reason}</span>
+                            <span className="text-[10px] text-text-tertiary font-sans">{event.lastSeen}</span>
                           </div>
-                          <p className="text-xs text-text-secondary truncate font-mono">{event.message}</p>
+                          <p className="text-xs text-text-secondary truncate font-sans">{event.message}</p>
                         </div>
                       </div>
                     ))}
@@ -631,8 +624,8 @@ export const TriageView: React.FC<TriageViewProps> = ({ workloads, isDarkMode = 
         ) : (
           <div className="flex-1 flex flex-col items-center justify-center p-8 text-center animate-fade-in">
             <div className="p-6 bg-primary-500/10 border border-primary-500/30 mb-4 kt-amber-glow"><Activity className="w-10 h-10 text-primary-500" /></div>
-            <h3 className="text-xl font-display font-bold text-text-primary mb-2 tracking-wider uppercase">Select a Workload</h3>
-            <p className="text-sm text-text-tertiary max-w-sm font-mono">Choose a workload from the sidebar to begin triage analysis.</p>
+            <h3 className="text-xl font-display font-bold text-text-primary mb-2">Select a Workload</h3>
+            <p className="text-sm text-text-tertiary max-w-sm font-sans">Choose a workload from the sidebar to begin triage analysis.</p>
           </div>
         )}
       </main>

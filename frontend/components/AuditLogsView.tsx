@@ -85,11 +85,11 @@ export const AuditLogsView: React.FC = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-2xl font-display font-bold text-text-primary flex items-center gap-3 tracking-wider uppercase">
+          <h1 className="text-2xl font-display font-bold text-text-primary flex items-center gap-3">
             <Shield className="w-7 h-7 text-primary-500" />
             Audit Logs
           </h1>
-          <p className="text-text-tertiary text-sm mt-1 font-mono">
+          <p className="text-text-tertiary text-sm mt-1 font-sans">
             Track every action performed in KubeTriage for compliance and accountability.
           </p>
         </div>
@@ -118,7 +118,7 @@ export const AuditLogsView: React.FC = () => {
             <option key={opt.value} value={opt.value}>{opt.label}</option>
           ))}
         </select>
-        <div className="ml-auto text-sm text-text-tertiary font-mono">
+        <div className="ml-auto text-sm text-text-tertiary font-sans">
           Showing {logs.length} of {total} logs
         </div>
       </div>
@@ -129,7 +129,7 @@ export const AuditLogsView: React.FC = () => {
           <span className="flex items-center gap-2">
             <Shield className="w-4 h-4 text-primary-500" /> Activity Log
           </span>
-          <span className="text-[10px] font-mono text-text-tertiary uppercase tracking-wider">{total} total entries</span>
+          <span className="text-[10px] text-text-tertiary font-sans">{total} total entries</span>
         </div>
 
         <div className="p-4 relative z-10 space-y-4">
@@ -157,8 +157,8 @@ export const AuditLogsView: React.FC = () => {
           ) : logs.length === 0 ? (
             <div className="text-center py-12">
               <Shield className="w-12 h-12 text-text-tertiary mx-auto mb-4" />
-              <p className="text-text-tertiary font-mono">No audit logs found.</p>
-              <p className="text-xs text-text-tertiary mt-1 font-mono">Actions will be logged as they occur.</p>
+              <p className="text-text-tertiary font-sans">No audit logs found.</p>
+              <p className="text-xs text-text-tertiary mt-1 font-sans">Actions will be logged as they occur.</p>
             </div>
           ) : (
             logs.map(log => (
@@ -176,7 +176,7 @@ export const AuditLogsView: React.FC = () => {
                 >
                   <div className="flex items-start justify-between gap-3 mb-3">
                     <div className="flex items-center gap-2 flex-wrap min-w-0">
-                      <span className="font-mono font-bold text-text-primary truncate uppercase tracking-wide">{log.Action}</span>
+                      <span className="font-mono font-bold text-text-primary truncate">{log.Action}</span>
                       <span className="kt-badge kt-badge-info">
                         {log.Resource}
                       </span>
@@ -191,7 +191,7 @@ export const AuditLogsView: React.FC = () => {
                       )}
                     </div>
                     <div className="flex items-center gap-2 shrink-0">
-                      <span className="text-[10px] font-mono text-text-tertiary uppercase tracking-wider">{new Date(log.CreatedAt).toLocaleString()}</span>
+                      <span className="text-[10px] text-text-tertiary font-mono">{new Date(log.CreatedAt).toLocaleString()}</span>
                       {selectedLog === log.ID ? (
                         <ChevronUp className="w-4 h-4 text-text-tertiary" />
                       ) : (
@@ -241,9 +241,9 @@ export const AuditLogsView: React.FC = () => {
                       <div className="p-3 bg-danger/10 border border-danger/20">
                         <div className="flex items-center gap-2 mb-1">
                           <AlertTriangle className="w-4 h-4 text-danger" />
-                          <span className="text-sm font-bold text-danger tracking-wide uppercase">Error</span>
+                          <span className="text-sm font-bold text-danger">Error</span>
                         </div>
-                        <p className="text-xs text-danger font-mono">{log.ErrorMsg}</p>
+                        <p className="text-xs text-danger font-sans">{log.ErrorMsg}</p>
                       </div>
                     )}
                   </div>
@@ -263,7 +263,7 @@ export const AuditLogsView: React.FC = () => {
             >
               Previous
             </button>
-            <span className="text-sm text-text-tertiary font-mono">
+            <span className="text-sm text-text-tertiary font-sans">
               Page {Math.floor(offset / limit) + 1} of {Math.ceil(total / limit)}
             </span>
             <button

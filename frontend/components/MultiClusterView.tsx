@@ -73,9 +73,9 @@ const summaryCard = (label: string, value: React.ReactNode, sub: React.ReactNode
   <div className="kt-panel p-4">
     <div className="flex items-start justify-between relative z-10">
       <div>
-        <p className="text-[11px] font-sans font-semibold text-text-tertiary tracking-wider uppercase mb-1">{label}</p>
+        <p className="text-[11px] font-sans font-semibold text-text-tertiary mb-1">{label}</p>
         <p className="text-3xl font-mono font-bold text-text-primary">{value}</p>
-        <p className="text-xs mt-1 font-mono">{sub}</p>
+        <p className="text-xs mt-1 font-sans">{sub}</p>
       </div>
       <div className={`p-2.5 bg-bg-main border border-border-main ${iconColor}`}>
         <icon className="w-5 h-5" />
@@ -217,16 +217,16 @@ export const MultiClusterView: React.FC = () => {
       <div className="p-6 bg-bg-hover border border-border-main mb-6 animate-pulse">
         <Globe className="w-12 h-12 text-primary-500" />
       </div>
-      <h2 className="text-2xl font-display font-bold text-text-primary mb-2 tracking-wider uppercase">Loading Multi-Cluster View</h2>
-      <p className="text-text-tertiary font-mono">Aggregating data from all connected clusters...</p>
+      <h2 className="text-2xl font-display font-bold text-text-primary mb-2">Loading Multi-Cluster View</h2>
+      <p className="text-text-tertiary font-sans">Aggregating data from all connected clusters...</p>
     </div>
   );
 
   if (!data) return (
     <div className="flex flex-col items-center justify-center min-h-[600px]">
       <AlertCircle className="w-12 h-12 text-danger mb-4" />
-      <h2 className="text-xl font-display font-bold text-text-primary mb-2 tracking-wider uppercase">Failed to Load Data</h2>
-      <p className="text-text-tertiary mb-4 font-mono">Could not fetch multi-cluster information</p>
+      <h2 className="text-xl font-display font-bold text-text-primary mb-2">Failed to Load Data</h2>
+      <p className="text-text-tertiary mb-4 font-sans">Could not fetch multi-cluster information</p>
       <button onClick={fetchData} className="kt-button kt-button-primary">
         <RefreshCw className="w-4 h-4" /> Retry
       </button>
@@ -237,18 +237,18 @@ export const MultiClusterView: React.FC = () => {
     <div className="flex flex-col gap-5 p-0 animate-fade-in">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
         <div>
-          <h1 className="text-2xl font-display font-bold text-text-primary flex items-center gap-3 tracking-wider uppercase">
+          <h1 className="text-2xl font-display font-bold text-text-primary flex items-center gap-3">
             <Globe className="w-7 h-7 text-primary-500" />
             Multi-Cluster Federation
           </h1>
-          <p className="text-text-tertiary text-sm mt-1 font-mono">
+          <p className="text-text-tertiary text-sm mt-1 font-sans">
             {summary?.totalClusters ?? 0} clusters • {summary?.totalWorkloads ?? 0} workloads
           </p>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
           <div className="flex bg-bg-card border border-border-main p-0.5">
             {(['overview', 'workloads', 'incidents'] as const).map((mode) => (
-              <button key={mode} onClick={() => setViewMode(mode)} className={`px-3 py-1.5 text-xs font-sans font-semibold tracking-wider uppercase border transition-all ${viewMode === mode ? 'bg-primary-500/10 text-primary-500 border-primary-500/30' : 'text-text-tertiary hover:text-text-primary border-transparent'}`}>
+              <button key={mode} onClick={() => setViewMode(mode)} className={`px-3 py-1.5 text-xs font-sans font-semibold border transition-all ${viewMode === mode ? 'bg-primary-500/10 text-primary-500 border-primary-500/30' : 'text-text-tertiary hover:text-text-primary border-transparent'}`}>
                 {mode}
               </button>
             ))}
@@ -277,27 +277,27 @@ export const MultiClusterView: React.FC = () => {
                       <Server className={`w-5 h-5 ${getStatusColor(cluster.status)}`} />
                     </div>
                     <div className="min-w-0">
-                      <h3 className="font-sans font-semibold text-text-primary truncate tracking-wide uppercase">{cluster.displayName || cluster.name}</h3>
-                      <p className="text-xs text-text-tertiary font-mono uppercase tracking-wider">{cluster.provider} • {cluster.region}</p>
+                      <h3 className="font-sans font-semibold text-text-primary truncate">{cluster.displayName || cluster.name}</h3>
+                      <p className="text-xs text-text-tertiary font-sans">{cluster.provider} • {cluster.region}</p>
                     </div>
                   </div>
                   <StatusBadge status={cluster.status} />
                 </div>
                 <div className="grid grid-cols-3 gap-2 mb-3 relative z-10">
                   <div className="text-center p-2 border border-border-main bg-bg-main">
-                    <p className="text-[10px] text-text-tertiary font-sans font-semibold tracking-wider uppercase">Nodes</p>
-                    <p className="font-mono font-bold text-text-primary">{cluster.healthyNodeCount}/{cluster.nodeCount}</p>
+                    <p className="text-[10px] text-text-tertiary font-sans font-medium uppercase">Nodes</p>
+                    <p className="font-bold text-text-primary font-sans">{cluster.healthyNodeCount}/{cluster.nodeCount}</p>
                   </div>
                   <div className="text-center p-2 border border-border-main bg-bg-main">
-                    <p className="text-[10px] text-text-tertiary font-sans font-semibold tracking-wider uppercase">Workloads</p>
-                    <p className="font-mono font-bold text-text-primary">{cluster.workloadCount}</p>
+                    <p className="text-[10px] text-text-tertiary font-sans font-medium uppercase">Workloads</p>
+                    <p className="font-bold text-text-primary font-sans">{cluster.workloadCount}</p>
                   </div>
                   <div className="text-center p-2 border border-border-main bg-bg-main">
-                    <p className="text-[10px] text-text-tertiary font-sans font-semibold tracking-wider uppercase">Incidents</p>
-                    <p className={`font-mono font-bold ${cluster.incidentCount > 0 ? 'text-danger' : 'text-success'}`}>{cluster.incidentCount}</p>
+                    <p className="text-[10px] text-text-tertiary font-sans font-medium uppercase">Incidents</p>
+                    <p className={`font-bold ${cluster.incidentCount > 0 ? 'text-danger' : 'text-success'} font-sans`}>{cluster.incidentCount}</p>
                   </div>
                 </div>
-                <div className="flex items-center justify-between text-xs relative z-10 font-mono uppercase tracking-wider">
+                <div className="flex items-center justify-between text-xs relative z-10 font-sans">
                   <span className="text-text-tertiary">v{cluster.version}</span>
                   <span className="text-text-tertiary">Last seen: {new Date(cluster.lastConnected).toLocaleTimeString()}</span>
                 </div>
@@ -338,10 +338,10 @@ export const MultiClusterView: React.FC = () => {
                       <Tooltip contentStyle={tooltipStyle} formatter={(value: number, name: string) => [`${value} workloads`, name]} />
                     </PieChart>
                   </ResponsiveContainer>
-                ) : <p className="text-text-tertiary font-mono uppercase tracking-wider">No workload data available</p>}
+                ) : <p className="text-text-tertiary font-sans">No workload data available</p>}
                 <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
                   <span className="text-2xl font-mono font-bold text-text-primary">{summary?.totalWorkloads ?? 0}</span>
-                  <span className="text-[10px] text-text-tertiary font-sans font-semibold tracking-wider uppercase">Workloads</span>
+                  <span className="text-[10px] text-text-tertiary font-sans font-medium uppercase">Workloads</span>
                 </div>
               </div>
               <div className="grid grid-cols-3 gap-2 mt-4 relative z-10">
@@ -349,7 +349,7 @@ export const MultiClusterView: React.FC = () => {
                   <div key={s.name} className="flex flex-col items-center gap-1 p-2 border border-border-main bg-bg-main">
                     <div className="flex items-center gap-1.5">
                       <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: s.color }} />
-                      <span className="text-[10px] font-sans font-semibold text-text-secondary tracking-wider uppercase">{s.name}</span>
+                      <span className="text-[10px] font-sans font-semibold text-text-secondary">{s.name}</span>
                     </div>
                     <span className="text-lg font-mono font-bold" style={{ color: s.color }}>{s.value}</span>
                   </div>
@@ -386,28 +386,28 @@ export const MultiClusterView: React.FC = () => {
                   <div className="flex items-center gap-3 min-w-0">
                     <div className={`p-2 shrink-0 border ${getStatusBg(workload.status)}`}>{getStatusIcon(workload.status)}</div>
                     <div className="min-w-0">
-                      <h4 className="font-mono font-bold text-text-primary truncate uppercase tracking-wide">{workload.name}</h4>
-                      <p className="text-xs text-text-tertiary font-mono uppercase tracking-wider">{workload.namespace} • {workload.kind} • {workload.clusterName}</p>
+                      <h4 className="font-mono font-bold text-text-primary truncate">{workload.name}</h4>
+                      <p className="text-xs text-text-tertiary font-sans">{workload.namespace} • {workload.kind} • {workload.clusterName}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-5 shrink-0 ml-10 sm:ml-0">
                     <div className="text-right">
                       <p className="text-sm font-mono font-bold text-text-primary">{workload.availableReplicas}/{workload.replicas}</p>
-                      <p className="text-[10px] text-text-tertiary font-sans font-semibold tracking-wider uppercase">Replicas</p>
+                      <p className="text-[10px] text-text-tertiary font-sans font-medium uppercase">Replicas</p>
                     </div>
                     <button className="p-2 border border-border-main hover:border-primary-500/30 hover:text-primary-500 text-text-tertiary transition-colors"><ArrowUpRight className="w-4 h-4" /></button>
                   </div>
                 </div>
               ))}
             </div>
-            {filteredWorkloads.length > 50 && <p className="text-center text-text-tertiary text-sm mt-4 font-mono uppercase tracking-wider">Showing 50 of {filteredWorkloads.length} workloads</p>}
+            {filteredWorkloads.length > 50 && <p className="text-center text-text-tertiary text-sm mt-4 font-sans font-medium">Showing 50 of {filteredWorkloads.length} workloads</p>}
           </div>
         </div>
       )}
 
       {viewMode === 'incidents' && <MultiClusterIncidentsList incidents={visibleIncidents} />}
 
-      <div className="flex items-center justify-center gap-2 text-text-tertiary text-xs font-mono uppercase tracking-wider">
+      <div className="flex items-center justify-center gap-2 text-text-tertiary text-xs font-sans font-medium">
         <Clock className="w-3 h-3" /> Last updated: {lastRefresh.toLocaleTimeString()}
       </div>
     </div>

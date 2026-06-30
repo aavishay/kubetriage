@@ -89,8 +89,8 @@ export const SettingsView: React.FC = () => {
         <div className="w-full h-full p-5 overflow-y-auto custom-scrollbar bg-bg-main animate-fade-in">
             <div className="max-w-3xl mx-auto space-y-5 pb-20">
                 <div className="flex flex-col gap-1">
-                    <h1 className="text-2xl font-display font-bold text-text-primary tracking-wider uppercase">Settings</h1>
-                    <p className="text-sm text-text-tertiary font-mono">Manage AI provider and notification preferences.</p>
+                    <h1 className="text-2xl font-display font-bold text-text-primary">Settings</h1>
+                    <p className="text-sm text-text-tertiary font-sans">Manage AI provider and notification preferences.</p>
                 </div>
 
                 <div className="kt-panel overflow-hidden">
@@ -102,7 +102,7 @@ export const SettingsView: React.FC = () => {
 
                     <div className="p-5 space-y-6 relative z-10">
                         <div className="space-y-3">
-                            <label className="text-[10px] font-sans font-semibold text-text-tertiary tracking-wider uppercase flex items-center gap-1.5">
+                            <label className="text-[10px] text-text-tertiary flex items-center gap-1.5 font-sans font-medium uppercase">
                                 <Cpu className="w-3.5 h-3.5" /> Provider
                             </label>
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -117,9 +117,9 @@ export const SettingsView: React.FC = () => {
                                         >
                                             <div className="flex items-center justify-between mb-2">
                                                 <span className={`font-sans font-semibold transition-colors ${active ? c.text : 'text-text-primary'}`}>{p.label}</span>
-                                                <span className={`px-1.5 py-0.5 text-[10px] font-sans font-semibold tracking-wider uppercase ${active ? `${c.tagBg} text-black` : 'bg-bg-hover text-text-tertiary border border-border-main'}`}>{p.tag}</span>
+                                                <span className={`px-1.5 py-0.5 text-[10px] font-sans font-semibold ${active ? `${c.tagBg} text-black` : 'bg-bg-hover text-text-tertiary border border-border-main'}`}>{p.tag}</span>
                                             </div>
-                                            <p className="text-xs text-text-tertiary leading-relaxed font-mono">
+                                            <p className="text-xs text-text-tertiary leading-relaxed font-sans">
                                                 {p.key === 'gemini' && 'High-performance cloud inference. Requires API key.'}
                                                 {p.key === 'ollama' && 'Private, local inference. Best for air-gapped environments.'}
                                                 {p.key === 'azure' && 'Microsoft Azure OpenAI Service. Requires endpoint and key.'}
@@ -138,18 +138,18 @@ export const SettingsView: React.FC = () => {
                         </div>
 
                         <div className="space-y-2">
-                            <label className="text-[10px] font-sans font-semibold text-text-tertiary tracking-wider uppercase">
+                            <label className="text-[10px] text-text-tertiary font-sans font-medium uppercase">
                                 Model Selection
                             </label>
                             {isLoadingModels ? (
                                 <div className="flex items-center gap-2 text-text-tertiary text-sm p-4 kt-panel-inset animate-pulse">
                                     <Loader2 className="w-4 h-4 animate-spin text-primary-500" />
-                                    <span className="font-mono uppercase tracking-wider">Fetching models...</span>
+                                    <span className="font-sans">Fetching models...</span>
                                 </div>
                             ) : fetchError ? (
                                 <div className="p-4 bg-danger/5 border border-danger/20 text-danger text-sm flex items-center gap-2">
                                     <AlertCircle className="w-4 h-4 shrink-0" />
-                                    <span className="font-mono uppercase tracking-wider">{fetchError}</span>
+                                    <span className="font-sans">{fetchError}</span>
                                 </div>
                             ) : (
                                 <div className="relative group">
@@ -166,7 +166,7 @@ export const SettingsView: React.FC = () => {
                             )}
                             <div className="flex items-start gap-1.5 px-1">
                                 <div className="mt-1 w-1 h-1 rounded-full bg-primary-500/50" />
-                                <p className="text-[11px] text-text-tertiary leading-normal font-mono">
+                                <p className="text-[11px] text-text-tertiary leading-normal font-sans">
                                     {provider === 'ollama'
                                         ? 'Models must be pulled via `ollama pull <model>` to appear here.'
                                         : provider === 'azure'
@@ -183,14 +183,14 @@ export const SettingsView: React.FC = () => {
                         <div className="h-px w-full bg-border-main/50" />
 
                         <div className="space-y-3">
-                            <label className="text-[10px] font-sans font-semibold text-text-tertiary tracking-wider uppercase flex items-center gap-1.5">
+                            <label className="text-[10px] text-text-tertiary flex items-center gap-1.5 font-sans font-medium uppercase">
                                 <RefreshCw className="w-3.5 h-3.5" /> Auto Refresh
                             </label>
                             <div className="kt-panel-inset p-4 space-y-4">
                                 <div className="flex items-center justify-between">
                                     <div>
-                                        <h3 className="text-sm font-sans font-semibold text-text-primary tracking-wide uppercase">Resource Refresh Interval</h3>
-                                        <p className="text-xs text-text-tertiary mt-1 font-mono">How often to update workload and resource data.</p>
+                                        <h3 className="text-sm font-sans font-semibold text-text-primary">Resource Refresh Interval</h3>
+                                        <p className="text-xs text-text-tertiary mt-1 font-sans">How often to update workload and resource data.</p>
                                     </div>
                                     <div className="flex items-center gap-2 text-xs font-medium">
                                         <Clock className="w-3.5 h-3.5 text-primary-500" />
@@ -199,14 +199,14 @@ export const SettingsView: React.FC = () => {
                                 </div>
                                 <div className="flex flex-wrap gap-2 pt-2">
                                     {[10, 30, 60].map((interval) => (
-                                        <button key={interval} onClick={() => setRefreshInterval(interval)} className={`px-4 py-2 text-xs font-sans font-semibold tracking-wider uppercase border transition-all ${refreshInterval === interval ? 'bg-primary-500 text-black border-primary-500 kt-amber-glow' : 'bg-bg-card border-border-main text-text-secondary hover:text-text-primary hover:border-primary-500/30'}`}>
+                                        <button key={interval} onClick={() => setRefreshInterval(interval)} className={`px-4 py-2 text-xs font-sans font-semibold border transition-all ${refreshInterval === interval ? 'bg-primary-500 text-black border-primary-500 kt-amber-glow' : 'bg-bg-card border-border-main text-text-secondary hover:text-text-primary hover:border-primary-500/30'}`}>
                                             {interval}s
                                         </button>
                                     ))}
                                 </div>
                                 <div className="flex items-start gap-1.5 px-1 pt-2">
                                     <div className="mt-1 w-1 h-1 rounded-full bg-primary-500/50" />
-                                    <p className="text-[11px] text-text-tertiary leading-normal font-mono">
+                                    <p className="text-[11px] text-text-tertiary leading-normal font-sans">
                                         Shorter intervals provide more real-time data but increase API load. 30s is recommended for most use cases.
                                     </p>
                                 </div>
@@ -216,14 +216,14 @@ export const SettingsView: React.FC = () => {
                         <div className="h-px w-full bg-border-main/50" />
 
                         <div className="space-y-3">
-                            <label className="text-[10px] font-sans font-semibold text-text-tertiary tracking-wider uppercase flex items-center gap-1.5">
+                            <label className="text-[10px] text-text-tertiary flex items-center gap-1.5 font-sans font-medium uppercase">
                                 <AlertCircle className="w-3.5 h-3.5" /> Notifications
                             </label>
                             <div className="kt-panel-inset p-4 space-y-4">
                                 <div className="flex items-center justify-between">
                                     <div>
-                                        <h3 className="text-sm font-sans font-semibold text-text-primary tracking-wide uppercase">Toast Notifications</h3>
-                                        <p className="text-xs text-text-tertiary mt-1 font-mono">Display alerts when thresholds are breached.</p>
+                                        <h3 className="text-sm font-sans font-semibold text-text-primary">Toast Notifications</h3>
+                                        <p className="text-xs text-text-tertiary mt-1 font-sans">Display alerts when thresholds are breached.</p>
                                     </div>
                                     <button
                                         onClick={() => updateNotificationSettings({ ...notificationSettings, toastEnabled: !notificationSettings.toastEnabled })}
@@ -236,7 +236,7 @@ export const SettingsView: React.FC = () => {
                                 {notificationSettings.toastEnabled && (
                                     <div className="space-y-3 pt-4 border-t border-border-main animate-fade-in">
                                         <div className="flex justify-between items-center text-xs">
-                                            <span className="text-text-secondary font-sans font-semibold tracking-wider uppercase opacity-80">Cooldown Frequency</span>
+                                            <span className="text-text-secondary font-sans font-semibold opacity-80">Cooldown Frequency</span>
                                             <span className="font-mono font-bold text-primary-500 bg-primary-500/10 border border-primary-500/20 px-2 py-0.5 rounded-sm min-w-[3rem] text-center">{notificationSettings.toastFrequency}s</span>
                                         </div>
                                         <input type="range" min="2" max="60" step="1" value={notificationSettings.toastFrequency} onChange={(e) => updateNotificationSettings({ ...notificationSettings, toastFrequency: parseInt(e.target.value) })} className="w-full h-1.5 bg-bg-card border border-border-main rounded-sm appearance-none cursor-pointer accent-primary-500" />
@@ -248,7 +248,7 @@ export const SettingsView: React.FC = () => {
                         <div className="h-px w-full bg-border-main/50" />
 
                         <div className="space-y-3">
-                            <label className="text-[10px] font-sans font-semibold text-text-tertiary tracking-wider uppercase flex items-center gap-1.5">
+                            <label className="text-[10px] text-text-tertiary flex items-center gap-1.5 font-sans font-medium uppercase">
                                 <Wifi className="w-3.5 h-3.5" /> Offline Mode
                             </label>
                             <div className="kt-panel-inset p-4 space-y-4">
@@ -258,8 +258,8 @@ export const SettingsView: React.FC = () => {
                                             {navigator.onLine ? <Wifi className="w-4 h-4" /> : <WifiOff className="w-4 h-4" />}
                                         </div>
                                         <div>
-                                            <h3 className="text-sm font-sans font-semibold text-text-primary tracking-wide uppercase">Offline Support</h3>
-                                            <p className="text-xs text-text-tertiary mt-1 font-mono">
+                                            <h3 className="text-sm font-sans font-semibold text-text-primary">Offline Support</h3>
+                                            <p className="text-xs text-text-tertiary mt-1 font-sans">
                                                 {navigator.onLine
                                                     ? 'Connected. GET responses are cached locally; mutations queue when offline.'
                                                     : 'Offline. Data is served from cache and actions are queued for sync.'}
@@ -275,14 +275,14 @@ export const SettingsView: React.FC = () => {
                                     <div className="kt-panel p-3">
                                         <div className="flex items-center gap-2 mb-1 relative z-10">
                                             <Database className="w-3.5 h-3.5 text-primary-500" />
-                                            <span className="text-[10px] font-sans font-semibold text-text-tertiary tracking-wider uppercase">Cached Entries</span>
+                                            <span className="text-[10px] text-text-tertiary font-sans font-medium uppercase">Cached Entries</span>
                                         </div>
                                         <p className="text-lg font-mono font-bold text-text-primary relative z-10">{offlineStats.entries}</p>
                                     </div>
                                     <div className="kt-panel p-3">
                                         <div className="flex items-center gap-2 mb-1 relative z-10">
                                             <ArrowUpCircle className="w-3.5 h-3.5 text-warning" />
-                                            <span className="text-[10px] font-sans font-semibold text-text-tertiary tracking-wider uppercase">Queued Actions</span>
+                                            <span className="text-[10px] text-text-tertiary font-sans font-medium uppercase">Queued Actions</span>
                                         </div>
                                         <p className="text-lg font-mono font-bold text-text-primary relative z-10">{offlineStats.queueSize}</p>
                                     </div>

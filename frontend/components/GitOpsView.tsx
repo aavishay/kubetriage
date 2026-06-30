@@ -105,7 +105,7 @@ const resourceHealthIcon = (status: string) => {
 const summaryCard = (label: string, value: React.ReactNode, colorClass: string) => (
   <div className="kt-panel p-4">
     <div className="relative z-10">
-      <p className="text-[11px] font-sans font-semibold text-text-tertiary tracking-wider uppercase mb-1">{label}</p>
+      <p className="text-[11px] font-sans font-semibold text-text-tertiary mb-1">{label}</p>
       <p className={`text-3xl font-mono font-bold ${colorClass}`}>{value}</p>
     </div>
   </div>
@@ -196,7 +196,7 @@ const ResourceDiff: React.FC<ResourceDiffProps> = ({ resources }) => {
           })}
         </div>
 
-        <div className="border border-border-main overflow-hidden font-mono text-[11px]">
+        <div className="border border-border-main overflow-hidden text-[11px] font-sans">
           <div className="overflow-x-auto custom-scrollbar">
             {sorted.length === 0 ? (
               <div className="px-3 py-2 text-text-tertiary text-[11px] bg-bg-hover">
@@ -399,11 +399,11 @@ export const GitOpsView: React.FC<GitOpsViewProps> = ({ clusterId }) => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-2xl font-display font-bold text-text-primary flex items-center gap-3 tracking-wider uppercase">
+          <h1 className="text-2xl font-display font-bold text-text-primary flex items-center gap-3">
             <GitBranch className="w-7 h-7 text-primary-500" />
             GitOps Status
           </h1>
-          <p className="text-text-tertiary text-sm mt-1 font-mono">
+          <p className="text-text-tertiary text-sm mt-1 font-sans">
             ArgoCD and Flux CD sync progress, health, and reconciliation results
           </p>
         </div>
@@ -470,7 +470,7 @@ export const GitOpsView: React.FC<GitOpsViewProps> = ({ clusterId }) => {
           <span className="flex items-center gap-2">
             <GitBranch className="w-4 h-4 text-primary-500" /> GitOps Resources
           </span>
-          <span className="text-[10px] font-mono text-text-tertiary uppercase tracking-wider">
+          <span className="text-[10px] text-text-tertiary font-sans">
             {filteredResources.length} resources matching filters
           </span>
         </div>
@@ -479,7 +479,7 @@ export const GitOpsView: React.FC<GitOpsViewProps> = ({ clusterId }) => {
           {filteredResources.length === 0 ? (
             <div className="text-center py-12">
               <GitBranch className="w-12 h-12 text-text-tertiary mx-auto mb-4" />
-              <p className="text-text-tertiary font-mono">
+              <p className="text-text-tertiary font-sans">
                 {data?.argocd?.length === 0 && data?.flux?.length === 0
                   ? 'No GitOps tools detected on this cluster'
                   : 'No resources match the current filters'}
@@ -511,7 +511,7 @@ export const GitOpsView: React.FC<GitOpsViewProps> = ({ clusterId }) => {
                   >
                     <div className="flex items-start justify-between gap-3 mb-3">
                       <div className="flex items-center gap-2 flex-wrap min-w-0">
-                        <span className="font-sans font-semibold text-text-primary truncate tracking-wide uppercase">
+                        <span className="font-sans font-semibold text-text-primary truncate">
                           {resource.name}
                         </span>
                         <span className="kt-badge kt-badge-info">
@@ -520,7 +520,7 @@ export const GitOpsView: React.FC<GitOpsViewProps> = ({ clusterId }) => {
                         <span className="kt-badge bg-bg-hover text-text-tertiary border-border-main">
                           {resource.kind}
                         </span>
-                        <span className="text-[10px] font-mono text-text-tertiary uppercase tracking-wider truncate">
+                        <span className="text-[10px] font-mono text-text-tertiary truncate">
                           {resource.namespace}
                         </span>
                       </div>
@@ -591,7 +591,7 @@ export const GitOpsView: React.FC<GitOpsViewProps> = ({ clusterId }) => {
                               {resource.sourceUrl}
                             </a>
                           ) : (
-                            <span className="text-sm text-text-tertiary font-mono">No source URL</span>
+                            <span className="text-sm text-text-tertiary font-sans">No source URL</span>
                           )}
                         </div>
 
@@ -605,7 +605,7 @@ export const GitOpsView: React.FC<GitOpsViewProps> = ({ clusterId }) => {
                               {resource.readyResources}/{resource.resourceCount}
                             </p>
                             {changedCount > 0 && (
-                              <p className="text-[10px] text-danger mt-1 font-mono">
+                              <p className="text-[10px] text-danger mt-1 font-sans">
                                 {changedCount} changed
                               </p>
                             )}
@@ -629,7 +629,7 @@ export const GitOpsView: React.FC<GitOpsViewProps> = ({ clusterId }) => {
                             <GitCommit className="w-3.5 h-3.5 text-text-tertiary" />
                             <span className="kt-text-label">Last Operation</span>
                           </div>
-                          <p className="text-sm text-text-secondary font-mono">{resource.message}</p>
+                          <p className="text-sm text-text-secondary font-sans">{resource.message}</p>
                         </div>
                       )}
 
@@ -646,18 +646,18 @@ export const GitOpsView: React.FC<GitOpsViewProps> = ({ clusterId }) => {
                                 <span className={`mt-0.5 kt-led ${cond.status === 'True' ? 'kt-led-success' : 'kt-led-danger'}`} />
                                 <div className="flex-1 min-w-0">
                                   <div className="flex items-center gap-2 mb-1">
-                                    <span className="text-xs font-sans font-semibold text-text-primary tracking-wide uppercase">
+                                    <span className="text-xs font-sans font-semibold text-text-primary">
                                       {cond.type}
                                     </span>
-                                    <span className="text-[10px] font-mono text-text-tertiary">
+                                    <span className="text-[10px] text-text-tertiary font-sans">
                                       {cond.status}
                                     </span>
                                   </div>
                                   {cond.reason && (
-                                    <p className="text-[10px] font-mono text-text-secondary">{cond.reason}</p>
+                                    <p className="text-[10px] text-text-secondary font-sans">{cond.reason}</p>
                                   )}
                                   {cond.message && (
-                                    <p className="text-[10px] font-mono text-text-secondary mt-1">
+                                    <p className="text-[10px] text-text-secondary mt-1 font-sans">
                                       {cond.message}
                                     </p>
                                   )}
@@ -675,13 +675,13 @@ export const GitOpsView: React.FC<GitOpsViewProps> = ({ clusterId }) => {
                             <div className="p-4 bg-danger/10 border border-danger/20">
                               <div className="flex items-center gap-2 mb-2">
                                 <AlertTriangle className="w-4 h-4 text-danger" />
-                                <span className="text-sm font-bold text-danger tracking-wide uppercase">Sync Errors</span>
+                                <span className="text-sm font-bold text-danger">Sync Errors</span>
                               </div>
                               <ul className="space-y-1">
                                 {resource.syncErrors.map((err, i) => (
                                   <li
                                     key={i}
-                                    className="text-xs text-danger flex items-start gap-2 font-mono"
+                                    className="text-xs text-danger flex items-start gap-2 font-sans"
                                   >
                                     <span className="mt-1">•</span>
                                     <span className="break-words">{err}</span>
@@ -695,7 +695,7 @@ export const GitOpsView: React.FC<GitOpsViewProps> = ({ clusterId }) => {
                             <div className="p-4 bg-warning/10 border border-warning/20">
                               <div className="flex items-center gap-2 mb-2">
                                 <AlertTriangle className="w-4 h-4 text-warning" />
-                                <span className="text-sm font-bold text-warning tracking-wide uppercase">
+                                <span className="text-sm font-bold text-warning">
                                   Misconfigurations
                                 </span>
                               </div>
@@ -703,7 +703,7 @@ export const GitOpsView: React.FC<GitOpsViewProps> = ({ clusterId }) => {
                                 {resource.misconfigurations.map((m, i) => (
                                   <li
                                     key={i}
-                                    className="text-xs text-warning flex items-start gap-2 font-mono"
+                                    className="text-xs text-warning flex items-start gap-2 font-sans"
                                   >
                                     <span className="mt-1">•</span>
                                     <span className="break-words">{m}</span>
@@ -729,7 +729,7 @@ export const GitOpsView: React.FC<GitOpsViewProps> = ({ clusterId }) => {
       </div>
 
       {/* Last Updated */}
-      <div className="flex items-center justify-center gap-2 text-text-tertiary text-xs font-mono uppercase tracking-wider">
+      <div className="flex items-center justify-center gap-2 text-text-tertiary text-xs font-sans font-medium">
         <Clock className="w-3 h-3" />
         Last updated: {lastRefresh.toLocaleTimeString()}
       </div>

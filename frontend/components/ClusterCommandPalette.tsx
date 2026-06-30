@@ -62,12 +62,12 @@ const ResultItem = memo(function ResultItem({
         <ProviderIcon provider={cluster.provider} className="w-4 h-4 shrink-0 text-text-secondary" />
       </div>
       <div className="flex-1 min-w-0">
-        <p className={`text-sm font-mono font-bold truncate uppercase tracking-wide ${isSelected ? 'text-primary-500' : 'text-text-primary'}`}>
+        <p className={`text-sm font-bold truncate ${isSelected ? 'text-primary-500' : 'text-text-primary'} font-sans`}>
           {cluster.displayName || cluster.name}
         </p>
         <div className="flex items-center gap-2 mt-0.5">
           <span className={`w-1.5 h-1.5 rounded-full ${getStatusColor(cluster.status)}`}></span>
-          <p className="text-[10px] text-text-tertiary font-mono uppercase tracking-wider">{cluster.provider}</p>
+          <p className="text-[10px] text-text-tertiary font-sans">{cluster.provider}</p>
         </div>
       </div>
       {isChecked && <Check className="w-4 h-4 text-primary-500 shrink-0" />}
@@ -206,13 +206,13 @@ export const ClusterCommandPalette: React.FC<ClusterCommandPaletteProps> = ({
             value={query}
             onChange={handleQueryChange}
             onKeyDown={handleKeyDown}
-            className="flex-1 bg-transparent text-text-primary placeholder:text-text-tertiary text-sm outline-none min-w-0 font-mono"
+            className="flex-1 bg-transparent text-text-primary placeholder:text-text-tertiary text-sm outline-none min-w-0 font-sans"
             autoComplete="off"
             spellCheck={false}
           />
           <div className="flex items-center gap-1 text-[10px] text-text-tertiary bg-bg-main px-1.5 py-0.5 border border-border-main shrink-0">
             <Command className="w-3 h-3" />
-            <span className="font-mono">K</span>
+            <span className="font-sans">K</span>
           </div>
         </div>
 
@@ -223,7 +223,7 @@ export const ClusterCommandPalette: React.FC<ClusterCommandPaletteProps> = ({
           {filteredClusters.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-8 text-text-tertiary">
               <Search className="w-6 h-6 mb-2 opacity-40" />
-              <p className="text-xs font-mono uppercase tracking-wider">No clusters found</p>
+              <p className="text-xs font-sans">No clusters found</p>
             </div>
           ) : (
             filteredClusters.map((cluster, idx) => (
@@ -240,7 +240,7 @@ export const ClusterCommandPalette: React.FC<ClusterCommandPaletteProps> = ({
           )}
         </div>
 
-        <div className="px-4 py-2 border-t border-border-main bg-bg-hover flex items-center justify-between text-[10px] text-text-tertiary font-mono uppercase tracking-wider">
+        <div className="px-4 py-2 border-t border-border-main bg-bg-hover flex items-center justify-between text-[10px] text-text-tertiary font-sans">
           <div className="flex items-center gap-3">
             <span className="flex items-center gap-1"><span className="bg-bg-card border border-border-main px-1">↓↑</span> navigate</span>
             <span className="flex items-center gap-1"><span className="bg-bg-card border border-border-main px-1">↵</span> select</span>

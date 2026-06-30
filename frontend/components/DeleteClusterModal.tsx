@@ -52,7 +52,7 @@ export const DeleteClusterModal: React.FC<DeleteClusterModalProps> = ({ isOpen, 
                         <div className="p-2 bg-bg-card rounded-lg">
                             <AlertTriangle className="w-4 h-4 text-danger" />
                         </div>
-                        <h3 id="delete-modal-title" className="font-display font-bold tracking-wider uppercase text-text-primary">Remove Cluster</h3>
+                        <h3 id="delete-modal-title" className="font-display font-bold text-text-primary">Remove Cluster</h3>
                     </div>
                     <button onClick={onClose} className="kt-button kt-button-ghost kt-button-sm">
                         <X className="w-4 h-4" />
@@ -62,20 +62,20 @@ export const DeleteClusterModal: React.FC<DeleteClusterModalProps> = ({ isOpen, 
                 <div className="p-5 space-y-4">
                     <p className="text-sm text-text-secondary">
                         This will permanently remove the cluster{' '}
-                        <span className="font-mono font-bold text-text-primary bg-bg-hover px-1.5 py-0.5 rounded">"{clusterName}"</span>
+                        <span className="font-bold text-text-primary bg-bg-hover px-1.5 py-0.5 rounded font-sans">"{clusterName}"</span>
                         {' '}and all its associated data. This action cannot be undone.
                     </p>
 
                     <div className="space-y-2">
                         <label id="confirm-instructions" className="kt-text-label">
-                            Type <span className="text-danger font-mono">{clusterName}</span> to confirm
+                            Type <span className="text-danger font-sans">{clusterName}</span> to confirm
                         </label>
                         <input
                             type="text"
                             value={inputValue}
                             onChange={(e) => setInputValue(e.target.value)}
                             placeholder={clusterName}
-                            className="kt-input font-mono text-sm"
+                            className="kt-input text-sm font-sans"
                             autoFocus
                             aria-describedby="confirm-instructions"
                         />

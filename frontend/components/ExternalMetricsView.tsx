@@ -52,11 +52,11 @@ const summaryCard = (
   <div className="kt-panel p-4">
     <div className="flex items-start justify-between relative z-10">
       <div>
-        <p className="text-[11px] font-sans font-semibold text-text-tertiary tracking-wider uppercase mb-1">
+        <p className="text-[11px] font-sans font-semibold text-text-tertiary mb-1">
           {label}
         </p>
         <p className="text-2xl font-mono font-bold text-text-primary">{value}</p>
-        <p className="text-xs mt-1 font-mono">{sub}</p>
+        <p className="text-xs mt-1 font-sans">{sub}</p>
       </div>
       <div className={`p-2.5 bg-bg-main border border-border-main ${iconColor}`}>
         <icon className="w-5 h-5" />
@@ -399,11 +399,11 @@ export const ExternalMetricsView: React.FC = () => {
         {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div className="min-w-0">
-            <h1 className="text-2xl font-display font-bold text-text-primary tracking-wider uppercase flex items-center gap-3">
+            <h1 className="text-2xl font-display font-bold text-text-primary flex items-center gap-3">
               <Database className="w-7 h-7 text-primary-500" />
               External Metrics
             </h1>
-            <p className="text-sm text-text-tertiary mt-1 font-mono">
+            <p className="text-sm text-text-tertiary mt-1 font-sans">
               Ingest metrics from Prometheus, Datadog, New Relic, CloudWatch, VictoriaMetrics, and other sources
             </p>
           </div>
@@ -453,11 +453,7 @@ export const ExternalMetricsView: React.FC = () => {
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
-              className={`flex-1 px-4 py-2.5 text-xs font-sans font-semibold tracking-wider uppercase border transition-all ${
-                activeTab === tab
-                  ? 'bg-primary-500/10 text-primary-500 border-primary-500/30'
-                  : 'text-text-tertiary hover:text-text-primary border-transparent'
-              }`}
+              className={`flex-1 px-4 py-2.5 text-xs font-sans font-semibold border transition-all ${ activeTab === tab ? 'bg-primary-500/10 text-primary-500 border-primary-500/30' : 'text-text-tertiary hover:text-text-primary border-transparent' }`}
             >
               {tab.charAt(0).toUpperCase() + tab.slice(1)}
             </button>
@@ -500,10 +496,10 @@ export const ExternalMetricsView: React.FC = () => {
                         {getProviderIcon(source.provider)}
                       </div>
                       <div className="min-w-0">
-                        <h3 className={`text-sm font-sans font-semibold break-words tracking-wide uppercase ${source.enabled ? 'text-text-primary' : 'text-text-secondary'}`}>
+                        <h3 className={`text-sm font-sans font-semibold break-words ${source.enabled ? 'text-text-primary' : 'text-text-secondary'}`}>
                           {source.name}
                         </h3>
-                        <p className="text-xs text-text-secondary font-mono uppercase tracking-wider break-words">
+                        <p className="text-xs text-text-secondary font-mono break-words">
                           {getProviderName(source.provider)}
                           {source.region && ` • ${source.region}`}
                         </p>
@@ -515,7 +511,7 @@ export const ExternalMetricsView: React.FC = () => {
                   </div>
 
                   <div className="mt-4 pt-4 border-t border-border-main relative z-10">
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs font-mono text-text-tertiary">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-text-tertiary font-sans">
                       <div className="flex items-center gap-4 flex-wrap">
                         <span className="flex items-center gap-1">
                           <Calendar className="w-3 h-3" />
@@ -556,7 +552,7 @@ export const ExternalMetricsView: React.FC = () => {
                   {source.errorMessage && (
                     <div className="mt-3 p-3 kt-panel-inset border-danger/25 bg-danger-light flex items-start gap-2 relative z-10">
                       <AlertCircle className="w-4 h-4 text-danger mt-0.5 shrink-0" />
-                      <p className="text-xs text-danger break-words font-mono">{source.errorMessage}</p>
+                      <p className="text-xs text-danger break-words font-sans">{source.errorMessage}</p>
                     </div>
                   )}
                 </div>
@@ -564,8 +560,8 @@ export const ExternalMetricsView: React.FC = () => {
               {filteredSources.length === 0 && (
                 <div className="col-span-full kt-panel flex flex-col items-center justify-center py-16">
                   <Database className="w-12 h-12 mb-4 text-text-muted" />
-                  <h3 className="text-lg font-display font-bold text-text-primary tracking-wider uppercase">No Metric Sources</h3>
-                  <p className="text-sm mt-2 text-text-secondary font-mono">Add a source to start ingesting external metrics.</p>
+                  <h3 className="text-lg font-display font-bold text-text-primary">No Metric Sources</h3>
+                  <p className="text-sm mt-2 text-text-secondary font-sans">Add a source to start ingesting external metrics.</p>
                   <button
                     onClick={() => setShowAddModal(true)}
                     className="mt-4 kt-button kt-button-primary kt-button-sm"
@@ -609,7 +605,7 @@ export const ExternalMetricsView: React.FC = () => {
                 <div key={metric.name} className="kt-panel p-5">
                   <div className="flex items-start justify-between gap-3 mb-4 relative z-10">
                     <div className="min-w-0">
-                      <h3 className="text-sm font-mono font-bold text-text-primary break-words uppercase tracking-wide">
+                      <h3 className="text-sm font-mono font-bold text-text-primary break-words">
                         {metric.name}
                       </h3>
                       <div className="flex items-center gap-2 mt-1 flex-wrap">
@@ -641,8 +637,8 @@ export const ExternalMetricsView: React.FC = () => {
           <div className="kt-panel p-6">
             <div className="text-center py-12 relative z-10">
               <LineChart className="w-12 h-12 text-text-tertiary mx-auto mb-4" />
-              <h3 className="text-lg font-display font-bold text-text-primary tracking-wider uppercase">Metric Query Builder</h3>
-              <p className="text-sm text-text-secondary mt-2 max-w-md mx-auto font-mono">
+              <h3 className="text-lg font-display font-bold text-text-primary">Metric Query Builder</h3>
+              <p className="text-sm text-text-secondary mt-2 max-w-md mx-auto font-sans">
                 Build custom queries to analyze metrics across all your external sources.
                 Use PromQL-compatible syntax for advanced filtering.
               </p>
@@ -786,7 +782,7 @@ const AddSourceForm: React.FC<AddSourceFormProps> = ({ onClose, onSave, clusters
   if (step === 1) {
     return (
       <div className="p-6 relative z-10">
-        <p className="text-sm text-text-secondary mb-4 font-mono">Select a metrics provider to connect:</p>
+        <p className="text-sm text-text-secondary mb-4 font-sans">Select a metrics provider to connect:</p>
         <div className="grid grid-cols-1 gap-3">
           {providers.map((p) => (
             <button
@@ -807,8 +803,8 @@ const AddSourceForm: React.FC<AddSourceFormProps> = ({ onClose, onSave, clusters
             >
               <div className="p-2 bg-bg-main border border-border-main">{p.icon}</div>
               <div className="flex-1">
-                <p className="font-sans font-semibold text-text-primary tracking-wide uppercase">{p.name}</p>
-                <p className="text-xs text-text-secondary font-mono">{p.description}</p>
+                <p className="font-sans font-semibold text-text-primary">{p.name}</p>
+                <p className="text-xs text-text-secondary font-sans">{p.description}</p>
               </div>
               <ChevronRight className="w-5 h-5 text-text-tertiary" />
             </button>
@@ -832,18 +828,18 @@ const AddSourceForm: React.FC<AddSourceFormProps> = ({ onClose, onSave, clusters
         <button
           type="button"
           onClick={() => setStep(1)}
-          className="text-sm text-text-secondary hover:text-text-primary flex items-center gap-1 font-mono"
+          className="text-sm text-text-secondary hover:text-text-primary flex items-center gap-1 font-sans"
         >
           &larr; Back
         </button>
         <span className="text-text-secondary">|</span>
-        <span className="text-sm font-sans font-semibold text-text-primary tracking-wide uppercase">
+        <span className="text-sm font-sans font-semibold text-text-primary">
           Configure {providers.find(p => p.id === provider)?.name}
         </span>
       </div>
 
       {error && (
-        <div className="p-3 kt-panel-inset border-danger/25 text-danger text-sm font-mono">
+        <div className="p-3 kt-panel-inset border-danger/25 text-danger text-sm font-sans">
           {error}
         </div>
       )}
@@ -871,7 +867,7 @@ const AddSourceForm: React.FC<AddSourceFormProps> = ({ onClose, onSave, clusters
             required
             className="kt-input"
           />
-          <p className="text-xs text-text-tertiary mt-1 font-mono">
+          <p className="text-xs text-text-tertiary mt-1 font-sans">
             The URL must be accessible from the Kubetriage server
           </p>
         </div>

@@ -77,10 +77,10 @@ const AIChatWidgetComponent: React.FC<AIChatWidgetProps> = ({ isOpen, onClose, i
             <Sparkles className="w-4 h-4 text-white" />
           </div>
           <div>
-            <h3 className="font-display font-bold tracking-wider uppercase text-sm text-text-primary">AI Co-Pilot</h3>
+            <h3 className="font-display font-bold text-sm text-text-primary">AI Co-Pilot</h3>
             <div className="flex items-center gap-1.5">
               <span className="kt-led kt-led-success"></span>
-              <span className="font-mono text-[10px] text-success">ONLINE</span>
+              <span className="text-[10px] text-success font-sans">ONLINE</span>
             </div>
           </div>
         </div>
@@ -148,7 +148,7 @@ const AIChatWidgetComponent: React.FC<AIChatWidgetProps> = ({ isOpen, onClose, i
                 </div>
               ) : (
                 msg.content.startsWith('Context for analysis:')
-                  ? <div className="font-mono text-text-tertiary italic text-xs border-l-2 border-border-main pl-2">Context shared</div>
+                  ? <div className="text-text-tertiary italic text-xs border-l-2 border-border-main pl-2 font-sans">Context shared</div>
                   : msg.content
               )}
             </div>
@@ -184,7 +184,7 @@ const AIChatWidgetComponent: React.FC<AIChatWidgetProps> = ({ isOpen, onClose, i
           </button>
         </form>
         <div className="mt-2 text-center">
-          <p className="font-mono text-[10px] text-text-tertiary">AI-GENERATED INSIGHTS</p>
+          <p className="text-[10px] text-text-tertiary font-sans">AI-GENERATED INSIGHTS</p>
         </div>
       </div>
     </div>

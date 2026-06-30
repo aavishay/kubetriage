@@ -122,10 +122,10 @@
   --kt-text-2xl: 1.75rem;
 
   /* Tracking */
-  --kt-tracking-tight: 0em;
-  --kt-tracking-normal: 0.03em;
-  --kt-tracking-wide: 0.08em;
-  --kt-tracking-wider: 0.12em;
+  --kt-tracking-tight: -0.01em;
+  --kt-tracking-normal: 0em;
+  --kt-tracking-wide: 0.02em;
+  --kt-tracking-wider: 0.04em;
 
   /* Transitions */
   --kt-duration-fast: 120ms;
@@ -274,7 +274,6 @@
   font-size: var(--kt-text-sm);
   font-weight: var(--kt-font-semibold);
   letter-spacing: var(--kt-tracking-wide);
-  text-transform: uppercase;
   color: var(--kt-fg-secondary);
 }
 

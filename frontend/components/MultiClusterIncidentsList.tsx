@@ -42,16 +42,16 @@ const formatRelativeTime = (dateStr: string) => {
 
 const markdownComponents = {
   h1: ({ children, ...props }: any) => (
-    <h1 className="text-base font-display font-bold text-text-primary mt-4 mb-2 first:mt-0 tracking-wide uppercase" {...props}>{children}</h1>
+    <h1 className="text-base font-display font-bold text-text-primary mt-4 mb-2 first:mt-0" {...props}>{children}</h1>
   ),
   h2: ({ children, ...props }: any) => (
-    <h2 className="text-sm font-display font-bold text-text-primary mt-3 mb-2 first:mt-0 flex items-center gap-2 tracking-wide uppercase" {...props}>{children}</h2>
+    <h2 className="text-sm font-display font-bold text-text-primary mt-3 mb-2 first:mt-0 flex items-center gap-2" {...props}>{children}</h2>
   ),
   h3: ({ children, ...props }: any) => (
-    <h3 className="text-xs font-sans font-semibold text-text-secondary mt-3 mb-1.5 first:mt-0 uppercase tracking-wider" {...props}>{children}</h3>
+    <h3 className="text-xs font-sans font-semibold text-text-secondary mt-3 mb-1.5 first:mt-0" {...props}>{children}</h3>
   ),
   p: ({ children, ...props }: any) => (
-    <p className="text-xs text-text-secondary leading-relaxed mb-2 last:mb-0 font-mono" {...props}>{children}</p>
+    <p className="text-xs text-text-secondary leading-relaxed mb-2 last:mb-0 font-sans" {...props}>{children}</p>
   ),
   ul: ({ children, ...props }: any) => (
     <ul className="space-y-1.5 my-2 list-none pl-0" {...props}>{children}</ul>
@@ -60,7 +60,7 @@ const markdownComponents = {
     <ol className="space-y-1.5 my-2 list-decimal pl-4" {...props}>{children}</ol>
   ),
   li: ({ children, ...props }: any) => (
-    <li className="flex gap-2 items-start text-xs text-text-secondary leading-relaxed font-mono" {...props}>
+    <li className="flex gap-2 items-start text-xs text-text-secondary leading-relaxed font-sans" {...props}>
       <span className="mt-1.5 w-1 h-1 rounded-full bg-primary-500/60 shrink-0" />
       <span className="flex-1">{children}</span>
     </li>
@@ -140,11 +140,11 @@ const IncidentRow = memo(function IncidentRow({ incident }: IncidentRowProps) {
         <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-2 mb-1.5">
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2 flex-wrap mb-1">
-              <h4 className="font-sans font-semibold text-text-primary text-sm truncate tracking-wide uppercase">{incident.title}</h4>
+              <h4 className="font-sans font-semibold text-text-primary text-sm truncate">{incident.title}</h4>
               <span className={`kt-badge ${severity.badge}`}>
                 {incident.severity}
               </span>
-              <span className="text-[10px] font-sans font-semibold px-1.5 py-0.5 bg-bg-main text-text-tertiary border border-border-main tracking-wider uppercase">
+              <span className="text-[10px] font-sans font-semibold px-1.5 py-0.5 bg-bg-main text-text-tertiary border border-border-main">
                 {incident.pattern}
               </span>
             </div>
@@ -156,23 +156,23 @@ const IncidentRow = memo(function IncidentRow({ incident }: IncidentRowProps) {
                 </ReactMarkdown>
               </div>
             ) : (
-              <p ref={descriptionRef} className="text-xs text-text-secondary line-clamp-2 leading-relaxed font-mono">
+              <p ref={descriptionRef} className="text-xs text-text-secondary line-clamp-2 leading-relaxed font-sans">
                 {cleanedDescription}
               </p>
             )}
 
             <div className="flex items-center gap-3 mt-1.5">
               {canExpand && (
-                <button onClick={toggleExpanded} className="text-[10px] font-sans font-semibold text-primary-500 hover:text-primary-400 flex items-center gap-1 transition-colors tracking-wider uppercase">
+                <button onClick={toggleExpanded} className="text-[10px] font-sans font-semibold text-primary-500 hover:text-primary-400 flex items-center gap-1 transition-colors">
                   {isExpanded ? <><ChevronUp className="w-3 h-3" /> Show less</> : <><ChevronDown className="w-3 h-3" /> Show more</>}
                 </button>
               )}
-              <button onClick={copyToClipboard} className="text-[10px] font-sans font-semibold text-text-tertiary hover:text-text-primary flex items-center gap-1 transition-colors tracking-wider uppercase" title="Copy incident description">
+              <button onClick={copyToClipboard} className="text-[10px] font-sans font-semibold text-text-tertiary hover:text-text-primary flex items-center gap-1 transition-colors" title="Copy incident description">
                 {copied ? <><Check className="w-3 h-3 text-success" /> Copied</> : <><Copy className="w-3 h-3" /> Copy</>}
               </button>
             </div>
           </div>
-          <div className="flex items-center gap-1.5 text-[10px] text-text-tertiary shrink-0 whitespace-nowrap font-mono uppercase tracking-wider">
+          <div className="flex items-center gap-1.5 text-[10px] text-text-tertiary shrink-0 whitespace-nowrap font-sans">
             <Clock className="w-3 h-3" />
             {formatRelativeTime(incident.startedAt)}
           </div>
@@ -180,19 +180,19 @@ const IncidentRow = memo(function IncidentRow({ incident }: IncidentRowProps) {
 
         <div className="flex flex-wrap items-center gap-2 mt-2.5">
           {visibleClusters.map((clusterId) => (
-            <span key={clusterId} className="inline-flex items-center gap-1.5 px-2 py-0.5 bg-bg-main border border-border-main text-[10px] font-medium text-text-secondary truncate max-w-[160px] font-mono uppercase tracking-wider">
+            <span key={clusterId} className="inline-flex items-center gap-1.5 px-2 py-0.5 bg-bg-main border border-border-main text-[10px] font-medium text-text-secondary truncate max-w-[160px] font-sans">
               <span className={`w-1.5 h-1.5 rounded-full ${severity.dot}`} />
               {clusterId}
             </span>
           ))}
           {hiddenCount > 0 && (
-            <span className="text-[10px] text-text-tertiary font-mono uppercase tracking-wider">+{hiddenCount} more</span>
+            <span className="text-[10px] text-text-tertiary font-sans font-medium uppercase">+{hiddenCount} more</span>
           )}
         </div>
 
         {incident.rootCause && (
-          <div className="mt-2.5 flex items-start gap-1.5 text-[11px] text-text-tertiary font-mono">
-            <span className="font-sans font-semibold text-text-secondary shrink-0 uppercase tracking-wider">Root cause:</span>
+          <div className="mt-2.5 flex items-start gap-1.5 text-[11px] text-text-tertiary font-sans">
+            <span className="font-sans font-semibold text-text-secondary shrink-0">Root cause:</span>
             {isExpanded ? (
               <div className="flex-1 animate-fade-in"><ReactMarkdown components={markdownComponents}>{incident.rootCause}</ReactMarkdown></div>
             ) : (
@@ -280,15 +280,15 @@ export const MultiClusterIncidentsList: React.FC<MultiClusterIncidentsListProps>
         {incidents.length === 0 ? (
           <div className="text-center py-12 px-6">
             <CheckCircle2 className="w-12 h-12 text-success mx-auto mb-4" />
-            <h4 className="text-lg font-display font-bold text-text-primary mb-2 tracking-wider uppercase">No Cross-Cluster Incidents</h4>
-            <p className="text-text-tertiary text-sm font-mono">All systems operating normally across selected clusters</p>
+            <h4 className="text-lg font-display font-bold text-text-primary mb-2">No Cross-Cluster Incidents</h4>
+            <p className="text-text-tertiary text-sm font-sans">All systems operating normally across selected clusters</p>
           </div>
         ) : filteredIncidents.length === 0 ? (
           <div className="text-center py-12 px-6">
             <Search className="w-10 h-10 text-text-tertiary mx-auto mb-3 opacity-40" />
-            <h4 className="text-base font-display font-bold text-text-primary mb-1 tracking-wider uppercase">No incidents match filters</h4>
-            <p className="text-text-tertiary text-sm mb-4 font-mono">Try adjusting search or filter criteria</p>
-            <button onClick={clearFilters} className="text-xs font-sans font-semibold text-primary-500 hover:text-primary-400 tracking-wider uppercase">
+            <h4 className="text-base font-display font-bold text-text-primary mb-1">No incidents match filters</h4>
+            <p className="text-text-tertiary text-sm mb-4 font-sans">Try adjusting search or filter criteria</p>
+            <button onClick={clearFilters} className="text-xs font-sans font-semibold text-primary-500 hover:text-primary-400">
               Clear all filters
             </button>
           </div>
@@ -298,7 +298,7 @@ export const MultiClusterIncidentsList: React.FC<MultiClusterIncidentsListProps>
               <IncidentRow key={incident.id} incident={incident} />
             ))}
             {hasMore && (
-              <button onClick={loadMore} className="w-full py-3 text-xs font-sans font-semibold text-text-secondary hover:text-text-primary hover:bg-bg-hover transition-colors flex items-center justify-center gap-1.5 border-t border-border-main tracking-wider uppercase">
+              <button onClick={loadMore} className="w-full py-3 text-xs font-sans font-semibold text-text-secondary hover:text-text-primary hover:bg-bg-hover transition-colors flex items-center justify-center gap-1.5 border-t border-border-main">
                 Load {Math.min(PAGE_SIZE, filteredIncidents.length - visibleIncidents.length)} more
                 <ChevronDown className="w-3.5 h-3.5" />
               </button>

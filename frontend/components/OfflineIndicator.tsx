@@ -15,7 +15,7 @@ export const OfflineIndicator: React.FC = () => {
       {showDetails && (
         <div className="kt-panel w-72 kt-animate-fade-in p-4">
           <div className="flex items-center justify-between mb-3">
-            <h3 className="font-display font-bold tracking-wider uppercase text-sm text-text-primary">
+            <h3 className="font-display font-bold text-sm text-text-primary">
               Offline Status
             </h3>
             <button
@@ -26,7 +26,7 @@ export const OfflineIndicator: React.FC = () => {
             </button>
           </div>
 
-          <div className="space-y-2 font-mono text-xs">
+          <div className="space-y-2 text-xs font-sans">
             <div className="flex items-center justify-between">
               <span className="text-text-secondary">Connection</span>
               <span className={`font-bold ${isOnline ? 'text-success' : 'text-danger'}`}>
@@ -68,7 +68,7 @@ export const OfflineIndicator: React.FC = () => {
           )}
 
           {!isOnline && (
-            <p className="mt-3 font-mono text-[10px] text-text-tertiary text-center">
+            <p className="mt-3 text-[10px] text-text-tertiary text-center font-sans">
               Actions will sync automatically when connection is restored.
             </p>
           )}

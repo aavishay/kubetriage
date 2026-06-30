@@ -32,12 +32,12 @@ const MetricCardComponent: React.FC<MetricCardProps> = ({
           <Icon className="w-5 h-5" />
         </div>
         {(trend || trendLabel) && (
-          <span className="text-[10px] font-mono font-bold text-primary-500 bg-primary-500/10 border border-primary-500/20 px-1.5 py-0.5 rounded-sm tracking-wider uppercase">
+          <span className="text-[10px] font-sans font-bold text-primary-500 bg-primary-500/10 border border-primary-500/20 px-1.5 py-0.5 rounded-sm">
             {trend || trendLabel}
           </span>
         )}
       </div>
-      <p className="text-[11px] font-sans font-semibold text-text-tertiary tracking-wider uppercase mb-1 relative z-10">{label}</p>
+      <p className="text-[11px] font-sans font-semibold text-text-tertiary mb-1 relative z-10">{label}</p>
       <h3 className="text-2xl font-mono font-bold text-text-primary tracking-tight relative z-10">{value}</h3>
     </div>
   );

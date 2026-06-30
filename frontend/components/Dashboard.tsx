@@ -143,8 +143,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = tr
             <Server className="w-12 h-12 text-text-secondary" />
           </div>
         </div>
-        <h2 className="text-2xl font-display font-bold mb-2 tracking-wider uppercase">No Workloads Found</h2>
-        <p className="text-text-secondary max-w-sm text-center mb-6 text-sm font-mono">
+        <h2 className="text-2xl font-display font-bold mb-2">No Workloads Found</h2>
+        <p className="text-text-secondary max-w-sm text-center mb-6 text-sm font-sans">
           No active workloads detected in the current cluster. Connect a cluster to begin monitoring.
         </p>
         <button
@@ -204,10 +204,10 @@ export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = tr
                   Critical Issues Detected
                 </span>
               </div>
-              <h2 className="text-2xl font-display font-bold text-text-primary mb-2 tracking-wider uppercase">
+              <h2 className="text-2xl font-display font-bold text-text-primary mb-2">
                 {criticalCount} workload{criticalCount > 1 ? 's' : ''} require immediate attention
               </h2>
-              <p className="text-text-secondary text-sm max-w-xl font-mono">
+              <p className="text-text-secondary text-sm max-w-xl font-sans">
                 Review the active incidents below and run AI triage to identify root causes.
               </p>
             </div>
@@ -285,13 +285,13 @@ export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = tr
                     <div className="flex justify-between items-start gap-2 mb-2">
                       <div className="flex items-center gap-2 min-w-0">
                         <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${getStatusColor(w.status)}`} />
-                        <span className="text-sm font-mono font-bold text-text-primary truncate uppercase tracking-wide">{w.name}</span>
+                        <span className="text-sm font-mono font-bold text-text-primary truncate">{w.name}</span>
                       </div>
                       <StatusBadge status={w.status} />
                     </div>
-                    <p className="text-xs text-text-secondary mb-3 font-mono">{getIncidentSummary(w)}</p>
+                    <p className="text-xs text-text-secondary mb-3 font-sans">{getIncidentSummary(w)}</p>
                     <div className="flex items-center justify-between">
-                      <span className="text-xs text-primary-500 flex items-center gap-1.5 group-hover:text-primary-400 font-mono uppercase tracking-wider">
+                      <span className="text-xs text-primary-500 flex items-center gap-1.5 group-hover:text-primary-400 font-sans">
                         <Sparkles className="w-3.5 h-3.5" />
                         Investigate with AI
                       </span>
@@ -304,7 +304,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = tr
                   <div className="p-3 bg-success/10 border border-success/30 mb-3">
                     <HeartPulse className="w-8 h-8 text-success" />
                   </div>
-                  <p className="text-xs font-sans font-semibold text-text-tertiary tracking-wider uppercase">All services nominal</p>
+                  <p className="text-xs text-text-tertiary font-sans font-medium">All services nominal</p>
                 </div>
               )}
             </div>
@@ -327,7 +327,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = tr
               </ResponsiveContainer>
               <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
                 <span className="text-2xl font-mono font-bold text-text-primary">{safeWorkloads.length}</span>
-                <span className="text-[10px] text-text-tertiary font-sans font-semibold tracking-wider uppercase">Total</span>
+                <span className="text-[10px] text-text-tertiary font-sans font-medium uppercase">Total</span>
               </div>
             </div>
             <div className="grid grid-cols-3 gap-2 mt-3 relative z-10">
@@ -338,7 +338,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = tr
                 >
                   <div className="flex items-center gap-1.5">
                     <div className="w-2 h-2 rounded-full" style={{ backgroundColor: item.color }} />
-                    <span className="text-[10px] font-sans font-semibold text-text-secondary tracking-wider uppercase">{item.name}</span>
+                    <span className="text-[10px] font-sans font-semibold text-text-secondary">{item.name}</span>
                   </div>
                   <span className="text-lg font-mono font-bold" style={{ color: item.color }}>{item.value}</span>
                 </div>
@@ -356,10 +356,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = tr
                   <button
                     key={win}
                     onClick={() => setMetricsWindow?.(win)}
-                    className={`px-2.5 py-1 text-[10px] font-mono font-bold tracking-wider uppercase border transition-all ${metricsWindow === win
-                      ? 'bg-primary-500/10 border-primary-500 text-primary-500'
-                      : 'border-border-main text-text-secondary hover:text-text-primary hover:border-text-tertiary'
-                      }`}
+                    className={`px-2.5 py-1 text-[10px] font-sans font-bold border transition-all ${metricsWindow === win ? 'bg-primary-500/10 border-primary-500 text-primary-500' : 'border-border-main text-text-secondary hover:text-text-primary hover:border-text-tertiary' }`}
                     aria-label={`Set metrics window to ${win}`}
                     aria-pressed={metricsWindow === win}
                   >
@@ -372,10 +369,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = tr
                   <button
                     key={type}
                     onClick={() => setSaturationTab(type)}
-                    className={`px-2.5 py-1 text-[10px] font-mono font-bold tracking-wider uppercase border transition-all ${saturationTab === type
-                      ? 'bg-primary-500/10 border-primary-500 text-primary-500'
-                      : 'border-border-main text-text-secondary hover:text-text-primary hover:border-text-tertiary'
-                      }`}
+                    className={`px-2.5 py-1 text-[10px] font-sans font-bold border transition-all ${saturationTab === type ? 'bg-primary-500/10 border-primary-500 text-primary-500' : 'border-border-main text-text-secondary hover:text-text-primary hover:border-text-tertiary' }`}
                     aria-label={`View ${type} saturation`}
                     aria-pressed={saturationTab === type}
                   >
@@ -432,27 +426,21 @@ export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = tr
                       role="button"
                       aria-label={`View details for ${item.name}`}
                     >
-                      <div className={`
-                        w-6 h-6 shrink-0 flex items-center justify-center text-[10px] font-mono font-bold border
-                        ${idx === 0 ? 'bg-danger/10 text-danger border-danger/30' :
-                          idx === 1 ? 'bg-warning/10 text-warning border-warning/30' :
-                          idx === 2 ? 'bg-primary-500/10 text-primary-500 border-primary-500/30' :
-                          'bg-bg-hover text-text-tertiary border-border-main'}
-                      `}>
+                      <div className={`w-6 h-6 shrink-0 flex items-center justify-center text-[10px] font-sans font-bold border ${idx === 0 ? 'bg-danger/10 text-danger border-danger/30' : idx === 1 ? 'bg-warning/10 text-warning border-warning/30' : idx === 2 ? 'bg-primary-500/10 text-primary-500 border-primary-500/30' : 'bg-bg-hover text-text-tertiary border-border-main'}`}>
                         {idx + 1}
                       </div>
 
                       <div className="w-28 shrink-0 min-w-0">
-                        <h4 className="text-sm font-mono font-bold text-text-primary truncate uppercase tracking-wide" title={item.name}>{item.name}</h4>
+                        <h4 className="text-sm font-mono font-bold text-text-primary truncate" title={item.name}>{item.name}</h4>
                         <div className="flex items-center gap-1.5 mt-1">
                           <div className={`w-1.5 h-1.5 rounded-full ${getStatusColor(item.status)}`} />
-                          <span className="text-[10px] text-text-tertiary font-mono uppercase tracking-wider">{item.status}</span>
+                          <span className="text-[10px] text-text-tertiary font-sans">{item.status}</span>
                         </div>
                       </div>
 
                       <div className="flex-1 flex flex-col justify-center">
                         <div className="flex justify-between items-center mb-1.5">
-                          <span className="text-[10px] text-text-tertiary font-sans font-semibold tracking-wider uppercase">{saturationTab}</span>
+                          <span className="text-[10px] text-text-tertiary font-sans font-semibold">{saturationTab}</span>
                           <span className={`text-xs font-mono font-bold ${item.isCritical ? 'text-danger' : item.isWarning ? 'text-warning' : 'text-text-secondary'}`}>
                             {item.saturation}%
                           </span>
@@ -475,7 +463,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = tr
                         <div className="text-xs font-mono font-bold text-text-secondary">
                           {item.used.toFixed(1)}{item.unit}
                         </div>
-                        <div className="text-[10px] text-text-tertiary font-mono">
+                        <div className="text-[10px] text-text-tertiary font-sans">
                           / {item.base.toFixed(0)}{item.unit}
                         </div>
                       </div>
@@ -483,7 +471,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = tr
                   ))}
                 {workloads.length > 10 && (
                   <div className="pt-2 pb-1 text-center">
-                    <span className="text-[11px] text-text-tertiary font-mono uppercase tracking-wider">
+                    <span className="text-[11px] text-text-tertiary font-sans font-medium uppercase">
                       Showing top 10 of {workloads.length} workloads
                     </span>
                   </div>
@@ -520,11 +508,11 @@ export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = tr
                 </PieChart>
               </ResponsiveContainer>
               <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
-                <span className="text-[10px] text-text-tertiary font-sans font-semibold tracking-wider uppercase mb-1">Budget</span>
+                <span className="text-[10px] text-text-tertiary mb-1 font-sans font-medium uppercase">Budget</span>
                 <span className={`text-3xl font-mono font-bold ${reliabilityMetrics.severity === 'Critical' ? 'text-danger' : 'text-text-primary'}`}>
                   {reliabilityMetrics.budgetPercentage.toFixed(1)}%
                 </span>
-                <span className="text-[10px] text-text-tertiary font-sans font-semibold tracking-wider uppercase">Remaining</span>
+                <span className="text-[10px] text-text-tertiary font-sans font-medium uppercase">Remaining</span>
               </div>
             </div>
           </div>
@@ -535,36 +523,36 @@ export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = tr
               <div className="flex justify-between items-center mb-2">
                 <div className="flex items-center gap-2">
                   <ShieldCheck className="w-4 h-4 text-success" />
-                  <span className="text-[11px] font-sans font-semibold text-text-secondary tracking-wider uppercase">Risk Factor</span>
+                  <span className="text-[11px] font-sans font-semibold text-text-secondary">Risk Factor</span>
                 </div>
                 <StatusBadge status={reliabilityMetrics.severity} />
               </div>
               <div className="text-2xl font-mono font-bold text-text-primary">{reliabilityMetrics.burnRate.toFixed(2)}x</div>
-              <p className="text-[10px] text-text-tertiary font-mono uppercase tracking-wider">Burn rate vs normal</p>
+              <p className="text-[10px] text-text-tertiary font-sans font-medium uppercase">Burn rate vs normal</p>
             </div>
 
             <div className="p-4 border border-border-main bg-bg-card">
               <div className="flex justify-between items-center mb-2">
                 <div className="flex items-center gap-2">
                   <Target className="w-4 h-4 text-primary-500" />
-                  <span className="text-[11px] font-sans font-semibold text-text-secondary tracking-wider uppercase">Exhaustion Forecast</span>
+                  <span className="text-[11px] font-sans font-semibold text-text-secondary">Exhaustion Forecast</span>
                 </div>
               </div>
               <div className="text-2xl font-mono font-bold text-text-primary">{reliabilityMetrics.uptimeForecast}</div>
-              <p className="text-[10px] text-text-tertiary font-mono uppercase tracking-wider">Time until SLO breach</p>
+              <p className="text-[10px] text-text-tertiary font-sans font-medium uppercase">Time until SLO breach</p>
             </div>
           </div>
 
           {/* Policy Compliance */}
           <div className="p-4 border border-border-main bg-bg-main flex flex-col justify-between">
             <div>
-              <h4 className="text-sm font-sans font-semibold text-text-primary mb-2 tracking-wider uppercase">Policy Compliance</h4>
-              <p className="text-xs text-text-secondary leading-relaxed font-mono">
+              <h4 className="text-sm font-sans font-semibold text-text-primary mb-2">Policy Compliance</h4>
+              <p className="text-xs text-text-secondary leading-relaxed font-sans">
                 Current resource distribution is within acceptable parameters. No immediate re-balancing required.
               </p>
             </div>
             <div className="mt-4">
-              <div className="flex justify-between text-[10px] font-mono uppercase tracking-wider text-text-tertiary mb-1">
+              <div className="flex justify-between text-[10px] text-text-tertiary mb-1 font-sans">
                 <span>SLO Target</span>
                 <span className="text-primary-500">{reliabilityMetrics.slo}%</span>
               </div>
@@ -576,7 +564,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = tr
               onClick={() => onTriageRequest?.('policy', 'General Health')}
               className="mt-4 w-full flex items-center justify-between p-3 bg-bg-card border border-border-main hover:border-primary-500/50 transition-all group"
             >
-              <span className="text-xs font-sans font-semibold text-text-secondary tracking-wider uppercase group-hover:text-primary-500">Run Compliance Audit</span>
+              <span className="text-xs font-sans font-semibold text-text-secondary group-hover:text-primary-500">Run Compliance Audit</span>
               <ArrowRight className="w-4 h-4 text-text-tertiary group-hover:text-primary-500" />
             </button>
           </div>

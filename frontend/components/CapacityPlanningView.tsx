@@ -151,9 +151,9 @@ export const CapacityPlanningView: React.FC = () => {
     <div className="kt-panel p-4">
       <div className="flex items-start justify-between relative z-10">
         <div>
-          <p className="text-[11px] font-sans font-semibold text-text-tertiary tracking-wider uppercase mb-1">{label}</p>
+          <p className="text-[11px] font-sans font-semibold text-text-tertiary mb-1">{label}</p>
           <p className="text-3xl font-mono font-bold text-text-primary">{value}</p>
-          <p className={`text-xs mt-1 font-mono ${iconColor}`}>{sub}</p>
+          <p className={`text-xs mt-1 ${iconColor} font-sans`}>{sub}</p>
         </div>
         <div className={`p-2.5 bg-bg-main border border-border-main ${iconColor}`}>
           <Icon className="w-5 h-5" />
@@ -196,7 +196,7 @@ export const CapacityPlanningView: React.FC = () => {
     return (
       <div className="flex flex-col items-center justify-center min-h-[600px]">
         <AlertTriangle className="w-12 h-12 text-danger mb-4" />
-        <h2 className="text-xl font-display font-bold text-text-primary mb-2 tracking-wider uppercase">Failed to Load Capacity Plans</h2>
+        <h2 className="text-xl font-display font-bold text-text-primary mb-2">Failed to Load Capacity Plans</h2>
         <button onClick={fetchData} className="kt-button kt-button-primary">
           <RefreshCw className="w-4 h-4 mr-2" /> Retry
         </button>
@@ -209,16 +209,16 @@ export const CapacityPlanningView: React.FC = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-2xl font-display font-bold text-text-primary flex items-center gap-3 tracking-wider uppercase">
+          <h1 className="text-2xl font-display font-bold text-text-primary flex items-center gap-3">
             <TrendingUp className="w-7 h-7 text-primary-500" />
             Capacity Planning
           </h1>
-          <p className="text-text-tertiary text-sm mt-1 font-mono">
+          <p className="text-text-tertiary text-sm mt-1 font-sans">
             Predictive resource analysis and capacity recommendations based on usage trends
           </p>
         </div>
         <div className="flex items-center gap-3">
-          <span className="text-xs text-text-tertiary font-mono uppercase tracking-wider">
+          <span className="text-xs text-text-tertiary font-sans font-medium">
             Last updated: {lastRefresh.toLocaleTimeString()}
           </span>
           <button
@@ -269,8 +269,8 @@ export const CapacityPlanningView: React.FC = () => {
         {sortedPlans.length === 0 && (
           <div className="kt-panel p-12 text-center">
             <TrendingUp className="w-12 h-12 text-text-tertiary mx-auto mb-4" />
-            <h3 className="text-lg font-display font-bold text-text-primary mb-2 tracking-wider uppercase">No Capacity Data Yet</h3>
-            <p className="text-sm text-text-secondary max-w-md mx-auto font-mono">
+            <h3 className="text-lg font-display font-bold text-text-primary mb-2">No Capacity Data Yet</h3>
+            <p className="text-sm text-text-secondary max-w-md mx-auto font-sans">
               Capacity planning requires at least 3 data points per workload. Metrics are ingested automatically as workloads are monitored.
             </p>
           </div>
@@ -304,7 +304,7 @@ export const CapacityPlanningView: React.FC = () => {
 
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap min-w-0">
-                    <h3 className="font-display font-bold text-text-primary text-sm truncate tracking-wide uppercase">
+                    <h3 className="font-display font-bold text-text-primary text-sm truncate">
                       {formatWorkloadName(plan.workloadKey)}
                     </h3>
                     <span className={`kt-badge ${config.badge} shrink-0`}>
@@ -314,18 +314,18 @@ export const CapacityPlanningView: React.FC = () => {
                       {plan.metric}
                     </span>
                   </div>
-                  <p className="text-xs text-text-secondary mt-1 line-clamp-1 font-mono">
+                  <p className="text-xs text-text-secondary mt-1 line-clamp-1 font-sans">
                     {plan.recommendation}
                   </p>
                 </div>
 
                 <div className="flex items-center gap-4 shrink-0">
                   <div className="text-right hidden sm:block">
-                    <p className="text-[10px] font-sans font-semibold text-text-tertiary tracking-wider uppercase">Confidence</p>
+                    <p className="text-[10px] text-text-tertiary font-sans font-medium uppercase">Confidence</p>
                     <p className="text-sm font-mono font-bold text-text-primary">{(plan.confidence * 100).toFixed(0)}%</p>
                   </div>
                   <div className="text-right hidden sm:block">
-                    <p className="text-[10px] font-sans font-semibold text-text-tertiary tracking-wider uppercase">Trend</p>
+                    <p className="text-[10px] text-text-tertiary font-sans font-medium uppercase">Trend</p>
                     <p className={`text-sm font-mono font-bold flex items-center justify-end gap-1 ${getTrendColor(plan.trendSlope)}`}>
                       {getTrendIcon(plan.trendSlope)}
                       {plan.trendSlope > 0 ? '+' : ''}{plan.trendSlope.toFixed(4)}/hr
@@ -333,7 +333,7 @@ export const CapacityPlanningView: React.FC = () => {
                   </div>
                   {plan.timeToExhaustionHours !== null && plan.timeToExhaustionHours !== undefined && (
                     <div className="text-right hidden md:block">
-                      <p className="text-[10px] font-sans font-semibold text-text-tertiary tracking-wider uppercase">Exhaustion</p>
+                      <p className="text-[10px] text-text-tertiary font-sans font-medium uppercase">Exhaustion</p>
                       <p className={`text-sm font-mono font-bold ${plan.timeToExhaustionHours < 24 ? 'text-danger' : plan.timeToExhaustionHours < 72 ? 'text-warning' : 'text-success'}`}>
                         {plan.timeToExhaustionHours.toFixed(1)}h
                       </p>
@@ -354,19 +354,19 @@ export const CapacityPlanningView: React.FC = () => {
                     {/* Metrics Grid */}
                     <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
                       <div className="kt-panel-inset p-3 min-w-0">
-                        <p className="text-[10px] font-sans font-semibold text-text-tertiary tracking-wider uppercase">Metric</p>
+                        <p className="text-[10px] text-text-tertiary font-sans font-medium uppercase">Metric</p>
                         <p className="text-sm font-mono font-bold text-text-primary mt-1 truncate">{plan.metric}</p>
                       </div>
                       <div className="kt-panel-inset p-3 min-w-0">
-                        <p className="text-[10px] font-sans font-semibold text-text-tertiary tracking-wider uppercase">Namespace</p>
+                        <p className="text-[10px] text-text-tertiary font-sans font-medium uppercase">Namespace</p>
                         <p className="text-sm font-mono font-bold text-text-primary mt-1 truncate">{plan.namespace || 'default'}</p>
                       </div>
                       <div className="kt-panel-inset p-3 min-w-0">
-                        <p className="text-[10px] font-sans font-semibold text-text-tertiary tracking-wider uppercase">Confidence</p>
+                        <p className="text-[10px] text-text-tertiary font-sans font-medium uppercase">Confidence</p>
                         <p className="text-sm font-mono font-bold text-text-primary mt-1 truncate">{(plan.confidence * 100).toFixed(1)}%</p>
                       </div>
                       <div className="kt-panel-inset p-3 min-w-0">
-                        <p className="text-[10px] font-sans font-semibold text-text-tertiary tracking-wider uppercase">Trend Slope</p>
+                        <p className="text-[10px] text-text-tertiary font-sans font-medium uppercase">Trend Slope</p>
                         <p className={`text-sm font-mono font-bold mt-1 truncate ${getTrendColor(plan.trendSlope)}`}>
                           {plan.trendSlope > 0 ? '+' : ''}{plan.trendSlope.toFixed(6)}/hr
                         </p>
@@ -375,14 +375,14 @@ export const CapacityPlanningView: React.FC = () => {
 
                     {/* Recommendation */}
                     <div className={`rounded-xl p-4 ${config.bg} ${config.border} border`}>
-                      <p className="text-xs font-display font-bold text-text-primary tracking-wider uppercase">Recommendation</p>
-                      <p className="text-sm text-text-secondary mt-1 font-mono">{plan.recommendation}</p>
+                      <p className="text-xs font-bold text-text-primary font-sans">Recommendation</p>
+                      <p className="text-sm text-text-secondary mt-1 font-sans">{plan.recommendation}</p>
                     </div>
 
                     {/* Chart */}
                     {chartData.length > 0 && (
                       <div className="kt-panel-inset p-4">
-                        <p className="text-xs font-display font-bold text-text-primary mb-3 flex items-center gap-2 tracking-wider uppercase">
+                        <p className="text-xs font-bold text-text-primary mb-3 flex items-center gap-2 font-sans">
                           <BarChart3 className="w-4 h-4 text-primary-500" />
                           Usage Trend & 72h Forecast
                         </p>
@@ -450,11 +450,11 @@ export const CapacityPlanningView: React.FC = () => {
                         <div className="flex items-center justify-center gap-4 mt-2">
                           <div className="flex items-center gap-1.5">
                             <div className="w-3 h-0.5 bg-primary-500" />
-                            <span className="text-[10px] text-text-tertiary font-sans font-semibold tracking-wider uppercase">Historical</span>
+                            <span className="text-[10px] text-text-tertiary font-sans font-medium uppercase">Historical</span>
                           </div>
                           <div className="flex items-center gap-1.5">
                             <div className="w-3 h-0.5 border-t-2 border-dashed" style={{ borderColor: config.chartColor }} />
-                            <span className="text-[10px] text-text-tertiary font-sans font-semibold tracking-wider uppercase">Forecast</span>
+                            <span className="text-[10px] text-text-tertiary font-sans font-medium uppercase">Forecast</span>
                           </div>
                         </div>
                       </div>

@@ -102,11 +102,11 @@ const summaryCard = (
   <div className="kt-panel p-4">
     <div className="flex items-start justify-between relative z-10">
       <div>
-        <p className="text-[11px] font-sans font-semibold text-text-tertiary tracking-wider uppercase mb-1">
+        <p className="text-[11px] font-sans font-semibold text-text-tertiary mb-1">
           {label}
         </p>
         <p className="text-3xl font-mono font-bold text-text-primary">{value}</p>
-        <p className="text-xs mt-1 font-mono">{sub}</p>
+        <p className="text-xs mt-1 font-sans">{sub}</p>
       </div>
       <div className={`p-2.5 bg-bg-main border border-border-main ${iconColor}`}>
         <icon className="w-5 h-5" />
@@ -235,7 +235,7 @@ export const MLIntelligenceView: React.FC = () => {
     return (
       <div className="flex flex-col items-center justify-center min-h-[600px]">
         <AlertTriangle className="w-12 h-12 text-danger mb-4" />
-        <h2 className="text-xl font-display font-bold text-text-primary mb-2 tracking-wider uppercase">
+        <h2 className="text-xl font-display font-bold text-text-primary mb-2">
           Failed to Load ML Data
         </h2>
         <button onClick={fetchData} className="kt-button kt-button-primary">
@@ -250,11 +250,11 @@ export const MLIntelligenceView: React.FC = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-2xl font-display font-bold text-text-primary flex items-center gap-3 tracking-wider uppercase">
+          <h1 className="text-2xl font-display font-bold text-text-primary flex items-center gap-3">
             <Brain className="w-7 h-7 text-primary-500" />
             ML Intelligence
           </h1>
-          <p className="text-text-tertiary text-sm mt-1 font-mono">
+          <p className="text-text-tertiary text-sm mt-1 font-sans">
             Machine learning powered insights, anomaly detection, and pattern recognition
           </p>
         </div>
@@ -341,7 +341,7 @@ export const MLIntelligenceView: React.FC = () => {
                   <Lightbulb className="w-5 h-5 text-warning shrink-0" />
                 )}
                 <div className="flex-1 min-w-0">
-                  <h4 className="font-sans font-semibold text-text-primary text-sm tracking-wide uppercase">
+                  <h4 className="font-sans font-semibold text-text-primary text-sm">
                     {insight.title}
                   </h4>
                   <p className="text-xs text-text-secondary mt-0.5">{insight.description}</p>
@@ -361,11 +361,7 @@ export const MLIntelligenceView: React.FC = () => {
           <button
             key={tab}
             onClick={() => setSelectedTab(tab)}
-            className={`flex-1 px-4 py-2.5 text-xs font-sans font-semibold tracking-wider uppercase border transition-all ${
-              selectedTab === tab
-                ? 'bg-primary-500/10 text-primary-500 border-primary-500/30'
-                : 'text-text-tertiary hover:text-text-primary border-transparent'
-            }`}
+            className={`flex-1 px-4 py-2.5 text-xs font-sans font-semibold border transition-all ${ selectedTab === tab ? 'bg-primary-500/10 text-primary-500 border-primary-500/30' : 'text-text-tertiary hover:text-text-primary border-transparent' }`}
           >
             {tab}
           </button>
@@ -405,7 +401,7 @@ export const MLIntelligenceView: React.FC = () => {
                   </BarChart>
                 </ResponsiveContainer>
               ) : (
-                <div className="flex flex-col items-center justify-center h-full text-text-tertiary font-mono uppercase tracking-wider">
+                <div className="flex flex-col items-center justify-center h-full text-text-tertiary font-sans">
                   <CheckCircle2 className="w-12 h-12 text-success mb-2" />
                   <p>No anomalies detected</p>
                 </div>
@@ -443,7 +439,7 @@ export const MLIntelligenceView: React.FC = () => {
                   </BarChart>
                 </ResponsiveContainer>
               ) : (
-                <div className="flex flex-col items-center justify-center h-full text-text-tertiary font-mono uppercase tracking-wider">
+                <div className="flex flex-col items-center justify-center h-full text-text-tertiary font-sans">
                   <Info className="w-12 h-12 text-text-tertiary mb-2" />
                   <p>No patterns discovered yet</p>
                 </div>
@@ -463,10 +459,10 @@ export const MLIntelligenceView: React.FC = () => {
             {(data.anomalies || []).length === 0 ? (
               <div className="text-center py-12">
                 <CheckCircle2 className="w-12 h-12 text-success mx-auto mb-4" />
-                <h4 className="text-lg font-display font-bold text-text-primary mb-2 tracking-wider uppercase">
+                <h4 className="text-lg font-display font-bold text-text-primary mb-2">
                   No Anomalies Detected
                 </h4>
-                <p className="text-text-tertiary font-mono">All metrics are within normal ranges</p>
+                <p className="text-text-tertiary font-sans">All metrics are within normal ranges</p>
               </div>
             ) : (
               data.anomalies.map((anomaly) => (
@@ -485,10 +481,10 @@ export const MLIntelligenceView: React.FC = () => {
                         <ShieldAlert className={`w-4 h-4 ${SEVERITY_COLORS[anomaly.severity]}`} />
                       </div>
                       <div className="min-w-0">
-                        <h4 className="font-sans font-semibold text-text-primary truncate tracking-wide uppercase">
+                        <h4 className="font-sans font-semibold text-text-primary truncate">
                           {anomaly.workload}
                         </h4>
-                        <p className="text-xs text-text-tertiary font-mono uppercase tracking-wider truncate">
+                        <p className="text-xs text-text-tertiary font-mono truncate">
                           {anomaly.namespace} • {anomaly.cluster}
                         </p>
                       </div>
@@ -498,7 +494,7 @@ export const MLIntelligenceView: React.FC = () => {
                     </span>
                   </div>
                   <p className="text-sm text-text-secondary mb-3 break-words">{anomaly.description}</p>
-                  <div className="flex flex-wrap items-center gap-4 text-xs font-mono text-text-tertiary">
+                  <div className="flex flex-wrap items-center gap-4 text-xs text-text-tertiary font-sans">
                     <span>Expected: {anomaly.expectedValue.toFixed(2)}</span>
                     <span>Actual: {anomaly.actualValue.toFixed(2)}</span>
                     <span>Deviation: {anomaly.deviation.toFixed(1)}σ</span>
@@ -521,10 +517,10 @@ export const MLIntelligenceView: React.FC = () => {
             {(data.patterns || []).length === 0 ? (
               <div className="text-center py-12">
                 <Info className="w-12 h-12 text-text-tertiary mx-auto mb-4" />
-                <h4 className="text-lg font-display font-bold text-text-primary mb-2 tracking-wider uppercase">
+                <h4 className="text-lg font-display font-bold text-text-primary mb-2">
                   No Patterns Discovered
                 </h4>
-                <p className="text-text-tertiary font-mono">ML is learning from your incident data...</p>
+                <p className="text-text-tertiary font-sans">ML is learning from your incident data...</p>
               </div>
             ) : (
               data.patterns.map((pattern) => (
@@ -543,10 +539,10 @@ export const MLIntelligenceView: React.FC = () => {
                         <TrendingUp className="w-4 h-4 text-success" />
                       </div>
                       <div className="min-w-0">
-                        <h4 className="font-sans font-semibold text-text-primary truncate tracking-wide uppercase">
+                        <h4 className="font-sans font-semibold text-text-primary truncate">
                           {pattern.name}
                         </h4>
-                        <p className="text-xs text-text-tertiary font-mono uppercase tracking-wider truncate">
+                        <p className="text-xs text-text-tertiary font-mono truncate">
                           {pattern.incidentType}
                         </p>
                       </div>
@@ -556,7 +552,7 @@ export const MLIntelligenceView: React.FC = () => {
                     </span>
                   </div>
                   <p className="text-sm text-text-secondary mb-3 break-words">{pattern.description}</p>
-                  <div className="flex flex-wrap items-center gap-4 text-xs font-mono text-text-tertiary mb-3">
+                  <div className="flex flex-wrap items-center gap-4 text-xs text-text-tertiary mb-3 font-sans">
                     <span>Occurred: {pattern.frequency} times</span>
                     <span>First seen: {new Date(pattern.firstSeen).toLocaleDateString()}</span>
                     <span>Last seen: {new Date(pattern.lastSeen).toLocaleDateString()}</span>
@@ -574,7 +570,7 @@ export const MLIntelligenceView: React.FC = () => {
                     </div>
                   )}
                   <div className="kt-panel-inset p-3">
-                    <p className="text-[11px] font-sans font-semibold text-text-tertiary tracking-wider uppercase mb-1">
+                    <p className="text-[11px] text-text-tertiary mb-1 font-sans font-medium uppercase">
                       Suggested Fix
                     </p>
                     <p className="text-sm text-text-secondary break-words">{pattern.suggestedFix}</p>
@@ -587,7 +583,7 @@ export const MLIntelligenceView: React.FC = () => {
       )}
 
       {/* Footer */}
-      <div className="flex items-center justify-center gap-2 text-text-tertiary text-xs font-mono uppercase tracking-wider">
+      <div className="flex items-center justify-center gap-2 text-text-tertiary text-xs font-sans font-medium">
         <Clock className="w-3 h-3" />
         Last updated: {lastRefresh.toLocaleTimeString()}
       </div>
