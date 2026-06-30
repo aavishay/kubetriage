@@ -81,68 +81,58 @@ export const AuditLogsView: React.FC = () => {
   ];
 
   return (
-    <div className="flex flex-col gap-6 p-6 font-sans">
+    <div className="flex flex-col gap-5 p-0 font-sans kt-page-enter">
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-2xl font-black text-text-primary   flex items-center gap-3">
+          <h1 className="text-2xl font-display font-bold text-text-primary flex items-center gap-3 tracking-wider uppercase">
             <Shield className="w-7 h-7 text-primary-500" />
             Audit Logs
           </h1>
-          <p className="text-text-tertiary text-sm mt-1">
+          <p className="text-text-tertiary text-sm mt-1 font-mono">
             Track every action performed in KubeTriage for compliance and accountability.
           </p>
         </div>
       </div>
 
       {/* Filters */}
-      <div className="flex flex-col sm:flex-row flex-wrap gap-3">
-        <div className="flex items-center gap-2 bg-bg-card rounded-xl border border-border-main px-3 py-2">
-          <Filter className="w-4 h-4 text-text-tertiary" />
-          <select
-            value={filterAction}
-            onChange={(e) => { setFilterAction(e.target.value); setOffset(0); }}
-            className="bg-transparent text-sm text-text-primary outline-none cursor-pointer min-w-0"
-            aria-label="Filter by action"
-          >
-            {actionOptions.map(opt => (
-              <option key={opt.value} value={opt.value}>{opt.label}</option>
-            ))}
-          </select>
-        </div>
-        <div className="flex items-center gap-2 bg-bg-card rounded-xl border border-border-main px-3 py-2">
-          <Filter className="w-4 h-4 text-text-tertiary" />
-          <select
-            value={filterResource}
-            onChange={(e) => { setFilterResource(e.target.value); setOffset(0); }}
-            className="bg-transparent text-sm text-text-primary outline-none cursor-pointer"
-            aria-label="Filter by resource type"
-          >
-            {resourceOptions.map(opt => (
-              <option key={opt.value} value={opt.value}>{opt.label}</option>
-            ))}
-          </select>
-        </div>
-        <div className="ml-auto text-sm text-text-tertiary">
+      <div className="flex flex-col sm:flex-row flex-wrap gap-3 items-center">
+        <Filter className="w-4 h-4 text-text-tertiary hidden sm:block" />
+        <select
+          value={filterAction}
+          onChange={(e) => { setFilterAction(e.target.value); setOffset(0); }}
+          className="kt-select text-sm flex-1 sm:flex-initial sm:w-56"
+          aria-label="Filter by action"
+        >
+          {actionOptions.map(opt => (
+            <option key={opt.value} value={opt.value}>{opt.label}</option>
+          ))}
+        </select>
+        <select
+          value={filterResource}
+          onChange={(e) => { setFilterResource(e.target.value); setOffset(0); }}
+          className="kt-select text-sm flex-1 sm:flex-initial sm:w-56"
+          aria-label="Filter by resource type"
+        >
+          {resourceOptions.map(opt => (
+            <option key={opt.value} value={opt.value}>{opt.label}</option>
+          ))}
+        </select>
+        <div className="ml-auto text-sm text-text-tertiary font-mono">
           Showing {logs.length} of {total} logs
         </div>
       </div>
 
       {/* Logs Table */}
-      <div className="bg-bg-card rounded-3xl border border-border-main overflow-hidden">
-        <div className="p-6 border-b border-border-main bg-bg-hover/50">
-          <div className="flex items-center gap-3">
-            <div className="p-2.5 bg-primary-600 rounded-xl shadow-lg shadow-primary-600/20">
-              <Shield className="w-5 h-5 text-white" />
-            </div>
-            <div>
-              <h2 className="text-sm font-black   text-text-primary">Activity Log</h2>
-              <p className="text-[10px] text-text-tertiary font-semibold">{total} total entries</p>
-            </div>
-          </div>
+      <div className="kt-panel overflow-hidden">
+        <div className="kt-panel-header">
+          <span className="flex items-center gap-2">
+            <Shield className="w-4 h-4 text-primary-500" /> Activity Log
+          </span>
+          <span className="text-[10px] font-mono text-text-tertiary uppercase tracking-wider">{total} total entries</span>
         </div>
 
-        <div className="p-6 space-y-4">
+        <div className="p-4 relative z-10 space-y-4">
           {loading ? (
             <div className="space-y-3 animate-fade-in">
               <div className="flex items-center gap-2 mb-4">
@@ -150,8 +140,8 @@ export const AuditLogsView: React.FC = () => {
                 <div className="kt-skeleton kt-skeleton-text w-16 ml-auto" />
               </div>
               {[...Array(6)].map((_, i) => (
-                <div key={i} className="flex items-center gap-4 p-3 rounded-xl bg-bg-hover/30 border border-border-main">
-                  <div className="kt-skeleton w-8 h-8 rounded-lg shrink-0" />
+                <div key={i} className="flex items-center gap-4 p-3 border border-border-main bg-bg-main">
+                  <div className="kt-skeleton w-8 h-8 rounded-sm shrink-0" />
                   <div className="flex-1 space-y-2">
                     <div className="flex gap-4">
                       <div className="kt-skeleton kt-skeleton-text w-20" />
@@ -167,41 +157,41 @@ export const AuditLogsView: React.FC = () => {
           ) : logs.length === 0 ? (
             <div className="text-center py-12">
               <Shield className="w-12 h-12 text-text-tertiary mx-auto mb-4" />
-              <p className="text-text-tertiary">No audit logs found.</p>
-              <p className="text-xs text-text-tertiary mt-1">Actions will be logged as they occur.</p>
+              <p className="text-text-tertiary font-mono">No audit logs found.</p>
+              <p className="text-xs text-text-tertiary mt-1 font-mono">Actions will be logged as they occur.</p>
             </div>
           ) : (
             logs.map(log => (
               <div
                 key={log.ID}
-                className={`rounded-2xl border-2 transition-all ${
+                className={`border transition-all ${
                   selectedLog === log.ID
-                    ? 'border-primary-500 bg-primary-500/5'
-                    : 'border-border-main hover:border-primary-500/30 bg-bg-hover/30'
+                    ? 'border-primary-500 kt-amber-glow bg-bg-card'
+                    : 'border-border-main hover:border-primary-500/30 bg-bg-main'
                 }`}
               >
                 <div
-                  className="p-5 cursor-pointer"
+                  className="p-4 cursor-pointer"
                   onClick={() => setSelectedLog(selectedLog === log.ID ? null : log.ID)}
                 >
                   <div className="flex items-start justify-between gap-3 mb-3">
                     <div className="flex items-center gap-2 flex-wrap min-w-0">
-                      <span className="font-bold text-text-primary truncate">{log.Action}</span>
-                      <span className="px-2 py-0.5 rounded-full bg-primary-500/10 text-primary-500 text-[10px] font-semibold shrink-0">
+                      <span className="font-mono font-bold text-text-primary truncate uppercase tracking-wide">{log.Action}</span>
+                      <span className="kt-badge kt-badge-info">
                         {log.Resource}
                       </span>
                       {log.Success ? (
-                        <span className="px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-500 text-[10px] font-bold flex items-center gap-1 shrink-0">
+                        <span className="kt-badge kt-badge-success flex items-center gap-1">
                           <CheckCircle2 className="w-3 h-3" /> Success
                         </span>
                       ) : (
-                        <span className="px-2 py-0.5 rounded-full bg-rose-500/10 text-rose-500 text-[10px] font-bold flex items-center gap-1 shrink-0">
+                        <span className="kt-badge kt-badge-danger flex items-center gap-1">
                           <XCircle className="w-3 h-3" /> Failed
                         </span>
                       )}
                     </div>
                     <div className="flex items-center gap-2 shrink-0">
-                      <span className="text-[10px] text-text-tertiary">{new Date(log.CreatedAt).toLocaleString()}</span>
+                      <span className="text-[10px] font-mono text-text-tertiary uppercase tracking-wider">{new Date(log.CreatedAt).toLocaleString()}</span>
                       {selectedLog === log.ID ? (
                         <ChevronUp className="w-4 h-4 text-text-tertiary" />
                       ) : (
@@ -213,22 +203,26 @@ export const AuditLogsView: React.FC = () => {
                   <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 text-xs">
                     {log.ClusterID && (
                       <div className="text-text-secondary min-w-0">
-                        <span className="text-text-tertiary">Cluster: </span><span className="break-all">{log.ClusterID}</span>
+                        <span className="text-text-tertiary">Cluster: </span>
+                        <span className="break-all font-mono">{log.ClusterID}</span>
                       </div>
                     )}
                     {log.Namespace && (
                       <div className="text-text-secondary min-w-0">
-                        <span className="text-text-tertiary">Namespace: </span><span className="break-all">{log.Namespace}</span>
+                        <span className="text-text-tertiary">Namespace: </span>
+                        <span className="break-all font-mono">{log.Namespace}</span>
                       </div>
                     )}
                     {log.ResourceID && (
                       <div className="text-text-secondary min-w-0">
-                        <span className="text-text-tertiary">Resource ID: </span><span className="break-all">{log.ResourceID}</span>
+                        <span className="text-text-tertiary">Resource ID: </span>
+                        <span className="break-all font-mono">{log.ResourceID}</span>
                       </div>
                     )}
                     {log.IPAddress && (
                       <div className="text-text-secondary min-w-0">
-                        <span className="text-text-tertiary">IP: </span><span className="break-all">{log.IPAddress}</span>
+                        <span className="text-text-tertiary">IP: </span>
+                        <span className="break-all font-mono">{log.IPAddress}</span>
                       </div>
                     )}
                   </div>
@@ -236,20 +230,20 @@ export const AuditLogsView: React.FC = () => {
 
                 {/* Expanded Details */}
                 {selectedLog === log.ID && (
-                  <div className="px-5 pb-5 pt-2 border-t border-border-main space-y-4 animate-in fade-in slide-in-from-top-2">
+                  <div className="px-4 pb-4 pt-2 border-t border-border-main space-y-4 animate-in fade-in slide-in-from-top-2">
                     {log.Details && (
-                      <div className="p-3 rounded-xl bg-bg-card border border-border-main">
-                        <p className="text-[10px] font-semibold  text-text-tertiary mb-1">Details</p>
+                      <div className="kt-panel-inset p-3">
+                        <p className="kt-text-label mb-1">Details</p>
                         <pre className="text-xs text-text-secondary whitespace-pre-wrap font-mono overflow-x-auto">{log.Details}</pre>
                       </div>
                     )}
                     {!log.Success && log.ErrorMsg && (
-                      <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/20">
+                      <div className="p-3 bg-danger/10 border border-danger/20">
                         <div className="flex items-center gap-2 mb-1">
-                          <AlertTriangle className="w-4 h-4 text-rose-500" />
-                          <span className="text-sm font-bold text-rose-500">Error</span>
+                          <AlertTriangle className="w-4 h-4 text-danger" />
+                          <span className="text-sm font-bold text-danger tracking-wide uppercase">Error</span>
                         </div>
-                        <p className="text-xs text-rose-400">{log.ErrorMsg}</p>
+                        <p className="text-xs text-danger font-mono">{log.ErrorMsg}</p>
                       </div>
                     )}
                   </div>
@@ -261,21 +255,21 @@ export const AuditLogsView: React.FC = () => {
 
         {/* Pagination */}
         {total > limit && (
-          <div className="p-6 border-t border-border-main flex items-center justify-between">
+          <div className="p-4 border-t border-border-main flex items-center justify-between">
             <button
               onClick={() => setOffset(Math.max(0, offset - limit))}
               disabled={offset === 0}
-              className="px-4 py-2 rounded-lg text-sm font-medium bg-bg-card border border-border-main text-text-secondary hover:text-text-primary disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+              className="kt-button kt-button-secondary kt-button-sm disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Previous
             </button>
-            <span className="text-sm text-text-tertiary">
+            <span className="text-sm text-text-tertiary font-mono">
               Page {Math.floor(offset / limit) + 1} of {Math.ceil(total / limit)}
             </span>
             <button
               onClick={() => setOffset(offset + limit)}
               disabled={offset + limit >= total}
-              className="px-4 py-2 rounded-lg text-sm font-medium bg-bg-card border border-border-main text-text-secondary hover:text-text-primary disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+              className="kt-button kt-button-secondary kt-button-sm disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Next
             </button>

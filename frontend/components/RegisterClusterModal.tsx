@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { X, Check, AlertCircle, Loader2, Cloud } from 'lucide-react';
 import { useMonitoring } from '../contexts/MonitoringContext';
 import { useEscapeKey } from '../utils/useEscapeKey';
@@ -59,40 +59,40 @@ export const RegisterClusterModal: React.FC<RegisterClusterModalProps> = ({ isOp
     return (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="register-modal-title">
             <div
-                className="absolute inset-0 bg-black/60 backdrop-blur-sm animate-fade-in"
+                className="absolute inset-0 bg-black/60 backdrop-blur-sm kt-animate-fade-in"
                 onClick={onClose}
             />
 
-            <div className="relative w-full max-w-lg bg-bg-card border border-border-main rounded-2xl shadow-2xl overflow-hidden animate-slide-up">
-                <div className="flex items-center justify-between px-5 py-4 border-b border-border-main bg-primary-500/5">
+            <div className="relative w-full max-w-lg kt-panel kt-animate-slide-up">
+                <div className="kt-panel-header">
                     <div className="flex items-center gap-2.5">
-                        <div className="p-2 bg-primary-500/10 rounded-lg">
-                            <Cloud className="w-4 h-4 text-primary-400" />
+                        <div className="p-2 bg-primary-600 rounded-lg">
+                            <Cloud className="w-4 h-4 text-white" />
                         </div>
-                        <h3 id="register-modal-title" className="font-semibold text-text-primary">Register Cluster</h3>
+                        <h3 id="register-modal-title" className="font-display font-bold tracking-wider uppercase text-text-primary">Register Cluster</h3>
                     </div>
-                    <button onClick={onClose} className="p-1.5 hover:bg-bg-hover rounded-lg transition-colors text-text-secondary hover:text-text-primary">
+                    <button onClick={onClose} className="kt-button kt-button-ghost kt-button-sm">
                         <X className="w-4 h-4" />
                     </button>
                 </div>
 
                 <form onSubmit={handleSubmit} className="p-5 space-y-4">
                     {error && (
-                        <div role="alert" className="p-3 bg-danger-light border border-danger/20 text-danger text-sm rounded-lg flex items-center gap-2 animate-fade-in">
+                        <div role="alert" className="kt-panel-inset p-3 text-danger text-sm flex items-center gap-2 kt-animate-fade-in">
                             <AlertCircle className="w-4 h-4 shrink-0" />
                             {error}
                         </div>
                     )}
 
                     {success && (
-                        <div role="alert" className="p-3 bg-success-light border border-success/20 text-success text-sm rounded-lg flex items-center gap-2 animate-fade-in">
+                        <div role="alert" className="kt-panel-inset p-3 text-success text-sm flex items-center gap-2 kt-animate-fade-in">
                             <Check className="w-4 h-4 shrink-0" />
                             Connection established successfully
                         </div>
                     )}
 
                     <div className="space-y-2">
-                        <label className="text-xs font-medium text-text-secondary ">
+                        <label className="kt-text-label">
                             Display Name (Optional)
                         </label>
                         <input
@@ -102,13 +102,13 @@ export const RegisterClusterModal: React.FC<RegisterClusterModalProps> = ({ isOp
                             placeholder="e.g., QA West Europe Cluster"
                             className="kt-input"
                         />
-                        <p className="text-[10px] text-text-tertiary">
+                        <p className="font-mono text-[10px] text-text-tertiary">
                             A friendly name for this cluster. If not provided, the context name from kubeconfig will be used.
                         </p>
                     </div>
 
                     <div className="space-y-2">
-                        <label className="text-xs font-medium text-text-secondary ">
+                        <label className="kt-text-label">
                             Kubeconfig
                         </label>
                         <textarea
@@ -119,10 +119,10 @@ export const RegisterClusterModal: React.FC<RegisterClusterModalProps> = ({ isOp
                             spellCheck={false}
                             required
                         />
-                        <div className="p-2.5 bg-warning-light border border-warning/20 rounded-lg">
-                            <p className="text-[10px] text-warning font-medium mb-1">Local clusters (minikube, kind)</p>
-                            <p className="text-[10px] text-text-tertiary">Use flattened kubeconfig:</p>
-                            <code className="text-[10px] text-text-secondary font-mono bg-bg-hover px-2 py-1 rounded block mt-1">
+                        <div className="kt-panel-inset p-2.5 border-l-2 border-l-warning">
+                            <p className="font-mono text-[10px] text-warning font-bold mb-1">LOCAL CLUSTERS (minikube, kind)</p>
+                            <p className="font-mono text-[10px] text-text-tertiary">Use flattened kubeconfig:</p>
+                            <code className="font-mono text-[10px] text-text-secondary bg-bg-hover px-2 py-1 rounded block mt-1">
                                 kubectl config view --minify --flatten --context=&lt;name&gt;
                             </code>
                         </div>
@@ -132,7 +132,7 @@ export const RegisterClusterModal: React.FC<RegisterClusterModalProps> = ({ isOp
                         <button
                             type="button"
                             onClick={onClose}
-                            className="px-4 py-2 text-sm font-medium text-text-secondary hover:text-text-primary transition-colors"
+                            className="kt-button kt-button-ghost"
                         >
                             Cancel
                         </button>

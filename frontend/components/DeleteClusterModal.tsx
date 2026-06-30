@@ -42,19 +42,19 @@ export const DeleteClusterModal: React.FC<DeleteClusterModalProps> = ({ isOpen, 
     return (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="delete-modal-title">
             <div
-                className="absolute inset-0 bg-black/60 backdrop-blur-sm animate-fade-in"
+                className="absolute inset-0 bg-black/60 backdrop-blur-sm kt-animate-fade-in"
                 onClick={onClose}
             />
 
-            <div className="relative w-full max-w-md bg-bg-card border border-border-main rounded-2xl shadow-2xl overflow-hidden animate-slide-up">
-                <div className="flex items-center justify-between px-5 py-4 border-b border-border-main bg-danger-light">
+            <div className="relative w-full max-w-md kt-panel kt-animate-slide-up">
+                <div className="kt-panel-header bg-danger-light">
                     <div className="flex items-center gap-2.5">
                         <div className="p-2 bg-bg-card rounded-lg">
                             <AlertTriangle className="w-4 h-4 text-danger" />
                         </div>
-                        <h3 id="delete-modal-title" className="font-semibold text-text-primary">Remove Cluster</h3>
+                        <h3 id="delete-modal-title" className="font-display font-bold tracking-wider uppercase text-text-primary">Remove Cluster</h3>
                     </div>
-                    <button onClick={onClose} className="p-1.5 hover:bg-bg-hover rounded-lg transition-colors text-text-secondary hover:text-text-primary">
+                    <button onClick={onClose} className="kt-button kt-button-ghost kt-button-sm">
                         <X className="w-4 h-4" />
                     </button>
                 </div>
@@ -62,12 +62,12 @@ export const DeleteClusterModal: React.FC<DeleteClusterModalProps> = ({ isOpen, 
                 <div className="p-5 space-y-4">
                     <p className="text-sm text-text-secondary">
                         This will permanently remove the cluster{' '}
-                        <span className="font-medium text-text-primary bg-bg-hover px-1.5 py-0.5 rounded">"{clusterName}"</span>
+                        <span className="font-mono font-bold text-text-primary bg-bg-hover px-1.5 py-0.5 rounded">"{clusterName}"</span>
                         {' '}and all its associated data. This action cannot be undone.
                     </p>
 
                     <div className="space-y-2">
-                        <label id="confirm-instructions" className="text-xs font-medium text-text-secondary">
+                        <label id="confirm-instructions" className="kt-text-label">
                             Type <span className="text-danger font-mono">{clusterName}</span> to confirm
                         </label>
                         <input
@@ -84,14 +84,14 @@ export const DeleteClusterModal: React.FC<DeleteClusterModalProps> = ({ isOpen, 
                     <div className="flex justify-end gap-2 pt-2">
                         <button
                             onClick={onClose}
-                            className="px-4 py-2 text-sm font-medium text-text-secondary hover:text-text-primary transition-colors"
+                            className="kt-button kt-button-ghost"
                         >
                             Cancel
                         </button>
                         <button
                             onClick={handleConfirm}
                             disabled={!isMatch || isDeleting}
-                            className="kt-button bg-danger hover:bg-danger/90 disabled:bg-bg-hover disabled:text-text-tertiary disabled:cursor-not-allowed"
+                            className="kt-button kt-button-danger disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                             {isDeleting ? (
                                 <>

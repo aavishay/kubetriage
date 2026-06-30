@@ -63,26 +63,24 @@ const AIChatWidgetComponent: React.FC<AIChatWidgetProps> = ({ isOpen, onClose, i
 
   if (!isOpen) return null;
 
-  // Container classes based on variant
   const containerClasses = variant === 'floating'
-    ? `fixed right-4 bottom-4 transition-all duration-300 z-50 flex flex-col bg-bg-card border border-border-main shadow-2xl rounded-2xl overflow-hidden ${
+    ? `fixed right-4 bottom-4 transition-all duration-300 z-50 flex flex-col kt-panel ${
         isExpanded ? 'top-4 w-[600px]' : 'w-[400px] h-[500px]'
       }`
-    : `w-full flex flex-col bg-bg-card border border-border-main rounded-2xl overflow-hidden h-[500px]`;
+    : `w-full flex flex-col kt-panel h-[500px]`;
 
   return (
     <div className={containerClasses}>
-      {/* Header */}
-      <div className="bg-bg-hover border-b border-border-main p-3 flex justify-between items-center shrink-0">
+      <div className="kt-panel-header shrink-0">
         <div className="flex items-center gap-2.5">
           <div className="p-2 bg-primary-600 rounded-lg">
             <Sparkles className="w-4 h-4 text-white" />
           </div>
           <div>
-            <h3 className="font-semibold text-sm text-text-primary">AI Co-Pilot</h3>
+            <h3 className="font-display font-bold tracking-wider uppercase text-sm text-text-primary">AI Co-Pilot</h3>
             <div className="flex items-center gap-1.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-success"></span>
-              <span className="text-[10px] text-success">Online</span>
+              <span className="kt-led kt-led-success"></span>
+              <span className="font-mono text-[10px] text-success">ONLINE</span>
             </div>
           </div>
         </div>
@@ -90,7 +88,7 @@ const AIChatWidgetComponent: React.FC<AIChatWidgetProps> = ({ isOpen, onClose, i
           {variant === 'floating' && (
             <button
               onClick={() => setIsExpanded(!isExpanded)}
-              className="p-1.5 text-text-secondary hover:text-text-primary hover:bg-bg-hover rounded-lg transition-colors"
+              className="kt-button kt-button-ghost kt-button-sm"
               title={isExpanded ? "Minimize" : "Maximize"}
               aria-label={isExpanded ? "Minimize chat" : "Maximize chat"}
             >
@@ -99,7 +97,7 @@ const AIChatWidgetComponent: React.FC<AIChatWidgetProps> = ({ isOpen, onClose, i
           )}
           <button
             onClick={onClose}
-            className="p-1.5 text-text-tertiary hover:text-danger hover:bg-danger-light rounded-lg transition-colors"
+            className="kt-button kt-button-ghost kt-button-sm text-danger hover:text-danger"
             aria-label="Close chat"
           >
             <X className="w-4 h-4" aria-hidden="true" />
@@ -107,7 +105,6 @@ const AIChatWidgetComponent: React.FC<AIChatWidgetProps> = ({ isOpen, onClose, i
         </div>
       </div>
 
-      {/* Messages Area */}
       <div ref={scrollRef} className="flex-1 overflow-y-auto p-3 space-y-4 custom-scrollbar" role="log" aria-live="polite" aria-label="Chat messages">
         {messages.map((msg, idx) => (
           <div key={idx} className={`flex gap-3 ${msg.role === 'user' ? 'flex-row-reverse' : 'flex-row'}`}>
@@ -151,7 +148,7 @@ const AIChatWidgetComponent: React.FC<AIChatWidgetProps> = ({ isOpen, onClose, i
                 </div>
               ) : (
                 msg.content.startsWith('Context for analysis:')
-                  ? <div className="text-text-tertiary italic text-xs border-l-2 border-border-main pl-2">Context shared</div>
+                  ? <div className="font-mono text-text-tertiary italic text-xs border-l-2 border-border-main pl-2">Context shared</div>
                   : msg.content
               )}
             </div>
@@ -159,7 +156,6 @@ const AIChatWidgetComponent: React.FC<AIChatWidgetProps> = ({ isOpen, onClose, i
         ))}
       </div>
 
-      {/* Input Area */}
       <div className="p-3 bg-bg-hover border-t border-border-main shrink-0">
         <form
           onSubmit={(e) => { e.preventDefault(); handleSendMessage(input); }}
@@ -177,7 +173,7 @@ const AIChatWidgetComponent: React.FC<AIChatWidgetProps> = ({ isOpen, onClose, i
           <button
             type="submit"
             disabled={!input.trim() || isTyping}
-            className="kt-button kt-button-primary p-2.5 disabled:opacity-50 shrink-0"
+            className="kt-button kt-button-primary kt-button-sm shrink-0 disabled:opacity-50"
             aria-label={isTyping ? "Sending message..." : "Send message"}
           >
             {isTyping ? (
@@ -188,7 +184,7 @@ const AIChatWidgetComponent: React.FC<AIChatWidgetProps> = ({ isOpen, onClose, i
           </button>
         </form>
         <div className="mt-2 text-center">
-          <p className="text-[10px] text-text-tertiary">AI-Generated Insights</p>
+          <p className="font-mono text-[10px] text-text-tertiary">AI-GENERATED INSIGHTS</p>
         </div>
       </div>
     </div>
