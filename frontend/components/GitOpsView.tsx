@@ -89,6 +89,21 @@ const actionConfig: Record<string, { marker: string; label: string; color: strin
   unknown: { marker: '?', label: 'unknown', color: 'text-text-tertiary', bg: 'bg-bg-hover border-border-main' },
 };
 
+const toBrowserUrl = (gitUrl: string) => {
+  // Azure DevOps SSH: git@ssh.dev.azure.com:v3/{org}/{project}/{repoPath}
+  const sshMatch = gitUrl.match(/^git@ssh\.dev\.azure\.com:v3\/([^/]+)\/([^/]+)\/(.+)$/);
+  if (sshMatch) {
+    const [, org, project, repoPath] = sshMatch;
+    const repo = repoPath.split('/').pop() || repoPath;
+    return `https://dev.azure.com/${org}/${project}/_git/${repo}`;
+  }
+  // Azure DevOps HTTPS clone URL: https://dev.azure.com/{org}/{project}/_git/{repo}
+  if (/^https:\/\/dev\.azure\.com\//.test(gitUrl)) {
+    return gitUrl.replace(/\.git$/, '');
+  }
+  return null;
+};
+
 const resourceHealthIcon = (status: string) => {
   switch (status) {
     case 'Healthy':
@@ -581,15 +596,30 @@ export const GitOpsView: React.FC<GitOpsViewProps> = ({ clusterId }) => {
                             <span className="kt-text-label">Source</span>
                           </div>
                           {resource.sourceUrl ? (
-                            <a
-                              href={resource.sourceUrl}
-                              target="_blank"
-                              rel="noreferrer"
-                              className="text-sm text-primary-500 hover:underline break-all"
-                              title={resource.sourceUrl}
-                            >
-                              {resource.sourceUrl}
-                            </a>
+                            (() => {
+                              const browserUrl = toBrowserUrl(resource.sourceUrl);
+                              return browserUrl ? (
+                                <a
+                                  href={browserUrl}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="text-sm text-primary-500 hover:underline break-all"
+                                  title={`Open ${browserUrl}`}
+                                >
+                                  {resource.sourceUrl}
+                                </a>
+                              ) : (
+                                <a
+                                  href={resource.sourceUrl}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="text-sm text-primary-500 hover:underline break-all"
+                                  title={resource.sourceUrl}
+                                >
+                                  {resource.sourceUrl}
+                                </a>
+                              );
+                            })()
                           ) : (
                             <span className="text-sm text-text-tertiary font-sans">No source URL</span>
                           )}
