@@ -1,6 +1,6 @@
 /// <reference lib="webworker" />
 
-const CACHE_NAME = 'kubetriage-v1';
+const CACHE_NAME = 'kubetriage-v2';
 const STATIC_ASSETS = [
   '/',
   '/index.html',
