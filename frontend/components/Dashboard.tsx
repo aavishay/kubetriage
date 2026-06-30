@@ -143,7 +143,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = tr
             <Server className="w-12 h-12 text-text-secondary" />
           </div>
         </div>
-        <h2 className="text-2xl font-display font-bold mb-2">No Workloads Found</h2>
+        <h2 className="font-sans text-2xl font-bold mb-2">No Workloads Found</h2>
         <p className="text-text-secondary max-w-sm text-center mb-6 text-sm font-sans">
           No active workloads detected in the current cluster. Connect a cluster to begin monitoring.
         </p>
@@ -193,7 +193,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = tr
               <div className="p-5 bg-danger/10 border border-danger/30">
                 <Network className="w-10 h-10 text-danger" />
               </div>
-              <div className="absolute -top-2 -right-2 w-6 h-6 bg-danger flex items-center justify-center text-[10px] font-mono font-bold text-black">
+              <div className="absolute -top-2 -right-2 w-6 h-6 bg-danger flex items-center justify-center text-[10px] font-bold text-black">
                 {criticalCount}
               </div>
             </div>
@@ -204,7 +204,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = tr
                   Critical Issues Detected
                 </span>
               </div>
-              <h2 className="text-2xl font-display font-bold text-text-primary mb-2">
+              <h2 className="font-sans text-2xl font-bold text-text-primary mb-2">
                 {criticalCount} workload{criticalCount > 1 ? 's' : ''} require immediate attention
               </h2>
               <p className="text-text-secondary text-sm max-w-xl font-sans">
@@ -285,7 +285,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = tr
                     <div className="flex justify-between items-start gap-2 mb-2">
                       <div className="flex items-center gap-2 min-w-0">
                         <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${getStatusColor(w.status)}`} />
-                        <span className="text-sm font-mono font-bold text-text-primary truncate">{w.name}</span>
+                        <span className="text-sm font-bold text-text-primary truncate">{w.name}</span>
                       </div>
                       <StatusBadge status={w.status} />
                     </div>
@@ -326,8 +326,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = tr
                 </PieChart>
               </ResponsiveContainer>
               <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                <span className="text-2xl font-mono font-bold text-text-primary">{safeWorkloads.length}</span>
-                <span className="text-[10px] text-text-tertiary font-sans font-medium uppercase">Total</span>
+                <span className="text-2xl font-bold text-text-primary">{safeWorkloads.length}</span>
+                <span className="text-[10px] text-text-tertiary font-sans font-medium">Total</span>
               </div>
             </div>
             <div className="grid grid-cols-3 gap-2 mt-3 relative z-10">
@@ -340,7 +340,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = tr
                     <div className="w-2 h-2 rounded-full" style={{ backgroundColor: item.color }} />
                     <span className="text-[10px] font-sans font-semibold text-text-secondary">{item.name}</span>
                   </div>
-                  <span className="text-lg font-mono font-bold" style={{ color: item.color }}>{item.value}</span>
+                  <span className="text-lg font-bold" style={{ color: item.color }}>{item.value}</span>
                 </div>
               ))}
             </div>
@@ -431,7 +431,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = tr
                       </div>
 
                       <div className="w-28 shrink-0 min-w-0">
-                        <h4 className="text-sm font-mono font-bold text-text-primary truncate" title={item.name}>{item.name}</h4>
+                        <h4 className="text-sm font-bold text-text-primary truncate" title={item.name}>{item.name}</h4>
                         <div className="flex items-center gap-1.5 mt-1">
                           <div className={`w-1.5 h-1.5 rounded-full ${getStatusColor(item.status)}`} />
                           <span className="text-[10px] text-text-tertiary font-sans">{item.status}</span>
@@ -441,7 +441,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = tr
                       <div className="flex-1 flex flex-col justify-center">
                         <div className="flex justify-between items-center mb-1.5">
                           <span className="text-[10px] text-text-tertiary font-sans font-semibold">{saturationTab}</span>
-                          <span className={`text-xs font-mono font-bold ${item.isCritical ? 'text-danger' : item.isWarning ? 'text-warning' : 'text-text-secondary'}`}>
+                          <span className={`text-xs font-bold ${item.isCritical ? 'text-danger' : item.isWarning ? 'text-warning' : 'text-text-secondary'}`}>
                             {item.saturation}%
                           </span>
                         </div>
@@ -460,7 +460,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = tr
                       </div>
 
                       <div className="w-24 shrink-0 text-right">
-                        <div className="text-xs font-mono font-bold text-text-secondary">
+                        <div className="text-xs font-bold text-text-secondary">
                           {item.used.toFixed(1)}{item.unit}
                         </div>
                         <div className="text-[10px] text-text-tertiary font-sans">
@@ -471,7 +471,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = tr
                   ))}
                 {workloads.length > 10 && (
                   <div className="pt-2 pb-1 text-center">
-                    <span className="text-[11px] text-text-tertiary font-sans font-medium uppercase">
+                    <span className="text-[11px] text-text-tertiary font-sans font-medium">
                       Showing top 10 of {workloads.length} workloads
                     </span>
                   </div>
@@ -508,11 +508,11 @@ export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = tr
                 </PieChart>
               </ResponsiveContainer>
               <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
-                <span className="text-[10px] text-text-tertiary mb-1 font-sans font-medium uppercase">Budget</span>
-                <span className={`text-3xl font-mono font-bold ${reliabilityMetrics.severity === 'Critical' ? 'text-danger' : 'text-text-primary'}`}>
+                <span className="text-[10px] text-text-tertiary mb-1 font-sans font-medium">Budget</span>
+                <span className={`text-3xl font-bold ${reliabilityMetrics.severity === 'Critical' ? 'text-danger' : 'text-text-primary'}`}>
                   {reliabilityMetrics.budgetPercentage.toFixed(1)}%
                 </span>
-                <span className="text-[10px] text-text-tertiary font-sans font-medium uppercase">Remaining</span>
+                <span className="text-[10px] text-text-tertiary font-sans font-medium">Remaining</span>
               </div>
             </div>
           </div>
@@ -527,8 +527,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = tr
                 </div>
                 <StatusBadge status={reliabilityMetrics.severity} />
               </div>
-              <div className="text-2xl font-mono font-bold text-text-primary">{reliabilityMetrics.burnRate.toFixed(2)}x</div>
-              <p className="text-[10px] text-text-tertiary font-sans font-medium uppercase">Burn rate vs normal</p>
+              <div className="text-2xl font-bold text-text-primary">{reliabilityMetrics.burnRate.toFixed(2)}x</div>
+              <p className="text-[10px] text-text-tertiary font-sans font-medium">Burn rate vs normal</p>
             </div>
 
             <div className="p-4 border border-border-main bg-bg-card">
@@ -538,8 +538,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = tr
                   <span className="text-[11px] font-sans font-semibold text-text-secondary">Exhaustion Forecast</span>
                 </div>
               </div>
-              <div className="text-2xl font-mono font-bold text-text-primary">{reliabilityMetrics.uptimeForecast}</div>
-              <p className="text-[10px] text-text-tertiary font-sans font-medium uppercase">Time until SLO breach</p>
+              <div className="text-2xl font-bold text-text-primary">{reliabilityMetrics.uptimeForecast}</div>
+              <p className="text-[10px] text-text-tertiary font-sans font-medium">Time until SLO breach</p>
             </div>
           </div>
 

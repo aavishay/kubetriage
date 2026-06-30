@@ -15,7 +15,7 @@ export const OfflineIndicator: React.FC = () => {
       {showDetails && (
         <div className="kt-panel w-72 kt-animate-fade-in p-4">
           <div className="flex items-center justify-between mb-3">
-            <h3 className="font-display font-bold text-sm text-text-primary">
+            <h3 className="font-sans font-bold text-sm text-text-primary">
               Offline Status
             </h3>
             <button

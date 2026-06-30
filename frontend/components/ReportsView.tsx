@@ -197,7 +197,7 @@ export const ReportsView: React.FC = () => {
                     <div className="inline-flex items-center gap-2 kt-badge kt-badge-success mb-6">
                         <Shield className="w-3.5 h-3.5" /> Compliance & Audit
                     </div>
-                    <h1 className="text-3xl font-display font-bold text-text-primary mb-3">
+                    <h1 className="font-sans text-3xl font-bold text-text-primary mb-3">
                         Reporting Center
                     </h1>
                     <p className="text-base text-text-tertiary mb-8 leading-relaxed">
@@ -227,7 +227,7 @@ export const ReportsView: React.FC = () => {
                         <div className="p-3 w-fit mb-5 bg-bg-main border border-border-main text-primary-500 group-hover:kt-amber-glow transition-all">
                             <Shield className="w-6 h-6" />
                         </div>
-                        <h3 className="text-lg font-display font-bold text-text-primary mb-2">SOC 2 Compliance Audit</h3>
+                        <h3 className="font-sans text-lg font-bold text-text-primary mb-2">SOC 2 Compliance Audit</h3>
                         <p className="text-sm text-text-tertiary mb-6 flex-1 leading-relaxed">
                             Complete audit log of user actions, authentication events, and configuration changes securely stored.
                         </p>
@@ -241,7 +241,7 @@ export const ReportsView: React.FC = () => {
                         <div className="p-3 w-fit mb-5 bg-bg-main border border-border-main text-info">
                             <Activity className="w-6 h-6" />
                         </div>
-                        <h3 className="text-lg font-display font-bold text-text-primary mb-2">Cluster Health Summary</h3>
+                        <h3 className="font-sans text-lg font-bold text-text-primary mb-2">Cluster Health Summary</h3>
                         <p className="text-sm text-text-tertiary mb-6 flex-1 leading-relaxed">
                             Monthly aggregated uptime, resource utilization, and incident frequency reports.
                         </p>
@@ -305,7 +305,7 @@ export const ReportsView: React.FC = () => {
                                 <div className="p-3 bg-danger-light text-danger border border-danger/20 w-fit mb-6">
                                     <Trash2 className="w-8 h-8" />
                                 </div>
-                                <h3 className="text-xl font-display font-bold text-text-primary mb-3">Delete All Reports?</h3>
+                                <h3 className="font-sans text-xl font-bold text-text-primary mb-3">Delete All Reports?</h3>
                                 <p className="text-sm text-text-tertiary mb-8 leading-relaxed">
                                     This will permanently delete all historical reports in your laboratory. This action <span className="text-danger font-bold">cannot be undone</span>.
                                 </p>
@@ -333,7 +333,7 @@ export const ReportsView: React.FC = () => {
                             <div className="kt-panel w-full max-w-4xl h-[85vh] flex flex-col overflow-hidden animate-fade-in" onClick={e => e.stopPropagation()}>
                                 <div className="kt-panel-header shrink-0">
                                     <div className="flex-1 min-w-0">
-                                        <h3 className="text-xl md:text-2xl font-display font-bold text-text-primary truncate">
+                                        <h3 className="font-sans text-xl md:text-2xl font-bold text-text-primary truncate">
                                             {selectedReport.WorkloadName}
                                         </h3>
                                         <div className="flex flex-wrap items-center gap-3 mt-2">
@@ -372,7 +372,7 @@ export const ReportsView: React.FC = () => {
                                             <div className="absolute top-0 right-0 p-3 opacity-20 group-hover/fix:opacity-40 transition-opacity">
                                                 <Sparkles className="w-12 h-12 text-primary-500" />
                                             </div>
-                                            <h4 className="text-base font-display font-bold text-text-primary mb-3 flex items-center gap-2 relative z-10">
+                                            <h4 className="font-sans text-base font-bold text-text-primary mb-3 flex items-center gap-2 relative z-10">
                                                 <Shield className="w-5 h-5 text-primary-500" /> AI Remediation Protocol
                                             </h4>
                                             <p className="text-sm text-text-tertiary mb-5 leading-relaxed relative z-10">
@@ -468,7 +468,7 @@ export const ReportsView: React.FC = () => {
 
                                                 <div className="flex-1 min-w-0">
                                                     <div className="flex flex-wrap items-center gap-2 mb-1 min-w-0">
-                                                        <h4 className="text-sm font-display font-bold text-text-primary group-hover:text-primary-500 transition-colors truncate">
+                                                        <h4 className="font-sans text-sm font-bold text-text-primary group-hover:text-primary-500 transition-colors truncate">
                                                             {group.workloadName}
                                                         </h4>
                                                         <span className={`kt-badge ${groupHasCritical ? 'kt-badge-danger' : 'kt-badge-warning'}`}>
@@ -480,7 +480,7 @@ export const ReportsView: React.FC = () => {
                                                             </span>
                                                         )}
                                                     </div>
-                                                    <p className="text-xs text-text-tertiary font-mono truncate">
+                                                    <p className="text-xs text-text-tertiary truncate">
                                                         Latest: {formatDate(group.latestReport.CreatedAt)}
                                                         {group.latestReport.Severity && (
                                                             <span className="ml-2">• Severity: {group.latestReport.Severity}</span>
@@ -523,7 +523,7 @@ export const ReportsView: React.FC = () => {
                                                                             {report.Severity}
                                                                         </span>
                                                                         {report.IncidentType && (
-                                                                            <span className="text-[10px] text-text-tertiary font-mono truncate min-w-0">
+                                                                            <span className="text-[10px] text-text-tertiary truncate min-w-0">
                                                                                 {report.IncidentType}
                                                                             </span>
                                                                         )}
@@ -557,7 +557,7 @@ export const ReportsView: React.FC = () => {
                                 <div className="mb-6 p-6 bg-bg-hover border border-border-main group-hover:scale-110 transition-transform duration-500">
                                     <FileText className="w-12 h-12 text-text-tertiary opacity-40" />
                                 </div>
-                                <h3 className="text-xl font-display font-bold text-text-primary mb-2">No Reports Found</h3>
+                                <h3 className="font-sans text-xl font-bold text-text-primary mb-2">No Reports Found</h3>
                                 <p className="text-sm text-text-tertiary max-w-xs mx-auto leading-relaxed mb-6">
                                     No historical analysis records available in your current laboratory segment.
                                 </p>

@@ -118,7 +118,7 @@ export const TopologyView: React.FC<TopologyViewProps> = ({ workloads }) => {
             {/* Header */}
             <div className="shrink-0 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-5">
                 <div>
-                    <h2 className="text-2xl font-display font-bold text-text-primary flex items-center gap-3">
+                    <h2 className="font-sans text-2xl font-bold text-text-primary flex items-center gap-3">
                         <div className="p-2 bg-bg-main border border-border-main text-primary-500">
                             <Share2 className="w-6 h-6" />
                         </div>
@@ -208,7 +208,7 @@ export const TopologyView: React.FC<TopologyViewProps> = ({ workloads }) => {
                         </div>
                         {showDebug && diagramCode && (
                             <div className="mt-2 w-full kt-panel-inset p-4 text-xs font-mono overflow-auto max-h-96 custom-scrollbar relative">
-                                <div className="absolute top-2 right-4 text-[10px] text-text-tertiary font-sans font-medium uppercase">Mermaid Source</div>
+                                <div className="absolute top-2 right-4 text-[10px] text-text-tertiary font-sans font-medium">Mermaid Source</div>
                                 <pre>{diagramCode}</pre>
                             </div>
                         )}
@@ -227,7 +227,7 @@ export const TopologyView: React.FC<TopologyViewProps> = ({ workloads }) => {
                                     </div>
                                 </div>
                                 <div>
-                                    <h3 className="text-xl font-display font-bold text-text-primary mb-2">Constructing Neural Map...</h3>
+                                    <h3 className="font-sans text-xl font-bold text-text-primary mb-2">Constructing Neural Map...</h3>
                                     <p className="text-sm text-text-tertiary max-w-sm mx-auto leading-relaxed font-sans">
                                         Analyzing workload relationships and rendering high-fidelity topology via Generative AI.
                                     </p>
@@ -247,7 +247,7 @@ export const TopologyView: React.FC<TopologyViewProps> = ({ workloads }) => {
                                 <div className="w-20 h-20 bg-bg-main border border-border-main flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
                                     <Sparkles className="w-10 h-10 text-primary-500" />
                                 </div>
-                                <h3 className="text-2xl font-display font-bold text-text-primary mb-3">Neural Map Generator</h3>
+                                <h3 className="font-sans text-2xl font-bold text-text-primary mb-3">Neural Map Generator</h3>
                                 <p className="text-text-tertiary mb-8 max-w-md text-sm leading-relaxed font-sans">
                                     Use Generative AI to visually reconstruct your cluster architecture. Typically visualizes namespaces, workload kinds, and inferred network traffic.
                                 </p>
@@ -286,7 +286,7 @@ export const TopologyView: React.FC<TopologyViewProps> = ({ workloads }) => {
                                             <div className="flex items-center gap-4 z-10 min-w-0">
                                                 <div className={`w-1.5 h-10 rounded-full shadow-lg transition-all group-hover:scale-110 shrink-0 ${getStatusBarClass(w.status)}`}></div>
                                                 <div className="min-w-0">
-                                                    <div className="text-sm font-mono font-bold text-text-primary group-hover:text-primary-500 transition-colors truncate">{w.name}</div>
+                                                    <div className="text-sm font-bold text-text-primary group-hover:text-primary-500 transition-colors truncate">{w.name}</div>
                                                     <div className="text-[10px] text-text-tertiary flex flex-wrap items-center gap-x-2 mt-1 font-bold opacity-80 font-sans">
                                                         <span className="flex items-center gap-1"><Box className="w-3 h-3" /> {w.kind}</span>
                                                         <span className="opacity-30">|</span>

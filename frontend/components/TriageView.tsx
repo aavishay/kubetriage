@@ -80,7 +80,7 @@ const TrafficPathExplorer = ({ workload }: { workload: Workload }) => {
           <div className="w-14 h-14 bg-bg-main border border-border-main flex items-center justify-center text-text-tertiary">
             <Globe className="w-6 h-6" />
           </div>
-          <span className="text-[10px] text-text-tertiary font-sans font-medium uppercase">Ingress</span>
+          <span className="text-[10px] text-text-tertiary font-sans font-medium">Ingress</span>
         </div>
         <div className="flex-1 h-px bg-gradient-to-r from-transparent via-primary-500/50 to-transparent"></div>
         <div className="flex flex-col items-center gap-2">
@@ -366,7 +366,7 @@ export const TriageView: React.FC<TriageViewProps> = ({ workloads, isDarkMode = 
   const metricCard = (label: string, value: string | number, critical = false, sub?: string) => (
     <div className="kt-panel p-4 hover:border-primary-500/30 transition-all">
       <p className="text-[10px] font-sans font-semibold text-text-tertiary mb-1">{label}</p>
-      <div className={`text-2xl font-mono font-bold ${critical ? 'text-danger' : 'text-text-primary'}`}>{value}</div>
+      <div className={`text-2xl font-bold ${critical ? 'text-danger' : 'text-text-primary'}`}>{value}</div>
       {sub && <div className="text-[10px] text-text-tertiary mt-1 font-sans">{sub}</div>}
     </div>
   );
@@ -378,7 +378,7 @@ export const TriageView: React.FC<TriageViewProps> = ({ workloads, isDarkMode = 
         ? <CodeBlock language={match[1]}>{children}</CodeBlock>
         : <code className="bg-primary-500/10 text-primary-500 px-1.5 py-0.5 rounded-sm font-mono text-xs" {...props}>{children}</code>;
     },
-    h2({ children, ...props }: any) { return <h2 className="text-lg font-display font-bold text-text-primary mb-4 mt-6 pb-2 border-b border-border-main" {...props}>{children}</h2>; },
+    h2({ children, ...props }: any) { return <h2 className="font-sans text-lg font-bold text-text-primary mb-4 mt-6 pb-2 border-b border-border-main" {...props}>{children}</h2>; },
     ul({ children, ...props }: any) { return <ul className="space-y-2 my-4 list-none pl-0" {...props}>{children}</ul>; },
     li({ children, ...props }: any) { return <li className="flex gap-3 items-start text-text-secondary text-sm" {...props}><span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-primary-500/50 shrink-0" /><span className="flex-1">{children}</span></li>; },
     strong({ children, ...props }: any) { return <strong className="font-bold text-text-primary" {...props}>{children}</strong>; }
@@ -429,7 +429,7 @@ export const TriageView: React.FC<TriageViewProps> = ({ workloads, isDarkMode = 
               setSelectedWorkload(w); notifyView(`workload-${w.id}`); setAnalysis(null); setPatchSuggestion(null); setIsSidebarOpen(false);
             }} className={`group p-2.5 cursor-pointer transition-all border ${selectedWorkload?.id === w.id ? 'bg-primary-500/10 border-primary-500/30' : 'hover:bg-bg-hover border-transparent'}`}>
               <div className="flex items-center justify-between mb-1">
-                <span className={`text-sm font-mono font-bold truncate ${selectedWorkload?.id === w.id ? 'text-text-primary' : 'text-text-secondary'}`}>{w.name}</span>
+                <span className={`text-sm font-bold truncate ${selectedWorkload?.id === w.id ? 'text-text-primary' : 'text-text-secondary'}`}>{w.name}</span>
                 <span className={`w-2 h-2 rounded-full shrink-0 ${getMetricStatusColor(w.status === 'Healthy' ? 0 : w.status === 'Warning' ? 80 : 100)}`} />
               </div>
               {!isDesktopCollapsed && (
@@ -452,7 +452,7 @@ export const TriageView: React.FC<TriageViewProps> = ({ workloads, isDarkMode = 
                 <button onClick={() => setIsSidebarOpen(true)} className="lg:hidden p-2 bg-bg-main border border-border-main text-text-secondary"><ChevronLeft className="w-4 h-4" /></button>
                 <div className="p-2 bg-bg-main border border-border-main shrink-0"><Terminal className="w-5 h-5 text-primary-500" /></div>
                 <div className="min-w-0">
-                  <h2 className="text-lg font-display font-bold text-text-primary truncate">{selectedWorkload.name}</h2>
+                  <h2 className="font-sans text-lg font-bold text-text-primary truncate">{selectedWorkload.name}</h2>
                   <div className="flex items-center gap-2 text-xs text-text-tertiary font-sans">
                     <span>{selectedWorkload.namespace}</span>
                     <span>•</span>
@@ -494,7 +494,7 @@ export const TriageView: React.FC<TriageViewProps> = ({ workloads, isDarkMode = 
                     </div>
                   </div>
                   <div className="flex items-center gap-4 relative z-10">
-                    <span className="text-sm font-mono font-bold text-text-primary">{selectedWorkload.recommendation.action}</span>
+                    <span className="text-sm font-bold text-text-primary">{selectedWorkload.recommendation.action}</span>
                     <span className="text-xs text-text-tertiary font-sans">{selectedWorkload.recommendation.confidence}% confidence</span>
                   </div>
                 </div>
@@ -624,7 +624,7 @@ export const TriageView: React.FC<TriageViewProps> = ({ workloads, isDarkMode = 
         ) : (
           <div className="flex-1 flex flex-col items-center justify-center p-8 text-center animate-fade-in">
             <div className="p-6 bg-primary-500/10 border border-primary-500/30 mb-4 kt-amber-glow"><Activity className="w-10 h-10 text-primary-500" /></div>
-            <h3 className="text-xl font-display font-bold text-text-primary mb-2">Select a Workload</h3>
+            <h3 className="font-sans text-xl font-bold text-text-primary mb-2">Select a Workload</h3>
             <p className="text-sm text-text-tertiary max-w-sm font-sans">Choose a workload from the sidebar to begin triage analysis.</p>
           </div>
         )}

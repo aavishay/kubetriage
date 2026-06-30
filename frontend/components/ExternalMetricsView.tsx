@@ -55,7 +55,7 @@ const summaryCard = (
         <p className="text-[11px] font-sans font-semibold text-text-tertiary mb-1">
           {label}
         </p>
-        <p className="text-2xl font-mono font-bold text-text-primary">{value}</p>
+        <p className="text-2xl font-bold text-text-primary">{value}</p>
         <p className="text-xs mt-1 font-sans">{sub}</p>
       </div>
       <div className={`p-2.5 bg-bg-main border border-border-main ${iconColor}`}>
@@ -399,7 +399,7 @@ export const ExternalMetricsView: React.FC = () => {
         {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div className="min-w-0">
-            <h1 className="text-2xl font-display font-bold text-text-primary flex items-center gap-3">
+            <h1 className="font-sans text-2xl font-bold text-text-primary flex items-center gap-3">
               <Database className="w-7 h-7 text-primary-500" />
               External Metrics
             </h1>
@@ -499,7 +499,7 @@ export const ExternalMetricsView: React.FC = () => {
                         <h3 className={`text-sm font-sans font-semibold break-words ${source.enabled ? 'text-text-primary' : 'text-text-secondary'}`}>
                           {source.name}
                         </h3>
-                        <p className="text-xs text-text-secondary font-mono break-words">
+                        <p className="text-xs text-text-secondary break-words">
                           {getProviderName(source.provider)}
                           {source.region && ` • ${source.region}`}
                         </p>
@@ -560,7 +560,7 @@ export const ExternalMetricsView: React.FC = () => {
               {filteredSources.length === 0 && (
                 <div className="col-span-full kt-panel flex flex-col items-center justify-center py-16">
                   <Database className="w-12 h-12 mb-4 text-text-muted" />
-                  <h3 className="text-lg font-display font-bold text-text-primary">No Metric Sources</h3>
+                  <h3 className="font-sans text-lg font-bold text-text-primary">No Metric Sources</h3>
                   <p className="text-sm mt-2 text-text-secondary font-sans">Add a source to start ingesting external metrics.</p>
                   <button
                     onClick={() => setShowAddModal(true)}
@@ -605,7 +605,7 @@ export const ExternalMetricsView: React.FC = () => {
                 <div key={metric.name} className="kt-panel p-5">
                   <div className="flex items-start justify-between gap-3 mb-4 relative z-10">
                     <div className="min-w-0">
-                      <h3 className="text-sm font-mono font-bold text-text-primary break-words">
+                      <h3 className="text-sm font-bold text-text-primary break-words">
                         {metric.name}
                       </h3>
                       <div className="flex items-center gap-2 mt-1 flex-wrap">
@@ -637,7 +637,7 @@ export const ExternalMetricsView: React.FC = () => {
           <div className="kt-panel p-6">
             <div className="text-center py-12 relative z-10">
               <LineChart className="w-12 h-12 text-text-tertiary mx-auto mb-4" />
-              <h3 className="text-lg font-display font-bold text-text-primary">Metric Query Builder</h3>
+              <h3 className="font-sans text-lg font-bold text-text-primary">Metric Query Builder</h3>
               <p className="text-sm text-text-secondary mt-2 max-w-md mx-auto font-sans">
                 Build custom queries to analyze metrics across all your external sources.
                 Use PromQL-compatible syntax for advanced filtering.

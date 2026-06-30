@@ -42,10 +42,10 @@ const formatRelativeTime = (dateStr: string) => {
 
 const markdownComponents = {
   h1: ({ children, ...props }: any) => (
-    <h1 className="text-base font-display font-bold text-text-primary mt-4 mb-2 first:mt-0" {...props}>{children}</h1>
+    <h1 className="font-sans text-base font-bold text-text-primary mt-4 mb-2 first:mt-0" {...props}>{children}</h1>
   ),
   h2: ({ children, ...props }: any) => (
-    <h2 className="text-sm font-display font-bold text-text-primary mt-3 mb-2 first:mt-0 flex items-center gap-2" {...props}>{children}</h2>
+    <h2 className="font-sans text-sm font-bold text-text-primary mt-3 mb-2 first:mt-0 flex items-center gap-2" {...props}>{children}</h2>
   ),
   h3: ({ children, ...props }: any) => (
     <h3 className="text-xs font-sans font-semibold text-text-secondary mt-3 mb-1.5 first:mt-0" {...props}>{children}</h3>
@@ -186,7 +186,7 @@ const IncidentRow = memo(function IncidentRow({ incident }: IncidentRowProps) {
             </span>
           ))}
           {hiddenCount > 0 && (
-            <span className="text-[10px] text-text-tertiary font-sans font-medium uppercase">+{hiddenCount} more</span>
+            <span className="text-[10px] text-text-tertiary font-sans font-medium">+{hiddenCount} more</span>
           )}
         </div>
 
@@ -280,13 +280,13 @@ export const MultiClusterIncidentsList: React.FC<MultiClusterIncidentsListProps>
         {incidents.length === 0 ? (
           <div className="text-center py-12 px-6">
             <CheckCircle2 className="w-12 h-12 text-success mx-auto mb-4" />
-            <h4 className="text-lg font-display font-bold text-text-primary mb-2">No Cross-Cluster Incidents</h4>
+            <h4 className="font-sans text-lg font-bold text-text-primary mb-2">No Cross-Cluster Incidents</h4>
             <p className="text-text-tertiary text-sm font-sans">All systems operating normally across selected clusters</p>
           </div>
         ) : filteredIncidents.length === 0 ? (
           <div className="text-center py-12 px-6">
             <Search className="w-10 h-10 text-text-tertiary mx-auto mb-3 opacity-40" />
-            <h4 className="text-base font-display font-bold text-text-primary mb-1">No incidents match filters</h4>
+            <h4 className="font-sans text-base font-bold text-text-primary mb-1">No incidents match filters</h4>
             <p className="text-text-tertiary text-sm mb-4 font-sans">Try adjusting search or filter criteria</p>
             <button onClick={clearFilters} className="text-xs font-sans font-semibold text-primary-500 hover:text-primary-400">
               Clear all filters

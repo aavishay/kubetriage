@@ -192,12 +192,12 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
 
           {(!isCollapsed || isMobileMenuOpen) && (
             <div className="animate-slide-up">
-              <h1 className="font-display font-bold text-text-primary text-lg">
+              <h1 className="font-sans font-bold text-text-primary text-lg">
                 Kube<span className="text-primary-500">Triage</span>
               </h1>
               <div className="flex items-center gap-1.5 mt-0.5">
                 <span className="kt-led kt-led-success kt-led-pulse" />
-                <p className="text-[10px] text-text-tertiary font-sans font-medium uppercase">Online</p>
+                <p className="text-[10px] text-text-tertiary font-sans font-medium">Online</p>
               </div>
             </div>
           )}
@@ -299,7 +299,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
               >
                 <span className="kt-led shrink-0" style={{ background: selectedClusterIds.length > 0 ? '#f5a623' : '#4a4d55', boxShadow: selectedClusterIds.length > 0 ? '0 0 6px #f5a623' : 'none' }} />
                 <div className="hidden sm:block text-left flex-1 min-w-0">
-                  <div className="text-[10px] text-text-tertiary group-hover:text-primary-500 transition-colors font-sans font-medium uppercase">
+                  <div className="text-[10px] text-text-tertiary group-hover:text-primary-500 transition-colors font-sans font-medium">
                     Target Cluster
                   </div>
                   <div className="text-sm font-sans font-medium text-text-primary truncate">
@@ -315,7 +315,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
                   className="absolute top-full left-0 mt-2 w-[calc(100vw-2rem)] max-w-xs sm:w-80 bg-bg-card border border-border-main rounded-sm shadow-2xl py-1 animate-slide-up z-50 overflow-hidden"
                 >
                   <div className="flex items-center justify-between px-3 py-2 border-b border-border-main bg-bg-hover">
-                    <p className="text-[10px] text-text-tertiary flex items-center gap-2 font-sans font-medium uppercase">
+                    <p className="text-[10px] text-text-tertiary flex items-center gap-2 font-sans font-medium">
                       <Server className="w-3.5 h-3.5" /> Control Plane Fleet
                     </p>
                     <button
@@ -417,12 +417,12 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
             {/* System Status Strip - Desktop */}
             <div className="hidden lg:flex items-center gap-0 px-1 bg-bg-main border border-border-main rounded-sm">
               <div className="flex items-center gap-2 px-2 py-1 border-r border-border-main">
-                <span className="text-[10px] text-text-tertiary font-sans font-medium uppercase">Latency</span>
+                <span className="text-[10px] text-text-tertiary font-sans font-medium">Latency</span>
                 <span className="text-xs font-mono font-bold text-success tabular-nums">{apiLatency !== null ? `${apiLatency}ms` : '...'}</span>
               </div>
               <div className="flex items-center gap-2 px-2 py-1">
                 <span className={`w-1.5 h-1.5 rounded-full ${apiStatus === 'Connected' ? 'bg-success' : 'bg-warning'} ${apiStatus === 'Connected' ? 'shadow-[0_0_6px_#2ecc71]' : 'shadow-[0_0_6px_#f5a623]'}`}></span>
-                <span className={`text-xs font-mono font-bold ${apiStatus === 'Connected' ? 'text-success' : 'text-warning'}`}>
+                <span className={`text-xs font-bold ${apiStatus === 'Connected' ? 'text-success' : 'text-warning'}`}>
                   {apiStatus}
                 </span>
               </div>

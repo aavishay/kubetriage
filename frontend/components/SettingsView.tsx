@@ -89,7 +89,7 @@ export const SettingsView: React.FC = () => {
         <div className="w-full h-full p-5 overflow-y-auto custom-scrollbar bg-bg-main animate-fade-in">
             <div className="max-w-3xl mx-auto space-y-5 pb-20">
                 <div className="flex flex-col gap-1">
-                    <h1 className="text-2xl font-display font-bold text-text-primary">Settings</h1>
+                    <h1 className="font-sans text-2xl font-bold text-text-primary">Settings</h1>
                     <p className="text-sm text-text-tertiary font-sans">Manage AI provider and notification preferences.</p>
                 </div>
 
@@ -102,7 +102,7 @@ export const SettingsView: React.FC = () => {
 
                     <div className="p-5 space-y-6 relative z-10">
                         <div className="space-y-3">
-                            <label className="text-[10px] text-text-tertiary flex items-center gap-1.5 font-sans font-medium uppercase">
+                            <label className="text-[10px] text-text-tertiary flex items-center gap-1.5 font-sans font-medium">
                                 <Cpu className="w-3.5 h-3.5" /> Provider
                             </label>
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -138,7 +138,7 @@ export const SettingsView: React.FC = () => {
                         </div>
 
                         <div className="space-y-2">
-                            <label className="text-[10px] text-text-tertiary font-sans font-medium uppercase">
+                            <label className="text-[10px] text-text-tertiary font-sans font-medium">
                                 Model Selection
                             </label>
                             {isLoadingModels ? (
@@ -183,7 +183,7 @@ export const SettingsView: React.FC = () => {
                         <div className="h-px w-full bg-border-main/50" />
 
                         <div className="space-y-3">
-                            <label className="text-[10px] text-text-tertiary flex items-center gap-1.5 font-sans font-medium uppercase">
+                            <label className="text-[10px] text-text-tertiary flex items-center gap-1.5 font-sans font-medium">
                                 <RefreshCw className="w-3.5 h-3.5" /> Auto Refresh
                             </label>
                             <div className="kt-panel-inset p-4 space-y-4">
@@ -194,7 +194,7 @@ export const SettingsView: React.FC = () => {
                                     </div>
                                     <div className="flex items-center gap-2 text-xs font-medium">
                                         <Clock className="w-3.5 h-3.5 text-primary-500" />
-                                        <span className="font-mono font-bold text-primary-500 bg-primary-500/10 border border-primary-500/20 px-2 py-0.5 rounded-sm min-w-[3rem] text-center">{refreshInterval}s</span>
+                                        <span className="font-bold text-primary-500 bg-primary-500/10 border border-primary-500/20 px-2 py-0.5 rounded-sm min-w-[3rem] text-center">{refreshInterval}s</span>
                                     </div>
                                 </div>
                                 <div className="flex flex-wrap gap-2 pt-2">
@@ -216,7 +216,7 @@ export const SettingsView: React.FC = () => {
                         <div className="h-px w-full bg-border-main/50" />
 
                         <div className="space-y-3">
-                            <label className="text-[10px] text-text-tertiary flex items-center gap-1.5 font-sans font-medium uppercase">
+                            <label className="text-[10px] text-text-tertiary flex items-center gap-1.5 font-sans font-medium">
                                 <AlertCircle className="w-3.5 h-3.5" /> Notifications
                             </label>
                             <div className="kt-panel-inset p-4 space-y-4">
@@ -237,7 +237,7 @@ export const SettingsView: React.FC = () => {
                                     <div className="space-y-3 pt-4 border-t border-border-main animate-fade-in">
                                         <div className="flex justify-between items-center text-xs">
                                             <span className="text-text-secondary font-sans font-semibold opacity-80">Cooldown Frequency</span>
-                                            <span className="font-mono font-bold text-primary-500 bg-primary-500/10 border border-primary-500/20 px-2 py-0.5 rounded-sm min-w-[3rem] text-center">{notificationSettings.toastFrequency}s</span>
+                                            <span className="font-bold text-primary-500 bg-primary-500/10 border border-primary-500/20 px-2 py-0.5 rounded-sm min-w-[3rem] text-center">{notificationSettings.toastFrequency}s</span>
                                         </div>
                                         <input type="range" min="2" max="60" step="1" value={notificationSettings.toastFrequency} onChange={(e) => updateNotificationSettings({ ...notificationSettings, toastFrequency: parseInt(e.target.value) })} className="w-full h-1.5 bg-bg-card border border-border-main rounded-sm appearance-none cursor-pointer accent-primary-500" />
                                     </div>
@@ -248,7 +248,7 @@ export const SettingsView: React.FC = () => {
                         <div className="h-px w-full bg-border-main/50" />
 
                         <div className="space-y-3">
-                            <label className="text-[10px] text-text-tertiary flex items-center gap-1.5 font-sans font-medium uppercase">
+                            <label className="text-[10px] text-text-tertiary flex items-center gap-1.5 font-sans font-medium">
                                 <Wifi className="w-3.5 h-3.5" /> Offline Mode
                             </label>
                             <div className="kt-panel-inset p-4 space-y-4">
@@ -275,16 +275,16 @@ export const SettingsView: React.FC = () => {
                                     <div className="kt-panel p-3">
                                         <div className="flex items-center gap-2 mb-1 relative z-10">
                                             <Database className="w-3.5 h-3.5 text-primary-500" />
-                                            <span className="text-[10px] text-text-tertiary font-sans font-medium uppercase">Cached Entries</span>
+                                            <span className="text-[10px] text-text-tertiary font-sans font-medium">Cached Entries</span>
                                         </div>
-                                        <p className="text-lg font-mono font-bold text-text-primary relative z-10">{offlineStats.entries}</p>
+                                        <p className="text-lg font-bold text-text-primary relative z-10">{offlineStats.entries}</p>
                                     </div>
                                     <div className="kt-panel p-3">
                                         <div className="flex items-center gap-2 mb-1 relative z-10">
                                             <ArrowUpCircle className="w-3.5 h-3.5 text-warning" />
-                                            <span className="text-[10px] text-text-tertiary font-sans font-medium uppercase">Queued Actions</span>
+                                            <span className="text-[10px] text-text-tertiary font-sans font-medium">Queued Actions</span>
                                         </div>
-                                        <p className="text-lg font-mono font-bold text-text-primary relative z-10">{offlineStats.queueSize}</p>
+                                        <p className="text-lg font-bold text-text-primary relative z-10">{offlineStats.queueSize}</p>
                                     </div>
                                 </div>
 

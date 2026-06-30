@@ -77,7 +77,7 @@ const AIChatWidgetComponent: React.FC<AIChatWidgetProps> = ({ isOpen, onClose, i
             <Sparkles className="w-4 h-4 text-white" />
           </div>
           <div>
-            <h3 className="font-display font-bold text-sm text-text-primary">AI Co-Pilot</h3>
+            <h3 className="font-sans font-bold text-sm text-text-primary">AI Co-Pilot</h3>
             <div className="flex items-center gap-1.5">
               <span className="kt-led kt-led-success"></span>
               <span className="text-[10px] text-success font-sans">ONLINE</span>

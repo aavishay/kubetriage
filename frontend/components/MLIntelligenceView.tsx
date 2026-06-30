@@ -105,7 +105,7 @@ const summaryCard = (
         <p className="text-[11px] font-sans font-semibold text-text-tertiary mb-1">
           {label}
         </p>
-        <p className="text-3xl font-mono font-bold text-text-primary">{value}</p>
+        <p className="text-3xl font-bold text-text-primary">{value}</p>
         <p className="text-xs mt-1 font-sans">{sub}</p>
       </div>
       <div className={`p-2.5 bg-bg-main border border-border-main ${iconColor}`}>
@@ -235,7 +235,7 @@ export const MLIntelligenceView: React.FC = () => {
     return (
       <div className="flex flex-col items-center justify-center min-h-[600px]">
         <AlertTriangle className="w-12 h-12 text-danger mb-4" />
-        <h2 className="text-xl font-display font-bold text-text-primary mb-2">
+        <h2 className="font-sans text-xl font-bold text-text-primary mb-2">
           Failed to Load ML Data
         </h2>
         <button onClick={fetchData} className="kt-button kt-button-primary">
@@ -250,7 +250,7 @@ export const MLIntelligenceView: React.FC = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-2xl font-display font-bold text-text-primary flex items-center gap-3">
+          <h1 className="font-sans text-2xl font-bold text-text-primary flex items-center gap-3">
             <Brain className="w-7 h-7 text-primary-500" />
             ML Intelligence
           </h1>
@@ -346,7 +346,7 @@ export const MLIntelligenceView: React.FC = () => {
                   </h4>
                   <p className="text-xs text-text-secondary mt-0.5">{insight.description}</p>
                 </div>
-                <span className="text-xs font-mono font-bold text-text-tertiary shrink-0">
+                <span className="text-xs font-bold text-text-tertiary shrink-0">
                   {(insight.confidence * 100).toFixed(0)}% confidence
                 </span>
               </div>
@@ -459,7 +459,7 @@ export const MLIntelligenceView: React.FC = () => {
             {(data.anomalies || []).length === 0 ? (
               <div className="text-center py-12">
                 <CheckCircle2 className="w-12 h-12 text-success mx-auto mb-4" />
-                <h4 className="text-lg font-display font-bold text-text-primary mb-2">
+                <h4 className="font-sans text-lg font-bold text-text-primary mb-2">
                   No Anomalies Detected
                 </h4>
                 <p className="text-text-tertiary font-sans">All metrics are within normal ranges</p>
@@ -484,7 +484,7 @@ export const MLIntelligenceView: React.FC = () => {
                         <h4 className="font-sans font-semibold text-text-primary truncate">
                           {anomaly.workload}
                         </h4>
-                        <p className="text-xs text-text-tertiary font-mono truncate">
+                        <p className="text-xs text-text-tertiary truncate">
                           {anomaly.namespace} • {anomaly.cluster}
                         </p>
                       </div>
@@ -517,7 +517,7 @@ export const MLIntelligenceView: React.FC = () => {
             {(data.patterns || []).length === 0 ? (
               <div className="text-center py-12">
                 <Info className="w-12 h-12 text-text-tertiary mx-auto mb-4" />
-                <h4 className="text-lg font-display font-bold text-text-primary mb-2">
+                <h4 className="font-sans text-lg font-bold text-text-primary mb-2">
                   No Patterns Discovered
                 </h4>
                 <p className="text-text-tertiary font-sans">ML is learning from your incident data...</p>
@@ -542,12 +542,12 @@ export const MLIntelligenceView: React.FC = () => {
                         <h4 className="font-sans font-semibold text-text-primary truncate">
                           {pattern.name}
                         </h4>
-                        <p className="text-xs text-text-tertiary font-mono truncate">
+                        <p className="text-xs text-text-tertiary truncate">
                           {pattern.incidentType}
                         </p>
                       </div>
                     </div>
-                    <span className="text-xs font-mono font-bold text-text-tertiary shrink-0">
+                    <span className="text-xs font-bold text-text-tertiary shrink-0">
                       {(pattern.confidence * 100).toFixed(0)}% confidence
                     </span>
                   </div>
@@ -570,7 +570,7 @@ export const MLIntelligenceView: React.FC = () => {
                     </div>
                   )}
                   <div className="kt-panel-inset p-3">
-                    <p className="text-[11px] text-text-tertiary mb-1 font-sans font-medium uppercase">
+                    <p className="text-[11px] text-text-tertiary mb-1 font-sans font-medium">
                       Suggested Fix
                     </p>
                     <p className="text-sm text-text-secondary break-words">{pattern.suggestedFix}</p>

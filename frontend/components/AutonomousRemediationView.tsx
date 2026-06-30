@@ -796,24 +796,24 @@ export const AutonomousRemediationView: React.FC = () => {
 
               <div className="space-y-4 mb-6">
                 <div>
-                  <p className="text-xs font-medium text-text-tertiary ">Workload</p>
+                  <p className="text-xs font-medium text-text-tertiary">Workload</p>
                   <p className="text-sm text-text-primary break-words">{selectedProposal.name} ({selectedProposal.namespace})</p>
                 </div>
                 <div>
-                  <p className="text-xs font-medium text-text-tertiary ">Issue</p>
+                  <p className="text-xs font-medium text-text-tertiary">Issue</p>
                   <p className="text-sm text-text-primary break-words">{selectedProposal.issue}</p>
                 </div>
                 <div>
-                  <p className="text-xs font-medium text-text-tertiary ">Proposed Fix</p>
+                  <p className="text-xs font-medium text-text-tertiary">Proposed Fix</p>
                   <p className="text-sm text-text-primary break-words">{selectedProposal.proposedFix.description}</p>
                   <p className="text-xs text-text-secondary mt-1 italic break-words">{selectedProposal.proposedFix.reasoning}</p>
                 </div>
                 <div>
-                  <p className="text-xs font-medium text-text-tertiary ">Impact</p>
+                  <p className="text-xs font-medium text-text-tertiary">Impact</p>
                   <p className="text-sm text-text-primary break-words">{selectedProposal.estimatedImpact}</p>
                 </div>
                 <div>
-                  <p className="text-xs font-medium text-text-tertiary ">Rollback Plan</p>
+                  <p className="text-xs font-medium text-text-tertiary">Rollback Plan</p>
                   <p className="text-sm text-text-primary break-words">
                     Automatic rollback if fix fails within {selectedProposal.rollbackPlan.timeout} seconds
                   </p>

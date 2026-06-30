@@ -38,7 +38,7 @@ const MetricCardComponent: React.FC<MetricCardProps> = ({
         )}
       </div>
       <p className="text-[11px] font-sans font-semibold text-text-tertiary mb-1 relative z-10">{label}</p>
-      <h3 className="text-2xl font-mono font-bold text-text-primary tracking-tight relative z-10">{value}</h3>
+      <h3 className="text-2xl font-bold text-text-primary tracking-tight relative z-10">{value}</h3>
     </div>
   );
 };

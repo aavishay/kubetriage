@@ -231,7 +231,7 @@ export const DeveloperPortalView: React.FC = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-2xl font-black text-text-primary   flex items-center gap-3">
+          <h1 className="text-2xl font-black text-text-primary flex items-center gap-3">
             <Users className="w-7 h-7 text-primary-500" />
             Developer Portal
           </h1>
@@ -272,7 +272,7 @@ export const DeveloperPortalView: React.FC = () => {
           <div className="bg-bg-card rounded-2xl p-5 border border-border-main shadow-sm">
             <div className="flex items-start justify-between">
               <div>
-                <p className="text-[10px] font-semibold   text-text-tertiary mb-1">Workloads</p>
+                <p className="text-[10px] font-semibold text-text-tertiary mb-1">Workloads</p>
                 <p className="text-3xl font-black text-text-primary">{(data.workloads || []).length}</p>
                 <p className="text-xs text-emerald-500 font-semibold mt-1">
                   {(data.workloads || []).filter(w => w.status === 'Healthy').length} healthy
@@ -287,7 +287,7 @@ export const DeveloperPortalView: React.FC = () => {
           <div className="bg-bg-card rounded-2xl p-5 border border-border-main shadow-sm">
             <div className="flex items-start justify-between">
               <div>
-                <p className="text-[10px] font-semibold   text-text-tertiary mb-1">Open Incidents</p>
+                <p className="text-[10px] font-semibold text-text-tertiary mb-1">Open Incidents</p>
                 <p className="text-3xl font-black text-text-primary">{data.openIncidents.length}</p>
                 <p className={`text-xs font-semibold mt-1 ${data.openIncidents.length > 0 ? 'text-rose-500' : 'text-emerald-500'}`}>
                   {data.openIncidents.filter(i => i.severity === 'Critical').length} critical
@@ -302,7 +302,7 @@ export const DeveloperPortalView: React.FC = () => {
           <div className="bg-bg-card rounded-2xl p-5 border border-border-main shadow-sm">
             <div className="flex items-start justify-between">
               <div>
-                <p className="text-[10px] font-semibold   text-text-tertiary mb-1">Monthly Cost</p>
+                <p className="text-[10px] font-semibold text-text-tertiary mb-1">Monthly Cost</p>
                 <p className="text-3xl font-black text-text-primary">${data.costSummary.monthlyCost.toFixed(0)}</p>
                 <p className={`text-xs font-semibold mt-1 ${
                   data.costSummary.budgetUsedPercent > 90 ? 'text-rose-500' :
@@ -320,7 +320,7 @@ export const DeveloperPortalView: React.FC = () => {
           <div className="bg-bg-card rounded-2xl p-5 border border-border-main shadow-sm">
             <div className="flex items-start justify-between">
               <div>
-                <p className="text-[10px] font-semibold   text-text-tertiary mb-1">Allowed Actions</p>
+                <p className="text-[10px] font-semibold text-text-tertiary mb-1">Allowed Actions</p>
                 <p className="text-3xl font-black text-text-primary">{data.allowedActions.length}</p>
                 <p className="text-xs text-primary-500 font-semibold mt-1">
                   Self-service enabled
@@ -357,7 +357,7 @@ export const DeveloperPortalView: React.FC = () => {
           <div className="lg:col-span-2 bg-bg-card rounded-3xl border border-border-main overflow-hidden">
             <div className="p-6 border-b border-border-main bg-bg-hover/50">
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                <h3 className="text-sm font-black   text-text-primary">
+                <h3 className="text-sm font-black text-text-primary">
                   Your Workloads ({filteredWorkloads.length})
                 </h3>
                 <div className="relative">
@@ -401,7 +401,7 @@ export const DeveloperPortalView: React.FC = () => {
                           <p className="text-xs text-text-tertiary">{workload.namespace} • {workload.clusterName}</p>
                         </div>
                       </div>
-                      <span className={`px-2 py-1 rounded-md text-[10px] font-semibold  ${STATUS_BG[workload.status]} ${STATUS_COLORS[workload.status]}`}>
+                      <span className={`px-2 py-1 rounded-md text-[10px] font-semibold ${STATUS_BG[workload.status]} ${STATUS_COLORS[workload.status]}`}>
                         {workload.status}
                       </span>
                     </div>
@@ -448,7 +448,7 @@ export const DeveloperPortalView: React.FC = () => {
 
           <div className="space-y-6">
             <div className="bg-bg-card rounded-3xl border border-border-main p-6">
-              <h3 className="text-sm font-black   text-text-primary mb-4">
+              <h3 className="text-sm font-black text-text-primary mb-4">
                 Status Distribution
               </h3>
               <div className="h-[200px]">
@@ -485,7 +485,7 @@ export const DeveloperPortalView: React.FC = () => {
       {selectedTab === 'incidents' && data && (
         <div className="bg-bg-card rounded-3xl border border-border-main overflow-hidden">
           <div className="p-6 border-b border-border-main bg-bg-hover/50">
-            <h3 className="text-sm font-black   text-text-primary">
+            <h3 className="text-sm font-black text-text-primary">
               Open Incidents ({data.openIncidents.length})
             </h3>
           </div>
@@ -539,7 +539,7 @@ export const DeveloperPortalView: React.FC = () => {
       {selectedTab === 'costs' && data && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <div className="bg-bg-card rounded-3xl border border-border-main p-6">
-            <h3 className="text-sm font-black   text-text-primary mb-4">
+            <h3 className="text-sm font-black text-text-primary mb-4">
               Cost by Namespace
             </h3>
             <div className="h-[300px]">
@@ -570,7 +570,7 @@ export const DeveloperPortalView: React.FC = () => {
 
           <div className="space-y-6">
             <div className="bg-bg-card rounded-2xl p-6 border border-border-main">
-              <h3 className="text-sm font-black   text-text-primary mb-4">
+              <h3 className="text-sm font-black text-text-primary mb-4">
                 Budget Overview
               </h3>
               <div className="space-y-4">
@@ -609,7 +609,7 @@ export const DeveloperPortalView: React.FC = () => {
             </div>
 
             <div className="bg-bg-card rounded-2xl p-6 border border-border-main">
-              <h3 className="text-sm font-black   text-text-primary mb-4">
+              <h3 className="text-sm font-black text-text-primary mb-4">
                 Cost Optimization Tips
               </h3>
               <ul className="space-y-3 text-sm text-text-secondary">
@@ -711,7 +711,7 @@ const PreDeployModal: React.FC<{ team: string; onClose: () => void }> = ({ team,
             <>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="text-xs font-bold text-text-tertiary ">Workload Name</label>
+                  <label className="text-xs font-bold text-text-tertiary">Workload Name</label>
                   <input
                     type="text"
                     value={formData.workload}
@@ -721,7 +721,7 @@ const PreDeployModal: React.FC<{ team: string; onClose: () => void }> = ({ team,
                   />
                 </div>
                 <div>
-                  <label className="text-xs font-bold text-text-tertiary ">Namespace</label>
+                  <label className="text-xs font-bold text-text-tertiary">Namespace</label>
                   <input
                     type="text"
                     value={formData.namespace}
@@ -733,7 +733,7 @@ const PreDeployModal: React.FC<{ team: string; onClose: () => void }> = ({ team,
               </div>
 
               <div>
-                <label className="text-xs font-bold text-text-tertiary ">Container Image</label>
+                <label className="text-xs font-bold text-text-tertiary">Container Image</label>
                 <input
                   type="text"
                   value={formData.image}
@@ -744,7 +744,7 @@ const PreDeployModal: React.FC<{ team: string; onClose: () => void }> = ({ team,
               </div>
 
               <div>
-                <label className="text-xs font-bold text-text-tertiary ">Replicas</label>
+                <label className="text-xs font-bold text-text-tertiary">Replicas</label>
                 <input
                   type="number"
                   value={formData.replicas}
@@ -755,7 +755,7 @@ const PreDeployModal: React.FC<{ team: string; onClose: () => void }> = ({ team,
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="text-xs font-bold text-text-tertiary ">CPU Request</label>
+                  <label className="text-xs font-bold text-text-tertiary">CPU Request</label>
                   <input
                     type="text"
                     value={formData.cpuRequest}
@@ -765,7 +765,7 @@ const PreDeployModal: React.FC<{ team: string; onClose: () => void }> = ({ team,
                   />
                 </div>
                 <div>
-                  <label className="text-xs font-bold text-text-tertiary ">CPU Limit</label>
+                  <label className="text-xs font-bold text-text-tertiary">CPU Limit</label>
                   <input
                     type="text"
                     value={formData.cpuLimit}
@@ -778,7 +778,7 @@ const PreDeployModal: React.FC<{ team: string; onClose: () => void }> = ({ team,
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="text-xs font-bold text-text-tertiary ">Memory Request</label>
+                  <label className="text-xs font-bold text-text-tertiary">Memory Request</label>
                   <input
                     type="text"
                     value={formData.memoryRequest}
@@ -788,7 +788,7 @@ const PreDeployModal: React.FC<{ team: string; onClose: () => void }> = ({ team,
                   />
                 </div>
                 <div>
-                  <label className="text-xs font-bold text-text-tertiary ">Memory Limit</label>
+                  <label className="text-xs font-bold text-text-tertiary">Memory Limit</label>
                   <input
                     type="text"
                     value={formData.memoryLimit}

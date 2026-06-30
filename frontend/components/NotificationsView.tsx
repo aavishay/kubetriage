@@ -199,7 +199,7 @@ export const NotificationsView: React.FC<NotificationsViewProps> = ({
                   <div className="p-2 bg-primary-500/10 border border-primary-500/30">
                      <Bell className="w-6 h-6 text-primary-500" />
                   </div>
-                  <h2 className="text-2xl font-display font-bold text-text-primary">Broadcast & Logic</h2>
+                  <h2 className="font-sans text-2xl font-bold text-text-primary">Broadcast & Logic</h2>
                </div>
                <p className="text-sm text-text-secondary max-w-sm opacity-80 font-sans">Define alert thresholds and connect external notification sinks.</p>
             </div>
@@ -220,7 +220,7 @@ export const NotificationsView: React.FC<NotificationsViewProps> = ({
                      <Settings2 className="w-6 h-6" />
                   </div>
                   <div>
-                     <h3 className="text-text-primary font-display font-bold text-xl">Alert Frequency Control</h3>
+                     <h3 className="font-sans text-text-primary font-bold text-xl">Alert Frequency Control</h3>
                      <p className="text-xs text-text-secondary font-sans font-semibold mt-1.5 flex items-center gap-2">
                         <span className="w-1.5 h-1.5 rounded-full bg-success animate-pulse" /> Global Toast Policy
                      </p>
@@ -242,7 +242,7 @@ export const NotificationsView: React.FC<NotificationsViewProps> = ({
                      <div className="flex-1 space-y-3">
                         <div className="flex justify-between items-end">
                            <span className="text-[10px] font-sans font-semibold text-text-secondary">Cooldown</span>
-                           <span className="text-sm font-mono font-bold text-primary-500 bg-primary-500/10 border border-primary-500/20 px-2 py-0.5 rounded-sm">{notificationSettings.toastFrequency}s</span>
+                           <span className="text-sm font-bold text-primary-500 bg-primary-500/10 border border-primary-500/20 px-2 py-0.5 rounded-sm">{notificationSettings.toastFrequency}s</span>
                         </div>
                         <input type="range" min="1" max="60" disabled={!notificationSettings.toastEnabled} value={notificationSettings.toastFrequency} onChange={(e) => updateNotificationSettings({ ...notificationSettings, toastFrequency: parseInt(e.target.value) })} className="w-full h-1.5 bg-bg-hover border border-border-main rounded-sm appearance-none cursor-pointer accent-primary-500 disabled:opacity-50" />
                      </div>
@@ -329,7 +329,7 @@ export const NotificationsView: React.FC<NotificationsViewProps> = ({
                                                 <StatusBadge status={alert.severity} />
                                              </div>
                                              <div className="text-xs text-text-tertiary flex flex-wrap items-center gap-x-2 font-sans">
-                                                Metric reached <span className="font-mono font-bold text-primary-500">{alert.value}%</span> {alert.metric} utilization.
+                                                Metric reached <span className="font-bold text-primary-500">{alert.value}%</span> {alert.metric} utilization.
                                              </div>
                                           </div>
                                           <div className="text-right shrink-0 hidden sm:block">
@@ -365,8 +365,8 @@ export const NotificationsView: React.FC<NotificationsViewProps> = ({
                                  <button onClick={() => onDeleteChannel(channel.id)} className="p-2 border border-border-main hover:border-danger/30 hover:text-danger text-text-tertiary transition-colors" title="Delete channel"><Trash2 className="w-4 h-4" /></button>
                               </div>
                            </div>
-                           <h3 className="text-xl font-display font-bold text-text-primary truncate mb-1.5">{channel.name}</h3>
-                           <p className="text-[10px] font-mono text-text-tertiary truncate mb-8">{channel.target}</p>
+                           <h3 className="font-sans text-xl font-bold text-text-primary truncate mb-1.5">{channel.name}</h3>
+                           <p className="text-[10px] text-text-tertiary truncate mb-8">{channel.target}</p>
 
                            <div className="mt-auto space-y-4 relative z-10">
                               <div className="flex items-center justify-between">
@@ -397,12 +397,12 @@ export const NotificationsView: React.FC<NotificationsViewProps> = ({
                                  </div>
                               </div>
 
-                              <h3 className="text-xl font-display font-bold text-text-primary truncate mb-4">{rule.name}</h3>
+                              <h3 className="font-sans text-xl font-bold text-text-primary truncate mb-4">{rule.name}</h3>
 
                               <div className="space-y-4 mb-6 flex-1 relative z-10">
                                  <div className="flex items-center justify-between mb-2">
-                                    <span className="text-[10px] text-text-tertiary font-sans font-medium uppercase">Saturation Threshold</span>
-                                    <span className={`text-lg font-mono font-bold ${isActive ? 'text-danger' : 'text-text-primary'}`}>{rule.threshold}%</span>
+                                    <span className="text-[10px] text-text-tertiary font-sans font-medium">Saturation Threshold</span>
+                                    <span className={`text-lg font-bold ${isActive ? 'text-danger' : 'text-text-primary'}`}>{rule.threshold}%</span>
                                  </div>
                                  <div className="w-full h-2 bg-bg-hover border border-border-main rounded-sm overflow-hidden">
                                     <div className={`h-full rounded-sm transition-all duration-1000 ${isActive ? 'bg-danger kt-danger-glow' : rule.severity === 'Critical' ? 'bg-danger/50' : rule.severity === 'Warning' ? 'bg-warning' : 'bg-primary-500'}`} style={{ width: `${rule.threshold}%` }} />
@@ -451,11 +451,11 @@ export const NotificationsView: React.FC<NotificationsViewProps> = ({
                   </div>
                   <form onSubmit={handleChannelSubmit} className="p-6 space-y-6 overflow-y-auto custom-scrollbar relative z-10">
                      <div className="space-y-2">
-                        <label className="text-[10px] text-text-tertiary font-sans font-medium uppercase">Display Name</label>
+                        <label className="text-[10px] text-text-tertiary font-sans font-medium">Display Name</label>
                         <input type="text" value={channelName} onChange={(e) => setChannelName(e.target.value)} placeholder="e.g. Platform SRE Slack" className="kt-input" required />
                      </div>
                      <div className="space-y-2">
-                        <label className="text-[10px] text-text-tertiary font-sans font-medium uppercase">Target Type</label>
+                        <label className="text-[10px] text-text-tertiary font-sans font-medium">Target Type</label>
                         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                            {(['Slack', 'PagerDuty', 'Webhook', 'Email'] as NotificationType[]).map(type => (
                               <button key={type} type="button" onClick={() => setChannelType(type)} className={`p-3 border text-[10px] font-sans font-semibold transition-all ${channelType === type ? 'bg-primary-600 border-primary-500 text-white kt-amber-glow' : 'bg-bg-card border-border-main text-text-tertiary hover:border-primary-500/30'}`}>
@@ -465,7 +465,7 @@ export const NotificationsView: React.FC<NotificationsViewProps> = ({
                         </div>
                      </div>
                      <div className="space-y-2">
-                        <label className="text-[10px] text-text-tertiary font-sans font-medium uppercase">Connection String</label>
+                        <label className="text-[10px] text-text-tertiary font-sans font-medium">Connection String</label>
                         <input type="text" value={channelTarget} onChange={(e) => setChannelTarget(e.target.value)} placeholder={channelType === 'Email' ? 'admin@example.com' : 'https://hooks.slack.com/...'} className="kt-input font-sans" required />
                      </div>
                      <div className="pt-4 flex gap-3">
@@ -489,20 +489,20 @@ export const NotificationsView: React.FC<NotificationsViewProps> = ({
                   </div>
                   <form onSubmit={handleRuleSubmit} className="p-6 space-y-6 overflow-y-auto custom-scrollbar relative z-10">
                      <div className="space-y-2">
-                        <label className="text-[10px] text-text-tertiary font-sans font-medium uppercase">Strategy Title</label>
+                        <label className="text-[10px] text-text-tertiary font-sans font-medium">Strategy Title</label>
                         <input type="text" value={ruleName} onChange={(e) => setRuleName(e.target.value)} placeholder="e.g. Critical CPU Pressure" className="kt-input" required />
                      </div>
 
                      <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
-                           <label className="text-[10px] text-text-tertiary font-sans font-medium uppercase">Metric</label>
+                           <label className="text-[10px] text-text-tertiary font-sans font-medium">Metric</label>
                            <select value={ruleMetric} onChange={(e) => setRuleMetric(e.target.value as any)} className="kt-select">
                               <option value="CPU">Compute (CPU)</option>
                               <option value="Memory">Memory (RAM)</option>
                            </select>
                         </div>
                         <div className="space-y-2">
-                           <label className="text-[10px] text-text-tertiary font-sans font-medium uppercase">Severity</label>
+                           <label className="text-[10px] text-text-tertiary font-sans font-medium">Severity</label>
                            <select value={ruleSeverity} onChange={(e) => setRuleSeverity(e.target.value as any)} className="kt-select">
                               <option value="Info">Information</option>
                               <option value="Warning">Warning</option>
@@ -513,14 +513,14 @@ export const NotificationsView: React.FC<NotificationsViewProps> = ({
 
                      <div className="space-y-3">
                         <div className="flex justify-between items-end">
-                           <label className="text-[10px] text-text-tertiary font-sans font-medium uppercase">Activation Threshold</label>
-                           <span className="text-2xl font-mono font-bold text-primary-500">{ruleThreshold}%</span>
+                           <label className="text-[10px] text-text-tertiary font-sans font-medium">Activation Threshold</label>
+                           <span className="text-2xl font-bold text-primary-500">{ruleThreshold}%</span>
                         </div>
                         <input type="range" min="1" max="100" value={ruleThreshold} onChange={(e) => setRuleThreshold(parseInt(e.target.value))} className="w-full h-2 bg-bg-hover border border-border-main rounded-sm appearance-none cursor-pointer accent-primary-500" />
                      </div>
 
                      <div className="space-y-2">
-                        <label className="text-[10px] text-text-tertiary font-sans font-medium uppercase">Route To Channels</label>
+                        <label className="text-[10px] text-text-tertiary font-sans font-medium">Route To Channels</label>
                         <div className="flex flex-wrap gap-2">
                            {channels.map(chan => (
                               <button key={chan.id} type="button" onClick={() => {

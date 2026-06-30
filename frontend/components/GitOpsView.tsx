@@ -106,7 +106,7 @@ const summaryCard = (label: string, value: React.ReactNode, colorClass: string) 
   <div className="kt-panel p-4">
     <div className="relative z-10">
       <p className="text-[11px] font-sans font-semibold text-text-tertiary mb-1">{label}</p>
-      <p className={`text-3xl font-mono font-bold ${colorClass}`}>{value}</p>
+      <p className={`text-3xl font-bold ${colorClass}`}>{value}</p>
     </div>
   </div>
 );
@@ -399,7 +399,7 @@ export const GitOpsView: React.FC<GitOpsViewProps> = ({ clusterId }) => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-2xl font-display font-bold text-text-primary flex items-center gap-3">
+          <h1 className="font-sans text-2xl font-bold text-text-primary flex items-center gap-3">
             <GitBranch className="w-7 h-7 text-primary-500" />
             GitOps Status
           </h1>
@@ -520,7 +520,7 @@ export const GitOpsView: React.FC<GitOpsViewProps> = ({ clusterId }) => {
                         <span className="kt-badge bg-bg-hover text-text-tertiary border-border-main">
                           {resource.kind}
                         </span>
-                        <span className="text-[10px] font-mono text-text-tertiary truncate">
+                        <span className="text-[10px] text-text-tertiary truncate">
                           {resource.namespace}
                         </span>
                       </div>
@@ -557,13 +557,13 @@ export const GitOpsView: React.FC<GitOpsViewProps> = ({ clusterId }) => {
                       </div>
                       <div className="flex items-center gap-2 text-xs min-w-0">
                         <GitCommit className="w-3.5 h-3.5 text-text-tertiary shrink-0" />
-                        <span className="font-mono text-text-secondary truncate">
+                        <span className="text-text-secondary truncate">
                           {resource.revision ? resource.revision.slice(0, 8) : '-'}
                         </span>
                       </div>
                       <div className="flex items-center gap-2 text-xs min-w-0">
                         <Clock className="w-3.5 h-3.5 text-text-tertiary shrink-0" />
-                        <span className="font-mono text-text-secondary truncate">
+                        <span className="text-text-secondary truncate">
                           {formatAge(resource.lastSyncTime)}
                         </span>
                       </div>
@@ -585,7 +585,7 @@ export const GitOpsView: React.FC<GitOpsViewProps> = ({ clusterId }) => {
                               href={resource.sourceUrl}
                               target="_blank"
                               rel="noreferrer"
-                              className="text-sm text-primary-500 hover:underline break-all font-mono"
+                              className="text-sm text-primary-500 hover:underline break-all"
                               title={resource.sourceUrl}
                             >
                               {resource.sourceUrl}
@@ -601,7 +601,7 @@ export const GitOpsView: React.FC<GitOpsViewProps> = ({ clusterId }) => {
                               <Layers className="w-3.5 h-3.5 text-text-tertiary" />
                               <span className="kt-text-label">Resources</span>
                             </div>
-                            <p className="text-xl font-mono font-bold text-text-primary">
+                            <p className="text-xl font-bold text-text-primary">
                               {resource.readyResources}/{resource.resourceCount}
                             </p>
                             {changedCount > 0 && (
@@ -615,7 +615,7 @@ export const GitOpsView: React.FC<GitOpsViewProps> = ({ clusterId }) => {
                               <Info className="w-3.5 h-3.5 text-text-tertiary" />
                               <span className="kt-text-label">Health</span>
                             </div>
-                            <p className="text-xl font-mono font-bold text-text-primary">
+                            <p className="text-xl font-bold text-text-primary">
                               {resource.healthStatus}
                             </p>
                           </div>

@@ -85,7 +85,7 @@ export const AuditLogsView: React.FC = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-2xl font-display font-bold text-text-primary flex items-center gap-3">
+          <h1 className="font-sans text-2xl font-bold text-text-primary flex items-center gap-3">
             <Shield className="w-7 h-7 text-primary-500" />
             Audit Logs
           </h1>
@@ -176,7 +176,7 @@ export const AuditLogsView: React.FC = () => {
                 >
                   <div className="flex items-start justify-between gap-3 mb-3">
                     <div className="flex items-center gap-2 flex-wrap min-w-0">
-                      <span className="font-mono font-bold text-text-primary truncate">{log.Action}</span>
+                      <span className="font-bold text-text-primary truncate">{log.Action}</span>
                       <span className="kt-badge kt-badge-info">
                         {log.Resource}
                       </span>

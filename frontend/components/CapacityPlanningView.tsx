@@ -152,7 +152,7 @@ export const CapacityPlanningView: React.FC = () => {
       <div className="flex items-start justify-between relative z-10">
         <div>
           <p className="text-[11px] font-sans font-semibold text-text-tertiary mb-1">{label}</p>
-          <p className="text-3xl font-mono font-bold text-text-primary">{value}</p>
+          <p className="text-3xl font-bold text-text-primary">{value}</p>
           <p className={`text-xs mt-1 ${iconColor} font-sans`}>{sub}</p>
         </div>
         <div className={`p-2.5 bg-bg-main border border-border-main ${iconColor}`}>
@@ -196,7 +196,7 @@ export const CapacityPlanningView: React.FC = () => {
     return (
       <div className="flex flex-col items-center justify-center min-h-[600px]">
         <AlertTriangle className="w-12 h-12 text-danger mb-4" />
-        <h2 className="text-xl font-display font-bold text-text-primary mb-2">Failed to Load Capacity Plans</h2>
+        <h2 className="font-sans text-xl font-bold text-text-primary mb-2">Failed to Load Capacity Plans</h2>
         <button onClick={fetchData} className="kt-button kt-button-primary">
           <RefreshCw className="w-4 h-4 mr-2" /> Retry
         </button>
@@ -209,7 +209,7 @@ export const CapacityPlanningView: React.FC = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-2xl font-display font-bold text-text-primary flex items-center gap-3">
+          <h1 className="font-sans text-2xl font-bold text-text-primary flex items-center gap-3">
             <TrendingUp className="w-7 h-7 text-primary-500" />
             Capacity Planning
           </h1>
@@ -269,7 +269,7 @@ export const CapacityPlanningView: React.FC = () => {
         {sortedPlans.length === 0 && (
           <div className="kt-panel p-12 text-center">
             <TrendingUp className="w-12 h-12 text-text-tertiary mx-auto mb-4" />
-            <h3 className="text-lg font-display font-bold text-text-primary mb-2">No Capacity Data Yet</h3>
+            <h3 className="font-sans text-lg font-bold text-text-primary mb-2">No Capacity Data Yet</h3>
             <p className="text-sm text-text-secondary max-w-md mx-auto font-sans">
               Capacity planning requires at least 3 data points per workload. Metrics are ingested automatically as workloads are monitored.
             </p>
@@ -304,7 +304,7 @@ export const CapacityPlanningView: React.FC = () => {
 
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap min-w-0">
-                    <h3 className="font-display font-bold text-text-primary text-sm truncate">
+                    <h3 className="font-sans font-bold text-text-primary text-sm truncate">
                       {formatWorkloadName(plan.workloadKey)}
                     </h3>
                     <span className={`kt-badge ${config.badge} shrink-0`}>
@@ -321,20 +321,20 @@ export const CapacityPlanningView: React.FC = () => {
 
                 <div className="flex items-center gap-4 shrink-0">
                   <div className="text-right hidden sm:block">
-                    <p className="text-[10px] text-text-tertiary font-sans font-medium uppercase">Confidence</p>
-                    <p className="text-sm font-mono font-bold text-text-primary">{(plan.confidence * 100).toFixed(0)}%</p>
+                    <p className="text-[10px] text-text-tertiary font-sans font-medium">Confidence</p>
+                    <p className="text-sm font-bold text-text-primary">{(plan.confidence * 100).toFixed(0)}%</p>
                   </div>
                   <div className="text-right hidden sm:block">
-                    <p className="text-[10px] text-text-tertiary font-sans font-medium uppercase">Trend</p>
-                    <p className={`text-sm font-mono font-bold flex items-center justify-end gap-1 ${getTrendColor(plan.trendSlope)}`}>
+                    <p className="text-[10px] text-text-tertiary font-sans font-medium">Trend</p>
+                    <p className={`text-sm font-bold flex items-center justify-end gap-1 ${getTrendColor(plan.trendSlope)}`}>
                       {getTrendIcon(plan.trendSlope)}
                       {plan.trendSlope > 0 ? '+' : ''}{plan.trendSlope.toFixed(4)}/hr
                     </p>
                   </div>
                   {plan.timeToExhaustionHours !== null && plan.timeToExhaustionHours !== undefined && (
                     <div className="text-right hidden md:block">
-                      <p className="text-[10px] text-text-tertiary font-sans font-medium uppercase">Exhaustion</p>
-                      <p className={`text-sm font-mono font-bold ${plan.timeToExhaustionHours < 24 ? 'text-danger' : plan.timeToExhaustionHours < 72 ? 'text-warning' : 'text-success'}`}>
+                      <p className="text-[10px] text-text-tertiary font-sans font-medium">Exhaustion</p>
+                      <p className={`text-sm font-bold ${plan.timeToExhaustionHours < 24 ? 'text-danger' : plan.timeToExhaustionHours < 72 ? 'text-warning' : 'text-success'}`}>
                         {plan.timeToExhaustionHours.toFixed(1)}h
                       </p>
                     </div>
@@ -354,20 +354,20 @@ export const CapacityPlanningView: React.FC = () => {
                     {/* Metrics Grid */}
                     <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
                       <div className="kt-panel-inset p-3 min-w-0">
-                        <p className="text-[10px] text-text-tertiary font-sans font-medium uppercase">Metric</p>
-                        <p className="text-sm font-mono font-bold text-text-primary mt-1 truncate">{plan.metric}</p>
+                        <p className="text-[10px] text-text-tertiary font-sans font-medium">Metric</p>
+                        <p className="text-sm font-bold text-text-primary mt-1 truncate">{plan.metric}</p>
                       </div>
                       <div className="kt-panel-inset p-3 min-w-0">
-                        <p className="text-[10px] text-text-tertiary font-sans font-medium uppercase">Namespace</p>
-                        <p className="text-sm font-mono font-bold text-text-primary mt-1 truncate">{plan.namespace || 'default'}</p>
+                        <p className="text-[10px] text-text-tertiary font-sans font-medium">Namespace</p>
+                        <p className="text-sm font-bold text-text-primary mt-1 truncate">{plan.namespace || 'default'}</p>
                       </div>
                       <div className="kt-panel-inset p-3 min-w-0">
-                        <p className="text-[10px] text-text-tertiary font-sans font-medium uppercase">Confidence</p>
-                        <p className="text-sm font-mono font-bold text-text-primary mt-1 truncate">{(plan.confidence * 100).toFixed(1)}%</p>
+                        <p className="text-[10px] text-text-tertiary font-sans font-medium">Confidence</p>
+                        <p className="text-sm font-bold text-text-primary mt-1 truncate">{(plan.confidence * 100).toFixed(1)}%</p>
                       </div>
                       <div className="kt-panel-inset p-3 min-w-0">
-                        <p className="text-[10px] text-text-tertiary font-sans font-medium uppercase">Trend Slope</p>
-                        <p className={`text-sm font-mono font-bold mt-1 truncate ${getTrendColor(plan.trendSlope)}`}>
+                        <p className="text-[10px] text-text-tertiary font-sans font-medium">Trend Slope</p>
+                        <p className={`text-sm font-bold mt-1 truncate ${getTrendColor(plan.trendSlope)}`}>
                           {plan.trendSlope > 0 ? '+' : ''}{plan.trendSlope.toFixed(6)}/hr
                         </p>
                       </div>
@@ -450,11 +450,11 @@ export const CapacityPlanningView: React.FC = () => {
                         <div className="flex items-center justify-center gap-4 mt-2">
                           <div className="flex items-center gap-1.5">
                             <div className="w-3 h-0.5 bg-primary-500" />
-                            <span className="text-[10px] text-text-tertiary font-sans font-medium uppercase">Historical</span>
+                            <span className="text-[10px] text-text-tertiary font-sans font-medium">Historical</span>
                           </div>
                           <div className="flex items-center gap-1.5">
                             <div className="w-3 h-0.5 border-t-2 border-dashed" style={{ borderColor: config.chartColor }} />
-                            <span className="text-[10px] text-text-tertiary font-sans font-medium uppercase">Forecast</span>
+                            <span className="text-[10px] text-text-tertiary font-sans font-medium">Forecast</span>
                           </div>
                         </div>
                       </div>

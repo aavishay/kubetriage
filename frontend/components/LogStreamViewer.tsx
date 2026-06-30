@@ -175,17 +175,17 @@ export const LogStreamViewer: React.FC<LogStreamViewerProps> = ({ clusterId, nam
                         {status === 'connecting' ? (
                             <>
                                 <div className="w-10 h-10 border-4 border-primary-500 border-t-transparent rounded-full animate-spin shadow-lg shadow-primary-500/20" />
-                                <p className="font-bold  text-xs">Establishing Secure Uplink...</p>
+                                <p className="font-bold text-xs">Establishing Secure Uplink...</p>
                             </>
                         ) : status === 'error' ? (
                             <div className="text-center">
-                                <p className="text-rose-600 dark:text-rose-400 font-black mb-2 ">Protocol Error</p>
-                                <p className="text-[10px] font-mono">{errorMsg}</p>
+                                <p className="text-rose-600 dark:text-rose-400 font-black mb-2">Protocol Error</p>
+                                <p className="text-[10px]">{errorMsg}</p>
                             </div>
                         ) : (
                             <div className="text-center animate-pulse">
                                 <Terminal className="w-12 h-12 mx-auto mb-4 opacity-20" />
-                                <p className="font-bold  text-[10px]">Synchronizing telemetry stream...</p>
+                                <p className="font-bold text-[10px]">Synchronizing telemetry stream...</p>
                             </div>
                         )}
                     </div>
@@ -207,7 +207,7 @@ export const LogStreamViewer: React.FC<LogStreamViewerProps> = ({ clusterId, nam
             </div>
 
             {/* Status Bar */}
-            <div className="px-5 py-2 bg-bg-hover/50 text-xs text-text-tertiary font-bold  flex justify-between border-t border-border-main shadow-inner">
+            <div className="px-5 py-2 bg-bg-hover/50 text-xs text-text-tertiary font-bold flex justify-between border-t border-border-main shadow-inner">
                 <span className="flex items-center gap-2">
                     <span className="w-1.5 h-1.5 rounded-full bg-primary-500 animate-pulse" />
                     {logs.length} RECORDS_BUFFERED

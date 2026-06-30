@@ -69,7 +69,7 @@ export const RegisterClusterModal: React.FC<RegisterClusterModalProps> = ({ isOp
                         <div className="p-2 bg-primary-600 rounded-lg">
                             <Cloud className="w-4 h-4 text-white" />
                         </div>
-                        <h3 id="register-modal-title" className="font-display font-bold text-text-primary">Register Cluster</h3>
+                        <h3 id="register-modal-title" className="font-sans font-bold text-text-primary">Register Cluster</h3>
                     </div>
                     <button onClick={onClose} className="kt-button kt-button-ghost kt-button-sm">
                         <X className="w-4 h-4" />
