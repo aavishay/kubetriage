@@ -416,7 +416,6 @@
   font-weight: var(--kt-font-semibold);
   font-size: var(--kt-text-sm);
   letter-spacing: var(--kt-tracking-wide);
-  text-transform: uppercase;
   border-radius: var(--kt-button-radius);
   transition: all var(--kt-duration-fast) var(--kt-ease-default);
   cursor: pointer;
@@ -505,7 +504,6 @@
   font-size: var(--kt-text-xs);
   font-weight: var(--kt-font-bold);
   letter-spacing: var(--kt-tracking-wide);
-  text-transform: uppercase;
   border-radius: var(--kt-radius-sm);
   border: 1px solid transparent;
 }
@@ -541,7 +539,6 @@
   font-family: var(--kt-font-display);
   font-weight: var(--kt-font-bold);
   letter-spacing: var(--kt-tracking-wide);
-  text-transform: uppercase;
 }
 
 .kt-text-label {
@@ -549,7 +546,6 @@
   font-size: var(--kt-text-xs);
   font-weight: var(--kt-font-semibold);
   letter-spacing: var(--kt-tracking-wider);
-  text-transform: uppercase;
   color: var(--kt-fg-tertiary);
 }
 
