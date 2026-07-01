@@ -398,15 +398,6 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
                       Cancel
                     </button>
                   </div>
-                  <div className="h-px bg-border-main mx-2 my-1" />
-                  <div className="p-1.5">
-                    <button
-                      onClick={() => { setIsRegisterModalOpen(true); setIsClusterMenuOpen(false); }}
-                      className="w-full flex items-center justify-center gap-2 px-4 py-2 text-xs font-sans font-semibold text-black bg-primary-500 hover:bg-primary-400 rounded-sm transition-all"
-                    >
-                      <Plus className="w-4 h-4" /> Provision new cluster
-                    </button>
-                  </div>
                 </div>
               )}
             </div>
