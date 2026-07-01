@@ -1,6 +1,6 @@
 /* KubeTriage Design System v3 — Industrial Control Room */
 /* A tactical, high-contrast operations console aesthetic. Dark matte panels, */
-/* amber CRT accents, monospace telemetry, and precise geometric framing. */
+/* cyan accents, monospace telemetry, and precise geometric framing. */
 
 @import "tailwindcss";
 
@@ -58,58 +58,58 @@
   --kt-primary-500: #00c8f0;
   --kt-primary-600: #00a0c2;
 
-  /* Industrial Dark Theme (Default) */
-  --kt-bg-main: #0b0c0f;
-  --kt-bg-card: #14151a;
-  --kt-bg-hover: #1c1d24;
-  --kt-border-main: #25262e;
+  /* Light Theme (Default when no .dark class) */
+  --kt-bg-main: #f7f8fa;
+  --kt-bg-card: #ffffff;
+  --kt-bg-hover: #f1f2f5;
+  --kt-border-main: #e2e4e8;
 
-  --kt-fg-primary: #e8e9ec;
-  --kt-fg-secondary: #9fa2a8;
-  --kt-fg-tertiary: #6b6e75;
-  --kt-fg-muted: #4a4d55;
+  --kt-fg-primary: #1a1d23;
+  --kt-fg-secondary: #4a4f5a;
+  --kt-fg-tertiary: #6e7480;
+  --kt-fg-muted: #9ba1ad;
 
   /* Cold Steel Blue for non-critical info */
-  --kt-steel: #5f9ea0;
-  --kt-steel-light: rgba(95, 158, 160, 0.12);
+  --kt-steel: #4a90a4;
+  --kt-steel-light: rgba(74, 144, 164, 0.10);
 
   /* Semantic Overlay (Glass) */
-  --kt-glass-bg: rgba(20, 21, 26, 0.85);
-  --kt-glass-border: rgba(255, 255, 255, 0.08);
+  --kt-glass-bg: rgba(255, 255, 255, 0.80);
+  --kt-glass-border: rgba(0, 0, 0, 0.06);
 
   /* Semantic Feedback */
-  --kt-success: #2ecc71;
-  --kt-success-light: rgba(46, 204, 113, 0.12);
-  --kt-warning: #f5a623;
-  --kt-warning-light: rgba(245, 166, 35, 0.12);
+  --kt-success: #10b981;
+  --kt-success-light: rgba(16, 185, 129, 0.10);
+  --kt-warning: #f59e0b;
+  --kt-warning-light: rgba(245, 158, 11, 0.10);
 
   /* Cyan brand glows */
   --kt-cyan: #00c8f0;
   --kt-cyan-light: rgba(0, 200, 240, 0.12);
   --kt-cyan-glow: 0 0 16px rgba(0, 200, 240, 0.35);
-  --kt-danger: #e74c3c;
-  --kt-danger-light: rgba(231, 76, 60, 0.12);
-  --kt-info: #4fc1ff;
-  --kt-info-light: rgba(79, 193, 255, 0.12);
+  --kt-danger: #ef4444;
+  --kt-danger-light: rgba(239, 68, 68, 0.10);
+  --kt-info: #0ea5e9;
+  --kt-info-light: rgba(14, 165, 233, 0.10);
 
-  /* Shadows — deep, directional */
-  --kt-shadow-sm: inset 0 1px 0 0 rgba(255, 255, 255, 0.04), 0 1px 2px 0 rgba(0, 0, 0, 0.4);
-  --kt-shadow-md: inset 0 1px 0 0 rgba(255, 255, 255, 0.04), 0 4px 12px -2px rgba(0, 0, 0, 0.5);
-  --kt-shadow-lg: inset 0 1px 0 0 rgba(255, 255, 255, 0.04), 0 12px 24px -4px rgba(0, 0, 0, 0.6);
+  /* Shadows — soft for light surfaces */
+  --kt-shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+  --kt-shadow-md: 0 4px 12px -2px rgba(0, 0, 0, 0.08);
+  --kt-shadow-lg: 0 12px 24px -4px rgba(0, 0, 0, 0.10);
   --kt-shadow-glow-primary: 0 0 16px rgba(0, 200, 240, 0.35);
-  --kt-shadow-glow-danger: 0 0 16px rgba(231, 76, 60, 0.35);
-  --kt-shadow-glow-success: 0 0 16px rgba(46, 204, 113, 0.35);
+  --kt-shadow-glow-danger: 0 0 16px rgba(239, 68, 68, 0.35);
+  --kt-shadow-glow-success: 0 0 16px rgba(16, 185, 129, 0.35);
 
-  /* Panel / Rack Colors */
-  --kt-panel-bg: #14151a;
-  --kt-panel-inset: #0e0f12;
-  --kt-panel-frame: #1f2027;
-  --kt-panel-highlight: rgba(255, 255, 255, 0.04);
+  /* Panel / Surface Colors */
+  --kt-panel-bg: #ffffff;
+  --kt-panel-inset: #f1f2f5;
+  --kt-panel-frame: #e2e4e8;
+  --kt-panel-highlight: rgba(0, 0, 0, 0.02);
 
-  /* Darker overlay variants */
-  --kt-dark-lighter: #1c1d24;
-  --kt-dark-hover: #25262e;
-  --kt-dark-border: rgba(255, 255, 255, 0.08);
+  /* Overlay variants */
+  --kt-dark-lighter: #f1f2f5;
+  --kt-dark-hover: #e2e4e8;
+  --kt-dark-border: rgba(0, 0, 0, 0.08);
 
   /* Font Weights */
   --kt-font-normal: 400;
@@ -142,7 +142,7 @@
 }
 
 .dark {
-  /* Same dark palette is default; dark class keeps existing compatibility */
+  /* Industrial Dark Theme */
   --kt-bg-main: #0b0c0f;
   --kt-bg-card: #14151a;
   --kt-bg-hover: #1c1d24;
@@ -153,8 +153,39 @@
   --kt-fg-tertiary: #6b6e75;
   --kt-fg-muted: #4a4d55;
 
+  /* Cold Steel Blue for non-critical info */
+  --kt-steel: #5f9ea0;
+  --kt-steel-light: rgba(95, 158, 160, 0.12);
+
+  /* Semantic Overlay (Glass) */
   --kt-glass-bg: rgba(20, 21, 26, 0.85);
   --kt-glass-border: rgba(255, 255, 255, 0.08);
+
+  /* Semantic Feedback */
+  --kt-success: #2ecc71;
+  --kt-success-light: rgba(46, 204, 113, 0.12);
+  --kt-warning: #f5a623;
+  --kt-warning-light: rgba(245, 166, 35, 0.12);
+  --kt-danger: #e74c3c;
+  --kt-danger-light: rgba(231, 76, 60, 0.12);
+  --kt-info: #4fc1ff;
+  --kt-info-light: rgba(79, 193, 255, 0.12);
+
+  /* Shadows — deep, directional */
+  --kt-shadow-sm: inset 0 1px 0 0 rgba(255, 255, 255, 0.04), 0 1px 2px 0 rgba(0, 0, 0, 0.4);
+  --kt-shadow-md: inset 0 1px 0 0 rgba(255, 255, 255, 0.04), 0 4px 12px -2px rgba(0, 0, 0, 0.5);
+  --kt-shadow-lg: inset 0 1px 0 0 rgba(255, 255, 255, 0.04), 0 12px 24px -4px rgba(0, 0, 0, 0.6);
+
+  /* Panel / Rack Colors */
+  --kt-panel-bg: #14151a;
+  --kt-panel-inset: #0e0f12;
+  --kt-panel-frame: #1f2027;
+  --kt-panel-highlight: rgba(255, 255, 255, 0.04);
+
+  /* Darker overlay variants */
+  --kt-dark-lighter: #1c1d24;
+  --kt-dark-hover: #25262e;
+  --kt-dark-border: rgba(255, 255, 255, 0.08);
 }
 
 /* ============================================
@@ -182,7 +213,7 @@
 .kt-scanlines {
   position: relative;
 }
-.kt-scanlines::before {
+.dark .kt-scanlines::before {
   content: '';
   position: absolute;
   inset: 0;
@@ -201,7 +232,7 @@
 .kt-noise {
   position: relative;
 }
-.kt-noise::after {
+.dark .kt-noise::after {
   content: '';
   position: absolute;
   inset: 0;
