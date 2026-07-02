@@ -8,10 +8,26 @@ coverage
 tmp
 kubetriage
 kubetriage.db*
+kubetriage.db-shm
+kubetriage.db-wal
 /server
 request.json
 main_tmp.go
 /server.log
+frontend/server.log
 /test_output.txt
 /cli
 /kubetriage_bin
+bin/
+
+# Pricing fetch scripts and generated data
+fetch_azure_pricing.py
+fetch_pricing.py
+pricing_db.py
+instance_pricing.json
+
+# Release/build artifacts and temp files
+*.tar.gz
+*.zip
+version.txt
+diff_part_*
