@@ -43,8 +43,7 @@
   /* Font Families */
   --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
   --font-display: 'Bricolage Grotesque', 'Space Grotesk', 'Antonio', sans-serif;
-  --font-mono: 'JetBrains Mono', monospace;
-  --kt-font-mono: var(--font-mono);
+  --kt-font-mono: var(--font-sans);
 
   /* Radius Overrides — tight, utilitarian */
   --radius-2xl: 6px;

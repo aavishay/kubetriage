@@ -115,14 +115,14 @@ export const RegisterClusterModal: React.FC<RegisterClusterModalProps> = ({ isOp
                             value={kubeconfig}
                             onChange={(e) => setKubeconfig(e.target.value)}
                             placeholder="Paste your kubeconfig file here..."
-                            className="kt-input h-40 resize-none custom-scrollbar font-mono text-xs"
+                            className="kt-input h-40 resize-none custom-scrollbar text-xs"
                             spellCheck={false}
                             required
                         />
                         <div className="kt-panel-inset p-2.5 border-l-2 border-l-warning">
                             <p className="text-[10px] text-warning font-bold mb-1 font-sans">Local clusters (minikube, kind)</p>
                             <p className="text-[10px] text-text-tertiary font-sans">Use flattened kubeconfig:</p>
-                            <code className="font-mono text-[10px] text-text-secondary bg-bg-hover px-2 py-1 rounded block mt-1">
+                            <code className="text-[10px] text-text-secondary bg-bg-hover px-2 py-1 rounded block mt-1">
                                 kubectl config view --minify --flatten --context=&lt;name&gt;
                             </code>
                         </div>
