@@ -44,6 +44,7 @@
   --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
   --font-display: 'Bricolage Grotesque', 'Space Grotesk', 'Antonio', sans-serif;
   --font-mono: 'JetBrains Mono', monospace;
+  --kt-font-mono: var(--font-mono);
 
   /* Radius Overrides — tight, utilitarian */
   --radius-2xl: 6px;
@@ -388,7 +389,7 @@
   border: var(--kt-input-border);
   border-radius: var(--kt-radius-md);
   padding: 0.5rem 0.75rem;
-  font-family: var(--font-mono);
+  font-family: var(--font-sans);
   font-size: var(--kt-text-sm);
   color: var(--kt-fg-primary);
   transition: border-color var(--kt-duration-fast) var(--kt-ease-default),
@@ -415,7 +416,7 @@
   border: var(--kt-input-border);
   border-radius: var(--kt-radius-md);
   padding: 0.5rem 1.75rem 0.5rem 0.75rem;
-  font-family: var(--font-mono);
+  font-family: var(--font-sans);
   font-size: var(--kt-text-sm);
   color: var(--kt-fg-primary);
   transition: border-color var(--kt-duration-fast) var(--kt-ease-default),
@@ -531,9 +532,9 @@
   align-items: center;
   gap: var(--kt-space-1);
   padding: 0.125rem 0.5rem;
-  font-family: var(--font-mono);
+  font-family: var(--font-sans);
   font-size: var(--kt-text-xs);
-  font-weight: var(--kt-font-bold);
+  font-weight: var(--kt-font-medium);
   letter-spacing: var(--kt-tracking-wide);
   border-radius: var(--kt-radius-sm);
   border: 1px solid transparent;
@@ -586,8 +587,8 @@
 }
 
 .kt-text-telemetry {
-  font-family: var(--kt-font-mono);
-  font-weight: var(--kt-font-bold);
+  font-family: var(--font-sans);
+  font-weight: var(--kt-font-semibold);
   letter-spacing: var(--kt-tracking-tight);
 }
 

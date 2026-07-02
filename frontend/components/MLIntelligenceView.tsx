@@ -392,7 +392,7 @@ export const MLIntelligenceView: React.FC = () => {
                         border: '1px solid var(--kt-border-main)',
                         borderRadius: '2px',
                         color: 'var(--kt-fg-primary)',
-                        fontFamily: 'var(--kt-font-mono)',
+                        fontFamily: 'var(--font-sans)',
                         fontSize: '12px',
                         fontWeight: 700
                       }}
@@ -430,7 +430,7 @@ export const MLIntelligenceView: React.FC = () => {
                         border: '1px solid var(--kt-border-main)',
                         borderRadius: '2px',
                         color: 'var(--kt-fg-primary)',
-                        fontFamily: 'var(--kt-font-mono)',
+                        fontFamily: 'var(--font-sans)',
                         fontSize: '12px',
                         fontWeight: 700
                       }}

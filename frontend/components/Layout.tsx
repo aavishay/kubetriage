@@ -409,7 +409,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
             <div className="hidden lg:flex items-center gap-0 px-1 bg-bg-main border border-border-main rounded-sm">
               <div className="flex items-center gap-2 px-2 py-1 border-r border-border-main">
                 <span className="text-[10px] text-text-tertiary font-sans font-medium">Latency</span>
-                <span className="text-xs font-mono font-bold text-success tabular-nums">{apiLatency !== null ? `${apiLatency}ms` : '...'}</span>
+                <span className="text-xs font-sans font-medium text-success tabular-nums">{apiLatency !== null ? `${apiLatency}ms` : '...'}</span>
               </div>
               <div className="flex items-center gap-2 px-2 py-1">
                 <span className={`w-1.5 h-1.5 rounded-full ${apiStatus === 'Connected' ? 'bg-success' : 'bg-warning'} ${apiStatus === 'Connected' ? 'shadow-[0_0_6px_#2ecc71]' : 'shadow-[0_0_6px_#f5a623]'}`}></span>

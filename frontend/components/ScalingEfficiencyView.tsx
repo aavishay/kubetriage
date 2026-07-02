@@ -682,7 +682,7 @@ const ScalingEfficiencyViewComponent: React.FC<ScalingEfficiencyViewProps> = ({ 
                             </div>
                             <div className="kt-panel-inset p-2">
                               <p className="text-[10px] text-text-tertiary font-sans font-medium">Age</p>
-                              <p className="font-mono font-bold text-text-primary">{formatAge(np.creationTimestamp)}</p>
+                              <p className="font-sans font-medium text-text-primary">{formatAge(np.creationTimestamp)}</p>
                             </div>
                           </div>
                           {(np.instanceTypes?.length || 0) > 0 && (
@@ -744,7 +744,7 @@ const ScalingEfficiencyViewComponent: React.FC<ScalingEfficiencyViewProps> = ({ 
                             border: '1px solid var(--kt-border-main)',
                             borderRadius: '2px',
                             color: 'var(--kt-fg-primary)',
-                            fontFamily: 'var(--kt-font-mono)'
+                            fontFamily: 'var(--font-sans)'
                           }}
                         />
                         <Bar dataKey="utilization" name="Utilization %" fill={COLORS.primary} radius={[2, 2, 0, 0]} />
@@ -995,7 +995,7 @@ const ScalingEfficiencyViewComponent: React.FC<ScalingEfficiencyViewProps> = ({ 
                             border: '1px solid var(--kt-border-main)',
                             borderRadius: '2px',
                             color: 'var(--kt-fg-primary)',
-                            fontFamily: 'var(--kt-font-mono)'
+                            fontFamily: 'var(--font-sans)'
                           }}
                         />
                         <Bar dataKey="efficiency" name="Efficiency %" radius={[0, 2, 2, 0]}>
@@ -1458,7 +1458,7 @@ const ScalingEfficiencyViewComponent: React.FC<ScalingEfficiencyViewProps> = ({ 
                       border: '1px solid var(--kt-border-main)',
                       borderRadius: '2px',
                       color: 'var(--kt-fg-primary)',
-                      fontFamily: 'var(--kt-font-mono)'
+                      fontFamily: 'var(--font-sans)'
                     }}
                     formatter={(value: number) => [`$${value.toFixed(2)}`, '']}
                   />

@@ -419,7 +419,7 @@ export const CapacityPlanningView: React.FC = () => {
                                   border: '1px solid var(--kt-border-main)',
                                   borderRadius: '2px',
                                   fontSize: '12px',
-                                  fontFamily: 'var(--kt-font-mono)'
+                                  fontFamily: 'var(--font-sans)'
                                 }}
                                 labelStyle={{ color: 'var(--kt-text-primary)', fontWeight: 'bold' }}
                               />

@@ -93,7 +93,7 @@ const tooltipStyle = {
   fontSize: '12px',
   fontWeight: '700',
   padding: '8px 12px',
-  fontFamily: 'var(--kt-font-mono)',
+  fontFamily: 'var(--font-sans)',
   boxShadow: 'var(--kt-shadow-lg)'
 };
 

@@ -601,7 +601,7 @@ export const RightSizingView: React.FC<RightSizingViewProps> = ({ workloads, isD
                                 </SyntaxHighlighter>
                               </div>
                             ) : (
-                              <code className="bg-primary-500/10 text-primary-600 dark:text-primary-400 px-2 py-0.5 rounded-lg font-mono text-xs font-bold" {...props}>{children}</code>
+                              <code className="bg-primary-500/10 text-primary-600 dark:text-primary-400 px-2 py-0.5 rounded-lg font-mono text-xs" {...props}>{children}</code>
                             )
                           }
                         }}
