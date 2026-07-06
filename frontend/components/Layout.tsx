@@ -32,7 +32,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
     selectedClusterIds,
     clusters,
     setSelectedClusterIds,
-    unreadReports,
+    triggeredAlerts,
     isWorkloadsLoading,
     refreshWorkloads,
     removeCluster
@@ -427,7 +427,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
                 aria-label="Notifications"
               >
                 <Bell className="w-[18px] h-[18px] group-hover:scale-110 transition-transform" />
-                {unreadReports > 0 && (
+                {triggeredAlerts.length > 0 && (
                   <span className="absolute top-1 right-1 flex h-2 w-2">
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
                     <span className="relative inline-flex rounded-full h-2 w-2 bg-danger"></span>

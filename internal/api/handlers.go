@@ -24,6 +24,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/dynamic"
@@ -464,88 +465,141 @@ func fetchEphemeralStorageFromKubelet(ctx context.Context, client *kubernetes.Cl
 	return total / (1024 * 1024 * 1024) // GiB
 }
 
-func fetchRecentLogs(ctx context.Context, client *kubernetes.Clientset, namespace string, matchLabels map[string]string) []string {
+func fetchRecentLogs(ctx context.Context, client *kubernetes.Clientset, namespace string, matchLabels map[string]string, pods []corev1.Pod) []string {
 	if len(matchLabels) == 0 {
 		return []string{}
 	}
 
-	listOpts := metav1.ListOptions{
-		LabelSelector: labels.Set(matchLabels).String(),
-		Limit:         1,
+	if pods == nil {
+		listOpts := metav1.ListOptions{
+			LabelSelector: labels.Set(matchLabels).String(),
+			Limit:         10,
+		}
+		podList, err := client.CoreV1().Pods(namespace).List(ctx, listOpts)
+		if err != nil || len(podList.Items) == 0 {
+			return []string{}
+		}
+		pods = podList.Items
 	}
 
-	pods, err := client.CoreV1().Pods(namespace).List(ctx, listOpts)
-	if err != nil || len(pods.Items) == 0 {
-		return []string{}
-	}
-
-	pod := pods.Items[0]
-	// If pod has multiple containers, default to the first one or logic to pick?
-	// For now, first one is fine or let API pick (defaults to first)
-	tailLines := int64(20)
-	req := client.CoreV1().Pods(namespace).GetLogs(pod.Name, &v1.PodLogOptions{
-		TailLines: &tailLines,
-	})
-
-	podLogs, err := req.Stream(ctx)
-	if err != nil {
-		return []string{}
-	}
-	defer podLogs.Close()
-
-	buf := new(bytes.Buffer)
-	_, err = io.Copy(buf, podLogs)
-	if err != nil {
-		return []string{}
-	}
-
-	lines := strings.Split(buf.String(), "\n")
-	var result []string
-	for _, l := range lines {
-		if strings.TrimSpace(l) != "" {
-			result = append(result, l)
+	selector := labels.SelectorFromSet(labels.Set(matchLabels))
+	var matchingPods []corev1.Pod
+	for _, p := range pods {
+		if p.Namespace == namespace && selector.Matches(labels.Set(p.Labels)) {
+			matchingPods = append(matchingPods, p)
 		}
 	}
-	return result
+	if len(matchingPods) == 0 {
+		return []string{}
+	}
+
+	tailLines := int64(20)
+
+	// Try pods in order, preferring Running pods. For CrashLoopBackOff, also try previous container logs.
+	for _, pod := range matchingPods {
+		podName := pod.Name
+		isRunning := pod.Status.Phase == corev1.PodRunning && len(pod.Status.ContainerStatuses) > 0 && pod.Status.ContainerStatuses[0].Ready
+
+		tryLogs := func(previous bool) []string {
+			req := client.CoreV1().Pods(namespace).GetLogs(podName, &v1.PodLogOptions{
+				TailLines: &tailLines,
+				Previous:  previous,
+			})
+			podLogs, err := req.Stream(ctx)
+			if err != nil {
+				return nil
+			}
+			defer podLogs.Close()
+
+			buf := new(bytes.Buffer)
+			if _, err = io.Copy(buf, podLogs); err != nil {
+				return nil
+			}
+
+			lines := strings.Split(buf.String(), "\n")
+			var result []string
+			for _, l := range lines {
+				if strings.TrimSpace(l) != "" {
+					result = append(result, l)
+				}
+			}
+			if len(result) > 0 {
+				return result
+			}
+			return nil
+		}
+
+		if isRunning {
+			if logs := tryLogs(false); logs != nil {
+				return logs
+			}
+		} else {
+			// For non-running / crashlooping pods, current logs might be empty; prefer previous container logs.
+			if logs := tryLogs(true); logs != nil {
+				return logs
+			}
+			if logs := tryLogs(false); logs != nil {
+				return logs
+			}
+		}
+	}
+
+	return []string{}
 }
 
-func fetchPodNames(ctx context.Context, client *kubernetes.Clientset, namespace string, matchLabels map[string]string) []string {
+func fetchPodNames(ctx context.Context, client *kubernetes.Clientset, namespace string, matchLabels map[string]string, pods []corev1.Pod) []string {
 	if len(matchLabels) == 0 {
 		return []string{}
 	}
 
-	listOpts := metav1.ListOptions{
-		LabelSelector: labels.Set(matchLabels).String(),
-		Limit:         50, // Limit to prevent huge lists
+	if pods == nil {
+		listOpts := metav1.ListOptions{
+			LabelSelector: labels.Set(matchLabels).String(),
+			Limit:         50, // Limit to prevent huge lists
+		}
+		var err error
+		podList, err := client.CoreV1().Pods(namespace).List(ctx, listOpts)
+		if err != nil {
+			return []string{}
+		}
+		pods = podList.Items
 	}
 
-	pods, err := client.CoreV1().Pods(namespace).List(ctx, listOpts)
-	if err != nil {
-		return []string{}
-	}
-
+	selector := labels.SelectorFromSet(labels.Set(matchLabels))
 	var names []string
-	for _, p := range pods.Items {
-		names = append(names, p.Name)
+	for _, p := range pods {
+		if p.Namespace == namespace && selector.Matches(labels.Set(p.Labels)) {
+			names = append(names, p.Name)
+		}
 	}
 	return names
 }
 
-func fetchRecentEvents(ctx context.Context, client *kubernetes.Clientset, namespace, name, kind string) []K8sEvent {
-	// Query events involving this object
-	// We use field selectors to match involvedObject.name and involvedObject.kind
-	selector := fmt.Sprintf("involvedObject.name=%s,involvedObject.kind=%s", name, kind)
+func fetchRecentEvents(ctx context.Context, client *kubernetes.Clientset, namespace, name, kind string, events []corev1.Event) []K8sEvent {
+	if events == nil {
+		// Query events involving this object
+		// We use field selectors to match involvedObject.name and involvedObject.kind
+		selector := fmt.Sprintf("involvedObject.name=%s,involvedObject.kind=%s", name, kind)
 
-	events, err := client.CoreV1().Events(namespace).List(ctx, metav1.ListOptions{
-		FieldSelector: selector,
-		Limit:         10,
-	})
-	if err != nil {
-		return []K8sEvent{}
+		eventList, err := client.CoreV1().Events(namespace).List(ctx, metav1.ListOptions{
+			FieldSelector: selector,
+			Limit:         10,
+		})
+		if err != nil {
+			return []K8sEvent{}
+		}
+		events = eventList.Items
 	}
 
 	var result []K8sEvent
-	for _, e := range events.Items {
+	count := 0
+	for _, e := range events {
+		if e.Namespace != namespace {
+			continue
+		}
+		if e.InvolvedObject.Name != name || e.InvolvedObject.Kind != kind {
+			continue
+		}
 		result = append(result, K8sEvent{
 			ID:       string(e.UID),
 			Type:     e.Type,
@@ -553,6 +607,10 @@ func fetchRecentEvents(ctx context.Context, client *kubernetes.Clientset, namesp
 			Message:  e.Message,
 			LastSeen: e.LastTimestamp.Format("15:04:05"),
 		})
+		count++
+		if count >= 10 {
+			break
+		}
 	}
 	// Ensure we never return nil
 	if result == nil {
@@ -766,7 +824,7 @@ func analyzeScheduling(events []K8sEvent, spec v1.PodSpec, prov *ProvisioningInf
 }
 
 // Helper to fetch KEDA ScaledObject
-func fetchKedaScaling(ctx context.Context, dynClient dynamic.Interface, namespace, workloadName string) ScalingInfo {
+func fetchKedaScaling(ctx context.Context, dynClient dynamic.Interface, namespace, workloadName string, scaledObjects []unstructured.Unstructured) ScalingInfo {
 	info := ScalingInfo{
 		Enabled: false,
 		Min:     0,
@@ -778,18 +836,20 @@ func fetchKedaScaling(ctx context.Context, dynClient dynamic.Interface, namespac
 		return info
 	}
 
-	gvr := schema.GroupVersionResource{
-		Group:    "keda.sh",
-		Version:  "v1alpha1",
-		Resource: "scaledobjects",
+	if scaledObjects == nil {
+		gvr := schema.GroupVersionResource{
+			Group:    "keda.sh",
+			Version:  "v1alpha1",
+			Resource: "scaledobjects",
+		}
+		sos, err := dynClient.Resource(gvr).Namespace(namespace).List(ctx, metav1.ListOptions{})
+		if err != nil {
+			return info
+		}
+		scaledObjects = sos.Items
 	}
 
-	sos, err := dynClient.Resource(gvr).Namespace(namespace).List(ctx, metav1.ListOptions{})
-	if err != nil {
-		return info
-	}
-
-	for _, item := range sos.Items {
+	for _, item := range scaledObjects {
 		spec, ok := item.Object["spec"].(map[string]interface{})
 		if !ok {
 			continue
@@ -818,6 +878,15 @@ func fetchKedaScaling(ctx context.Context, dynClient dynamic.Interface, namespac
 							triggers = append(triggers, typeStr)
 						}
 					}
+				}
+			}
+
+			// Current replica count from KEDA status
+			if status, ok := item.Object["status"].(map[string]interface{}); ok {
+				if rc, ok := status["replicaCount"].(int64); ok {
+					info.Current = int32(rc)
+				} else if rc, ok := status["replicaCount"].(float64); ok {
+					info.Current = int32(rc)
 				}
 			}
 
@@ -869,7 +938,7 @@ func fetchKedaScaling(ctx context.Context, dynClient dynamic.Interface, namespac
 }
 
 // Helper to fetch standard HorizontalPodAutoscaler
-func fetchHPAScaling(ctx context.Context, client *kubernetes.Clientset, namespace, workloadName string) ScalingInfo {
+func fetchHPAScaling(ctx context.Context, client *kubernetes.Clientset, namespace, workloadName string, hpas []autoscalingv2.HorizontalPodAutoscaler) ScalingInfo {
 	info := ScalingInfo{
 		Enabled: false,
 		Min:     0,
@@ -881,12 +950,15 @@ func fetchHPAScaling(ctx context.Context, client *kubernetes.Clientset, namespac
 		return info
 	}
 
-	hpas, err := client.AutoscalingV2().HorizontalPodAutoscalers(namespace).List(ctx, metav1.ListOptions{})
-	if err != nil {
-		return info
+	if hpas == nil {
+		hpaList, err := client.AutoscalingV2().HorizontalPodAutoscalers(namespace).List(ctx, metav1.ListOptions{})
+		if err != nil {
+			return info
+		}
+		hpas = hpaList.Items
 	}
 
-	for _, hpa := range hpas.Items {
+	for _, hpa := range hpas {
 		if hpa.Spec.ScaleTargetRef.Name == workloadName {
 			info.Enabled = true
 			if hpa.Spec.MinReplicas != nil {
@@ -946,9 +1018,9 @@ type ClusterResponse struct {
 	Status      string `json:"status"`
 }
 
-func getScalingInfo(ctx context.Context, client *kubernetes.Clientset, dynClient dynamic.Interface, namespace, name string) ScalingInfo {
-	keda := fetchKedaScaling(ctx, dynClient, namespace, name)
-	hpa := fetchHPAScaling(ctx, client, namespace, name)
+func getScalingInfo(ctx context.Context, client *kubernetes.Clientset, dynClient dynamic.Interface, namespace, name string, hpas []autoscalingv2.HorizontalPodAutoscaler, scaledObjects []unstructured.Unstructured) ScalingInfo {
+	keda := fetchKedaScaling(ctx, dynClient, namespace, name, scaledObjects)
+	hpa := fetchHPAScaling(ctx, client, namespace, name, hpas)
 
 	if !keda.Enabled && !hpa.Enabled {
 		return ScalingInfo{Enabled: false}
@@ -959,6 +1031,12 @@ func getScalingInfo(ctx context.Context, client *kubernetes.Clientset, dynClient
 	res := hpa
 	if keda.Enabled {
 		res.Enabled = true
+		// KEDA is the authoritative scaler when present; use its replica bounds and current count.
+		if keda.Max > 0 {
+			res.Min = keda.Min
+			res.Max = keda.Max
+			res.Current = keda.Current
+		}
 		res.KedaReady = keda.KedaReady
 		res.Fallback = keda.Fallback
 		res.Paused = keda.Paused
@@ -1155,9 +1233,44 @@ func WorkloadsHandler(c *gin.Context) {
 		return
 	}
 
+	// Pre-fetch shared resources once per namespace to avoid hundreds of redundant API calls
+	// (and client-side throttling) when enriching every workload.
+	var allPods []corev1.Pod
+	var allEvents []corev1.Event
+	var allHPAs []autoscalingv2.HorizontalPodAutoscaler
+	var allScaledObjects []unstructured.Unstructured
+
+	prefetchCtx, prefetchCancel := context.WithTimeout(c.Request.Context(), 30*time.Second)
+	defer prefetchCancel()
+
+	var prefetchWg sync.WaitGroup
+	prefetchWg.Add(3)
+	go func() {
+		defer prefetchWg.Done()
+		if eventList, err := client.CoreV1().Events(targetNamespace).List(prefetchCtx, metav1.ListOptions{}); err == nil {
+			allEvents = eventList.Items
+		}
+	}()
+	go func() {
+		defer prefetchWg.Done()
+		if hpaList, err := client.AutoscalingV2().HorizontalPodAutoscalers(targetNamespace).List(prefetchCtx, metav1.ListOptions{}); err == nil {
+			allHPAs = hpaList.Items
+		}
+	}()
+	go func() {
+		defer prefetchWg.Done()
+		if dynClient != nil {
+			gvrSOS := schema.GroupVersionResource{Group: "keda.sh", Version: "v1alpha1", Resource: "scaledobjects"}
+			if soList, err := dynClient.Resource(gvrSOS).Namespace(targetNamespace).List(prefetchCtx, metav1.ListOptions{}); err == nil {
+				allScaledObjects = soList.Items
+			}
+		}
+	}()
+	prefetchWg.Wait()
+
 	// Use errgroup for concurrency
 	g, ctx := errgroup.WithContext(c.Request.Context())
-	g.SetLimit(20) // Concurrent enrichment limit
+	g.SetLimit(12) // Concurrent enrichment limit
 
 	var mu sync.Mutex
 	var workloads []Workload
@@ -1174,8 +1287,9 @@ func WorkloadsHandler(c *gin.Context) {
 		for _, d := range deps.Items {
 			d := d // capture loop var
 			g.Go(func() error {
-				enrichCtx, cancel := context.WithTimeout(ctx, 3*time.Second)
+				enrichCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
 				defer cancel()
+				status := getStatus(d.Status.AvailableReplicas, *d.Spec.Replicas)
 				w := Workload{
 					ID:                string(d.UID),
 					ClusterID:         clusterID,
@@ -1184,15 +1298,13 @@ func WorkloadsHandler(c *gin.Context) {
 					Kind:              "Deployment",
 					Replicas:          *d.Spec.Replicas,
 					AvailableReplicas: d.Status.AvailableReplicas,
-					Status:            getStatus(d.Status.AvailableReplicas, *d.Spec.Replicas),
+					Status:            status,
 					CostPerMonth:      rand.Intn(500) + 50,
 					Metrics:           getRealMetrics(enrichCtx, clusterID, d.Namespace, d.Name, "Deployment", d.Spec.Template.Spec, window, d.Spec.Selector.MatchLabels, *d.Spec.Replicas),
-					RecentLogs:        fetchRecentLogs(enrichCtx, client, d.Namespace, d.Spec.Selector.MatchLabels),
-					PodNames:          fetchPodNames(enrichCtx, client, d.Namespace, d.Spec.Selector.MatchLabels),
-					Events:            fetchRecentEvents(enrichCtx, client, d.Namespace, d.Name, "Deployment"),
-					Scaling:           getScalingInfo(enrichCtx, client, dynClient, d.Namespace, d.Name),
+					Events:            fetchRecentEvents(enrichCtx, client, d.Namespace, d.Name, "Deployment", allEvents),
+					Scaling:           getScalingInfo(enrichCtx, client, dynClient, d.Namespace, d.Name, allHPAs, allScaledObjects),
 				}
-				if w.Status != "Healthy" {
+				if status != "Healthy" {
 					w.SchedulerLogs = fetchKarpenterLogs(enrichCtx, client, d.Name)
 					w.Provisioning = fetchKarpenterProvisioning(enrichCtx, dynClient, d.Name)
 					w.ProvisioningStatus = analyzeScheduling(w.Events, d.Spec.Template.Spec, w.Provisioning)
@@ -1209,8 +1321,9 @@ func WorkloadsHandler(c *gin.Context) {
 		for _, s := range sts.Items {
 			s := s // capture loop var
 			g.Go(func() error {
-				enrichCtx, cancel := context.WithTimeout(ctx, 3*time.Second)
+				enrichCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
 				defer cancel()
+				status := getStatus(s.Status.ReadyReplicas, *s.Spec.Replicas)
 				w := Workload{
 					ID:                string(s.UID),
 					ClusterID:         clusterID,
@@ -1219,15 +1332,13 @@ func WorkloadsHandler(c *gin.Context) {
 					Kind:              "StatefulSet",
 					Replicas:          *s.Spec.Replicas,
 					AvailableReplicas: s.Status.ReadyReplicas,
-					Status:            getStatus(s.Status.ReadyReplicas, *s.Spec.Replicas),
+					Status:            status,
 					CostPerMonth:      rand.Intn(500) + 100,
 					Metrics:           getRealMetrics(enrichCtx, clusterID, s.Namespace, s.Name, "StatefulSet", s.Spec.Template.Spec, window, s.Spec.Selector.MatchLabels, *s.Spec.Replicas),
-					RecentLogs:        fetchRecentLogs(enrichCtx, client, s.Namespace, s.Spec.Selector.MatchLabels),
-					PodNames:          fetchPodNames(enrichCtx, client, s.Namespace, s.Spec.Selector.MatchLabels),
-					Events:            fetchRecentEvents(enrichCtx, client, s.Namespace, s.Name, "StatefulSet"),
-					Scaling:           getScalingInfo(enrichCtx, client, dynClient, s.Namespace, s.Name),
+					Events:            fetchRecentEvents(enrichCtx, client, s.Namespace, s.Name, "StatefulSet", allEvents),
+					Scaling:           getScalingInfo(enrichCtx, client, dynClient, s.Namespace, s.Name, allHPAs, allScaledObjects),
 				}
-				if w.Status != "Healthy" {
+				if status != "Healthy" {
 					w.SchedulerLogs = fetchKarpenterLogs(enrichCtx, client, s.Name)
 					w.Provisioning = fetchKarpenterProvisioning(enrichCtx, dynClient, s.Name)
 					w.ProvisioningStatus = analyzeScheduling(w.Events, s.Spec.Template.Spec, w.Provisioning)
@@ -1244,8 +1355,9 @@ func WorkloadsHandler(c *gin.Context) {
 		for _, ds := range dss.Items {
 			ds := ds // capture loop var
 			g.Go(func() error {
-				enrichCtx, cancel := context.WithTimeout(ctx, 3*time.Second)
+				enrichCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
 				defer cancel()
+				status := getStatus(ds.Status.NumberReady, ds.Status.DesiredNumberScheduled)
 				w := Workload{
 					ID:                string(ds.UID),
 					ClusterID:         clusterID,
@@ -1254,18 +1366,16 @@ func WorkloadsHandler(c *gin.Context) {
 					Kind:              "DaemonSet",
 					Replicas:          ds.Status.DesiredNumberScheduled,
 					AvailableReplicas: ds.Status.NumberReady,
-					Status:            getStatus(ds.Status.NumberReady, ds.Status.DesiredNumberScheduled),
+					Status:            status,
 					CostPerMonth:      rand.Intn(200) + 50,
 					Metrics:           getRealMetrics(enrichCtx, clusterID, ds.Namespace, ds.Name, "DaemonSet", ds.Spec.Template.Spec, window, ds.Spec.Selector.MatchLabels, ds.Status.DesiredNumberScheduled),
-					RecentLogs:        fetchRecentLogs(enrichCtx, client, ds.Namespace, ds.Spec.Selector.MatchLabels),
-					PodNames:          fetchPodNames(enrichCtx, client, ds.Namespace, ds.Spec.Selector.MatchLabels),
-					Events:            fetchRecentEvents(enrichCtx, client, ds.Namespace, ds.Name, "DaemonSet"),
+					Events:            fetchRecentEvents(enrichCtx, client, ds.Namespace, ds.Name, "DaemonSet", allEvents),
+					Scaling:           getScalingInfo(enrichCtx, client, dynClient, ds.Namespace, ds.Name, allHPAs, allScaledObjects),
 				}
-				if w.Status != "Healthy" {
+				if status != "Healthy" {
 					// DaemonSets usually don't use Karpenter provisioning like Deployments do
 					// But we can still analyze scheduling issues
 					w.Provisioning = &ProvisioningInfo{Enabled: false} // Placeholder
-					w.ProvisioningStatus = analyzeScheduling(w.Events, ds.Spec.Template.Spec, w.Provisioning)
 					w.ProvisioningStatus = analyzeScheduling(w.Events, ds.Spec.Template.Spec, w.Provisioning)
 				}
 				w.Recommendation = calculateRecommendation(w.Metrics)
@@ -1357,7 +1467,7 @@ func WorkloadsHandler(c *gin.Context) {
 						status = "Warning"
 					}
 
-					enrichCtx, cancel := context.WithTimeout(ctx, 3*time.Second)
+					enrichCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
 					defer cancel()
 
 					var recentLogs []string
@@ -1369,10 +1479,10 @@ func WorkloadsHandler(c *gin.Context) {
 						if jn, ok := latestPod.Labels["job-name"]; ok {
 							jobLabels = map[string]string{"job-name": jn}
 						}
-						recentLogs = fetchRecentLogs(enrichCtx, client, namespace, jobLabels)
-						recentEvents = fetchRecentEvents(enrichCtx, client, namespace, name, "ScaledJob")
+						recentLogs = fetchRecentLogs(enrichCtx, client, namespace, jobLabels, allPods)
+						recentEvents = fetchRecentEvents(enrichCtx, client, namespace, name, "ScaledJob", allEvents)
 					} else {
-						recentEvents = fetchRecentEvents(enrichCtx, client, namespace, name, "ScaledJob")
+						recentEvents = fetchRecentEvents(enrichCtx, client, namespace, name, "ScaledJob", allEvents)
 					}
 
 					w := Workload{
@@ -1455,6 +1565,62 @@ func WorkloadsHandler(c *gin.Context) {
 
 	log.Printf("WorkloadsHandler: Returning %d workloads for cluster %s", len(workloads), clusterID)
 	c.JSON(http.StatusOK, workloads)
+}
+
+// WorkloadLogsHandler returns recent container logs for a specific workload on demand.
+// The workloads list no longer fetches logs for every workload (too slow on large clusters),
+// so the UI calls this endpoint when a workload is opened in the triage view.
+func WorkloadLogsHandler(c *gin.Context) {
+	clusterID := c.Query("cluster")
+	namespace := c.Param("namespace")
+	name := c.Param("name")
+	kind := c.Query("kind")
+	if kind == "" {
+		kind = "Deployment"
+	}
+
+	var client *kubernetes.Clientset
+	if clusterID != "" && k8s.Manager != nil {
+		if cls, err := k8s.Manager.GetOrConnectCluster(clusterID); err == nil {
+			client = cls.ClientSet
+		}
+	}
+	if client == nil {
+		client = k8s.ClientSet
+	}
+	if client == nil {
+		c.JSON(http.StatusServiceUnavailable, gin.H{"error": "Kubernetes client not available"})
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(c.Request.Context(), 15*time.Second)
+	defer cancel()
+
+	var matchLabels map[string]string
+	switch kind {
+	case "Deployment":
+		if d, err := client.AppsV1().Deployments(namespace).Get(ctx, name, metav1.GetOptions{}); err == nil {
+			matchLabels = d.Spec.Selector.MatchLabels
+		}
+	case "StatefulSet":
+		if s, err := client.AppsV1().StatefulSets(namespace).Get(ctx, name, metav1.GetOptions{}); err == nil {
+			matchLabels = s.Spec.Selector.MatchLabels
+		}
+	case "DaemonSet":
+		if ds, err := client.AppsV1().DaemonSets(namespace).Get(ctx, name, metav1.GetOptions{}); err == nil {
+			matchLabels = ds.Spec.Selector.MatchLabels
+		}
+	}
+
+	if len(matchLabels) == 0 {
+		c.JSON(http.StatusOK, gin.H{"logs": []string{}, "podNames": []string{}})
+		return
+	}
+
+	logs := fetchRecentLogs(ctx, client, namespace, matchLabels, nil)
+	podNames := fetchPodNames(ctx, client, namespace, matchLabels, nil)
+
+	c.JSON(http.StatusOK, gin.H{"logs": logs, "podNames": podNames})
 }
 
 type RegisterClusterRequest struct {

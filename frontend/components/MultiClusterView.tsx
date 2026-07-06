@@ -189,12 +189,27 @@ export const MultiClusterView: React.FC = () => {
     };
   }, [data, selectedClusterIds, derivedSummary, visibleClusters]);
 
+  const statusRank = (status: string) => {
+    switch (status.toLowerCase()) {
+      case 'critical': return 0;
+      case 'warning': return 1;
+      case 'healthy': return 2;
+      default: return 3;
+    }
+  };
+
   const filteredWorkloads = useMemo(() => {
-    return visibleWorkloads.filter(w => {
-      const matchesSearch = w.name.toLowerCase().includes(searchTerm.toLowerCase()) || w.clusterName.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesStatus = statusFilter === 'all' || w.status.toLowerCase() === statusFilter.toLowerCase();
-      return matchesSearch && matchesStatus;
-    });
+    return visibleWorkloads
+      .filter(w => {
+        const matchesSearch = w.name.toLowerCase().includes(searchTerm.toLowerCase()) || w.clusterName.toLowerCase().includes(searchTerm.toLowerCase());
+        const matchesStatus = statusFilter === 'all' || w.status.toLowerCase() === statusFilter.toLowerCase();
+        return matchesSearch && matchesStatus;
+      })
+      .sort((a, b) => {
+        const rankDiff = statusRank(a.status) - statusRank(b.status);
+        if (rankDiff !== 0) return rankDiff;
+        return a.name.localeCompare(b.name);
+      });
   }, [visibleWorkloads, searchTerm, statusFilter]);
 
   const clusterHealthData = useMemo(() => visibleClusters.map(c => ({ name: c.name, nodes: c.nodeCount, healthy: c.healthyNodeCount, utilization: c.totalCpu > 0 ? (c.usedCpu / c.totalCpu) * 100 : 0 })), [visibleClusters]);

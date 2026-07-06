@@ -76,6 +76,7 @@ func SetupRouter(cfg RouterConfig) *gin.Engine {
 		api.POST("/clusters/register", RegisterClusterHandler)
 		api.DELETE("/clusters/:id", DeleteClusterHandler)
 		api.GET("/cluster/workloads", WorkloadsHandler)
+		api.GET("/cluster/workloads/:namespace/:name/logs", WorkloadLogsHandler)
 		api.GET("/cluster/nodes", NodesHandler)
 		api.GET("/cluster/events", ClusterEventsHandler)
 		api.GET("/cluster/metrics", ClusterMetricsHandler)

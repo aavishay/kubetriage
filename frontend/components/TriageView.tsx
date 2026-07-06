@@ -10,7 +10,6 @@ import { Terminal, Loader2, Sparkles, Activity, Search, Globe, ChevronLeft, Mess
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import { MetricsChart } from './MetricsChart';
-import { LogStreamViewer } from './LogStreamViewer';
 import { CommentsThread } from './CommentsThread';
 import { StatusBadge } from './dashboard/StatusBadge';
 
@@ -106,7 +105,7 @@ export const TriageView: React.FC<TriageViewProps> = ({ workloads, isDarkMode = 
   const searchParams = new URL(window.location.href).searchParams;
   const urlWorkload = searchParams.get('workload');
   const urlPlaybook = searchParams.get('playbook');
-  const { activeUsers, notifyView, notifyLeave, broadcastLogState, logStateEvents } = usePresence();
+  const { activeUsers, notifyView, notifyLeave } = usePresence();
   const targetWorkloadId = urlWorkload || location.state?.workloadId || propId;
   const targetTemplate = urlPlaybook || location.state?.playbook || propTemplate;
   const [selectedWorkload, setSelectedWorkload] = useState<Workload | null>(null);
@@ -126,29 +125,12 @@ export const TriageView: React.FC<TriageViewProps> = ({ workloads, isDarkMode = 
   const [workloadSearchTerm, setWorkloadSearchTerm] = useState<string>('');
   const [logSearchTerm, setLogSearchTerm] = useState<string>('');
   const [isLogWrapEnabled, setIsLogWrapEnabled] = useState(false);
-  const [isLogSyncEnabled, setIsLogSyncEnabled] = useState(false);
-
-  useEffect(() => {
-    if (!selectedWorkload || !isLogSyncEnabled) return;
-    const event = logStateEvents[`workload-${selectedWorkload.id}`];
-    if (event?.payload) {
-      if (event.payload.searchTerm !== logSearchTerm) setLogSearchTerm(event.payload.searchTerm);
-      if (event.payload.isWrapEnabled !== isLogWrapEnabled) setIsLogWrapEnabled(event.payload.isWrapEnabled);
-    }
-  }, [logStateEvents, selectedWorkload, isLogSyncEnabled]);
 
   const handleLogSearchChange = (val: string) => {
     setLogSearchTerm(val);
-    if (selectedWorkload && isLogSyncEnabled) {
-      broadcastLogState(`workload-${selectedWorkload.id}`, { searchTerm: val, isWrapEnabled: isLogWrapEnabled });
-    }
   };
   const handleLogWrapToggle = () => {
-    const newVal = !isLogWrapEnabled;
-    setIsLogWrapEnabled(newVal);
-    if (selectedWorkload && isLogSyncEnabled) {
-      broadcastLogState(`workload-${selectedWorkload.id}`, { searchTerm: logSearchTerm, isWrapEnabled: newVal });
-    }
+    setIsLogWrapEnabled(!isLogWrapEnabled);
   };
   const handleHandover = () => {
     if (!selectedWorkload || !analysis) return;
@@ -201,7 +183,7 @@ export const TriageView: React.FC<TriageViewProps> = ({ workloads, isDarkMode = 
         .then(data => { if (data && data.length > 0) setCurrentReport(data[0]); else setCurrentReport(null); })
         .catch(err => { console.error("Failed to fetch workload report", err); setCurrentReport(null); });
     } else setCurrentReport(null);
-  }, [selectedWorkload, analysis]);
+  }, [selectedWorkload?.id, selectedWorkload?.clusterId, selectedWorkload?.namespace, selectedWorkload?.name, analysis]);
 
   const safeWorkloads = workloads || [];
 
@@ -244,7 +226,7 @@ export const TriageView: React.FC<TriageViewProps> = ({ workloads, isDarkMode = 
   const triggerAutoAnalysis = async (workload: Workload, playbook: DiagnosticPlaybook) => {
     setIsAnalyzing(true); setAnalysis(null);
     try {
-      const { analysis, context } = await analyzeWorkload(workload, playbook, aiConfig.provider, aiConfig.model);
+      const { analysis, context } = await analyzeWorkload({ ...workload, recentLogs: workload.recentLogs?.length ? workload.recentLogs : fetchedLogs }, playbook, aiConfig.provider, aiConfig.model);
       setAnalysis(analysis); setEnrichedContext(context);
       sessionStorage.setItem(`analysis_${workload.id}_${playbook}`, analysis);
       if (context) sessionStorage.setItem(`context_${workload.id}_${playbook}`, JSON.stringify(context));
@@ -259,6 +241,17 @@ export const TriageView: React.FC<TriageViewProps> = ({ workloads, isDarkMode = 
       return true;
     });
   }, [workloads, namespaceFilter, statusFilter, workloadSearchTerm]);
+
+  const [fetchedLogs, setFetchedLogs] = useState<string[]>([]);
+  const [fetchedPodNames, setFetchedPodNames] = useState<string[]>([]);
+  const [isFetchingLogs, setIsFetchingLogs] = useState(false);
+
+  const effectiveWorkload = useMemo<Workload | null>(() => {
+    if (!selectedWorkload) return null;
+    const logs = selectedWorkload.recentLogs?.length ? selectedWorkload.recentLogs : fetchedLogs;
+    const pods = selectedWorkload.podNames?.length ? selectedWorkload.podNames : fetchedPodNames;
+    return { ...selectedWorkload, recentLogs: logs, podNames: pods };
+  }, [selectedWorkload, fetchedLogs, fetchedPodNames]);
 
   const [customPlaybooks, setCustomPlaybooks] = useState<import('../types').Playbook[]>([]);
   const [cpuMetrics, setCpuMetrics] = useState<{ timestamp: number, value: number }[]>([]);
@@ -280,7 +273,36 @@ export const TriageView: React.FC<TriageViewProps> = ({ workloads, isDarkMode = 
     fetchMetrics();
     const interval = setInterval(fetchMetrics, 30000);
     return () => clearInterval(interval);
-  }, [selectedWorkload]);
+  }, [selectedWorkload?.id, selectedWorkload?.clusterId, selectedWorkload?.namespace, selectedWorkload?.name]);
+
+  // Static tail: snapshot the logs that came with the workload list, or fetch once on demand.
+  // Dependencies are stable identifiers so live metric simulation updates don't re-fetch/reflash the box.
+  useEffect(() => {
+    if (!selectedWorkload) {
+      setFetchedLogs([]);
+      setFetchedPodNames([]);
+      return;
+    }
+    const logsSnapshot = selectedWorkload.recentLogs?.length ? selectedWorkload.recentLogs : [];
+    const podsSnapshot = selectedWorkload.podNames?.length ? selectedWorkload.podNames : [];
+    setFetchedLogs(logsSnapshot);
+    setFetchedPodNames(podsSnapshot);
+    if (logsSnapshot.length > 0 || podsSnapshot.length > 0) return;
+
+    setIsFetchingLogs(true);
+    fetch(`/api/cluster/workloads/${encodeURIComponent(selectedWorkload.namespace)}/${encodeURIComponent(selectedWorkload.name)}/logs?cluster=${encodeURIComponent(selectedWorkload.clusterId)}&kind=${encodeURIComponent(selectedWorkload.kind)}`)
+      .then(res => res.json())
+      .then(data => {
+        setFetchedLogs(data.logs || []);
+        setFetchedPodNames(data.podNames || []);
+      })
+      .catch(err => {
+        console.error("Failed to fetch workload logs", err);
+        setFetchedLogs([]);
+        setFetchedPodNames([]);
+      })
+      .finally(() => setIsFetchingLogs(false));
+  }, [selectedWorkload?.id, selectedWorkload?.clusterId, selectedWorkload?.namespace, selectedWorkload?.name, selectedWorkload?.kind]);
 
   useEffect(() => {
     const fetchPlaybooks = async () => {
@@ -298,8 +320,8 @@ export const TriageView: React.FC<TriageViewProps> = ({ workloads, isDarkMode = 
     try {
       const selectedCustom = customPlaybooks.find(p => p.name === selectedPlaybook);
       const result = selectedCustom
-        ? await analyzeWorkload(selectedWorkload, 'General Health', aiConfig.provider, aiConfig.model)
-        : await analyzeWorkload(selectedWorkload, selectedPlaybook, aiConfig.provider, aiConfig.model);
+        ? await analyzeWorkload(effectiveWorkload!, 'General Health', aiConfig.provider, aiConfig.model)
+        : await analyzeWorkload(effectiveWorkload!, selectedPlaybook, aiConfig.provider, aiConfig.model);
       setAnalysis(result.analysis); setEnrichedContext(result.context);
     } catch (e) { setAnalysis("Error generating analysis."); } finally { setIsAnalyzing(false); }
   };
@@ -319,10 +341,11 @@ export const TriageView: React.FC<TriageViewProps> = ({ workloads, isDarkMode = 
     if (!selectedWorkload) return;
     setIsGeneratingFix(true);
     const currentId = selectedWorkload.id;
+    const logsForFix = (effectiveWorkload?.recentLogs || selectedWorkload.recentLogs || []).slice(-10).join('\n');
     try {
       const suggestion = await generateRemediation(
         selectedWorkload.kind, selectedWorkload.name,
-        (selectedWorkload.recentLogs || []).slice(-10).join('\n'),
+        logsForFix,
         aiConfig.provider, aiConfig.model,
         selectedWorkload.namespace, analysis || undefined
       );
@@ -574,24 +597,23 @@ export const TriageView: React.FC<TriageViewProps> = ({ workloads, isDarkMode = 
 
               <div className="kt-panel overflow-hidden flex flex-col min-h-[360px]">
                 <div className="kt-panel-header">
-                  <div className="flex items-center gap-2"><span className="kt-led kt-led-success kt-led-pulse" /><Terminal className="w-4 h-4 text-text-secondary" /> Logs</div>
+                  <div className="flex items-center gap-2"><Terminal className="w-4 h-4 text-text-secondary" /> Logs <span className="text-[10px] text-text-tertiary font-sans font-normal ml-1">(last 20 lines)</span></div>
                   <div className="flex items-center gap-2">
-                    <button onClick={() => setIsLogSyncEnabled(!isLogSyncEnabled)} className={`flex items-center gap-1.5 px-2 py-1 text-[10px] border transition-all ${isLogSyncEnabled ? 'bg-primary-500/10 text-primary-500 border-primary-500/30' : 'text-text-tertiary hover:text-text-secondary border-border-main'} font-sans`}>
-                      <span className={`w-1.5 h-1.5 rounded-full ${isLogSyncEnabled ? 'bg-primary-500' : 'bg-text-tertiary'}`} /> Sync
-                    </button>
                     <div className="relative"><Search className="w-3.5 h-3.5 text-text-tertiary absolute left-2.5 top-1/2 -translate-y-1/2" /><input type="text" placeholder="Search..." value={logSearchTerm} onChange={(e) => handleLogSearchChange(e.target.value)} className="kt-input pl-8 pr-3 py-1 text-xs w-40" /></div>
                     <button onClick={handleLogWrapToggle} className={`p-1.5 rounded-sm transition-colors border ${isLogWrapEnabled ? 'bg-primary-500/10 text-primary-500 border-primary-500/30' : 'text-text-tertiary hover:text-text-primary border-border-main'}`} title={isLogWrapEnabled ? "Disable wrap" : "Enable wrap"}><WrapText className="w-4 h-4" /></button>
+                    <CopyButton text={fetchedLogs.filter(log => !logSearchTerm || log.toLowerCase().includes(logSearchTerm.toLowerCase())).join('\n')} className="text-text-tertiary hover:text-text-primary" />
                   </div>
                 </div>
                 <div className="flex-1 overflow-auto font-mono text-xs p-3 custom-scrollbar kt-panel-inset m-4">
-                  {(!selectedWorkload.recentLogs || selectedWorkload.recentLogs.length === 0) ? (
+                  {isFetchingLogs ? (
+                    <div className="h-full flex flex-col items-center justify-center text-text-tertiary/50 gap-3"><Loader2 className="w-6 h-6 animate-spin" /><p className="text-xs font-sans">Loading logs...</p></div>
+                  ) : fetchedLogs.length === 0 ? (
                     <div className="h-full flex flex-col items-center justify-center text-text-tertiary/50 gap-3"><Terminal className="w-8 h-8 opacity-20" /><p className="text-xs font-sans">No logs available</p></div>
                   ) : (
-                    selectedWorkload.recentLogs.filter(log => !logSearchTerm || log.toLowerCase().includes(logSearchTerm.toLowerCase())).map((log, i) => (
+                    fetchedLogs.filter(log => !logSearchTerm || log.toLowerCase().includes(logSearchTerm.toLowerCase())).map((log, i) => (
                       <div key={i} className="flex gap-3 group hover:bg-bg-hover px-2 py-1 items-start transition-colors">
                         <span className="text-text-tertiary/50 select-none w-8 text-right shrink-0 font-sans">{i + 1}</span>
                         <div className={`text-text-secondary flex-1 min-w-0 ${isLogWrapEnabled ? 'break-all whitespace-pre-wrap' : 'whitespace-nowrap overflow-hidden overflow-x-auto'}`}>{highlightLog(log)}</div>
-                        <CopyButton text={log} className="opacity-0 group-hover:opacity-100 shrink-0" />
                       </div>
                     ))
                   )}
