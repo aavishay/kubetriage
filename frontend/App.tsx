@@ -160,7 +160,7 @@ const AppContent: React.FC = () => {
             } />
             <Route path="/multicluster" element={
               <PageTransition>
-                <MultiClusterView />
+                <MultiClusterView onTriageRequest={handleNavigateToTriage} />
               </PageTransition>
             } />
             <Route path="/ml-intelligence" element={

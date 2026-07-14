@@ -3,7 +3,7 @@ import {
   Globe, Server, AlertTriangle, CheckCircle2, XCircle,
   DollarSign, Box, RefreshCw,
   ArrowUpRight, Clock, AlertCircle, Minus, BarChart3,
-  Search, Filter, X
+  Search, Filter, X, Sparkles, ArrowRight
 } from 'lucide-react';
 import { useMonitoring } from '../contexts/MonitoringContext';
 import {
@@ -32,6 +32,10 @@ interface MultiClusterData {
   incidents: CrossClusterIncident[];
   summary: GlobalSummary;
   correlatedEvents: CorrelatedEvent[];
+}
+
+interface MultiClusterViewProps {
+  onTriageRequest?: (workloadId: string, playbook: DiagnosticPlaybook) => void;
 }
 
 const COLORS = {
@@ -97,7 +101,7 @@ const tooltipStyle = {
   boxShadow: 'var(--kt-shadow-lg)'
 };
 
-export const MultiClusterView: React.FC = () => {
+export const MultiClusterView: React.FC<MultiClusterViewProps> = ({ onTriageRequest }) => {
   const { selectedClusterIds } = useMonitoring();
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<MultiClusterData | null>(null);
@@ -373,7 +377,7 @@ export const MultiClusterView: React.FC = () => {
             </div>
           </div>
 
-          {visibleIncidents.length > 0 && <MultiClusterIncidentsList incidents={visibleIncidents} />}
+          {visibleIncidents.length > 0 && <MultiClusterIncidentsList incidents={visibleIncidents} onTriageRequest={onTriageRequest} />}
         </>
       )}
 
@@ -420,7 +424,7 @@ export const MultiClusterView: React.FC = () => {
         </div>
       )}
 
-      {viewMode === 'incidents' && <MultiClusterIncidentsList incidents={visibleIncidents} />}
+      {viewMode === 'incidents' && <MultiClusterIncidentsList incidents={visibleIncidents} onTriageRequest={onTriageRequest} />}
 
       <div className="flex items-center justify-center gap-2 text-text-tertiary text-xs font-sans font-medium">
         <Clock className="w-3 h-3" /> Last updated: {lastRefresh.toLocaleTimeString()}

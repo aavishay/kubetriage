@@ -125,6 +125,13 @@ export const MonitoringProvider: React.FC<MonitoringProviderProps> = ({ children
     return clusters.find(c => c.id === selectedClusterIds[0]) || null;
   }, [clusters, selectedClusterIds]);
 
+  // Determine active cluster IDs for workload fetching.
+  // If none explicitly selected, treat all known clusters as selected so the dashboard is multi-cluster ready by default.
+  const activeClusterIds = useMemo(() => {
+    if (selectedClusterIds.length > 0) return selectedClusterIds;
+    return clusters.map(c => c.id);
+  }, [selectedClusterIds, clusters]);
+
   // Persist selected cluster IDs
   useEffect(() => {
     if (typeof localStorage !== 'undefined' && localStorage.setItem) {
@@ -163,7 +170,9 @@ export const MonitoringProvider: React.FC<MonitoringProviderProps> = ({ children
     }
   }, []);
 
+  // Initial cluster list load on mount. Async data fetching in useEffect is the app's established pattern.
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     refreshClusters();
   }, [refreshClusters]);
 
@@ -185,7 +194,7 @@ export const MonitoringProvider: React.FC<MonitoringProviderProps> = ({ children
 
   useEffect(() => {
     const fetchWorkloads = async () => {
-      const cacheKey = `cache_workloads_${selectedCluster?.id || ''}_${metricsWindow}`;
+      const cacheKey = `cache_workloads_${activeClusterIds.join(',')}_${metricsWindow}`;
       const cached = (typeof localStorage !== 'undefined' && localStorage.getItem) ? localStorage.getItem(cacheKey) : null;
       if (cached) {
         setWorkloads(JSON.parse(cached));
@@ -193,20 +202,31 @@ export const MonitoringProvider: React.FC<MonitoringProviderProps> = ({ children
         setWorkloads([]);
       }
 
-      if (!selectedCluster) return;
+      if (activeClusterIds.length === 0) return;
 
       setIsWorkloadsLoading(true);
       try {
-        const response = await fetchWithOffline(`/api/cluster/workloads?cluster=${selectedCluster.id}&window=${metricsWindow}`);
-        if (response.ok) {
-          const data = await response.json();
-          const workloadsWithEvents = Array.isArray(data) ? data.map((w: any) => ({
-            ...w,
-            events: w.events || []
-          })) : [];
-          setWorkloads(workloadsWithEvents);
-          localStorage.setItem(cacheKey, JSON.stringify(workloadsWithEvents));
-        }
+        const results = await Promise.all(
+          activeClusterIds.map(id =>
+            fetchWithOffline(`/api/cluster/workloads?cluster=${id}&window=${metricsWindow}`)
+              .then(async (res) => {
+                if (!res.ok) return [];
+                const data = await res.json();
+                return Array.isArray(data) ? data.map((w: any) => ({
+                  ...w,
+                  clusterId: w.clusterId || id,
+                  events: w.events || []
+                })) : [];
+              })
+              .catch((err) => {
+                console.error(`Error fetching workloads for cluster ${id}:`, err);
+                return [];
+              })
+          )
+        );
+        const merged = results.flat();
+        setWorkloads(merged);
+        localStorage.setItem(cacheKey, JSON.stringify(merged));
       } catch (err) {
         console.error("Error fetching workloads", err);
       } finally {
@@ -214,39 +234,50 @@ export const MonitoringProvider: React.FC<MonitoringProviderProps> = ({ children
       }
     };
     fetchWorkloads();
-  }, [selectedCluster, metricsWindow]);
+  }, [activeClusterIds, metricsWindow]);
 
   const refreshWorkloads = useCallback(async () => {
-    if (!selectedCluster) return;
+    if (activeClusterIds.length === 0) return;
     setIsWorkloadsLoading(true);
     try {
-      const response = await fetchWithOffline(`/api/cluster/workloads?cluster=${selectedCluster.id}&window=${metricsWindow}`);
-      if (response.ok) {
-        const data = await response.json();
-        const workloadsWithEvents = Array.isArray(data) ? data.map((w: any) => ({
-          ...w,
-          events: w.events || []
-        })) : [];
-        setWorkloads(workloadsWithEvents);
-        localStorage.setItem(`cache_workloads_${selectedCluster.id}_${metricsWindow}`, JSON.stringify(workloadsWithEvents));
-      }
+      const results = await Promise.all(
+        activeClusterIds.map(id =>
+          fetchWithOffline(`/api/cluster/workloads?cluster=${id}&window=${metricsWindow}`)
+            .then(async (res) => {
+              if (!res.ok) return [];
+              const data = await res.json();
+              return Array.isArray(data) ? data.map((w: any) => ({
+                ...w,
+                clusterId: w.clusterId || id,
+                events: w.events || []
+              })) : [];
+            })
+            .catch((err) => {
+              console.error(`Error refreshing workloads for cluster ${id}:`, err);
+              return [];
+            })
+        )
+      );
+      const merged = results.flat();
+      setWorkloads(merged);
+      localStorage.setItem(`cache_workloads_${activeClusterIds.join(',')}_${metricsWindow}`, JSON.stringify(merged));
     } catch (err) {
       console.error("Error refreshing workloads", err);
     } finally {
       setIsWorkloadsLoading(false);
     }
-  }, [selectedCluster, metricsWindow]);
+  }, [activeClusterIds, metricsWindow]);
 
   // Auto-refresh workloads based on refreshInterval
   useEffect(() => {
-    if (!selectedCluster || refreshInterval <= 0) return;
+    if (activeClusterIds.length === 0 || refreshInterval <= 0) return;
 
     const intervalId = setInterval(() => {
       refreshWorkloads();
     }, refreshInterval * 1000);
 
     return () => clearInterval(intervalId);
-  }, [selectedCluster, refreshInterval, refreshWorkloads]);
+  }, [activeClusterIds, refreshInterval, refreshWorkloads]);
 
   // --- Notifications & Alerting State ---
   const [notificationChannels, setNotificationChannels] = useState<NotificationChannel[]>(() => {
@@ -276,9 +307,17 @@ export const MonitoringProvider: React.FC<MonitoringProviderProps> = ({ children
   });
 
   const [aiConfig, setAiConfig] = useState<{ provider: string; model: string }>(() => {
-    if (typeof localStorage === 'undefined' || !localStorage.getItem) return { provider: 'ollama', model: 'llama3:latest' };
+    if (typeof localStorage === 'undefined' || !localStorage.getItem) return { provider: 'ollama', model: 'gemma4:e4b' };
     const saved = localStorage.getItem('ai_config');
-    return saved ? JSON.parse(saved) : { provider: 'ollama', model: 'llama3:latest' };
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      // Migrate away from the old short-context default that cannot produce structured triage reports.
+      if (parsed.provider === 'ollama' && parsed.model === 'llama3:latest') {
+        return { provider: 'ollama', model: 'gemma4:e4b' };
+      }
+      return parsed;
+    }
+    return { provider: 'ollama', model: 'gemma4:e4b' };
   });
 
   const [lastToastTime, setLastToastTime] = useState(0);
@@ -388,6 +427,7 @@ export const MonitoringProvider: React.FC<MonitoringProviderProps> = ({ children
               ruleName: rule.name,
               workloadName: workload.name,
               workloadId: workload.id,
+              clusterId: workload.clusterId,
               metric: rule.metric,
               value: parseFloat(saturationValue.toFixed(1)),
               threshold: rule.threshold,

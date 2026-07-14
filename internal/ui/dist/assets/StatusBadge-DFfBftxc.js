@@ -1,0 +1,1 @@
+import{j as n}from"./index-BZrL0Km3.js";import{r}from"./vendor-nQJm1a_0.js";const a={Healthy:"kt-badge-success",Warning:"kt-badge-warning",Critical:"kt-badge-danger"},o=({status:t,className:s=""})=>{const e=a[t]||a.Warning;return n.jsx("span",{className:`kt-badge ${e} ${s}`,children:t})},i=r.memo(o);export{i as S};

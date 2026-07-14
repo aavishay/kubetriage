@@ -1,12 +1,14 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState, useEffect, useRef, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { Workload, DiagnosticPlaybook } from '../types';
 import { getMetricStatusColor } from '../types';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
-import { Activity, DollarSign, Box, Zap, TrendingDown, ShieldAlert, HeartPulse, Sparkles, Network, ArrowRight, Target, ShieldCheck, ChevronRight, Server, Loader2 } from 'lucide-react';
+import { Activity, DollarSign, Box, TrendingDown, HeartPulse, Sparkles, Network, ArrowRight, Target, ShieldCheck, ChevronRight, Server, Globe } from 'lucide-react';
 import { DashboardCard } from './dashboard/DashboardCard';
 import { MetricCard } from './dashboard/MetricCard';
 import { StatusBadge } from './dashboard/StatusBadge';
 import { useStaggerAnimation } from './PageTransition';
+import { useMonitoring } from '../contexts/MonitoringContext';
 
 interface DashboardProps {
   workloads: Workload[];
@@ -18,30 +20,225 @@ interface DashboardProps {
   setMetricsWindow?: (window: string) => void;
 }
 
-export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = true, isLoading = false, onTriageRequest, onRefresh, metricsWindow = '1h', setMetricsWindow }) => {
-  const [saturationTab, setSaturationTab] = React.useState<'CPU' | 'Memory' | 'Ephemeral Storage' | 'Network' | 'GPU'>('CPU');
-  const safeWorkloads = workloads || [];
-  const totalCost = safeWorkloads.reduce((acc, w) => acc + (w.costPerMonth || 0), 0);
-  const criticalCount = safeWorkloads.filter(w => w.status === 'Critical').length;
-  const warningCount = safeWorkloads.filter(w => w.status === 'Warning').length;
+export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode: _isDarkMode = true, isLoading = false, onTriageRequest, onRefresh, metricsWindow = '1h', setMetricsWindow }) => {
+  const { selectedClusterIds, selectedCluster, clusters } = useMonitoring();
+  const [saturationTab, setSaturationTab] = useState<'CPU' | 'Memory' | 'Ephemeral Storage' | 'Network' | 'GPU'>('CPU');
+  const [namespaceFilter, setNamespaceFilter] = useState<string[]>(() => {
+    try {
+      if (typeof localStorage !== 'undefined' && localStorage.getItem) {
+        const saved = localStorage.getItem('kt_dashboard_namespaces');
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            return parsed;
+          }
+        }
+        const legacy = localStorage.getItem('kt_dashboard_namespace');
+        if (legacy && legacy !== 'all') return [legacy];
+      }
+    } catch (e) {
+      console.warn('Failed to load namespace filter:', e);
+    }
+    return ['all'];
+  });
 
-  const potentialSavings = safeWorkloads
+  const safeWorkloads = useMemo(() => workloads || [], [workloads]);
+  const activeNamespaces = useMemo(() => {
+    const all = namespaceFilter.includes('all') || namespaceFilter.length === 0;
+    return { all, selected: namespaceFilter.filter(n => n !== 'all') };
+  }, [namespaceFilter]);
+
+  const filteredWorkloads = useMemo(() => {
+    if (activeNamespaces.all) return safeWorkloads;
+    return safeWorkloads.filter(w => activeNamespaces.selected.includes(w.namespace));
+  }, [safeWorkloads, activeNamespaces]);
+
+  const namespaces = useMemo(() => {
+    const seen = new Set<string>();
+    safeWorkloads.forEach(w => seen.add(w.namespace));
+    return Array.from(seen).sort();
+  }, [safeWorkloads]);
+
+  useEffect(() => {
+    try {
+      if (typeof localStorage !== 'undefined' && localStorage.setItem) {
+        localStorage.setItem('kt_dashboard_namespaces', JSON.stringify(namespaceFilter));
+      }
+    } catch (e) {
+      console.warn('Failed to save namespace filter:', e);
+    }
+  }, [namespaceFilter]);
+
+  const namespaceSummary = useMemo(() => {
+    if (activeNamespaces.all) return 'All namespaces';
+    if (activeNamespaces.selected.length === 1) return activeNamespaces.selected[0];
+    return `${activeNamespaces.selected.length} namespaces`;
+  }, [activeNamespaces]);
+
+  const applyNamespaces = (next: string[]) => {
+    setNamespaceFilter(next.length === 0 ? ['all'] : next);
+  };
+
+  const namespaceMenuItems = useMemo(() => {
+    return namespaces.map(ns => ({
+      id: ns,
+      label: ns,
+      selected: activeNamespaces.selected.includes(ns),
+    }));
+  }, [namespaces, activeNamespaces]);
+
+  // ---- Namespace scope menu (command-palette style) ----
+  interface NsMenuPosition { top: number; left: number; width: number; }
+  const nsButtonRef = useRef<HTMLButtonElement>(null);
+  const nsSearchRef = useRef<HTMLInputElement>(null);
+  const [nsMenuOpen, setNsMenuOpen] = useState(false);
+  const [nsMenuPos, setNsMenuPos] = useState<NsMenuPosition | null>(null);
+  const [nsSearch, setNsSearch] = useState('');
+  const [pendingNs, setPendingNs] = useState<string[]>([]);
+  const [focusIndex, setFocusIndex] = useState<number>(-1);
+
+  const showNsSearch = namespaces.length >= 8;
+  const filteredNsItems = useMemo(() => {
+    const term = nsSearch.trim().toLowerCase();
+    if (!term) return namespaceMenuItems;
+    return namespaceMenuItems.filter(item => item.label.toLowerCase().includes(term));
+  }, [namespaceMenuItems, nsSearch]);
+
+  const pendingHasChanges = useMemo(() => {
+    const current = activeNamespaces.all ? [] : activeNamespaces.selected.slice().sort();
+    const next = pendingNs.slice().sort();
+    return JSON.stringify(current) !== JSON.stringify(next);
+  }, [activeNamespaces, pendingNs]);
+
+  const openNsMenu = useCallback(() => {
+    const seed = activeNamespaces.all ? [] : activeNamespaces.selected;
+    setPendingNs(seed);
+    setNsSearch('');
+    setFocusIndex(-1);
+    if (nsButtonRef.current) {
+      const rect = nsButtonRef.current.getBoundingClientRect();
+      const width = Math.min(Math.max(rect.width, 220), 320);
+      setNsMenuPos({ top: rect.bottom + 4, left: rect.left, width });
+    }
+    setNsMenuOpen(true);
+  }, [activeNamespaces]);
+
+  const closeNsMenu = useCallback(() => {
+    setNsMenuOpen(false);
+    setNsSearch('');
+    setFocusIndex(-1);
+  }, []);
+
+  const commitPendingNs = useCallback(() => {
+    applyNamespaces(pendingNs);
+    closeNsMenu();
+  }, [pendingNs, closeNsMenu]);
+
+  const togglePendingNs = useCallback((ns: string) => {
+    setPendingNs(prev => {
+      if (prev.includes(ns)) {
+        const next = prev.filter(n => n !== ns);
+        return next;
+      }
+      return [...prev, ns];
+    });
+  }, []);
+
+  const selectAllPending = useCallback(() => {
+    setPendingNs([]);
+  }, []);
+
+  const clearPending = useCallback(() => {
+    setPendingNs([]);
+  }, []);
+
+  useEffect(() => {
+    if (!nsMenuOpen) return;
+    if (showNsSearch && nsSearchRef.current) {
+      nsSearchRef.current.focus();
+    }
+    const handleClickOutside = (e: MouseEvent) => {
+      const portal = document.getElementById('ns-dropdown-portal');
+      const target = e.target as Node;
+      if (nsButtonRef.current && !nsButtonRef.current.contains(target) && portal && !portal.contains(target)) {
+        closeNsMenu();
+      }
+    };
+    const handleResize = () => closeNsMenu();
+    document.addEventListener('mousedown', handleClickOutside);
+    window.addEventListener('resize', handleResize);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      window.removeEventListener('resize', handleResize);
+    };
+  }, [nsMenuOpen, showNsSearch, closeNsMenu]);
+
+  useEffect(() => {
+    if (!nsMenuOpen) return;
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        closeNsMenu();
+        return;
+      }
+      if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+        e.preventDefault();
+        setFocusIndex(prev => {
+          const max = filteredNsItems.length - 1;
+          if (max < 0) return -1;
+          if (e.key === 'ArrowDown') return prev >= max ? 0 : prev + 1;
+          return prev <= 0 ? max : prev - 1;
+        });
+        return;
+      }
+      if (e.key === ' ' || e.key === 'Enter') {
+        if (focusIndex >= 0 && focusIndex < filteredNsItems.length) {
+          e.preventDefault();
+          togglePendingNs(filteredNsItems[focusIndex].id);
+        }
+        return;
+      }
+      if (e.key === 'Tab' && !e.shiftKey) {
+        if (focusIndex === filteredNsItems.length - 1) {
+          e.preventDefault();
+          setFocusIndex(-1);
+          nsSearchRef.current?.focus();
+        }
+      }
+    };
+    document.addEventListener('keydown', handleKey);
+    return () => document.removeEventListener('keydown', handleKey);
+  }, [nsMenuOpen, filteredNsItems, focusIndex, togglePendingNs, closeNsMenu]);
+
+  const totalCost = filteredWorkloads.reduce((acc, w) => acc + (w.costPerMonth || 0), 0);
+  const criticalCount = filteredWorkloads.filter(w => w.status === 'Critical').length;
+  const warningCount = filteredWorkloads.filter(w => w.status === 'Warning').length;
+
+  const clusterNameById = useMemo(() => {
+    const map = new Map<string, string>();
+    clusters.forEach(c => map.set(c.id, c.displayName || c.name));
+    return map;
+  }, [clusters]);
+
+  const selectedClusterCount = selectedClusterIds.length > 0 ? selectedClusterIds.length : clusters.length;
+
+  const potentialSavings = filteredWorkloads
     .filter(w => w.recommendation && w.recommendation.action === 'Downsize')
     .reduce((acc, w) => acc + (w.costPerMonth * 0.4), 0);
 
   const statusData = [
-    { name: 'Healthy', value: safeWorkloads.filter(w => w.status === 'Healthy').length, color: '#2ecc71' },
+    { name: 'Healthy', value: filteredWorkloads.filter(w => w.status === 'Healthy').length, color: '#2ecc71' },
     { name: 'Warning', value: warningCount, color: '#f5a623' },
     { name: 'Critical', value: criticalCount, color: '#e74c3c' },
   ];
 
   const incidents = useMemo(() => {
-    return safeWorkloads.filter(w => w.status !== 'Healthy').sort((a, b) => {
+    return filteredWorkloads.filter(w => w.status !== 'Healthy').sort((a, b) => {
       if (a.status === 'Critical' && b.status !== 'Critical') return -1;
       if (a.status !== 'Critical' && b.status === 'Critical') return 1;
       return 0;
     });
-  }, [safeWorkloads]);
+  }, [filteredWorkloads]);
 
   const reliabilityMetrics = useMemo(() => {
     const slo = 99.9;
@@ -53,7 +250,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = tr
     const dailyConsumption = (
       (criticalCount * criticalWeight) +
       (warningCount * warningWeight) +
-      ((safeWorkloads.length - criticalCount - warningCount) * healthyWeight)
+      ((filteredWorkloads.length - criticalCount - warningCount) * healthyWeight)
     );
 
     const baselineConsumed = 0.042;
@@ -70,7 +267,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = tr
       uptimeForecast: `${days}d ${hours}h`,
       severity: burnRate > 2.0 ? 'Critical' : burnRate > 1.2 ? 'Warning' : 'Healthy'
     };
-  }, [safeWorkloads, criticalCount, warningCount]);
+  }, [filteredWorkloads, criticalCount, warningCount]);
 
   const budgetGaugeData = [
     { name: 'Consumed', value: Math.max(0, isFinite(reliabilityMetrics.budgetPercentage) ? 100 - reliabilityMetrics.budgetPercentage : 100), color: reliabilityMetrics.severity === 'Critical' ? '#e74c3c' : '#f5a623' },
@@ -145,7 +342,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = tr
         </div>
         <h2 className="font-sans text-2xl font-bold mb-2">No workloads found</h2>
         <p className="text-text-secondary max-w-sm text-center mb-6 text-sm font-sans">
-          No active workloads detected in the current cluster. Connect a cluster to begin monitoring.
+          No active workloads detected in the selected clusters. Connect or select a cluster to begin monitoring.
         </p>
         <button
           onClick={() => onRefresh?.()}
@@ -227,6 +424,23 @@ export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = tr
         </DashboardCard>
       )}
 
+      {/* Context summary strip */}
+      <div className="flex items-center gap-2 px-3 py-2 border border-border-main bg-bg-card/50 text-text-tertiary text-xs font-sans">
+        {selectedClusterCount > 1 ? (
+          <>
+            <Globe className="w-3.5 h-3.5 text-primary-500" />
+            <span className="font-semibold text-text-secondary">Multi-cluster view:</span>
+            <span>Aggregating {filteredWorkloads.length} workloads across {selectedClusterCount} selected clusters{!activeNamespaces.all && ` (${namespaceSummary})`}.</span>
+          </>
+        ) : (
+          <>
+            <Server className="w-3.5 h-3.5 text-primary-500" />
+            <span className="font-semibold text-text-secondary">Cluster view:</span>
+            <span>{filteredWorkloads.length} workloads in {selectedCluster?.displayName || selectedCluster?.name || 'selected cluster'}{!activeNamespaces.all && ` (${namespaceSummary})`}.</span>
+          </>
+        )}
+      </div>
+
       {/* Metrics Grid */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         <MetricCard
@@ -234,7 +448,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = tr
           iconColor="text-primary-500"
           label="Monthly cost"
           value={`$${totalCost.toLocaleString()}`}
-          trend="+4.2%"
+          trend={selectedClusterCount > 1 ? `Across ${selectedClusterCount} clusters` : '+4.2%'}
           delay={stagger(0).animationDelay}
         />
         <MetricCard
@@ -242,7 +456,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = tr
           iconColor="text-success"
           label="Health score"
           value={criticalCount === 0 ? 'Healthy' : 'Degraded'}
-          trendLabel={`${Math.round((1 - (criticalCount / (safeWorkloads.length || 1))) * 100)}%`}
+          trendLabel={`${Math.round((1 - (criticalCount / (filteredWorkloads.length || 1))) * 100)}%`}
           delay={stagger(1).animationDelay}
         />
         <MetricCard
@@ -250,7 +464,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = tr
           iconColor="text-primary-500"
           label="Cost savings"
           value={`$${Math.round(potentialSavings).toLocaleString()}`}
-          trendLabel="Potential"
+          trendLabel={selectedClusterCount > 1 ? 'Potential across selection' : 'Potential'}
           delay={stagger(2).animationDelay}
         />
         <MetricCard
@@ -258,7 +472,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = tr
           iconColor="text-info"
           label="Workloads"
           value="Active"
-          trendLabel={`${safeWorkloads.length}`}
+          trendLabel={`${filteredWorkloads.length}`}
           delay={stagger(3).animationDelay}
         />
       </div>
@@ -268,7 +482,13 @@ export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = tr
 
         {/* Left Column */}
         <div className="lg:col-span-2 flex flex-col gap-4">
-          <DashboardCard padding="lg" title="Active incidents" className="flex flex-col flex-1 min-h-[360px]">
+          <DashboardCard
+            padding="lg"
+            title={activeNamespaces.all
+              ? (selectedClusterCount > 1 ? `Active incidents across ${selectedClusterCount} clusters` : 'Active incidents')
+              : `Active incidents in ${namespaceSummary}`}
+            className="flex flex-col flex-1 min-h-[360px]"
+          >
             <div className="space-y-2 overflow-y-auto flex-1 min-h-0 pr-1 custom-scrollbar relative z-10">
               {incidents.length > 0 ? (
                 incidents.slice(0, 5).map((w, idx) => (
@@ -286,6 +506,11 @@ export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = tr
                       <div className="flex items-center gap-2 min-w-0">
                         <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${getStatusColor(w.status)}`} />
                         <span className="text-sm font-bold text-text-primary truncate">{w.name}</span>
+                        {selectedClusterCount > 1 && (
+                          <span className="text-[10px] px-1.5 py-0.5 border border-border-main bg-bg-hover text-text-tertiary font-sans truncate max-w-[120px]">
+                            {clusterNameById.get(w.clusterId) || w.clusterId}
+                          </span>
+                        )}
                       </div>
                       <StatusBadge status={w.status} />
                     </div>
@@ -310,7 +535,10 @@ export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = tr
             </div>
           </DashboardCard>
 
-          <DashboardCard padding="lg" title="Status distribution">
+          <DashboardCard padding="lg" title={activeNamespaces.all
+            ? (selectedClusterCount > 1 ? 'Status distribution (all clusters)' : 'Status distribution')
+            : `Status distribution in ${namespaceSummary}`}
+          >
             <div className="h-44 w-full relative z-10">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
@@ -326,8 +554,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = tr
                 </PieChart>
               </ResponsiveContainer>
               <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                <span className="text-2xl font-bold text-text-primary">{safeWorkloads.length}</span>
-                <span className="text-[10px] text-text-tertiary font-sans font-medium">Total</span>
+                <span className="text-2xl font-bold text-text-primary">{filteredWorkloads.length}</span>
+                <span className="text-[10px] text-text-tertiary font-sans font-medium">{activeNamespaces.all ? 'Total' : 'Filtered'}</span>
               </div>
             </div>
             <div className="grid grid-cols-3 gap-2 mt-3 relative z-10">
@@ -349,7 +577,9 @@ export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = tr
 
         {/* Right Column - Resource Saturation */}
         <div className="lg:col-span-3">
-          <DashboardCard padding="lg" title="Resource saturation" className="flex flex-col h-full min-h-[360px]">
+          <DashboardCard padding="lg" title={activeNamespaces.all
+            ? (selectedClusterCount > 1 ? 'Resource saturation (all clusters)' : 'Resource saturation')
+            : `Resource saturation in ${namespaceSummary}`} className="flex flex-col h-full min-h-[360px]">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 mb-4 relative z-10">
               <div className="flex flex-wrap items-center gap-2">
                 {(['5m', '15m', '30m', '1h'] as const).map((win) => (
@@ -363,6 +593,105 @@ export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = tr
                     {win}
                   </button>
                 ))}
+                <div className="relative">
+                  <button
+                    ref={nsButtonRef}
+                    className="kt-select text-[10px] py-1 px-2 h-[26px] min-w-[110px] flex items-center gap-2 text-left aria-expanded:border-primary-500 aria-expanded:shadow-[0_0_0_1px_rgba(0,200,240,0.25)]"
+                    aria-label="Filter by namespace"
+                    aria-haspopup="listbox"
+                    aria-expanded={nsMenuOpen}
+                    onClick={() => {
+                      if (nsMenuOpen) {
+                        closeNsMenu();
+                      } else {
+                        openNsMenu();
+                      }
+                    }}
+                  >
+                    <span className="truncate">{namespaceSummary}</span>
+                  </button>
+                  {nsMenuOpen && nsMenuPos && typeof document !== 'undefined' && document.getElementById('ns-dropdown-portal') && createPortal(
+                    <div
+                      className="custom-scrollbar bg-bg-card border border-border-main shadow-lg overflow-hidden animate-fade-in"
+                      style={{ position: 'fixed', top: nsMenuPos.top, left: nsMenuPos.left, minWidth: nsMenuPos.width, maxWidth: 320, zIndex: 2147483647 }}
+                      role="listbox"
+                      aria-label="Select namespaces"
+                      aria-multiselectable="true"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      {/* Active scope indicator line — the signature "console feed" detail */}
+                      <div className="h-[2px] w-full bg-gradient-to-r from-primary-600 via-primary-500 to-primary-600 animate-pulse dark:from-primary-500 dark:via-primary-300 dark:to-primary-500" />
+
+                      {showNsSearch && (
+                        <div className="p-2 border-b border-border-main">
+                          <input
+                            ref={nsSearchRef}
+                            type="text"
+                            value={nsSearch}
+                            onChange={(e) => { setNsSearch(e.target.value); setFocusIndex(-1); }}
+                            placeholder="Search namespaces…"
+                            className="kt-input w-full text-xs py-1.5 px-2"
+                            aria-label="Search namespaces"
+                          />
+                        </div>
+                      )}
+
+                      {/* All namespaces — radio-style mutual exclusion */}
+                      <div
+                        role="option"
+                        aria-selected={pendingNs.length === 0}
+                        className={`flex items-center gap-2 px-3 py-2 text-[13px] font-sans cursor-pointer border-b border-border-main transition-colors ${pendingNs.length === 0 ? 'bg-primary-500/10 dark:bg-primary-500/[0.08] text-primary-700 dark:text-text-primary font-semibold' : 'hover:bg-bg-hover text-text-primary'}`}
+                        onClick={selectAllPending}
+                        onMouseEnter={() => setFocusIndex(-1)}
+                      >
+                        <div className={`w-4 h-4 rounded-full border flex items-center justify-center shrink-0 ${pendingNs.length === 0 ? 'border-primary-600 bg-primary-600 dark:border-primary-500 dark:bg-primary-500' : 'border-border-main bg-bg-main'}`}>
+                          {pendingNs.length === 0 && <div className="w-1.5 h-1.5 rounded-full bg-white dark:bg-bg-card" />}
+                        </div>
+                        <span className="truncate">All namespaces</span>
+                      </div>
+
+                      {/* Namespace list */}
+                      <div className="max-h-[240px] overflow-y-auto custom-scrollbar" role="presentation">
+                        {filteredNsItems.length === 0 && (
+                          <div className="px-3 py-4 text-xs text-text-tertiary text-center font-sans">No namespaces match</div>
+                        )}
+                        {filteredNsItems.map((item, idx) => (
+                          <div
+                            key={item.id}
+                            role="option"
+                            aria-selected={item.selected}
+                            className={`flex items-center gap-2 px-3 py-2 text-[13px] font-sans cursor-pointer transition-colors ${idx === focusIndex ? 'bg-bg-hover' : ''} ${item.selected ? 'bg-primary-500/10 dark:bg-primary-500/[0.08] text-primary-700 dark:text-text-primary font-semibold' : 'hover:bg-bg-hover text-text-primary'}`}
+                            onClick={() => togglePendingNs(item.id)}
+                            onMouseEnter={() => setFocusIndex(idx)}
+                          >
+                            <div className={`w-4 h-4 rounded-sm border flex items-center justify-center shrink-0 ${item.selected ? 'border-primary-600 bg-primary-600 dark:border-primary-500 dark:bg-primary-500' : 'border-border-main bg-bg-main'}`}>
+                              {item.selected && <span className="text-[10px] text-white">✓</span>}
+                            </div>
+                            <span className="truncate" title={item.label}>{item.label}</span>
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* Footer actions */}
+                      <div className="flex items-center justify-between px-2 py-2 border-t border-border-main bg-bg-main/50">
+                        <button
+                          className="kt-button kt-button-ghost kt-button-sm text-text-tertiary hover:text-text-primary"
+                          onClick={clearPending}
+                        >
+                          Clear
+                        </button>
+                        <button
+                          className="kt-button kt-button-primary kt-button-sm disabled:opacity-40 disabled:cursor-not-allowed"
+                          disabled={!pendingHasChanges}
+                          onClick={commitPendingNs}
+                        >
+                          Apply{pendingNs.length > 0 && ` (${pendingNs.length})`}
+                        </button>
+                      </div>
+                    </div>,
+                    document.getElementById('ns-dropdown-portal')!
+                  )}
+                </div>
               </div>
               <div className="flex flex-wrap items-center gap-2">
                 {(['CPU', 'Memory', 'Ephemeral Storage', 'GPU', 'Network'] as const).map((type) => (
@@ -381,9 +710,9 @@ export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = tr
 
             <div className="flex-1 min-h-0 overflow-y-auto pr-1 custom-scrollbar relative z-10">
               <div className="space-y-2">
-                {workloads
+                {filteredWorkloads
                   .map((w) => {
-                    const metrics = w.metrics || {} as any;
+                    const metrics = w.metrics ?? ({} as Workload['metrics']);
                     let base = 0, used = 0, unit = '';
 
                     if (saturationTab === 'CPU') {
@@ -412,7 +741,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = tr
                     const isCritical = saturation >= 90;
                     const isWarning = saturation >= 70 && !isCritical;
 
-                    return { name: w.name, base, used, unit, saturation, isCritical, isWarning, status: w.status };
+                    return { name: w.name, clusterId: w.clusterId, base, used, unit, saturation, isCritical, isWarning, status: w.status };
                   })
                   .sort((a, b) => b.saturation - a.saturation)
                   .slice(0, 10)
@@ -436,6 +765,11 @@ export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = tr
                           <div className={`w-1.5 h-1.5 rounded-full ${getStatusColor(item.status)}`} />
                           <span className="text-[10px] text-text-tertiary font-sans">{item.status}</span>
                         </div>
+                        {selectedClusterCount > 1 && (
+                          <div className="text-[10px] text-text-tertiary font-sans truncate mt-0.5">
+                            {clusterNameById.get(item.clusterId) || item.clusterId}
+                          </div>
+                        )}
                       </div>
 
                       <div className="flex-1 flex flex-col justify-center">
@@ -469,10 +803,10 @@ export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode = tr
                       </div>
                     </div>
                   ))}
-                {workloads.length > 10 && (
+                {filteredWorkloads.length > 10 && (
                   <div className="pt-2 pb-1 text-center">
                     <span className="text-[11px] text-text-tertiary font-sans font-medium">
-                      Showing top 10 of {workloads.length} workloads
+                      Showing top 10 of {filteredWorkloads.length} workloads{selectedClusterCount > 1 && ` across ${selectedClusterCount} clusters`}
                     </span>
                   </div>
                 )}

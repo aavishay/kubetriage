@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo, useCallback, memo, useRef } from 'react';
-import { Search, Filter, X, Clock, CheckCircle2, ChevronDown, ChevronUp, Copy, Check } from 'lucide-react';
+import { Search, Filter, X, Clock, CheckCircle2, ChevronDown, ChevronUp, Copy, Check, Sparkles, ArrowRight } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
-import { CrossClusterIncident } from '../types';
+import { CrossClusterIncident, DiagnosticPlaybook } from '../types';
 import { useDebounce } from '../hooks/useDebounce';
 
 const SEVERITY_CONFIG: Record<string, { bar: string; badge: string; dot: string }> = {
@@ -94,9 +94,10 @@ const markdownComponents = {
 
 interface IncidentRowProps {
   incident: CrossClusterIncident;
+  onTriageRequest?: (workloadId: string, playbook: DiagnosticPlaybook) => void;
 }
 
-const IncidentRow = memo(function IncidentRow({ incident }: IncidentRowProps) {
+const IncidentRow = memo(function IncidentRow({ incident, onTriageRequest }: IncidentRowProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [isDescriptionClamped, setIsDescriptionClamped] = useState(false);
   const [isRootCauseClamped, setIsRootCauseClamped] = useState(false);
@@ -170,6 +171,15 @@ const IncidentRow = memo(function IncidentRow({ incident }: IncidentRowProps) {
               <button onClick={copyToClipboard} className="text-[10px] font-sans font-semibold text-text-tertiary hover:text-text-primary flex items-center gap-1 transition-colors" title="Copy incident description">
                 {copied ? <><Check className="w-3 h-3 text-success" /> Copied</> : <><Copy className="w-3 h-3" /> Copy</>}
               </button>
+              {onTriageRequest && incident.affectedWorkloads && incident.affectedWorkloads.length > 0 && (
+                <button
+                  onClick={() => onTriageRequest(incident.affectedWorkloads[0].name, 'Resource Constraints')}
+                  className="text-[10px] font-sans font-semibold text-primary-500 hover:text-primary-400 flex items-center gap-1 transition-colors"
+                  title={`Run AI triage on ${incident.affectedWorkloads[0].name}`}
+                >
+                  <Sparkles className="w-3 h-3" /> Run triage
+                </button>
+              )}
             </div>
           </div>
           <div className="flex items-center gap-1.5 text-[10px] text-text-tertiary shrink-0 whitespace-nowrap font-sans">
@@ -207,9 +217,10 @@ const IncidentRow = memo(function IncidentRow({ incident }: IncidentRowProps) {
 
 interface MultiClusterIncidentsListProps {
   incidents: CrossClusterIncident[];
+  onTriageRequest?: (workloadId: string, playbook: DiagnosticPlaybook) => void;
 }
 
-export const MultiClusterIncidentsList: React.FC<MultiClusterIncidentsListProps> = memo(function MultiClusterIncidentsList({ incidents }) {
+export const MultiClusterIncidentsList: React.FC<MultiClusterIncidentsListProps> = memo(function MultiClusterIncidentsList({ incidents, onTriageRequest }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [severityFilter, setSeverityFilter] = useState('all');
   const [patternFilter, setPatternFilter] = useState('all');
@@ -295,7 +306,7 @@ export const MultiClusterIncidentsList: React.FC<MultiClusterIncidentsListProps>
         ) : (
           <div className="divide-y divide-border-main">
             {visibleIncidents.map((incident) => (
-              <IncidentRow key={incident.id} incident={incident} />
+              <IncidentRow key={incident.id} incident={incident} onTriageRequest={onTriageRequest} />
             ))}
             {hasMore && (
               <button onClick={loadMore} className="w-full py-3 text-xs font-sans font-semibold text-text-secondary hover:text-text-primary hover:bg-bg-hover transition-colors flex items-center justify-center gap-1.5 border-t border-border-main">

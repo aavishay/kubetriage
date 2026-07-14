@@ -199,10 +199,10 @@ func (s *AIService) AnalyzeWorkload(ctx context.Context, req AnalyzeWorkloadRequ
 		}
 	}
 
-	// Truncate logs and events to avoid massive context size
+	// Truncate logs and events to avoid massive context size, but keep the most recent tail
 	safeLogs := req.Logs
-	if len(safeLogs) > 20 {
-		safeLogs = safeLogs[len(safeLogs)-20:]
+	if len(safeLogs) > 40 {
+		safeLogs = safeLogs[len(safeLogs)-40:]
 	}
 	safeEvents := req.Events
 	if len(safeEvents) > 20 {
@@ -250,18 +250,20 @@ func (s *AIService) AnalyzeWorkload(ctx context.Context, req AnalyzeWorkloadRequ
     - Known Misconfigurations: %s
     
     **LOGS & EVENTS**:
-    Logs:
+    Recent pod log tail (most recent lines first; these are the primary signal for root cause):
     %s
-    
-    Events:
+
+    Kubernetes events:
     %s
-    
+
     **INFRASTRUCTURE LOGS (Karpenter/Scheduler)**:
     %s
-    
+
     **SRE INTERPRETATION NOTES**:
     - If Min Replicas is **0**, this workload is likely configured for **Scale to Zero (Cost Optimization)**. If current replicas are 0, this is expected behavior and not a failure unless logs indicate a trigger failed to fire.
-    
+    - Start your root cause by quoting or referencing specific log lines above. Do not ignore them.
+    - If logs contain error keywords (Error, Exception, Fatal, CrashLoopBackOff, OOMKilled, Evicted, Timeout, Connection refused, 5xx), call them out explicitly.
+
     **OUTPUT REQUIREMENTS**:
     Produce a Highly Polished, Executive-Grade SRE Incident Report in Markdown.
     
@@ -308,7 +310,44 @@ func (s *AIService) AnalyzeWorkload(ctx context.Context, req AnalyzeWorkloadRequ
 		strings.Join(safeSchedulerLogs, "\n"),
 	)
 
-	return provider.GenerateContent(ctx, prompt, req.Model)
+	analysis, err := provider.GenerateContent(ctx, prompt, req.Model)
+	if err != nil {
+		return "", err
+	}
+
+	// If the model returns an empty or trivial response, synthesize a fallback from the data we have.
+	// This guarantees the user sees a concrete diagnostic even when a small local model chokes.
+	clean := strings.TrimSpace(analysis)
+	if clean == "" || strings.EqualFold(clean, "No analysis generated.") || len(clean) < 60 {
+		var b strings.Builder
+		fmt.Fprintf(&b, "## 🚨 Diagnostic Summary\n\nThe AI model returned a brief or empty response. A manual diagnostic summary is provided below based on the collected telemetry, events, and the most recent pod log tail.\n\n")
+		fmt.Fprintf(&b, "- **Workload**: `%s/%s` (%s)\n", req.Namespace, req.WorkloadName, req.Kind)
+		fmt.Fprintf(&b, "- **Status**: %s\n", req.Status)
+		fmt.Fprintf(&b, "- **Playbook**: %s\n", req.Playbook)
+		fmt.Fprintf(&b, "- **CPU**: %s / %s cores\n", req.CpuUsage, req.CpuLimit)
+		fmt.Fprintf(&b, "- **Memory**: %s / %s MiB\n", req.MemoryUsage, req.MemoryLimit)
+
+		if len(safeEvents) > 0 {
+			fmt.Fprintf(&b, "\n## Recent Events\n")
+			for _, e := range safeEvents {
+				fmt.Fprintf(&b, "- %s\n", e)
+			}
+		}
+
+		if len(safeLogs) > 0 {
+			fmt.Fprintf(&b, "\n## Recent Pod Log Tail\n")
+			fmt.Fprintf(&b, "```\n%s\n```\n", strings.Join(safeLogs, "\n"))
+		}
+
+		fmt.Fprintf(&b, "\n## Suggested Next Steps\n")
+		fmt.Fprintf(&b, "1. Inspect the full logs with: `kubectl logs -n %s -l app=%s --tail=200`\n", req.Namespace, req.WorkloadName)
+		fmt.Fprintf(&b, "2. Describe the workload with: `kubectl describe %s %s -n %s`\n", req.Kind, req.WorkloadName, req.Namespace)
+		fmt.Fprintf(&b, "3. Check events with: `kubectl get events -n %s --field-selector involvedObject.name=%s`\n", req.Namespace, req.WorkloadName)
+
+		return b.String(), nil
+	}
+
+	return analysis, nil
 }
 
 type RightSizingRequest struct {

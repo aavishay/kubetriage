@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FileText, Download, Clock, Shield, Search, Filter, Loader2, CheckCircle2, AlertCircle, FileCheck, Activity, Trash2, MessageSquare, Ticket, Share2, X, Sparkles, ChevronRight, ChevronDown, Layers, Plus } from 'lucide-react';
+import { FileText, Download, Clock, Shield, Search, Loader2, CheckCircle2, AlertCircle, FileCheck, Activity, Trash2, MessageSquare, Ticket, X, Sparkles, ChevronRight, ChevronDown, Layers, Plus } from 'lucide-react';
 import { useMonitoring } from '../contexts/MonitoringContext';
 import { usePresence } from '../contexts/PresenceContext';
 import { useEscapeKey } from '../utils/useEscapeKey';
@@ -36,15 +36,6 @@ export const ReportsView: React.FC = () => {
         });
     }, []);
 
-    const expandAll = useCallback(() => {
-        const allNames = new Set(groupedReports.map(g => g.workloadName));
-        setExpandedGroups(allNames);
-    }, []);
-
-    const collapseAll = useCallback(() => {
-        setExpandedGroups(new Set());
-    }, []);
-
     const closeConfirm = useCallback(() => setShowConfirm(false), []);
     const closeReport = useCallback(() => {
         if (selectedReport) notifyLeave(`report-${selectedReport.ID}`);
@@ -53,11 +44,7 @@ export const ReportsView: React.FC = () => {
     useEscapeKey(showConfirm, closeConfirm);
     useEscapeKey(!!selectedReport, closeReport);
 
-    useEffect(() => {
-        fetchReports();
-    }, []);
-
-    const fetchReports = async () => {
+    const fetchReports = useCallback(async () => {
         try {
             const res = await fetch('/api/reports?all=true'); // Fetch all reports history
             if (res.ok) {
@@ -69,7 +56,13 @@ export const ReportsView: React.FC = () => {
         } finally {
             setIsLoading(false);
         }
-    };
+    }, []);
+
+    // Initial data fetch on mount. Async data fetching in useEffect is the app's established pattern.
+    useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        fetchReports();
+    }, [fetchReports]);
 
     const handleDownloadCompliance = () => {
         window.open('/api/reports/compliance', '_blank');
@@ -103,10 +96,18 @@ export const ReportsView: React.FC = () => {
         }
     };
 
-    const formatDate = (dateStr: string) => {
+    const formatDateTime = (dateStr: string) => {
         const d = new Date(dateStr);
         if (isNaN(d.getTime())) return 'Just Now';
-        return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+        return d.toLocaleString(undefined, {
+            month: 'short',
+            day: 'numeric',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+            hour12: false
+        });
     };
 
     const handleApprove = async (report: TriageReport) => {
@@ -159,6 +160,23 @@ export const ReportsView: React.FC = () => {
         (r.WorkloadName || 'Unknown').toLowerCase().includes(searchTerm.toLowerCase())
     );
 
+    // Deduplicate reports that share the same incident signature (type + severity + normalized analysis)
+    // Keeps the most recent occurrence of each recurring event.
+    const dedupeReports = (reports: TriageReport[]): TriageReport[] => {
+        const seen = new Map<string, TriageReport>();
+        reports
+            .slice()
+            .sort((a, b) => new Date(b.CreatedAt).getTime() - new Date(a.CreatedAt).getTime())
+            .forEach(report => {
+                const normalizedAnalysis = (report.Analysis || '').replace(/[#*`\s]/g, '').substring(0, 120).toLowerCase();
+                const key = `${report.IncidentType || 'Unknown'}|${report.Severity || 'Unknown'}|${normalizedAnalysis}`;
+                if (!seen.has(key)) {
+                    seen.set(key, report);
+                }
+            });
+        return Array.from(seen.values()).sort((a, b) => new Date(b.CreatedAt).getTime() - new Date(a.CreatedAt).getTime());
+    };
+
     // Group reports by WorkloadName (pod name)
     const groupedReports = useMemo(() => {
         const groups = new Map<string, TriageReport[]>();
@@ -170,17 +188,29 @@ export const ReportsView: React.FC = () => {
             groups.get(name)!.push(report);
         });
         return Array.from(groups.entries())
-            .map(([workloadName, reports]) => ({
-                workloadName,
-                reports: reports.sort((a, b) => new Date(b.CreatedAt).getTime() - new Date(a.CreatedAt).getTime()),
-                latestReport: reports[0],
-                count: reports.length,
-                criticalCount: reports.filter(r => r.Severity === 'Critical').length,
-            }))
+            .map(([workloadName, reports]) => {
+                const uniqueReports = dedupeReports(reports);
+                return {
+                    workloadName,
+                    reports: uniqueReports,
+                    latestReport: uniqueReports[0],
+                    count: uniqueReports.length,
+                    criticalCount: uniqueReports.filter(r => r.Severity === 'Critical').length,
+                };
+            })
             .sort((a, b) => new Date(b.latestReport.CreatedAt).getTime() - new Date(a.latestReport.CreatedAt).getTime());
     }, [filteredReports]);
 
     const allExpanded = groupedReports.length > 0 && expandedGroups.size === groupedReports.length;
+
+    const expandAll = useCallback(() => {
+        const allNames = new Set(groupedReports.map(g => g.workloadName));
+        setExpandedGroups(allNames);
+    }, [groupedReports]);
+
+    const collapseAll = useCallback(() => {
+        setExpandedGroups(new Set());
+    }, []);
 
     const severityBadge = (severity: string | undefined, isSecurity: boolean) => {
         if (isSecurity || severity === 'Critical') {
@@ -342,7 +372,7 @@ export const ReportsView: React.FC = () => {
                                             </span>
                                             <div className="flex items-center gap-1.5 text-xs text-text-tertiary font-sans">
                                                 <Clock className="w-3.5 h-3.5" />
-                                                {formatDate(selectedReport.CreatedAt)}
+                                                {formatDateTime(selectedReport.CreatedAt)}
                                             </div>
 
                                             {activeUsers[`report-${selectedReport.ID}`] && activeUsers[`report-${selectedReport.ID}`].length > 0 && (
@@ -481,7 +511,7 @@ export const ReportsView: React.FC = () => {
                                                         )}
                                                     </div>
                                                     <p className="text-xs text-text-tertiary truncate">
-                                                        Latest: {formatDate(group.latestReport.CreatedAt)}
+                                                        Latest: {formatDateTime(group.latestReport.CreatedAt)}
                                                         {group.latestReport.Severity && (
                                                             <span className="ml-2">• Severity: {group.latestReport.Severity}</span>
                                                         )}
@@ -516,8 +546,8 @@ export const ReportsView: React.FC = () => {
 
                                                                 <div className="flex-1 min-w-0">
                                                                     <div className="flex items-center gap-2 min-w-0">
-                                                                        <span className="kt-badge kt-badge-info">
-                                                                            {formatDate(report.CreatedAt)}
+                                                                        <span className="kt-badge kt-badge-info" title={formatDateTime(report.CreatedAt)}>
+                                                                            {formatDateTime(report.CreatedAt)}
                                                                         </span>
                                                                         <span className={`kt-badge ${severityBadge(report.Severity, reportIsSecurity)}`}>
                                                                             {report.Severity}

@@ -59,7 +59,7 @@ func (p *OllamaProvider) GenerateContent(ctx context.Context, prompt string, mod
 		Prompt: prompt,
 		Stream: false,
 		Options: map[string]interface{}{
-			"num_predict": 1024, // Reduced from 16384 to fix massive CPU inference hangs
+			"num_predict": 4096, // Enough tokens for a structured SRE report with logs
 			"temperature": 0.2,
 		},
 	}

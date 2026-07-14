@@ -8,6 +8,20 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Bricolage+Grotesque:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500&family=Antonio:wght@400;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <title>KubeTriage</title>
+  <style>
+    #ns-dropdown-portal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 0;
+      height: 0;
+      z-index: 2147483647;
+      pointer-events: none;
+    }
+    #ns-dropdown-portal > * {
+      pointer-events: auto;
+    }
+  </style>
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
@@ -20,6 +34,7 @@
 </head>
 <body>
   <div id="root"></div>
+  <div id="ns-dropdown-portal"></div>
   <script type="module" src="/index.tsx"></script>
 </body>
 </html>

@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect, useRef } from 'react';
+import React, { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import { useLocation, Link } from 'react-router-dom';
 import { Workload, TriageReport, ViewPropsWithChat, DiagnosticPlaybook, getMetricStatusColor } from '../types';
 import { useMonitoring } from '../contexts/MonitoringContext';
@@ -188,33 +188,33 @@ export const TriageView: React.FC<TriageViewProps> = ({ workloads, isDarkMode = 
   const safeWorkloads = workloads || [];
 
   useEffect(() => {
-    if (targetWorkloadId) {
-      const workload = safeWorkloads.find(w => w.id === targetWorkloadId || w.name === targetWorkloadId);
-      if (workload) {
-        if (selectedWorkload?.id !== workload.id) {
-          if (selectedWorkload) notifyLeave(`workload-${selectedWorkload.id}`);
-          setSelectedWorkload(workload);
-          notifyView(`workload-${workload.id}`);
-          setIsSidebarOpen(false);
-          const cacheKey = `analysis_${workload.id}_${selectedPlaybook}`;
-          const cached = sessionStorage.getItem(cacheKey);
-          if (cached) { setAnalysis(cached); }
-          else {
-            fetch(`/api/reports?all=true&workloadName=${encodeURIComponent(workload.name)}`)
-              .then(res => res.json())
-              .then(data => {
-                if (data && data.length > 0 && data[0].Analysis && data[0].Analysis !== "No analysis generated.") {
-                  setAnalysis(data[0].Analysis);
-                  setCurrentReport(data[0]);
-                  sessionStorage.setItem(cacheKey, data[0].Analysis);
-                } else triggerAutoAnalysis(workload, selectedPlaybook);
-              })
-              .catch(() => triggerAutoAnalysis(workload, selectedPlaybook));
-          }
-        } else if (selectedWorkload !== workload) setSelectedWorkload(workload);
+    if (!targetWorkloadId) return;
+    const workload = safeWorkloads.find(w => w.id === targetWorkloadId || w.name === targetWorkloadId);
+    if (!workload) return;
+    if (selectedWorkload?.id !== workload.id) {
+      if (selectedWorkload) notifyLeave(`workload-${selectedWorkload.id}`);
+      setSelectedWorkload(workload);
+      notifyView(`workload-${workload.id}`);
+      setIsSidebarOpen(false);
+      const cacheKey = `analysis_${workload.id}_${selectedPlaybook}`;
+      const cached = sessionStorage.getItem(cacheKey);
+      if (cached) { setAnalysis(cached); }
+      else {
+        fetch(`/api/reports?all=true&workloadName=${encodeURIComponent(workload.name)}`)
+          .then(res => res.json())
+          .then(data => {
+            if (data && data.length > 0 && data[0].Analysis && data[0].Analysis !== "No analysis generated.") {
+              setAnalysis(data[0].Analysis);
+              setCurrentReport(data[0]);
+              sessionStorage.setItem(cacheKey, data[0].Analysis);
+            } else triggerAutoAnalysis(workload, selectedPlaybook);
+          })
+          .catch(() => triggerAutoAnalysis(workload, selectedPlaybook));
       }
+    } else if (selectedWorkload !== workload) {
+      setSelectedWorkload(workload);
     }
-  }, [targetWorkloadId, safeWorkloads, targetTemplate]);
+  }, [targetWorkloadId, safeWorkloads, targetTemplate, selectedPlaybook]);
 
   useEffect(() => { return () => { if (selectedWorkload) notifyLeave(`workload-${selectedWorkload.id}`); }; }, [selectedWorkload]);
   useEffect(() => {
@@ -223,15 +223,34 @@ export const TriageView: React.FC<TriageViewProps> = ({ workloads, isDarkMode = 
     }
   }, [workloads, selectedWorkload]);
 
-  const triggerAutoAnalysis = async (workload: Workload, playbook: DiagnosticPlaybook) => {
+  const fetchLogsForWorkload = useCallback(async (workload: Workload): Promise<{ logs: string[]; podNames: string[] }> => {
+    if (workload.recentLogs?.length) {
+      return { logs: workload.recentLogs, podNames: workload.podNames || [] };
+    }
+    try {
+      setIsFetchingLogs(true);
+      const res = await fetch(`/api/cluster/workloads/${encodeURIComponent(workload.namespace)}/${encodeURIComponent(workload.name)}/logs?cluster=${encodeURIComponent(workload.clusterId)}&kind=${encodeURIComponent(workload.kind)}`);
+      if (!res.ok) throw new Error(`Log fetch failed: ${res.status}`);
+      const data = await res.json();
+      return { logs: data.logs || [], podNames: data.podNames || [] };
+    } catch (err) {
+      console.error('Failed to fetch workload logs for triage', err);
+      return { logs: [], podNames: [] };
+    } finally {
+      setIsFetchingLogs(false);
+    }
+  }, []);
+
+  const triggerAutoAnalysis = useCallback(async (workload: Workload, playbook: DiagnosticPlaybook) => {
     setIsAnalyzing(true); setAnalysis(null);
     try {
-      const { analysis, context } = await analyzeWorkload({ ...workload, recentLogs: workload.recentLogs?.length ? workload.recentLogs : fetchedLogs }, playbook, aiConfig.provider, aiConfig.model);
+      const { logs } = await fetchLogsForWorkload(workload);
+      const { analysis, context } = await analyzeWorkload({ ...workload, recentLogs: logs }, playbook, aiConfig.provider, aiConfig.model);
       setAnalysis(analysis); setEnrichedContext(context);
       sessionStorage.setItem(`analysis_${workload.id}_${playbook}`, analysis);
       if (context) sessionStorage.setItem(`context_${workload.id}_${playbook}`, JSON.stringify(context));
     } catch (e) { setAnalysis("Diagnostic interrupted. API error."); } finally { setIsAnalyzing(false); }
-  };
+  }, [aiConfig.provider, aiConfig.model, fetchLogsForWorkload]);
 
   const filteredWorkloads = useMemo(() => {
     return (workloads || []).filter(w => {
