@@ -1,6 +1,7 @@
 package api
 
 import (
+	"io"
 	"net/http"
 	"strings"
 	"time"
@@ -77,6 +78,7 @@ func SetupRouter(cfg RouterConfig) *gin.Engine {
 		api.DELETE("/clusters/:id", DeleteClusterHandler)
 		api.GET("/cluster/workloads", WorkloadsHandler)
 		api.GET("/cluster/workloads/:namespace/:name/logs", WorkloadLogsHandler)
+		api.GET("/cluster/workloads/:namespace/:name/history", WorkloadMetricsHistoryHandler)
 		api.GET("/cluster/nodes", NodesHandler)
 		api.GET("/cluster/events", ClusterEventsHandler)
 		api.GET("/cluster/metrics", ClusterMetricsHandler)
@@ -186,6 +188,23 @@ func SetupRouter(cfg RouterConfig) *gin.Engine {
 	}
 	// Serve Frontend Static Files
 	r.StaticFS("/assets", cfg.AssetsFS)
+
+	// Service worker and manifest must be served as real files, not index.html
+	r.GET("/sw.js", func(c *gin.Context) {
+		data, err := cfg.RootFS.Open("/sw.js")
+		if err != nil {
+			c.AbortWithStatus(http.StatusNotFound)
+			return
+		}
+		defer data.Close()
+		content, err := io.ReadAll(data)
+		if err != nil {
+			c.AbortWithStatus(http.StatusInternalServerError)
+			return
+		}
+		c.Data(http.StatusOK, "application/javascript", content)
+	})
+	r.GET("/manifest.json", func(c *gin.Context) { c.FileFromFS("/manifest.json", cfg.RootFS) })
 
 	// Favicon handlers
 	r.GET("/favicon.ico", func(c *gin.Context) { c.FileFromFS("/favicon.ico", cfg.RootFS) })

@@ -1,9 +1,9 @@
 import React, { useMemo, useState, useEffect, useRef, useCallback } from 'react';
 import { createPortal } from 'react-dom';
-import { Workload, DiagnosticPlaybook } from '../types';
+import { Workload, DiagnosticPlaybook, ResourceMetrics } from '../types';
 import { getMetricStatusColor } from '../types';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
-import { Activity, DollarSign, Box, TrendingDown, HeartPulse, Sparkles, Network, ArrowRight, Target, ShieldCheck, ChevronRight, Server, Globe } from 'lucide-react';
+import { Activity, DollarSign, Box, TrendingDown, HeartPulse, Sparkles, Network, ArrowRight, Target, ShieldCheck, ChevronRight, Server, Globe, Wand2 } from 'lucide-react';
 import { DashboardCard } from './dashboard/DashboardCard';
 import { MetricCard } from './dashboard/MetricCard';
 import { StatusBadge } from './dashboard/StatusBadge';
@@ -15,7 +15,7 @@ interface DashboardProps {
   isDarkMode?: boolean;
   isLoading?: boolean;
   onRefresh?: () => void;
-  onTriageRequest?: (workloadId: string, playbook: DiagnosticPlaybook) => void;
+  onTriageRequest?: (workloadId: string, playbook: DiagnosticPlaybook, podName?: string) => void;
   metricsWindow?: string;
   setMetricsWindow?: (window: string) => void;
 }
@@ -79,13 +79,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode: _is
     setNamespaceFilter(next.length === 0 ? ['all'] : next);
   };
 
-  const namespaceMenuItems = useMemo(() => {
-    return namespaces.map(ns => ({
-      id: ns,
-      label: ns,
-      selected: activeNamespaces.selected.includes(ns),
-    }));
-  }, [namespaces, activeNamespaces]);
+  const isNsPending = (ns: string) => pendingNs.includes(ns);
 
   // ---- Namespace scope menu (command-palette style) ----
   interface NsMenuPosition { top: number; left: number; width: number; }
@@ -100,9 +94,10 @@ export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode: _is
   const showNsSearch = namespaces.length >= 8;
   const filteredNsItems = useMemo(() => {
     const term = nsSearch.trim().toLowerCase();
-    if (!term) return namespaceMenuItems;
-    return namespaceMenuItems.filter(item => item.label.toLowerCase().includes(term));
-  }, [namespaceMenuItems, nsSearch]);
+    const items = namespaces.map(ns => ({ id: ns, label: ns }));
+    if (!term) return items;
+    return items.filter(item => item.label.toLowerCase().includes(term));
+  }, [namespaces, nsSearch]);
 
   const pendingHasChanges = useMemo(() => {
     const current = activeNamespaces.all ? [] : activeNamespaces.selected.slice().sort();
@@ -239,6 +234,67 @@ export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode: _is
       return 0;
     });
   }, [filteredWorkloads]);
+
+  // Per-pod resource saturation rows for the right-hand panel.
+  const saturationPods = useMemo(() => {
+    const severityOrder: Record<string, number> = { Critical: 0, Warning: 1, Healthy: 2 };
+
+    const pods = filteredWorkloads.flatMap(w =>
+      (w.pods ?? []).map(pod => {
+        const metrics = pod.metrics ?? {} as ResourceMetrics;
+        let base = 0, used = 0, unit = '';
+
+        if (saturationTab === 'CPU') {
+          base = (Number(metrics.cpuLimit) || 0) * 1000;
+          used = (Number(metrics.cpuUsage) || 0) * 1000;
+          unit = 'mCPU';
+        } else if (saturationTab === 'Memory') {
+          base = Number(metrics.memoryLimit) || 0;
+          used = Number(metrics.memoryUsage) || 0;
+          unit = 'MiB';
+        } else if (saturationTab === 'Ephemeral Storage') {
+          base = Number(metrics.storageLimit) || 5;
+          used = Number(metrics.storageUsage) || 0;
+          unit = 'GiB';
+        } else if (saturationTab === 'GPU') {
+          base = Number(metrics.gpuLimit) || 0;
+          used = Number(metrics.gpuUsage) || 0;
+          unit = '%';
+        } else {
+          used = (Number(metrics.networkIn) || 0) + (Number(metrics.networkOut) || 0);
+          unit = 'MB/s';
+        }
+
+        const rawSaturation = base > 0 ? Math.round((used / base) * 100) : 0;
+        const saturation = Math.min(100, rawSaturation);
+        const isCritical = saturation >= 90 || pod.status === 'Critical';
+        const isWarning = (saturation >= 70 && !isCritical) || pod.status === 'Warning';
+
+        return {
+          ...pod,
+          workloadName: w.name,
+          workloadId: w.id,
+          clusterId: w.clusterId,
+          base,
+          used,
+          unit,
+          saturation,
+          isCritical,
+          isWarning,
+        };
+      })
+    );
+
+    return pods
+      .sort((a, b) => {
+        const aSev = severityOrder[a.status] ?? 2;
+        const bSev = severityOrder[b.status] ?? 2;
+        if (aSev !== bSev) return aSev - bSev;
+        if (a.saturation !== b.saturation) return b.saturation - a.saturation;
+        return b.restartCount - a.restartCount;
+      })
+      .slice(0, 10);
+  }, [filteredWorkloads, saturationTab]);
 
   const reliabilityMetrics = useMemo(() => {
     const slo = 99.9;
@@ -655,21 +711,24 @@ export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode: _is
                         {filteredNsItems.length === 0 && (
                           <div className="px-3 py-4 text-xs text-text-tertiary text-center font-sans">No namespaces match</div>
                         )}
-                        {filteredNsItems.map((item, idx) => (
-                          <div
-                            key={item.id}
-                            role="option"
-                            aria-selected={item.selected}
-                            className={`flex items-center gap-2 px-3 py-2 text-[13px] font-sans cursor-pointer transition-colors ${idx === focusIndex ? 'bg-bg-hover' : ''} ${item.selected ? 'bg-primary-500/10 dark:bg-primary-500/[0.08] text-primary-700 dark:text-text-primary font-semibold' : 'hover:bg-bg-hover text-text-primary'}`}
-                            onClick={() => togglePendingNs(item.id)}
-                            onMouseEnter={() => setFocusIndex(idx)}
-                          >
-                            <div className={`w-4 h-4 rounded-sm border flex items-center justify-center shrink-0 ${item.selected ? 'border-primary-600 bg-primary-600 dark:border-primary-500 dark:bg-primary-500' : 'border-border-main bg-bg-main'}`}>
-                              {item.selected && <span className="text-[10px] text-white">✓</span>}
+                        {filteredNsItems.map((item, idx) => {
+                          const pendingSelected = isNsPending(item.id);
+                          return (
+                            <div
+                              key={item.id}
+                              role="option"
+                              aria-selected={pendingSelected}
+                              className={`flex items-center gap-2 px-3 py-2 text-[13px] font-sans cursor-pointer transition-colors ${idx === focusIndex ? 'bg-bg-hover' : ''} ${pendingSelected ? 'bg-primary-500/10 dark:bg-primary-500/[0.08] text-primary-700 dark:text-text-primary font-semibold' : 'hover:bg-bg-hover text-text-primary'}`}
+                              onClick={() => togglePendingNs(item.id)}
+                              onMouseEnter={() => setFocusIndex(idx)}
+                            >
+                              <div className={`w-4 h-4 rounded-sm border flex items-center justify-center shrink-0 ${pendingSelected ? 'border-primary-600 bg-primary-600 dark:border-primary-500 dark:bg-primary-500' : 'border-border-main bg-bg-main'}`}>
+                                {pendingSelected && <span className="text-[10px] text-white">✓</span>}
+                              </div>
+                              <span className="truncate" title={item.label}>{item.label}</span>
                             </div>
-                            <span className="truncate" title={item.label}>{item.label}</span>
-                          </div>
-                        ))}
+                          );
+                        })}
                       </div>
 
                       {/* Footer actions */}
@@ -710,103 +769,122 @@ export const Dashboard: React.FC<DashboardProps> = ({ workloads, isDarkMode: _is
 
             <div className="flex-1 min-h-0 overflow-y-auto pr-1 custom-scrollbar relative z-10">
               <div className="space-y-2">
-                {filteredWorkloads
-                  .map((w) => {
-                    const metrics = w.metrics ?? ({} as Workload['metrics']);
-                    let base = 0, used = 0, unit = '';
+                {saturationPods.map((item, idx) => (
+                  <div
+                    key={`${item.clusterId}-${item.namespace}-${item.name}`}
+                    className="flex items-center gap-3 p-3 border border-border-main bg-bg-main hover:border-primary-500/30 hover:bg-bg-hover transition-all cursor-pointer group focus-visible:ring-2 focus-visible:ring-primary-500/50 focus-visible:outline-none"
+                    onClick={() => onTriageRequest?.(item.workloadId, 'General Health', item.name)}
+                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onTriageRequest?.(item.workloadId, 'General Health', item.name); } }}
+                    tabIndex={0}
+                    role="button"
+                    aria-label={`View details for pod ${item.name} of ${item.workloadName}`}
+                  >
+                    <div className={`w-6 h-6 shrink-0 flex items-center justify-center text-[10px] font-sans font-bold border ${idx === 0 ? 'bg-danger/10 text-danger border-danger/30' : idx === 1 ? 'bg-warning/10 text-warning border-warning/30' : idx === 2 ? 'bg-primary-500/10 text-primary-500 border-primary-500/30' : 'bg-bg-hover text-text-tertiary border-border-main'}`}>
+                      {idx + 1}
+                    </div>
 
-                    if (saturationTab === 'CPU') {
-                      base = (Number(metrics.cpuLimit) || 0) * 1000;
-                      used = (Number(metrics.cpuUsage) || 0) * 1000;
-                      unit = 'mCPU';
-                    } else if (saturationTab === 'Memory') {
-                      base = Number(metrics.memoryLimit) || 0;
-                      used = Number(metrics.memoryUsage) || 0;
-                      unit = 'MiB';
-                    } else if (saturationTab === 'Ephemeral Storage') {
-                      base = Number(metrics.storageLimit) || 5;
-                      used = Number(metrics.storageUsage) || 0;
-                      unit = 'GiB';
-                    } else if (saturationTab === 'GPU') {
-                      base = Number(metrics.gpuLimit) || 0;
-                      used = Number(metrics.gpuUsage) || 0;
-                      unit = '%';
-                    } else {
-                      used = (Number(metrics.networkIn) || 0) + (Number(metrics.networkOut) || 0);
-                      unit = 'MB/s';
-                    }
-
-                    const rawSaturation = base > 0 ? Math.round((used / base) * 100) : 0;
-                    const saturation = Math.min(100, rawSaturation);
-                    const isCritical = saturation >= 90;
-                    const isWarning = saturation >= 70 && !isCritical;
-
-                    return { name: w.name, clusterId: w.clusterId, base, used, unit, saturation, isCritical, isWarning, status: w.status };
-                  })
-                  .sort((a, b) => b.saturation - a.saturation)
-                  .slice(0, 10)
-                  .map((item, idx) => (
-                    <div
-                      key={idx}
-                      className="flex items-center gap-3 p-3 border border-border-main bg-bg-main hover:border-primary-500/30 hover:bg-bg-hover transition-all cursor-pointer group focus-visible:ring-2 focus-visible:ring-primary-500/50 focus-visible:outline-none"
-                      onClick={() => onTriageRequest?.(item.name, 'General Health')}
-                      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onTriageRequest?.(item.name, 'General Health'); } }}
-                      tabIndex={0}
-                      role="button"
-                      aria-label={`View details for ${item.name}`}
-                    >
-                      <div className={`w-6 h-6 shrink-0 flex items-center justify-center text-[10px] font-sans font-bold border ${idx === 0 ? 'bg-danger/10 text-danger border-danger/30' : idx === 1 ? 'bg-warning/10 text-warning border-warning/30' : idx === 2 ? 'bg-primary-500/10 text-primary-500 border-primary-500/30' : 'bg-bg-hover text-text-tertiary border-border-main'}`}>
-                        {idx + 1}
-                      </div>
-
-                      <div className="w-28 shrink-0 min-w-0">
-                        <h4 className="text-sm font-bold text-text-primary truncate" title={item.name}>{item.name}</h4>
-                        <div className="flex items-center gap-1.5 mt-1">
-                          <div className={`w-1.5 h-1.5 rounded-full ${getStatusColor(item.status)}`} />
-                          <span className="text-[10px] text-text-tertiary font-sans">{item.status}</span>
-                        </div>
-                        {selectedClusterCount > 1 && (
-                          <div className="text-[10px] text-text-tertiary font-sans truncate mt-0.5">
-                            {clusterNameById.get(item.clusterId) || item.clusterId}
-                          </div>
+                    <div className="w-36 shrink-0 min-w-0">
+                      <h4 className="text-sm font-bold text-text-primary truncate" title={item.name}>{item.name}</h4>
+                      <div className="flex items-center gap-1.5 mt-1">
+                        <div className={`w-1.5 h-1.5 rounded-full ${getStatusColor(item.status)}`} />
+                        <span className="text-[10px] text-text-tertiary font-sans">{item.status}</span>
+                        {(item.terminatedReason || item.waitingReason) && (
+                          <span className="text-[10px] px-1.5 py-0.5 bg-danger/10 text-danger border border-danger/30 font-sans">
+                            {item.terminatedReason || item.waitingReason}
+                          </span>
+                        )}
+                        {item.cpuThrottled && (
+                          <span className="text-[10px] px-1.5 py-0.5 bg-warning/10 text-warning border border-warning/30 font-sans">
+                            CPU throttled
+                          </span>
                         )}
                       </div>
-
-                      <div className="flex-1 flex flex-col justify-center">
-                        <div className="flex justify-between items-center mb-1.5">
-                          <span className="text-[10px] text-text-tertiary font-sans font-semibold">{saturationTab}</span>
-                          <span className={`text-xs font-bold ${item.isCritical ? 'text-danger' : item.isWarning ? 'text-warning' : 'text-text-secondary'}`}>
-                            {item.saturation}%
-                          </span>
-                        </div>
-                        <div className="h-2 w-full bg-bg-hover/50 rounded-sm overflow-hidden border border-border-main">
-                          <div
-                            className={`h-full rounded-sm transition-all duration-500 ${
-                              item.isCritical
-                                ? 'bg-danger shadow-[0_0_8px_#e74c3c]'
-                                : item.isWarning
-                                  ? 'bg-warning shadow-[0_0_8px_#f5a623]'
-                                  : 'bg-primary-500 shadow-[0_0_8px_#00c8f0]'
-                            }`}
-                            style={{ width: `${Math.min(100, item.saturation)}%` }}
-                          />
-                        </div>
+                      <div className="text-[10px] text-text-tertiary font-sans truncate mt-0.5" title={`${item.ownerKind}/${item.workloadName}`}>
+                        {item.ownerKind}/{item.workloadName}
                       </div>
-
-                      <div className="w-24 shrink-0 text-right">
-                        <div className="text-xs font-bold text-text-secondary">
-                          {item.used.toFixed(1)}{item.unit}
+                      {selectedClusterCount > 1 && (
+                        <div className="text-[10px] text-text-tertiary font-sans truncate mt-0.5">
+                          {clusterNameById.get(item.clusterId) || item.clusterId}
                         </div>
-                        <div className="text-[10px] text-text-tertiary font-sans">
-                          / {item.base.toFixed(0)}{item.unit}
-                        </div>
-                      </div>
+                      )}
                     </div>
-                  ))}
-                {filteredWorkloads.length > 10 && (
+
+                    <div className="flex-1 flex flex-col justify-center">
+                      {item.base > 0 && item.used > 0 ? (
+                        <>
+                          <div className="flex justify-between items-center mb-1.5">
+                            <span className="text-[10px] text-text-tertiary font-sans font-semibold">{saturationTab}</span>
+                            <span className={`text-xs font-bold ${item.isCritical ? 'text-danger' : item.isWarning ? 'text-warning' : 'text-text-secondary'}`}>
+                              {item.saturation}%
+                            </span>
+                          </div>
+                          <div className="h-2 w-full bg-bg-hover/50 rounded-sm overflow-hidden border border-border-main">
+                            <div
+                              className={`h-full rounded-sm transition-all duration-500 ${
+                                item.isCritical
+                                  ? 'bg-danger shadow-[0_0_8px_#e74c3c]'
+                                  : item.isWarning
+                                    ? 'bg-warning shadow-[0_0_8px_#f5a623]'
+                                    : 'bg-primary-500 shadow-[0_0_8px_#00c8f0]'
+                              }`}
+                              style={{ width: `${Math.min(100, item.saturation)}%` }}
+                            />
+                          </div>
+                        </>
+                      ) : (
+                        <div className="flex items-center justify-between h-6">
+                          <span className="text-[10px] text-text-tertiary font-sans font-semibold">{saturationTab}</span>
+                          <span className="text-[10px] text-text-tertiary font-sans italic">No live metrics</span>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="w-24 shrink-0 text-right">
+                      {item.base > 0 && item.used > 0 ? (
+                        <>
+                          <div className="text-xs font-bold text-text-secondary">
+                            {item.used.toFixed(1)}{item.unit}
+                          </div>
+                          <div className="text-[10px] text-text-tertiary font-sans">
+                            / {item.base.toFixed(0)}{item.unit}
+                          </div>
+                        </>
+                      ) : item.base > 0 ? (
+                        <div className="text-[10px] text-text-tertiary font-sans">
+                          Limit {item.base.toFixed(0)}{item.unit}
+                        </div>
+                      ) : null}
+                    </div>
+
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onTriageRequest?.(item.workloadId, 'Resource Constraints', item.name);
+                      }}
+                      className="shrink-0 p-2 border border-border-main bg-bg-card text-text-tertiary hover:text-primary-500 hover:border-primary-500/50 hover:bg-primary-500/10 transition-all opacity-0 group-hover:opacity-100 focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-primary-500/50 focus-visible:outline-none"
+                      aria-label={`Run AI triage on pod ${item.name}`}
+                      title="Run AI triage"
+                    >
+                      <Wand2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                ))}
+                {saturationPods.length === 0 && (
+                  <div className="p-8 text-center flex flex-col items-center">
+                    {isLoading ? (
+                      <>
+                        <div className="w-5 h-5 border-2 border-primary-500/30 border-t-primary-500 rounded-full animate-spin mb-2" />
+                        <p className="text-xs text-text-tertiary font-sans font-medium">Loading pod metrics…</p>
+                      </>
+                    ) : (
+                      <p className="text-xs text-text-tertiary font-sans font-medium">No pod data available</p>
+                    )}
+                  </div>
+                )}
+                {filteredWorkloads.reduce((acc, w) => acc + (w.pods?.length ?? 0), 0) > 10 && (
                   <div className="pt-2 pb-1 text-center">
                     <span className="text-[11px] text-text-tertiary font-sans font-medium">
-                      Showing top 10 of {filteredWorkloads.length} workloads{selectedClusterCount > 1 && ` across ${selectedClusterCount} clusters`}
+                      Showing top 10 of {filteredWorkloads.reduce((acc, w) => acc + (w.pods?.length ?? 0), 0)} pods{selectedClusterCount > 1 && ` across ${selectedClusterCount} clusters`}
                     </span>
                   </div>
                 )}

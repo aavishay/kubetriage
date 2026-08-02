@@ -9,6 +9,7 @@ import (
 	"log"
 	"math/rand"
 	"net/http"
+	"sort"
 	"strings"
 	"sync"
 	"time"
@@ -20,6 +21,7 @@ import (
 	"github.com/aavishay/kubetriage/backend/internal/k8s"
 	"github.com/aavishay/kubetriage/backend/internal/prometheus"
 	"github.com/gin-gonic/gin"
+	"github.com/prometheus/common/model"
 	autoscalingv2 "k8s.io/api/autoscaling/v2"
 	corev1 "k8s.io/api/core/v1"
 	v1 "k8s.io/api/core/v1"
@@ -29,20 +31,29 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/kubernetes"
+	metricsv1beta1 "k8s.io/metrics/pkg/apis/metrics/v1beta1"
 )
 
 // ResourceMetrics mock struct
 type ResourceMetrics struct {
-	CpuRequest     float64 `json:"cpuRequest"`
-	CpuLimit       float64 `json:"cpuLimit"`
-	CpuUsage       float64 `json:"cpuUsage"`
-	MemoryRequest  float64 `json:"memoryRequest"`
-	MemoryLimit    float64 `json:"memoryLimit"`
-	MemoryUsage    float64 `json:"memoryUsage"`
-	StorageRequest float64 `json:"storageRequest"`
-	StorageLimit   float64 `json:"storageLimit"`
-	StorageUsage   float64 `json:"storageUsage"`
-	NetworkIn      float64 `json:"networkIn"`
+	CpuRequest        float64 `json:"cpuRequest"`
+	CpuLimit          float64 `json:"cpuLimit"`
+	CpuLimitPerPod    float64 `json:"cpuLimitPerPod"`
+	CpuUsage          float64 `json:"cpuUsage"`
+	CpuMaxPodUsage    float64 `json:"cpuMaxPodUsage"`
+	CpuHotPodP99      float64 `json:"cpuHotPodP99"`
+	MemoryRequest     float64 `json:"memoryRequest"`
+	MemoryLimit       float64 `json:"memoryLimit"`
+	MemoryLimitPerPod float64 `json:"memoryLimitPerPod"`
+	MemoryUsage       float64 `json:"memoryUsage"`
+	MemoryMaxPodUsage float64 `json:"memoryMaxPodUsage"`
+	MemoryHotPodP99   float64 `json:"memoryHotPodP99"`
+	StorageRequest        float64 `json:"storageRequest"`
+	StorageLimit          float64 `json:"storageLimit"`
+	StorageLimitPerPod    float64 `json:"storageLimitPerPod"`
+	StorageUsage          float64 `json:"storageUsage"`
+	StorageMaxPodUsage    float64 `json:"storageMaxPodUsage"`
+	NetworkIn             float64 `json:"networkIn"`
 	NetworkOut     float64 `json:"networkOut"`
 	DiskIo         float64 `json:"diskIo"`
 	CpuAvg         float64 `json:"cpuAvg"`
@@ -54,7 +65,9 @@ type ResourceMetrics struct {
 	// GPU Metrics
 	GpuRequest     float64 `json:"gpuRequest"`     // Number of GPUs requested
 	GpuLimit       float64 `json:"gpuLimit"`       // Number of GPUs limited
+	GpuLimitPerPod float64 `json:"gpuLimitPerPod"`
 	GpuUsage       float64 `json:"gpuUsage"`       // GPU utilization in percentage
+	GpuMaxPodUsage float64 `json:"gpuMaxPodUsage"`
 	GpuMemoryUsage float64 `json:"gpuMemoryUsage"` // GPU memory usage in MiB
 	GpuMemoryTotal float64 `json:"gpuMemoryTotal"` // GPU memory total in MiB
 	GpuTemperature float64 `json:"gpuTemperature"` // GPU temperature in Celsius
@@ -69,6 +82,26 @@ type K8sEvent struct {
 	LastSeen string `json:"lastSeen"`
 }
 
+// PodSaturation carries per-pod resource usage and lifecycle signals so the
+// dashboard can surface individual pods (e.g. OOMKilled, CPU-throttled) rather
+// than only aggregated workload metrics.
+type PodSaturation struct {
+	Name              string          `json:"name"`
+	Namespace         string          `json:"namespace"`
+	ClusterID         string          `json:"clusterId"`
+	Node              string          `json:"node,omitempty"`
+	Phase             string          `json:"phase"`
+	Status            string          `json:"status"` // Healthy | Warning | Critical
+	RestartCount      int32           `json:"restartCount"`
+	WaitingReason     string          `json:"waitingReason,omitempty"`
+	TerminatedReason  string          `json:"terminatedReason,omitempty"`
+	CpuThrottled      bool            `json:"cpuThrottled"`
+	CpuThrottleRatio  float64         `json:"cpuThrottleRatio"`
+	Metrics           ResourceMetrics   `json:"metrics"`
+	OwnerWorkload     string          `json:"ownerWorkload"`
+	OwnerKind         string          `json:"ownerKind"`
+}
+
 // Workload struct mapping to frontend
 type Workload struct {
 	ID                 string            `json:"id"`
@@ -78,10 +111,12 @@ type Workload struct {
 	Kind               string            `json:"kind"`
 	Replicas           int32             `json:"replicas"`
 	AvailableReplicas  int32             `json:"availableReplicas"`
+	PodCount           int32             `json:"podCount"`
 	Status             string            `json:"status"`
 	Metrics            ResourceMetrics   `json:"metrics"`
 	RecentLogs         []string          `json:"recentLogs"`
 	PodNames           []string          `json:"podNames"`
+	Pods               []PodSaturation   `json:"pods,omitempty"`
 	Events             []K8sEvent        `json:"events"`
 	CostPerMonth       int               `json:"costPerMonth"`
 	Scaling            ScalingInfo       `json:"scaling"`
@@ -202,6 +237,10 @@ func getRealMetrics(ctx context.Context, clusterID, namespace, name, kind string
 	// 1.5 Scale Limits/Requests by Replicas
 	if replicas > 1 {
 		scale := float64(replicas)
+		metrics.CpuLimitPerPod = metrics.CpuLimit
+		metrics.MemoryLimitPerPod = metrics.MemoryLimit
+		metrics.StorageLimitPerPod = metrics.StorageLimit
+		metrics.GpuLimitPerPod = metrics.GpuLimit
 		metrics.CpuRequest *= scale
 		metrics.CpuLimit *= scale
 		metrics.MemoryRequest *= scale
@@ -210,6 +249,11 @@ func getRealMetrics(ctx context.Context, clusterID, namespace, name, kind string
 		metrics.StorageLimit *= scale
 		metrics.GpuRequest *= scale
 		metrics.GpuLimit *= scale
+	} else {
+		metrics.CpuLimitPerPod = metrics.CpuLimit
+		metrics.MemoryLimitPerPod = metrics.MemoryLimit
+		metrics.StorageLimitPerPod = metrics.StorageLimit
+		metrics.GpuLimitPerPod = metrics.GpuLimit
 	}
 
 	// 2. Fetch Usage from Prometheus (if avail)
@@ -218,6 +262,21 @@ func getRealMetrics(ctx context.Context, clusterID, namespace, name, kind string
 		cpuQuery := fmt.Sprintf(`sum(rate(container_cpu_usage_seconds_total{namespace="%s", pod=~"^%s-[a-z0-9]+(-[a-z0-9]+)?$", container!=""}[2m]))`, namespace, name)
 		if val, err := prometheus.GlobalClient.QueryVector(ctx, cpuQuery); err == nil && val > 0 {
 			metrics.CpuUsage = val
+		}
+
+		// Per-pod P99 CPU and memory: identify the most overloaded pod per resource.
+		cpuP99ByPod := queryPodResourceP99(ctx, namespace, name, "cpu", window)
+		for _, v := range cpuP99ByPod {
+			if v > metrics.CpuHotPodP99 {
+				metrics.CpuHotPodP99 = v
+			}
+		}
+		memP99ByPod := queryPodResourceP99(ctx, namespace, name, "memory", window)
+		for _, v := range memP99ByPod {
+			vMiB := v / (1024 * 1024)
+			if vMiB > metrics.MemoryHotPodP99 {
+				metrics.MemoryHotPodP99 = vMiB
+			}
 		}
 
 		// Memory Usage
@@ -396,6 +455,275 @@ func getRealMetrics(ctx context.Context, clusterID, namespace, name, kind string
 	return metrics
 }
 
+// getPodRequestsAndLimits sums container-level requests and limits for a single pod.
+func getPodRequestsAndLimits(podSpec v1.PodSpec) ResourceMetrics {
+	m := ResourceMetrics{}
+	for _, c := range podSpec.Containers {
+		if q, ok := c.Resources.Requests[v1.ResourceCPU]; ok {
+			m.CpuRequest += float64(q.MilliValue()) / 1000.0
+		}
+		if q, ok := c.Resources.Limits[v1.ResourceCPU]; ok {
+			m.CpuLimit += float64(q.MilliValue()) / 1000.0
+		}
+		if q, ok := c.Resources.Requests[v1.ResourceMemory]; ok {
+			m.MemoryRequest += float64(q.Value()) / (1024 * 1024)
+		}
+		if q, ok := c.Resources.Limits[v1.ResourceMemory]; ok {
+			m.MemoryLimit += float64(q.Value()) / (1024 * 1024)
+		}
+		if q, ok := c.Resources.Requests[v1.ResourceEphemeralStorage]; ok {
+			m.StorageRequest += float64(q.Value()) / (1024 * 1024 * 1024)
+		}
+		if q, ok := c.Resources.Limits[v1.ResourceEphemeralStorage]; ok {
+			m.StorageLimit += float64(q.Value()) / (1024 * 1024 * 1024)
+		}
+		for resourceName, q := range c.Resources.Requests {
+			if strings.Contains(string(resourceName), "gpu") || strings.Contains(string(resourceName), "nvidia.com") {
+				m.GpuRequest += float64(q.Value())
+			}
+		}
+		for resourceName, q := range c.Resources.Limits {
+			if strings.Contains(string(resourceName), "gpu") || strings.Contains(string(resourceName), "nvidia.com") {
+				m.GpuLimit += float64(q.Value())
+			}
+		}
+	}
+	return m
+}
+
+// podContainerStatus extracts the most severe container status signals from a pod.
+func podContainerStatus(pod corev1.Pod) (waitingReason, terminatedReason string, restartCount int32) {
+	for _, cs := range pod.Status.ContainerStatuses {
+		restartCount += cs.RestartCount
+		if cs.State.Waiting != nil && cs.State.Waiting.Reason != "" {
+			if waitingReason == "" {
+				waitingReason = cs.State.Waiting.Reason
+			}
+		}
+		if cs.LastTerminationState.Terminated != nil && cs.LastTerminationState.Terminated.Reason != "" {
+			if terminatedReason == "" {
+				terminatedReason = cs.LastTerminationState.Terminated.Reason
+			}
+		}
+	}
+	return
+}
+
+// podPhaseStatus maps pod phase and container signals to a dashboard severity.
+func podPhaseStatus(phase string, waitingReason, terminatedReason string) string {
+	if terminatedReason == "OOMKilled" || terminatedReason == "Error" || waitingReason == "CrashLoopBackOff" || waitingReason == "ImagePullBackOff" || waitingReason == "ErrImagePull" || waitingReason == "CreateContainerError" || waitingReason == "CreateContainerConfigError" || phase == "Failed" || phase == "Unknown" {
+		return "Critical"
+	}
+	if phase == "Pending" || waitingReason != "" || terminatedReason != "" {
+		return "Warning"
+	}
+	return "Healthy"
+}
+
+// queryPodCPUThrottling returns a map of pod name -> throttle ratio for pods in the namespace.
+// It is best-effort: errors are ignored and an empty map is returned. The query is scoped to
+// the whole namespace so a single call can serve all workloads in that namespace.
+func queryPodCPUThrottling(ctx context.Context, namespace string) map[string]float64 {
+	if prometheus.GlobalClient == nil {
+		return nil
+	}
+	throttledQuery := fmt.Sprintf(`sum by (pod) (rate(container_cpu_cfs_throttled_seconds_total{namespace="%s", container!=""}[2m]))`, namespace)
+	rawTotalQuery := fmt.Sprintf(`sum by (pod) (rate(container_cpu_cfs_periods_total{namespace="%s", container!=""}[2m]))`, namespace)
+
+	throttledResult, err := prometheus.GlobalClient.QueryVectorRaw(ctx, throttledQuery)
+	if err != nil {
+		return nil
+	}
+	throttledVector, ok := throttledResult.(model.Vector)
+	if !ok {
+		return nil
+	}
+
+	totalResult, err := prometheus.GlobalClient.QueryVectorRaw(ctx, rawTotalQuery)
+	if err != nil {
+		return nil
+	}
+	totalVector, ok := totalResult.(model.Vector)
+	if !ok {
+		return nil
+	}
+
+	totalByPod := make(map[string]float64, len(totalVector))
+	for _, s := range totalVector {
+		podName := string(s.Metric["pod"])
+		if podName != "" {
+			totalByPod[podName] = float64(s.Value)
+		}
+	}
+
+	out := make(map[string]float64, len(throttledVector))
+	for _, s := range throttledVector {
+		podName := string(s.Metric["pod"])
+		if podName == "" {
+			continue
+		}
+		throttled := float64(s.Value)
+		total := totalByPod[podName]
+		if total > 0 {
+			out[podName] = throttled / total
+		} else if throttled > 0 {
+			out[podName] = 1.0
+		}
+	}
+	return out
+}
+
+// buildPodSaturationList creates a capped, severity-sorted list of PodSaturation entries
+// for pods matching the workload's selector. All non-healthy pods are kept; only the
+// top-N healthy pods by resource saturation are included to limit response size.
+// It also returns the per-pod maxima observed across *all* matched pods (before capping)
+// and the total matched pod count so callers can size the workload correctly.
+func buildPodSaturationList(ctx context.Context, clusterID, namespace, ownerName, ownerKind string, matchLabels map[string]string, allPods []corev1.Pod, podSpec v1.PodSpec, podMetricsByName map[string]metricsv1beta1.PodMetrics, throttleByPod map[string]float64, maxHealthy int) ([]PodSaturation, ResourceMetrics, int) {
+	selector := labels.SelectorFromSet(labels.Set(matchLabels))
+	var matched []corev1.Pod
+	for _, p := range allPods {
+		if p.Namespace != namespace {
+			continue
+		}
+		if selector.Matches(labels.Set(p.Labels)) {
+			matched = append(matched, p)
+		}
+	}
+	if len(matched) == 0 {
+		return nil, ResourceMetrics{}, 0
+	}
+
+	requestsAndLimits := getPodRequestsAndLimits(podSpec)
+	maxMetrics := ResourceMetrics{}
+
+	pods := make([]PodSaturation, 0, len(matched))
+	for _, pod := range matched {
+		waitingReason, terminatedReason, restartCount := podContainerStatus(pod)
+		status := podPhaseStatus(string(pod.Status.Phase), waitingReason, terminatedReason)
+		if status == "Healthy" && restartCount > 0 {
+			status = "Warning"
+		}
+
+		metrics := requestsAndLimits
+		pm, hasMetrics := podMetricsByName[pod.Name]
+		if hasMetrics {
+			for _, c := range pm.Containers {
+				metrics.CpuUsage += float64(c.Usage.Cpu().MilliValue()) / 1000.0
+				metrics.MemoryUsage += float64(c.Usage.Memory().Value()) / (1024 * 1024)
+				if q, ok := c.Usage[v1.ResourceEphemeralStorage]; ok {
+					metrics.StorageUsage += float64(q.Value()) / (1024 * 1024 * 1024)
+				}
+			}
+		}
+
+		if metrics.CpuUsage > maxMetrics.CpuMaxPodUsage {
+			maxMetrics.CpuMaxPodUsage = metrics.CpuUsage
+		}
+		if metrics.MemoryUsage > maxMetrics.MemoryMaxPodUsage {
+			maxMetrics.MemoryMaxPodUsage = metrics.MemoryUsage
+		}
+		if metrics.StorageUsage > maxMetrics.StorageMaxPodUsage {
+			maxMetrics.StorageMaxPodUsage = metrics.StorageUsage
+		}
+		if metrics.GpuUsage > maxMetrics.GpuMaxPodUsage {
+			maxMetrics.GpuMaxPodUsage = metrics.GpuUsage
+		}
+
+		cpuThrottleRatio := throttleByPod[pod.Name]
+		cpuThrottled := cpuThrottleRatio > 0.05
+		if cpuThrottled && status == "Healthy" {
+			status = "Warning"
+		}
+
+		pods = append(pods, PodSaturation{
+			Name:             pod.Name,
+			Namespace:        pod.Namespace,
+			ClusterID:        clusterID,
+			Node:             pod.Spec.NodeName,
+			Phase:            string(pod.Status.Phase),
+			Status:           status,
+			RestartCount:     restartCount,
+			WaitingReason:    waitingReason,
+			TerminatedReason: terminatedReason,
+			CpuThrottled:     cpuThrottled,
+			CpuThrottleRatio: cpuThrottleRatio,
+			Metrics:          metrics,
+			OwnerWorkload:    ownerName,
+			OwnerKind:        ownerKind,
+		})
+	}
+
+	// Sort by severity then by CPU saturation descending (CPU is the most common tab).
+	sort.Slice(pods, func(i, j int) bool {
+		severityOrder := map[string]int{"Critical": 0, "Warning": 1, "Healthy": 2}
+		if severityOrder[pods[i].Status] != severityOrder[pods[j].Status] {
+			return severityOrder[pods[i].Status] < severityOrder[pods[j].Status]
+		}
+		iSat := 0.0
+		jSat := 0.0
+		if pods[i].Metrics.CpuLimit > 0 {
+			iSat = pods[i].Metrics.CpuUsage / pods[i].Metrics.CpuLimit
+		}
+		if pods[j].Metrics.CpuLimit > 0 {
+			jSat = pods[j].Metrics.CpuUsage / pods[j].Metrics.CpuLimit
+		}
+		return iSat > jSat
+	})
+
+	// Cap healthy pods.
+	var result []PodSaturation
+	healthyCount := 0
+	for _, p := range pods {
+		if p.Status == "Healthy" {
+			if healthyCount >= maxHealthy {
+				continue
+			}
+			healthyCount++
+		}
+		result = append(result, p)
+	}
+	return result, maxMetrics, len(matched)
+}
+
+// queryPodResourceP99 returns a map of pod name -> P99 usage over the given window.
+// It is best-effort: if Prometheus is unavailable or the query fails, it returns nil.
+// For CPU, the P99 is computed over per-pod rate samples. For memory, it is computed
+// over raw working-set bytes.
+func queryPodResourceP99(ctx context.Context, namespace, name, resource, window string) map[string]float64 {
+	if prometheus.GlobalClient == nil {
+		return nil
+	}
+
+	var query string
+	switch resource {
+	case "cpu":
+		// Subquery: evaluate rate every 1m over the window, then take the 99th percentile per pod.
+		query = fmt.Sprintf(`quantile_over_time(0.99, rate(container_cpu_usage_seconds_total{namespace="%s", pod=~"^%s-[a-z0-9]+(-[a-z0-9]+)?$", container!=""}[2m])[%s:1m])`, namespace, name, window)
+	case "memory":
+		query = fmt.Sprintf(`quantile_over_time(0.99, container_memory_working_set_bytes{namespace="%s", pod=~"^%s-[a-z0-9]+(-[a-z0-9]+)?$", container!=""}[%s])`, namespace, name, window)
+	default:
+		return nil
+	}
+
+	result, err := prometheus.GlobalClient.QueryVectorRaw(ctx, query)
+	if err != nil {
+		return nil
+	}
+	vector, ok := result.(model.Vector)
+	if !ok {
+		return nil
+	}
+
+	out := make(map[string]float64, len(vector))
+	for _, s := range vector {
+		podName := string(s.Metric["pod"])
+		if podName != "" {
+			out[podName] = float64(s.Value)
+		}
+	}
+	return out
+}
+
 // fetchEphemeralStorageFromKubelet queries each node's kubelet stats/summary
 // endpoint to get per-pod ephemeral storage usage. This is required because
 // the Kubernetes Metrics API (metrics.k8s.io) does not expose storage metrics.
@@ -466,7 +794,7 @@ func fetchEphemeralStorageFromKubelet(ctx context.Context, client *kubernetes.Cl
 }
 
 func fetchRecentLogs(ctx context.Context, client *kubernetes.Clientset, namespace string, matchLabels map[string]string, pods []corev1.Pod) []string {
-	if len(matchLabels) == 0 {
+	if len(matchLabels) == 0 && len(pods) == 0 {
 		return []string{}
 	}
 
@@ -482,12 +810,16 @@ func fetchRecentLogs(ctx context.Context, client *kubernetes.Clientset, namespac
 		pods = podList.Items
 	}
 
-	selector := labels.SelectorFromSet(labels.Set(matchLabels))
 	var matchingPods []corev1.Pod
-	for _, p := range pods {
-		if p.Namespace == namespace && selector.Matches(labels.Set(p.Labels)) {
-			matchingPods = append(matchingPods, p)
+	if len(matchLabels) > 0 {
+		selector := labels.SelectorFromSet(labels.Set(matchLabels))
+		for _, p := range pods {
+			if p.Namespace == namespace && selector.Matches(labels.Set(p.Labels)) {
+				matchingPods = append(matchingPods, p)
+			}
 		}
+	} else {
+		matchingPods = pods
 	}
 	if len(matchingPods) == 0 {
 		return []string{}
@@ -1239,12 +1571,14 @@ func WorkloadsHandler(c *gin.Context) {
 	var allEvents []corev1.Event
 	var allHPAs []autoscalingv2.HorizontalPodAutoscaler
 	var allScaledObjects []unstructured.Unstructured
+	var allPodMetrics map[string]metricsv1beta1.PodMetrics
+	var cpuThrottleByPod map[string]float64
 
 	prefetchCtx, prefetchCancel := context.WithTimeout(c.Request.Context(), 30*time.Second)
 	defer prefetchCancel()
 
 	var prefetchWg sync.WaitGroup
-	prefetchWg.Add(3)
+	prefetchWg.Add(6)
 	go func() {
 		defer prefetchWg.Done()
 		if eventList, err := client.CoreV1().Events(targetNamespace).List(prefetchCtx, metav1.ListOptions{}); err == nil {
@@ -1265,6 +1599,32 @@ func WorkloadsHandler(c *gin.Context) {
 				allScaledObjects = soList.Items
 			}
 		}
+	}()
+	go func() {
+		defer prefetchWg.Done()
+		if podList, err := client.CoreV1().Pods(targetNamespace).List(prefetchCtx, metav1.ListOptions{}); err == nil {
+			allPods = podList.Items
+		}
+	}()
+	go func() {
+		defer prefetchWg.Done()
+		if clusterID != "" {
+			mgr := k8s.GetClusterManager()
+			if mgr != nil {
+				if cls, err := mgr.GetOrConnectCluster(clusterID); err == nil && cls != nil && cls.MetricsClient != nil {
+					if list, err := cls.MetricsClient.MetricsV1beta1().PodMetricses(targetNamespace).List(prefetchCtx, metav1.ListOptions{}); err == nil {
+						allPodMetrics = make(map[string]metricsv1beta1.PodMetrics, len(list.Items))
+						for _, pm := range list.Items {
+							allPodMetrics[pm.Name] = pm
+						}
+					}
+				}
+			}
+		}
+	}()
+	go func() {
+		defer prefetchWg.Done()
+		cpuThrottleByPod = queryPodCPUThrottling(prefetchCtx, targetNamespace)
 	}()
 	prefetchWg.Wait()
 
@@ -1290,6 +1650,12 @@ func WorkloadsHandler(c *gin.Context) {
 				enrichCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
 				defer cancel()
 				status := getStatus(d.Status.AvailableReplicas, *d.Spec.Replicas)
+				metrics := getRealMetrics(enrichCtx, clusterID, d.Namespace, d.Name, "Deployment", d.Spec.Template.Spec, window, d.Spec.Selector.MatchLabels, *d.Spec.Replicas)
+				pods, maxPodMetrics, podCount := buildPodSaturationList(enrichCtx, clusterID, d.Namespace, d.Name, "Deployment", d.Spec.Selector.MatchLabels, allPods, d.Spec.Template.Spec, allPodMetrics, cpuThrottleByPod, 3)
+				metrics.CpuMaxPodUsage = maxPodMetrics.CpuMaxPodUsage
+				metrics.MemoryMaxPodUsage = maxPodMetrics.MemoryMaxPodUsage
+				metrics.StorageMaxPodUsage = maxPodMetrics.StorageMaxPodUsage
+				metrics.GpuMaxPodUsage = maxPodMetrics.GpuMaxPodUsage
 				w := Workload{
 					ID:                string(d.UID),
 					ClusterID:         clusterID,
@@ -1298,11 +1664,13 @@ func WorkloadsHandler(c *gin.Context) {
 					Kind:              "Deployment",
 					Replicas:          *d.Spec.Replicas,
 					AvailableReplicas: d.Status.AvailableReplicas,
+					PodCount:          int32(podCount),
 					Status:            status,
 					CostPerMonth:      rand.Intn(500) + 50,
-					Metrics:           getRealMetrics(enrichCtx, clusterID, d.Namespace, d.Name, "Deployment", d.Spec.Template.Spec, window, d.Spec.Selector.MatchLabels, *d.Spec.Replicas),
+					Metrics:           metrics,
 					Events:            fetchRecentEvents(enrichCtx, client, d.Namespace, d.Name, "Deployment", allEvents),
 					Scaling:           getScalingInfo(enrichCtx, client, dynClient, d.Namespace, d.Name, allHPAs, allScaledObjects),
+					Pods:              pods,
 				}
 				if status != "Healthy" {
 					w.SchedulerLogs = fetchKarpenterLogs(enrichCtx, client, d.Name)
@@ -1324,6 +1692,12 @@ func WorkloadsHandler(c *gin.Context) {
 				enrichCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
 				defer cancel()
 				status := getStatus(s.Status.ReadyReplicas, *s.Spec.Replicas)
+				metrics := getRealMetrics(enrichCtx, clusterID, s.Namespace, s.Name, "StatefulSet", s.Spec.Template.Spec, window, s.Spec.Selector.MatchLabels, *s.Spec.Replicas)
+				pods, maxPodMetrics, podCount := buildPodSaturationList(enrichCtx, clusterID, s.Namespace, s.Name, "StatefulSet", s.Spec.Selector.MatchLabels, allPods, s.Spec.Template.Spec, allPodMetrics, cpuThrottleByPod, 3)
+				metrics.CpuMaxPodUsage = maxPodMetrics.CpuMaxPodUsage
+				metrics.MemoryMaxPodUsage = maxPodMetrics.MemoryMaxPodUsage
+				metrics.StorageMaxPodUsage = maxPodMetrics.StorageMaxPodUsage
+				metrics.GpuMaxPodUsage = maxPodMetrics.GpuMaxPodUsage
 				w := Workload{
 					ID:                string(s.UID),
 					ClusterID:         clusterID,
@@ -1332,11 +1706,13 @@ func WorkloadsHandler(c *gin.Context) {
 					Kind:              "StatefulSet",
 					Replicas:          *s.Spec.Replicas,
 					AvailableReplicas: s.Status.ReadyReplicas,
+					PodCount:          int32(podCount),
 					Status:            status,
 					CostPerMonth:      rand.Intn(500) + 100,
-					Metrics:           getRealMetrics(enrichCtx, clusterID, s.Namespace, s.Name, "StatefulSet", s.Spec.Template.Spec, window, s.Spec.Selector.MatchLabels, *s.Spec.Replicas),
+					Metrics:           metrics,
 					Events:            fetchRecentEvents(enrichCtx, client, s.Namespace, s.Name, "StatefulSet", allEvents),
 					Scaling:           getScalingInfo(enrichCtx, client, dynClient, s.Namespace, s.Name, allHPAs, allScaledObjects),
+					Pods:              pods,
 				}
 				if status != "Healthy" {
 					w.SchedulerLogs = fetchKarpenterLogs(enrichCtx, client, s.Name)
@@ -1358,6 +1734,12 @@ func WorkloadsHandler(c *gin.Context) {
 				enrichCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
 				defer cancel()
 				status := getStatus(ds.Status.NumberReady, ds.Status.DesiredNumberScheduled)
+				metrics := getRealMetrics(enrichCtx, clusterID, ds.Namespace, ds.Name, "DaemonSet", ds.Spec.Template.Spec, window, ds.Spec.Selector.MatchLabels, ds.Status.DesiredNumberScheduled)
+				pods, maxPodMetrics, podCount := buildPodSaturationList(enrichCtx, clusterID, ds.Namespace, ds.Name, "DaemonSet", ds.Spec.Selector.MatchLabels, allPods, ds.Spec.Template.Spec, allPodMetrics, cpuThrottleByPod, 3)
+				metrics.CpuMaxPodUsage = maxPodMetrics.CpuMaxPodUsage
+				metrics.MemoryMaxPodUsage = maxPodMetrics.MemoryMaxPodUsage
+				metrics.StorageMaxPodUsage = maxPodMetrics.StorageMaxPodUsage
+				metrics.GpuMaxPodUsage = maxPodMetrics.GpuMaxPodUsage
 				w := Workload{
 					ID:                string(ds.UID),
 					ClusterID:         clusterID,
@@ -1366,11 +1748,13 @@ func WorkloadsHandler(c *gin.Context) {
 					Kind:              "DaemonSet",
 					Replicas:          ds.Status.DesiredNumberScheduled,
 					AvailableReplicas: ds.Status.NumberReady,
+					PodCount:          int32(podCount),
 					Status:            status,
 					CostPerMonth:      rand.Intn(200) + 50,
-					Metrics:           getRealMetrics(enrichCtx, clusterID, ds.Namespace, ds.Name, "DaemonSet", ds.Spec.Template.Spec, window, ds.Spec.Selector.MatchLabels, ds.Status.DesiredNumberScheduled),
+					Metrics:           metrics,
 					Events:            fetchRecentEvents(enrichCtx, client, ds.Namespace, ds.Name, "DaemonSet", allEvents),
 					Scaling:           getScalingInfo(enrichCtx, client, dynClient, ds.Namespace, ds.Name, allHPAs, allScaledObjects),
+					Pods:              pods,
 				}
 				if status != "Healthy" {
 					// DaemonSets usually don't use Karpenter provisioning like Deployments do
@@ -1563,6 +1947,65 @@ func WorkloadsHandler(c *gin.Context) {
 		cache.Set(c.Request.Context(), cacheKey, jsonBytes, cache.TTLWorkloads)
 	}
 
+	// Step 3: Persist metric snapshots asynchronously for right-sizing history.
+	// This is best-effort: failures are logged but do not affect the response.
+	go func(list []Workload, cid string) {
+		if db.DB == nil {
+			return
+		}
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		now := time.Now()
+		for _, w := range list {
+			snap := db.WorkloadMetricSnapshot{
+				ClusterID:          cid,
+				Namespace:          w.Namespace,
+				WorkloadName:       w.Name,
+				Kind:               string(w.Kind),
+				CpuUsage:           w.Metrics.CpuUsage,
+				CpuLimit:           w.Metrics.CpuLimit,
+				CpuLimitPerPod:     w.Metrics.CpuLimitPerPod,
+				MaxCpuUsage:        w.Metrics.CpuMaxPodUsage,
+				CpuHotPodP99:       w.Metrics.CpuHotPodP99,
+				MemoryUsage:        w.Metrics.MemoryUsage,
+				MemoryLimit:        w.Metrics.MemoryLimit,
+				MemoryLimitPerPod:  w.Metrics.MemoryLimitPerPod,
+				MaxMemoryUsage:     w.Metrics.MemoryMaxPodUsage,
+				MemoryHotPodP99:    w.Metrics.MemoryHotPodP99,
+				StorageUsage:       w.Metrics.StorageUsage,
+				StorageLimit:       w.Metrics.StorageLimit,
+				StorageLimitPerPod: w.Metrics.StorageLimitPerPod,
+				MaxStorageUsage:    w.Metrics.StorageMaxPodUsage,
+				GpuUsage:           w.Metrics.GpuUsage,
+				GpuLimit:           w.Metrics.GpuLimit,
+				GpuLimitPerPod:     w.Metrics.GpuLimitPerPod,
+				MaxGpuUsage:        w.Metrics.GpuMaxPodUsage,
+				PodCount:           w.PodCount,
+				RecordedAt:         now,
+			}
+			if err := db.DB.WithContext(ctx).Create(&snap).Error; err != nil {
+				log.Printf("Warning: failed to write metric snapshot for %s/%s: %v", w.Namespace, w.Name, err)
+			}
+		}
+		// Keep only the last 100 snapshots per workload to bound table growth.
+		if len(list) > 0 {
+			var idsToKeep []uint
+			for _, w := range list {
+				var keep []uint
+				db.DB.WithContext(ctx).Model(&db.WorkloadMetricSnapshot{}).
+					Select("id").
+					Where("cluster_id = ? AND namespace = ? AND workload_name = ?", cid, w.Namespace, w.Name).
+					Order("recorded_at DESC").
+					Limit(100).
+					Pluck("id", &keep)
+				idsToKeep = append(idsToKeep, keep...)
+			}
+			if len(idsToKeep) > 0 {
+				db.DB.WithContext(ctx).Where("cluster_id = ? AND id NOT IN ?", cid, idsToKeep).Delete(&db.WorkloadMetricSnapshot{})
+			}
+		}
+	}(workloads, clusterID)
+
 	log.Printf("WorkloadsHandler: Returning %d workloads for cluster %s", len(workloads), clusterID)
 	c.JSON(http.StatusOK, workloads)
 }
@@ -1609,6 +2052,12 @@ func WorkloadLogsHandler(c *gin.Context) {
 	case "DaemonSet":
 		if ds, err := client.AppsV1().DaemonSets(namespace).Get(ctx, name, metav1.GetOptions{}); err == nil {
 			matchLabels = ds.Spec.Selector.MatchLabels
+		}
+	case "Pod":
+		if pod, err := client.CoreV1().Pods(namespace).Get(ctx, name, metav1.GetOptions{}); err == nil {
+			logs := fetchRecentLogs(ctx, client, namespace, nil, []corev1.Pod{*pod})
+			c.JSON(http.StatusOK, gin.H{"logs": logs, "podNames": []string{name}})
+			return
 		}
 	}
 

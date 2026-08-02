@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useMonitoring } from '../contexts/MonitoringContext';
 import { NotificationChannel, NotificationType, AlertRule, TriggeredAlert } from '../types';
-import { Bell, Plus, Search, Slack, Mail, Webhook, Trash2, Edit2, X, Activity, Loader2, Play, Pause, Settings2, ShieldAlert, Cpu, MemoryStick, Zap, DollarSign, Filter, CheckCircle2, AlertCircle, MessageSquare, History, Clock, ArrowRight, BellRing, ChevronDown, ChevronUp } from 'lucide-react';
+import { Bell, Plus, Search, Slack, Mail, Webhook, Trash2, Edit2, X, Activity, Loader2, Play, Pause, Settings2, ShieldAlert, Cpu, MemoryStick, Zap, DollarSign, Filter, CheckCircle2, AlertCircle, MessageSquare, History, Clock, ArrowRight, BellRing, ChevronDown, ChevronUp, Sparkles } from 'lucide-react';
 import { useEscapeKey } from '../utils/useEscapeKey';
 import { StatusBadge } from './dashboard/StatusBadge';
 
@@ -25,12 +25,13 @@ export const NotificationsView: React.FC<NotificationsViewProps> = ({
    triggeredAlerts,
    isDarkMode = true
 }) => {
-   const { notificationSettings, updateNotificationSettings } = useMonitoring();
+   const { notificationSettings, updateNotificationSettings, clearTriggeredAlerts } = useMonitoring();
    const [activeTab, setActiveTab] = useState<'channels' | 'rules' | 'history'>('rules');
    const [isChannelModalOpen, setIsChannelModalOpen] = useState(false);
    const [isRuleModalOpen, setIsRuleModalOpen] = useState(false);
    const [searchTerm, setSearchTerm] = useState('');
    const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
+   const [showClearConfirm, setShowClearConfirm] = useState(false);
 
    const closeChannelModal = useCallback(() => setIsChannelModalOpen(false), []);
    const closeRuleModal = useCallback(() => setIsRuleModalOpen(false), []);
@@ -271,9 +272,19 @@ export const NotificationsView: React.FC<NotificationsViewProps> = ({
                      <div className="flex items-center gap-2">
                         <History className="w-4 h-4 text-text-secondary" /> Threshold Breach Timeline
                      </div>
-                     <button onClick={togglePause} className={`px-3 py-1 text-[10px] font-sans font-semibold border transition-all flex items-center gap-2 ${isPaused ? 'bg-warning text-black border-warning kt-amber-glow' : 'bg-bg-card text-text-tertiary hover:text-primary-500 border-border-main'}`}>
-                        {isPaused ? <><Clock className="w-3 h-3" /> Live updates paused</> : <><Activity className="w-3 h-3" /> Real-time</>}
-                     </button>
+                     <div className="flex items-center gap-2">
+                        {filteredHistory.length > 0 && (
+                           <button
+                              onClick={() => setShowClearConfirm(true)}
+                              className="px-3 py-1 text-[10px] font-sans font-semibold border border-danger/30 text-danger hover:bg-danger/10 transition-all flex items-center gap-1.5"
+                           >
+                              <Trash2 className="w-3 h-3" /> Clear history
+                           </button>
+                        )}
+                        <button onClick={togglePause} className={`px-3 py-1 text-[10px] font-sans font-semibold border transition-all flex items-center gap-2 ${isPaused ? 'bg-warning text-black border-warning kt-amber-glow' : 'bg-bg-card text-text-tertiary hover:text-primary-500 border-border-main'}`}>
+                           {isPaused ? <><Clock className="w-3 h-3" /> Live updates paused</> : <><Activity className="w-3 h-3" /> Real-time</>}
+                        </button>
+                     </div>
                   </div>
                   <div className="divide-y divide-border-main relative z-10">
                      {filteredHistory.length > 0 ? (
@@ -473,6 +484,34 @@ export const NotificationsView: React.FC<NotificationsViewProps> = ({
                         <button type="submit" className="kt-button kt-button-primary flex-[2]">Establish sink</button>
                      </div>
                   </form>
+               </div>
+            </div>
+         )}
+
+         {showClearConfirm && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in" onClick={() => setShowClearConfirm(false)}>
+               <div className="kt-panel w-full max-w-sm animate-slide-up" onClick={(e) => e.stopPropagation()}>
+                  <div className="kt-panel-header">
+                     <div className="flex items-center gap-2">
+                        <Trash2 className="w-5 h-5 text-danger" />
+                        Clear alert history?
+                     </div>
+                     <button onClick={() => setShowClearConfirm(false)} className="p-2 border border-border-main hover:border-danger/30 hover:text-danger text-text-tertiary transition-colors"><X className="w-5 h-5" /></button>
+                  </div>
+                  <div className="p-6 space-y-4 relative z-10">
+                     <p className="text-sm text-text-secondary font-sans">
+                        This will permanently remove {triggeredAlerts.length} threshold breach alert{triggeredAlerts.length !== 1 ? 's' : ''} from the local history. Active rules will continue to generate new alerts.
+                     </p>
+                     <div className="flex gap-3">
+                        <button onClick={() => setShowClearConfirm(false)} className="kt-button kt-button-ghost kt-button-sm flex-1">Cancel</button>
+                        <button
+                           onClick={() => { clearTriggeredAlerts(); setShowClearConfirm(false); setExpandedGroups(new Set()); }}
+                           className="kt-button kt-button-danger flex-1"
+                        >
+                           Clear history
+                        </button>
+                     </div>
+                  </div>
                </div>
             </div>
          )}

@@ -95,6 +95,7 @@ type AnalyzeWorkloadRequest struct {
 	Model         string            `json:"model"`    // specific model like "llama3"
 	ClusterID     string            `json:"clusterId"`
 	WorkloadName  string            `json:"workloadName"`
+	PodName       string            `json:"podName,omitempty"`
 	Namespace     string            `json:"namespace"`
 	Kind          string            `json:"kind"`
 	Status        string            `json:"status"`
@@ -112,8 +113,17 @@ type AnalyzeWorkloadRequest struct {
 	Logs          []string          `json:"logs"`
 	Events        []string          `json:"events"`
 	SchedulerLogs []string          `json:"schedulerLogs"`
-	Scaling       *ScalingInfo      `json:"scaling,omitempty"`
-	Provisioning  *ProvisioningInfo `json:"provisioning,omitempty"`
+	Scaling           *ScalingInfo        `json:"scaling,omitempty"`
+	Provisioning      *ProvisioningInfo   `json:"provisioning,omitempty"`
+	HistoricalReports []HistoricalReport `json:"historicalReports,omitempty"`
+}
+
+type HistoricalReport struct {
+	ID          int    `json:"id"`
+	CreatedAt   string `json:"createdAt"`
+	Severity    string `json:"severity"`
+	IncidentType string `json:"incidentType"`
+	Analysis    string `json:"analysis"`
 }
 
 func (s *AIService) getProvider(name string) (AIProvider, error) {
@@ -213,26 +223,43 @@ func (s *AIService) AnalyzeWorkload(ctx context.Context, req AnalyzeWorkloadRequ
 		safeSchedulerLogs = safeSchedulerLogs[len(safeSchedulerLogs)-20:]
 	}
 
+	historicalReportsText := "None"
+	if len(req.HistoricalReports) > 0 {
+		var hr strings.Builder
+		for i, hrItem := range req.HistoricalReports {
+			if i >= 10 {
+				break
+			}
+			fmt.Fprintf(&hr, "- [%s | %s | %s] %s\n", hrItem.CreatedAt, hrItem.Severity, hrItem.IncidentType, strings.ReplaceAll(hrItem.Analysis, "\n", " "))
+		}
+		historicalReportsText = hr.String()
+	}
+
+	podFocus := ""
+	if req.PodName != "" {
+		podFocus = fmt.Sprintf("\n    **FOCUS POD**: %s (analyze this specific pod within the workload)", req.PodName)
+	}
+
 	prompt := fmt.Sprintf(`
-    You are a Senior Site Reliability Engineer (SRE) performing a deep-dive diagnostic analysis of the Kubernetes workload "%s".
-    
+    You are a Senior Site Reliability Engineer (SRE) performing a deep-dive diagnostic analysis of the Kubernetes workload "%s".%s
+
     **CONTEXT**:
     - **Status**: %s
     - **Playbook**: %s
     - **Instruction**: %s
-    
+
     **TELEMETRY**:
     - CPU: %s Cores / %s Cores (Limit)
     - RAM: %s MiB / %s MiB (Limit)
     - Storage: %s GiB / %s GiB (Limit)
     - Disk I/O: %s
-    
+
     **HISTORICAL METRICS (Trend)**:
     %s
-    
+
     **YAML MANIFEST (Current State)**:
     %s
-    
+
     **SCALING (HPA/KEDA)**:
     - Enabled: %v
     - Replicas: %d Min / %d Max / %d Current
@@ -242,13 +269,13 @@ func (s *AIService) AnalyzeWorkload(ctx context.Context, req AnalyzeWorkloadRequ
     - Paused: %v
     - Triggers: %s
     - Known Misconfigurations: %s
-    
+
     **PROVISIONING (Karpenter)**:
     - Enabled: %v
     - NodePools: %s
     - Pending NodeClaims: %s
     - Known Misconfigurations: %s
-    
+
     **LOGS & EVENTS**:
     Recent pod log tail (most recent lines first; these are the primary signal for root cause):
     %s
@@ -259,10 +286,15 @@ func (s *AIService) AnalyzeWorkload(ctx context.Context, req AnalyzeWorkloadRequ
     **INFRASTRUCTURE LOGS (Karpenter/Scheduler)**:
     %s
 
+    **HISTORICAL AI TRIAGE REPORTS**:
+    Previous analyses for this workload (newest first). Use them to identify recurring patterns, regressions, or whether a fix stuck:
+    %s
+
     **SRE INTERPRETATION NOTES**:
     - If Min Replicas is **0**, this workload is likely configured for **Scale to Zero (Cost Optimization)**. If current replicas are 0, this is expected behavior and not a failure unless logs indicate a trigger failed to fire.
     - Start your root cause by quoting or referencing specific log lines above. Do not ignore them.
     - If logs contain error keywords (Error, Exception, Fatal, CrashLoopBackOff, OOMKilled, Evicted, Timeout, Connection refused, 5xx), call them out explicitly.
+    - When historical reports are provided, explicitly compare current findings to the most recent prior analysis. State whether this is a recurrence, a new failure mode, or a verification that a previous fix held.
 
     **OUTPUT REQUIREMENTS**:
     Produce a Highly Polished, Executive-Grade SRE Incident Report in Markdown.
@@ -299,7 +331,7 @@ func (s *AIService) AnalyzeWorkload(ctx context.Context, req AnalyzeWorkloadRequ
     kubectl get pod ...
     `+"```"+`
 	`,
-		req.WorkloadName, req.Status, req.Playbook, req.Instructions,
+		req.WorkloadName, podFocus, req.Status, req.Playbook, req.Instructions,
 		req.CpuUsage, req.CpuLimit, req.MemoryUsage, req.MemoryLimit, req.StorageUsage, req.StorageLimit, req.DiskIo,
 		req.Metrics, req.Yaml,
 		scalingEnabled, scalingMin, scalingMax, scalingCurrent, scalingReady,
@@ -308,6 +340,7 @@ func (s *AIService) AnalyzeWorkload(ctx context.Context, req AnalyzeWorkloadRequ
 		strings.Join(safeLogs, "\n"),
 		strings.Join(safeEvents, "\n"),
 		strings.Join(safeSchedulerLogs, "\n"),
+		historicalReportsText,
 	)
 
 	analysis, err := provider.GenerateContent(ctx, prompt, req.Model)
@@ -322,6 +355,9 @@ func (s *AIService) AnalyzeWorkload(ctx context.Context, req AnalyzeWorkloadRequ
 		var b strings.Builder
 		fmt.Fprintf(&b, "## 🚨 Diagnostic Summary\n\nThe AI model returned a brief or empty response. A manual diagnostic summary is provided below based on the collected telemetry, events, and the most recent pod log tail.\n\n")
 		fmt.Fprintf(&b, "- **Workload**: `%s/%s` (%s)\n", req.Namespace, req.WorkloadName, req.Kind)
+		if req.PodName != "" {
+			fmt.Fprintf(&b, "- **Focus Pod**: `%s`\n", req.PodName)
+		}
 		fmt.Fprintf(&b, "- **Status**: %s\n", req.Status)
 		fmt.Fprintf(&b, "- **Playbook**: %s\n", req.Playbook)
 		fmt.Fprintf(&b, "- **CPU**: %s / %s cores\n", req.CpuUsage, req.CpuLimit)

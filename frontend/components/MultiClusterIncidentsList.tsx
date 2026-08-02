@@ -94,7 +94,7 @@ const markdownComponents = {
 
 interface IncidentRowProps {
   incident: CrossClusterIncident;
-  onTriageRequest?: (workloadId: string, playbook: DiagnosticPlaybook) => void;
+  onTriageRequest?: (workloadId: string, playbook: DiagnosticPlaybook, podName?: string) => void;
 }
 
 const IncidentRow = memo(function IncidentRow({ incident, onTriageRequest }: IncidentRowProps) {
@@ -217,7 +217,7 @@ const IncidentRow = memo(function IncidentRow({ incident, onTriageRequest }: Inc
 
 interface MultiClusterIncidentsListProps {
   incidents: CrossClusterIncident[];
-  onTriageRequest?: (workloadId: string, playbook: DiagnosticPlaybook) => void;
+  onTriageRequest?: (workloadId: string, playbook: DiagnosticPlaybook, podName?: string) => void;
 }
 
 export const MultiClusterIncidentsList: React.FC<MultiClusterIncidentsListProps> = memo(function MultiClusterIncidentsList({ incidents, onTriageRequest }) {

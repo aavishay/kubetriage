@@ -30,13 +30,21 @@ export const getMetricStatusColor = (value: number) => {
 export interface ResourceMetrics {
   cpuRequest: number; // in cores
   cpuLimit: number;
+  cpuLimitPerPod?: number;
   cpuUsage: number;
+  cpuMaxPodUsage?: number;
+  cpuHotPodP99?: number;
   memoryRequest: number; // in MiB
   memoryLimit: number;
+  memoryLimitPerPod?: number;
   memoryUsage: number;
+  memoryMaxPodUsage?: number;
+  memoryHotPodP99?: number;
   storageRequest?: number; // in GiB
   storageLimit?: number;
+  storageLimitPerPod?: number;
   storageUsage?: number;
+  storageMaxPodUsage?: number;
   networkIn: number; // MB/s
   networkOut: number; // MB/s
   diskIo: number; // MB/s
@@ -49,7 +57,9 @@ export interface ResourceMetrics {
   // GPU Metrics
   gpuRequest?: number; // Number of GPUs requested
   gpuLimit?: number; // Number of GPUs limited
+  gpuLimitPerPod?: number;
   gpuUsage?: number; // Watts
+  gpuMaxPodUsage?: number;
   gpuMemoryUsage?: number; // MiB
   gpuMemoryTotal?: number; // MiB
   gpuUtilization?: number; // Percentage 0-100
@@ -71,6 +81,23 @@ export interface ProvisioningInfo {
   misconfigurations?: string[];
 }
 
+export interface PodSaturation {
+  name: string;
+  namespace: string;
+  clusterId: string;
+  node?: string;
+  phase: string;
+  status: 'Healthy' | 'Warning' | 'Critical';
+  restartCount: number;
+  waitingReason?: string;
+  terminatedReason?: string;
+  cpuThrottled: boolean;
+  cpuThrottleRatio: number;
+  metrics: ResourceMetrics;
+  ownerWorkload: string;
+  ownerKind: string;
+}
+
 export interface Workload {
   id: string;
   clusterId: string;
@@ -84,6 +111,7 @@ export interface Workload {
   metrics: ResourceMetrics;
   recentLogs: string[];
   podNames: string[];
+  pods?: PodSaturation[];
   events: K8sEvent[];
   costPerMonth: number;
   recommendation?: {

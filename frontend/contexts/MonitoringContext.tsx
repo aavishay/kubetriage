@@ -44,6 +44,7 @@ interface MonitoringContextType {
   updateAlertRule: (rule: AlertRule) => void;
   deleteAlertRule: (id: string) => void;
   dismissNotification: () => void;
+  clearTriggeredAlerts: () => void;
   removeCluster: (id: string) => Promise<void>;
 
   // Theme
@@ -194,7 +195,7 @@ export const MonitoringProvider: React.FC<MonitoringProviderProps> = ({ children
 
   useEffect(() => {
     const fetchWorkloads = async () => {
-      const cacheKey = `cache_workloads_${activeClusterIds.join(',')}_${metricsWindow}`;
+      const cacheKey = `cache_workloads_${activeClusterIds.join(',')}_${metricsWindow}_v2`;
       const cached = (typeof localStorage !== 'undefined' && localStorage.getItem) ? localStorage.getItem(cacheKey) : null;
       if (cached) {
         setWorkloads(JSON.parse(cached));
@@ -260,7 +261,7 @@ export const MonitoringProvider: React.FC<MonitoringProviderProps> = ({ children
       );
       const merged = results.flat();
       setWorkloads(merged);
-      localStorage.setItem(`cache_workloads_${activeClusterIds.join(',')}_${metricsWindow}`, JSON.stringify(merged));
+      localStorage.setItem(`cache_workloads_${activeClusterIds.join(',')}_${metricsWindow}_v2`, JSON.stringify(merged));
     } catch (err) {
       console.error("Error refreshing workloads", err);
     } finally {
@@ -387,6 +388,7 @@ export const MonitoringProvider: React.FC<MonitoringProviderProps> = ({ children
   const deleteAlertRule = (id: string) => setAlertRules(prev => prev.filter(r => r.id !== id));
 
   const dismissNotification = () => setActiveNotification(null);
+  const clearTriggeredAlerts = () => setTriggeredAlerts([]);
 
   const removeCluster = async (id: string) => {
     try {
@@ -546,6 +548,7 @@ export const MonitoringProvider: React.FC<MonitoringProviderProps> = ({ children
       updateAlertRule,
       deleteAlertRule,
       dismissNotification,
+      clearTriggeredAlerts,
       isDarkMode,
       toggleTheme,
       unreadReports,

@@ -59,9 +59,17 @@ func RunWorkloadScanner(aiService *ai.AIService) {
 			}
 
 			if isRisky {
+				// Resolve the top-level controller so the report is stored under the same
+				// name shown in the triage workload list (Deployment/StatefulSet/etc).
+				workloadName := pod.Name
+				kind := "Pod"
+				if len(pod.OwnerReferences) > 0 {
+					workloadName, kind = k8s.ResolveTopLevelController(context.Background(), client, pod.Namespace, pod.OwnerReferences[0])
+				}
+
 				// Deduplicate: Check if we have an unread report for this workload
 				var existingReport db.TriageReport
-				result := db.DB.Session(&gorm.Session{Logger: db.DB.Logger.LogMode(logger.Silent)}).Where("cluster_id = ? AND namespace = ? AND workload_name = ? AND is_read = ?", cluster.ID, pod.Namespace, pod.Name, false).First(&existingReport)
+				result := db.DB.Session(&gorm.Session{Logger: db.DB.Logger.LogMode(logger.Silent)}).Where("cluster_id = ? AND namespace = ? AND workload_name = ? AND is_read = ?", cluster.ID, pod.Namespace, workloadName, false).First(&existingReport)
 
 				if result.Error == nil {
 					continue
@@ -71,7 +79,7 @@ func RunWorkloadScanner(aiService *ai.AIService) {
 				}
 
 				// Trigger AI Analysis
-				log.Printf("Triggering Proactive Analysis for %s/%s", pod.Namespace, pod.Name)
+				log.Printf("Triggering Proactive Analysis for %s/%s", pod.Namespace, workloadName)
 
 				if aiService == nil {
 					log.Println("Warning: AIService not available for proactive scan.")
@@ -80,9 +88,9 @@ func RunWorkloadScanner(aiService *ai.AIService) {
 
 				// Prepare Request
 				req := ai.AnalyzeWorkloadRequest{
-					WorkloadName: pod.Name,
+					WorkloadName: workloadName,
 					Namespace:    pod.Namespace,
-					Kind:         "Pod",
+					Kind:         kind,
 					Status:       string(pod.Status.Phase),
 					Playbook:     "General Health",
 					Instructions: "Proactive background triage of a failing pod detected by Cluster Watcher.",
@@ -95,7 +103,7 @@ func RunWorkloadScanner(aiService *ai.AIService) {
 				analysis, err := aiService.AnalyzeWorkload(context.Background(), req)
 				if err != nil {
 					log.Printf("Error during proactive AI analysis: %v", err)
-					analysis = fmt.Sprintf("AI Analysis failed: %v. Manual investigation required for %s/%s", err, pod.Namespace, pod.Name)
+					analysis = fmt.Sprintf("AI Analysis failed: %v. Manual investigation required for %s/%s", err, pod.Namespace, workloadName)
 				}
 
 				severity := "High"
@@ -106,8 +114,8 @@ func RunWorkloadScanner(aiService *ai.AIService) {
 				report := db.TriageReport{
 					ClusterID:    cluster.ID,
 					Namespace:    pod.Namespace,
-					WorkloadName: pod.Name,
-					Kind:         "Pod",
+					WorkloadName: workloadName,
+					Kind:         kind,
 					Analysis:     analysis,
 					Severity:     severity,
 				}
@@ -119,7 +127,7 @@ func RunWorkloadScanner(aiService *ai.AIService) {
 				// Send Slack Notification
 				if severity == "High" || severity == "Critical" {
 					go integrations.SendSlackAlert(
-						fmt.Sprintf("🚨 Proactive Triage: %s/%s", pod.Namespace, pod.Name),
+						fmt.Sprintf("🚨 Proactive Triage: %s/%s", pod.Namespace, workloadName),
 						fmt.Sprintf("Cluster: %s\nIssue detected and triaged by AI Copilot.\n\n*Summary:*\n%s", cluster.Name, truncate(analysis, 500)),
 						severity,
 						nil,

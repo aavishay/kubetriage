@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/aavishay/kubetriage/backend/internal/ai"
+	"github.com/aavishay/kubetriage/backend/internal/k8s"
 	"github.com/aavishay/kubetriage/backend/internal/prometheus"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -43,6 +44,20 @@ func EnrichAnalyzeRequest(ctx context.Context, client *kubernetes.Clientset, req
 		if p, err := client.CoreV1().Pods(req.Namespace).Get(ctx, req.WorkloadName, metav1.GetOptions{}); err == nil {
 			req.Yaml = FetchFullYaml(p)
 		}
+	}
+
+	// 3. Pod-specific enrichment: if a pod name is supplied, fetch pod logs and events and override metrics.
+	if req.PodName != "" {
+		if podLogs, err := k8s.GetPodLogs(ctx, client, req.Namespace, req.PodName, &k8s.LogOptions{Lines: 50}); err == nil && podLogs != "" {
+			req.Logs = append(req.Logs, fmt.Sprintf("--- logs from pod %s ---", req.PodName), podLogs)
+		}
+		if podEvents := k8s.GetPodEvents(ctx, client, req.Namespace, req.PodName); len(podEvents) > 0 {
+			for _, e := range podEvents {
+				req.Events = append(req.Events, fmt.Sprintf("Pod event [%s]: %s", e.Reason, e.Message))
+			}
+		}
+		req.Metrics = FetchHistoricalMetricsTrend(ctx, req.Namespace, req.WorkloadName)
+		return
 	}
 
 	// 3. Metrics

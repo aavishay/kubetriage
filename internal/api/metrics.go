@@ -4,12 +4,21 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/aavishay/kubetriage/backend/internal/cache"
 	"github.com/aavishay/kubetriage/backend/internal/prometheus"
 	"github.com/gin-gonic/gin"
 )
+
+// promEscape escapes characters that would break a PromQL regex label value.
+func promEscape(s string) string {
+	s = strings.ReplaceAll(s, `\`, `\\`)
+	s = strings.ReplaceAll(s, `"`, `\"`)
+	s = strings.ReplaceAll(s, `|`, `\|`)
+	return s
+}
 
 func ClusterMetricsHandler(c *gin.Context) {
 	if prometheus.GlobalClient == nil {
@@ -28,6 +37,21 @@ func ClusterMetricsHandler(c *gin.Context) {
 		return
 	}
 
+	podFilter := ""
+	if podsParam := c.Query("pods"); podsParam != "" {
+		var podNames []string
+		if err := json.Unmarshal([]byte(podsParam), &podNames); err == nil && len(podNames) > 0 {
+			escaped := make([]string, len(podNames))
+			for i, p := range podNames {
+				escaped[i] = promEscape(p)
+			}
+			podFilter = fmt.Sprintf(",pod=~\"%s\"", strings.Join(escaped, "|"))
+		}
+	}
+	if podFilter == "" {
+		podFilter = fmt.Sprintf(",pod=~\"%s-.*\"", promEscape(workload))
+	}
+
 	var query string
 	clusterFilter := ""
 	if clusterID != "" {
@@ -36,12 +60,13 @@ func ClusterMetricsHandler(c *gin.Context) {
 	switch metric {
 	case "cpu":
 		// Rate of CPU usage over 5m window, summed across all pods of the workload
-		// Heuristic: matching pod name prefix. Ideally we'd match bye owner reference but that's complex in PromQL alone without strict labeling.
-		query = fmt.Sprintf("sum(rate(container_cpu_usage_seconds_total{namespace=\"%s\", pod=~\"%s-.*\", container!=\"POD\"%s}[5m]))", namespace, workload, clusterFilter)
+		query = fmt.Sprintf("sum(rate(container_cpu_usage_seconds_total{namespace=\"%s\"%s, container!=\"POD\"%s}[5m]))", namespace, podFilter, clusterFilter)
 	case "memory":
-		query = fmt.Sprintf("sum(container_memory_working_set_bytes{namespace=\"%s\", pod=~\"%s-.*\", container!=\"POD\"%s})", namespace, workload, clusterFilter)
+		query = fmt.Sprintf("sum(container_memory_working_set_bytes{namespace=\"%s\"%s, container!=\"POD\"%s})", namespace, podFilter, clusterFilter)
+	case "storage":
+		query = fmt.Sprintf("sum(container_fs_usage_bytes{namespace=\"%s\"%s, container!=\"POD\"%s})", namespace, podFilter, clusterFilter)
 	default:
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid metric type. Supported: cpu, memory"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid metric type. Supported: cpu, memory, storage"})
 		return
 	}
 
@@ -62,7 +87,7 @@ func ClusterMetricsHandler(c *gin.Context) {
 	}
 
 	// Step 1: Check Cache
-	cacheKey := fmt.Sprintf("metrics:%s:%s:%s:%s:%s", clusterID, namespace, workload, metric, durationStr)
+	cacheKey := fmt.Sprintf("metrics:%s:%s:%s:%s:%s:%s", clusterID, namespace, workload, metric, durationStr, c.Query("pods"))
 	if cached, err := cache.Get(c.Request.Context(), cacheKey); err == nil {
 		var points []prometheus.MetricPoint
 		if err := json.Unmarshal([]byte(cached), &points); err == nil {

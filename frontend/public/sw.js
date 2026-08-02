@@ -1,6 +1,6 @@
 /// <reference lib="webworker" />
 
-const CACHE_NAME = 'kubetriage-v2';
+const CACHE_NAME = 'kubetriage-v3';
 const STATIC_ASSETS = [
   '/',
   '/index.html',
@@ -31,7 +31,7 @@ self.addEventListener('activate', (event) => {
   );
 });
 
-// Fetch: network-first for API, cache-first for static assets
+// Fetch: network-first for API and versioned JS assets, cache-first for static assets
 self.addEventListener('fetch', (event) => {
   const { request } = event;
   const url = new URL(request.url);
@@ -45,6 +45,24 @@ self.addEventListener('fetch', (event) => {
   // API requests: network-first with IndexedDB fallback is handled by the main thread
   // via fetchWithOffline. The service worker only caches static assets here.
   if (url.pathname.startsWith('/api/')) {
+    return;
+  }
+
+  // Versioned JS/CSS chunks and index.html: network-first so redeploys are picked
+  // up immediately. Fall back to cache only when offline.
+  const isVersionedAsset = url.pathname.startsWith('/assets/') || url.pathname === '/index.html' || url.pathname === '/';
+  if (isVersionedAsset) {
+    event.respondWith(
+      fetch(request)
+        .then((response) => {
+          if (response.ok && response.type === 'basic') {
+            const clone = response.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
+          }
+          return response;
+        })
+        .catch(() => caches.match(request))
+    );
     return;
   }
 

@@ -519,6 +519,31 @@ export const ReportsView: React.FC = () => {
                                                 </div>
 
                                                 <div className="hidden sm:flex items-center gap-3 shrink-0">
+                                                    <button
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            navigate('/triage', {
+                                                                state: {
+                                                                    workloadId: group.workloadName,
+                                                                    clusterId: group.latestReport.ClusterID,
+                                                                    namespace: group.latestReport.Namespace,
+                                                                    kind: group.latestReport.Kind,
+                                                                    playbook: 'General Health',
+                                                                    historicalReports: group.reports.map(r => ({
+                                                                        id: r.ID,
+                                                                        createdAt: r.CreatedAt,
+                                                                        severity: r.Severity,
+                                                                        incidentType: r.IncidentType,
+                                                                        analysis: r.Analysis,
+                                                                    }))
+                                                                }
+                                                            });
+                                                        }}
+                                                        className="kt-button kt-button-primary kt-button-sm"
+                                                        title={`Run aggregated AI triage on ${group.count} historical reports for ${group.workloadName}`}
+                                                    >
+                                                        <Sparkles className="w-3.5 h-3.5" /> Run aggregated triage
+                                                    </button>
                                                     <span className={`kt-badge ${severityBadge(group.latestReport.Severity, isSecurity)}`}>
                                                         {group.latestReport.Severity}
                                                     </span>

@@ -26,16 +26,12 @@ func (w *Watcher) scanAutomation(ctx context.Context, cls *k8s.ClusterConn) {
 	for _, pod := range pods.Items {
 		for _, cs := range pod.Status.ContainerStatuses {
 			if cs.RestartCount > 5 {
-				// Try to find owner
+				// Resolve to the top-level controller (Deployment/StatefulSet/DaemonSet/CronJob)
+				// so the report is stored under the same name used in the triage workload list.
 				kind := "Pod"
 				name := pod.Name
 				if len(pod.OwnerReferences) > 0 {
-					// Simplified: take the first owner if it's a standard workload
-					owner := pod.OwnerReferences[0]
-					if owner.Kind == "ReplicaSet" {
-						// For Deployments, owner is RS. We should ideally find the Deployment.
-						// For MVP, we'll just report the Pod but mention the owner in analysis.
-					}
+					name, kind = k8s.ResolveTopLevelController(ctx, client, pod.Namespace, pod.OwnerReferences[0])
 				}
 
 				w.reportAutomationIssue(
@@ -53,12 +49,18 @@ func (w *Watcher) scanAutomation(ctx context.Context, cls *k8s.ClusterConn) {
 
 			// Check for OOMKilled
 			if cs.LastTerminationState.Terminated != nil && cs.LastTerminationState.Terminated.Reason == "OOMKilled" {
+				// Resolve to the top-level controller for consistent naming.
+				oomKind := "Pod"
+				oomName := pod.Name
+				if len(pod.OwnerReferences) > 0 {
+					oomName, oomKind = k8s.ResolveTopLevelController(ctx, client, pod.Namespace, pod.OwnerReferences[0])
+				}
 				w.reportAutomationIssue(
 					ctx,
 					cls,
 					pod.Namespace,
-					pod.Name,
-					"Pod",
+					oomName,
+					oomKind,
 					"OOMKilled Detected",
 					fmt.Sprintf("Container '%s' was recently terminated due to OutOfMemory (OOM).", cs.Name),
 					"Critical",

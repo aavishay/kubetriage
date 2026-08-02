@@ -1,7 +1,8 @@
 
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { useLocation } from 'react-router-dom';
 import { Workload, ResourceMetrics, ViewPropsWithChat, OptimizationProfile, DiagnosticPlaybook } from '../types';
+import { useMonitoring } from '../contexts/MonitoringContext';
 import { generateRightSizingRecommendation, generateKubectlPatch } from '../services/geminiService';
 import ReactMarkdown from 'react-markdown';
 import { ComposedChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceLine, Scatter, Cell } from 'recharts';
@@ -26,90 +27,148 @@ interface Pod {
   schedulingInfo?: string;
 }
 
-const generateStaticHistory = (workload: Workload) => {
-  const now = new Date();
-  const data = [];
-  for (let i = 25; i >= 0; i--) {
-    const date = new Date(now);
-    date.setMinutes(date.getMinutes() - i * 5);
-    const base = workload.metrics;
-    const noise = Math.sin(i * 0.5) * 0.1;
-    const burst = i % 8 === 0 ? 0.4 : 0;
+interface SnapshotPoint {
+  recordedAt: string;
+  cpuUsage: number;
+  cpuLimit: number;
+  cpuLimitPerPod?: number;
+  cpuMaxPodUsage?: number;
+  cpuHotPodP99?: number;
+  memoryUsage: number;
+  memoryLimit: number;
+  memoryLimitPerPod?: number;
+  memoryMaxPodUsage?: number;
+  memoryHotPodP99?: number;
+  storageUsage: number;
+  storageLimit: number;
+  storageLimitPerPod?: number;
+  storageMaxPodUsage?: number;
+  gpuUsage: number;
+  gpuLimit: number;
+  gpuLimitPerPod?: number;
+  gpuMaxPodUsage?: number;
+  podCount: number;
+}
 
-    const cpuUsage = Math.max(0.01, base.cpuUsage * (0.7 + noise + burst));
-    const memoryUsage = Math.max(10, base.memoryUsage * (0.9 + (Math.cos(i) * 0.05)));
-    const storageUsage = Math.max(0.1, (base.storageUsage || 1) * (0.8 + noise));
-    // GPU usage simulation (0-100%)
-    const gpuUsage = base.gpuUsage ? Math.max(0, Math.min(100, base.gpuUsage * (0.8 + noise + (burst * 0.5)))) : 0;
+interface HistoryResponse {
+  points: SnapshotPoint[];
+}
 
-    data.push({
-      time: date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      timestamp: date.getTime(),
-      cpuUsage,
-      cpuLimit: base.cpuLimit,
-      memoryUsage,
-      memoryLimit: base.memoryLimit,
-      storageUsage,
-      storageLimit: base.storageLimit || 5,
-      gpuUsage,
-      gpuLimit: base.gpuLimit || 1,
-    });
-  }
-  return data;
-};
+// baselineUsage returns the P99 of the most overloaded pod for CPU and memory.
+// If P99 is unavailable, it falls back to the current peak pod usage, then to
+// aggregate workload usage, so the UI still renders when Prometheus is absent.
+const baselineUsage = (workload: Workload) => ({
+  cpu: workload.metrics.cpuHotPodP99 || workload.metrics.cpuMaxPodUsage || workload.metrics.cpuUsage,
+  memory: workload.metrics.memoryHotPodP99 || workload.metrics.memoryMaxPodUsage || workload.metrics.memoryUsage,
+  storage: workload.metrics.storageMaxPodUsage ?? workload.metrics.storageUsage ?? 0.1,
+  gpu: workload.metrics.gpuMaxPodUsage ?? workload.metrics.gpuUsage ?? 0,
+});
 
-const fetchNextMockData = async (base: ResourceMetrics) => {
-  const now = new Date();
-  const randomCpu = 0.6 + (Math.random() * 0.6);
-  const randomMem = 0.95 + (Math.random() * 0.1);
-  const randomStorage = 0.98 + (Math.random() * 0.05);
-  const randomGpu = 0.7 + (Math.random() * 0.5);
-
+// perPodLimit returns the per-pod resource limit for right-sizing. Kubernetes
+// container limits are per-container, so a Deployment's aggregate limit is not
+// meaningful for sizing. We prefer the per-pod limit exposed by the backend and
+// fall back to deriving it from the capped pod list, then to the aggregate limit.
+// A limit of 0 means "not configured", so we treat it as missing and fall back.
+const perPodLimit = (workload: Workload) => {
+  const pods = workload.pods || [];
+  const firstPodCpu = pods[0]?.metrics?.cpuLimit;
+  const firstPodMem = pods[0]?.metrics?.memoryLimit;
+  const firstPodStorage = pods[0]?.metrics?.storageLimit;
+  const firstPodGpu = pods[0]?.metrics?.gpuLimit;
   return {
-    time: now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
-    timestamp: now.getTime(),
-    cpuUsage: Math.max(0.01, base.cpuUsage * randomCpu),
-    cpuLimit: base.cpuLimit,
-    memoryUsage: Math.max(10, base.memoryUsage * randomMem),
-    memoryLimit: base.memoryLimit,
-    storageUsage: Math.max(0.1, (base.storageUsage || 1) * randomStorage),
-    storageLimit: base.storageLimit || 5,
-    gpuUsage: Math.max(0, base.gpuUsage ? base.gpuUsage * randomGpu : 0),
-    gpuLimit: base.gpuLimit || 1,
+    cpu: workload.metrics.cpuLimitPerPod || firstPodCpu || workload.metrics.cpuLimit || 0.01,
+    memory: workload.metrics.memoryLimitPerPod || firstPodMem || workload.metrics.memoryLimit || 128,
+    storage: workload.metrics.storageLimitPerPod || firstPodStorage || workload.metrics.storageLimit || 0,
+    gpu: workload.metrics.gpuLimitPerPod || firstPodGpu || workload.metrics.gpuLimit || 0,
   };
 };
 
-const generateMockPods = (workload: Workload, currentMetrics: ResourceMetrics): Pod[] => {
-  const pods: Pod[] = [];
-  const nodes = ['node-us-east-1a-001', 'node-us-east-1b-002', 'node-us-east-1c-003'];
-  const zones = ['us-east-1a', 'us-east-1b', 'us-east-1c'];
-  const instanceTypes = ['n2-standard-4', 'e2-medium', 'n2-highmem-8'];
+const fetchHistoricalMetrics = async (clusterId: string, namespace: string, workloadName: string): Promise<SnapshotPoint[]> => {
+  const res = await fetch(`/api/cluster/workloads/${encodeURIComponent(namespace)}/${encodeURIComponent(workloadName)}/history?cluster=${encodeURIComponent(clusterId)}`);
+  if (!res.ok) return [];
+  const data: HistoryResponse = await res.json();
+  return data.points || [];
+};
 
-  for (let i = 0; i < workload.replicas; i++) {
-    const variance = (Math.random() * 0.3) - 0.15;
-    const isHealthy = i < workload.availableReplicas;
+const buildChartData = (snapshots: SnapshotPoint[], workload: Workload) => {
+  const perPod = perPodLimit(workload);
 
-    let status: Pod['status'] = 'Running';
-    if (!isHealthy) {
-      status = 'Pending';
-    }
+  return snapshots.map(s => {
+    const date = new Date(s.recordedAt);
+    return {
+      time: date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      timestamp: date.getTime(),
+      cpuUsage: s.cpuHotPodP99 || s.cpuMaxPodUsage || s.cpuUsage,
+      cpuLimit: s.cpuLimitPerPod || perPod.cpu,
+      memoryUsage: s.memoryHotPodP99 || s.memoryMaxPodUsage || s.memoryUsage,
+      memoryLimit: s.memoryLimitPerPod || perPod.memory,
+      storageUsage: s.storageMaxPodUsage ?? s.storageUsage,
+      storageLimit: s.storageLimitPerPod || perPod.storage,
+      gpuUsage: s.gpuMaxPodUsage ?? s.gpuUsage,
+      gpuLimit: s.gpuLimitPerPod || perPod.gpu,
+    };
+  });
+};
 
-    pods.push({
-      id: `pod-${workload.id}-${i}`,
-      name: `${workload.name}-${Math.random().toString(36).substring(7)}`,
-      status,
-      isReady: isHealthy,
-      isLive: true,
-      restarts: isHealthy ? Math.floor(Math.random() * 2) : 5,
-      cpuUsage: Math.max(0, currentMetrics.cpuUsage * (1 + variance)),
-      memoryUsage: Math.max(0, currentMetrics.memoryUsage * (1 + variance)),
-      storageUsage: Math.max(0, (currentMetrics.storageUsage || 1) * (1 + variance)),
-      node: nodes[i % nodes.length],
-      instanceType: instanceTypes[i % instanceTypes.length],
-      zone: zones[i % zones.length],
+const generateSyntheticHistory = (workload: Workload) => {
+  const now = Date.now();
+  const baseline = baselineUsage(workload);
+  const perPod = perPodLimit(workload);
+  const points = [];
+  for (let i = 6; i >= 0; i--) {
+    const ts = now - i * 5 * 60 * 1000;
+    points.push({
+      time: new Date(ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      timestamp: ts,
+      cpuUsage: baseline.cpu,
+      cpuLimit: perPod.cpu,
+      memoryUsage: baseline.memory,
+      memoryLimit: perPod.memory,
+      storageUsage: baseline.storage,
+      storageLimit: perPod.storage,
+      gpuUsage: baseline.gpu,
+      gpuLimit: perPod.gpu,
     });
   }
-  return pods;
+  return points;
+};
+
+const buildPodsFromWorkload = (workload: Workload): Pod[] => {
+  if (workload.pods && workload.pods.length > 0) {
+    return workload.pods.map(pod => ({
+      id: `${workload.clusterId}-${pod.namespace}-${pod.name}`,
+      name: pod.name,
+      status: pod.phase === 'Failed' ? 'Error' : pod.phase === 'Pending' ? 'Pending' : 'Running',
+      isReady: pod.phase === 'Running' && pod.status !== 'Critical',
+      isLive: pod.phase === 'Running',
+      restarts: pod.restartCount,
+      cpuUsage: pod.metrics.cpuUsage,
+      memoryUsage: pod.metrics.memoryUsage,
+      storageUsage: pod.metrics.storageUsage || 0,
+      gpuUsage: pod.metrics.gpuUsage,
+      node: pod.node || 'Unknown',
+      instanceType: 'Unknown',
+      zone: 'Unknown',
+      schedulingInfo: pod.waitingReason || pod.terminatedReason,
+    }));
+  }
+
+  // Fallback: one representative pod built from aggregate metrics.
+  return [{
+    id: `${workload.id}-aggregate`,
+    name: `${workload.name} (aggregate)`,
+    status: workload.availableReplicas === workload.replicas ? 'Running' : 'Pending',
+    isReady: workload.availableReplicas > 0,
+    isLive: workload.availableReplicas > 0,
+    restarts: 0,
+    cpuUsage: workload.metrics.cpuUsage,
+    memoryUsage: workload.metrics.memoryUsage,
+    storageUsage: workload.metrics.storageUsage || 0,
+    gpuUsage: workload.metrics.gpuUsage,
+    node: 'Unknown',
+    instanceType: 'Unknown',
+    zone: 'Unknown',
+  }];
 };
 
 const CustomTooltip = ({ active, payload, isDarkMode, type }: any) => {
@@ -131,7 +190,7 @@ const CustomTooltip = ({ active, payload, isDarkMode, type }: any) => {
             <span className={`font-bold ${color}`}>{data[valKey].toFixed(2)}{unit}</span>
           </div>
           <div className="flex justify-between gap-4 items-center">
-            <span className="font-medium text-text-tertiary text-[10px]">Sim limit</span>
+            <span className="font-medium text-text-tertiary text-[10px]">Current limit</span>
             <span className="font-bold text-text-muted">{data[limitKey].toFixed(2)}{unit}</span>
           </div>
         </div>
@@ -142,7 +201,7 @@ const CustomTooltip = ({ active, payload, isDarkMode, type }: any) => {
 };
 
 interface RightSizingViewProps extends ViewPropsWithChat {
-  onTriageRequest?: (workloadId: string, playbook: DiagnosticPlaybook) => void;
+  onTriageRequest?: (workloadId: string, playbook: DiagnosticPlaybook, podName?: string) => void;
   onRefresh?: () => void;
   initialWorkloadId?: string;
   defaultTemplate?: string;
@@ -150,6 +209,7 @@ interface RightSizingViewProps extends ViewPropsWithChat {
 
 export const RightSizingView: React.FC<RightSizingViewProps> = ({ workloads, isDarkMode = true, onOpenChat, defaultTemplate: propTemplate, onTriageRequest, initialWorkloadId: propId, onRefresh }) => {
   const location = useLocation();
+  const { aiConfig } = useMonitoring();
   const { workloadId: stateId, template: stateTemplate } = location.state || {}; // Read from router state
 
   if (!workloads || workloads.length === 0) {
@@ -178,8 +238,8 @@ export const RightSizingView: React.FC<RightSizingViewProps> = ({ workloads, isD
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [recommendation, setRecommendation] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [metricsLoading, setMetricsLoading] = useState(false);
   const [isAutoRefresh, setIsAutoRefresh] = useState(false);
-  const [isConnecting, setIsConnecting] = useState(false);
   const [chartData, setChartData] = useState<any[]>([]);
   const [adjustedCpuLimit, setAdjustedCpuLimit] = useState<number>(0.1);
   const [adjustedMemoryLimit, setAdjustedMemoryLimit] = useState<number>(128);
@@ -202,42 +262,49 @@ export const RightSizingView: React.FC<RightSizingViewProps> = ({ workloads, isD
     }
   }, [initialWorkloadId, safeWorkloads]);
 
+  const loadMetrics = useCallback(async (workload: Workload) => {
+    setMetricsLoading(true);
+    try {
+      const snapshots = await fetchHistoricalMetrics(workload.clusterId, workload.namespace, workload.name);
+      if (snapshots.length > 1) {
+        setChartData(buildChartData(snapshots, workload));
+      } else {
+        // Not enough history yet: show a synthetic line from current metrics so the UI isn't empty.
+        setChartData(generateSyntheticHistory(workload));
+      }
+    } catch (err) {
+      console.error('Failed to load historical metrics', err);
+      setChartData(generateSyntheticHistory(workload));
+    } finally {
+      setMetricsLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
     if (selectedWorkload) {
-      setChartData(generateStaticHistory(selectedWorkload));
-      setAdjustedCpuLimit(selectedWorkload.metrics.cpuLimit);
-      setAdjustedMemoryLimit(selectedWorkload.metrics.memoryLimit);
-      setAdjustedStorageLimit(selectedWorkload.metrics.storageLimit || 5);
-      setAdjustedGpuLimit(selectedWorkload.metrics.gpuLimit || 1);
+      const perPod = perPodLimit(selectedWorkload);
+      setAdjustedCpuLimit(perPod.cpu);
+      setAdjustedMemoryLimit(perPod.memory);
+      setAdjustedStorageLimit(perPod.storage);
+      setAdjustedGpuLimit(perPod.gpu);
       setRecommendation(null);
       setIsAutoRefresh(true);
+      loadMetrics(selectedWorkload);
     }
-  }, [selectedId]);
+  }, [selectedId, selectedWorkload, loadMetrics]);
 
   useEffect(() => {
     let intervalId: any;
-    if (isAutoRefresh && !isConnecting && selectedWorkload) {
-      intervalId = setInterval(async () => {
-        const nextPoint = await fetchNextMockData(selectedWorkload.metrics);
-        setChartData(prev => {
-          const newData = [...prev, { ...nextPoint, cpuLimit: adjustedCpuLimit, memoryLimit: adjustedMemoryLimit, storageLimit: adjustedStorageLimit, gpuLimit: adjustedGpuLimit }];
-          return newData.length > 30 ? newData.slice(1) : newData;
-        });
-      }, 3000);
+    if (isAutoRefresh && selectedWorkload) {
+      intervalId = setInterval(() => {
+        loadMetrics(selectedWorkload);
+      }, 30000);
     }
     return () => clearInterval(intervalId);
-  }, [isAutoRefresh, isConnecting, selectedId, selectedWorkload, adjustedCpuLimit, adjustedMemoryLimit, adjustedStorageLimit, adjustedGpuLimit]);
+  }, [isAutoRefresh, selectedWorkload, loadMetrics]);
 
   const handleToggleLive = () => {
-    if (!isAutoRefresh) {
-      setIsConnecting(true);
-      setTimeout(() => {
-        setIsConnecting(false);
-        setIsAutoRefresh(true);
-      }, 1200);
-    } else {
-      setIsAutoRefresh(false);
-    }
+    setIsAutoRefresh(prev => !prev);
   };
 
   const analysis = useMemo(() => {
@@ -282,9 +349,8 @@ export const RightSizingView: React.FC<RightSizingViewProps> = ({ workloads, isD
 
   const pods = useMemo(() => {
     if (!selectedWorkload) return [];
-    const latestMetrics = chartData[chartData.length - 1] || selectedWorkload.metrics;
-    return generateMockPods(selectedWorkload, { ...selectedWorkload.metrics, cpuUsage: latestMetrics.cpuUsage, memoryUsage: latestMetrics.memoryUsage, storageUsage: latestMetrics.storageUsage });
-  }, [selectedId, chartData, selectedWorkload]);
+    return buildPodsFromWorkload(selectedWorkload);
+  }, [selectedWorkload]);
 
   const handleOptimize = async () => {
     if (loading) return;
@@ -293,7 +359,13 @@ export const RightSizingView: React.FC<RightSizingViewProps> = ({ workloads, isD
 
     setLoading(true);
     setRecommendation(null);
-    const report = await generateRightSizingRecommendation(targetWorkload, `Efficiency: CPU ${analysis?.cpuEfficiency}%, RAM ${analysis?.memEfficiency}%, Storage ${analysis?.storageEfficiency}%`, selectedProfile);
+    const report = await generateRightSizingRecommendation(
+      targetWorkload,
+      `Efficiency: CPU ${analysis?.cpuEfficiency}%, RAM ${analysis?.memEfficiency}%, Storage ${analysis?.storageEfficiency}%`,
+      selectedProfile,
+      aiConfig.provider,
+      aiConfig.model
+    );
     setRecommendation(report);
     setLoading(false);
   };
@@ -320,7 +392,7 @@ export const RightSizingView: React.FC<RightSizingViewProps> = ({ workloads, isD
             Right-sizing
           </h2>
           <p className="text-sm text-text-tertiary mt-2 font-medium pl-1">
-            Simulate resource caps to detect potential DiskPressure or OOM evictions.
+            Analyze real resource utilization and tune CPU, memory, and storage limits.
           </p>
         </div>
       </div>
@@ -411,10 +483,16 @@ export const RightSizingView: React.FC<RightSizingViewProps> = ({ workloads, isD
                   <div className="flex items-center gap-3">
                     <div className="p-2.5 bg-primary-500/10 rounded-xl"><Settings2 className="w-5 h-5 text-primary-500 dark:text-primary-400" /></div>
                     <div>
-                      <h3 className="text-sm font-semibold text-text-primary">Right-sizing Simulation Cockpit</h3>
-                      <p className="text-xs text-text-tertiary">Simulate resource caps to detect potential DiskPressure or OOM evictions</p>
+                      <h3 className="text-sm font-semibold text-text-primary">Right-sizing Cockpit</h3>
+                      <p className="text-xs text-text-tertiary">Adjust limits and compare against real historical demand.</p>
                     </div>
                   </div>
+                  {metricsLoading && (
+                    <div className="flex items-center gap-2 text-text-tertiary">
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <span className="text-xs font-sans">Loading metrics…</span>
+                    </div>
+                  )}
                 </div>
 
                 <div className="p-8 space-y-8">
@@ -422,10 +500,10 @@ export const RightSizingView: React.FC<RightSizingViewProps> = ({ workloads, isD
                   <div className="flex flex-col lg:flex-row gap-6 items-center bg-bg-hover/50 p-5 rounded-xl border border-border-main">
                     <div className="flex-[3] w-full space-y-4">
                       <div className="flex justify-between items-end">
-                        <div className="flex items-center gap-2"><Cpu className="w-4 h-4 text-primary-500" /><label className="text-[10px] font-semibold text-text-tertiary">CPU limit (simulated)</label></div>
+                        <div className="flex items-center gap-2"><Cpu className="w-4 h-4 text-primary-500" /><label className="text-[10px] font-semibold text-text-tertiary">CPU limit</label></div>
                         <span className="text-xl font-bold text-primary-500">{adjustedCpuLimit.toFixed(2)}c</span>
                       </div>
-                      <input type="range" min="0.01" max={selectedWorkload.metrics.cpuLimit * 2} step="0.01" value={adjustedCpuLimit} onChange={(e) => setAdjustedCpuLimit(parseFloat(e.target.value))} className="w-full h-3 bg-bg-hover rounded-full appearance-none cursor-pointer accent-primary-600" />
+                      <input type="range" min="0.01" max={perPodLimit(selectedWorkload).cpu * 2} step="0.01" value={adjustedCpuLimit} onChange={(e) => setAdjustedCpuLimit(parseFloat(e.target.value))} className="w-full h-3 bg-bg-hover rounded-full appearance-none cursor-pointer accent-primary-600" />
                     </div>
                     <div className="flex-[1] w-full min-w-0 p-4 rounded-xl bg-bg-card border border-border-main text-center">
                       <p className="text-[8px] font-semibold text-text-tertiary mb-1">CPU load</p>
@@ -437,10 +515,10 @@ export const RightSizingView: React.FC<RightSizingViewProps> = ({ workloads, isD
                   <div className="flex flex-col lg:flex-row gap-6 items-center bg-bg-hover/50 p-5 rounded-xl border border-border-main">
                     <div className="flex-[3] w-full space-y-4">
                       <div className="flex justify-between items-end">
-                        <div className="flex items-center gap-2"><MemoryStick className="w-4 h-4 text-emerald-500" /><label className="text-[10px] font-semibold text-text-tertiary">Memory limit (simulated)</label></div>
+                        <div className="flex items-center gap-2"><MemoryStick className="w-4 h-4 text-emerald-500" /><label className="text-[10px] font-semibold text-text-tertiary">Memory limit</label></div>
                         <span className="text-xl font-bold text-emerald-500">{adjustedMemoryLimit.toFixed(0)}Mi</span>
                       </div>
-                      <input type="range" min="10" max={selectedWorkload.metrics.memoryLimit * 2} step="10" value={adjustedMemoryLimit} onChange={(e) => setAdjustedMemoryLimit(parseFloat(e.target.value))} className="w-full h-3 bg-bg-hover rounded-full appearance-none cursor-pointer accent-emerald-500" />
+                      <input type="range" min="10" max={perPodLimit(selectedWorkload).memory * 2} step="10" value={adjustedMemoryLimit} onChange={(e) => setAdjustedMemoryLimit(parseFloat(e.target.value))} className="w-full h-3 bg-bg-hover rounded-full appearance-none cursor-pointer accent-emerald-500" />
                     </div>
                     <div className="flex-[1] w-full min-w-0 p-4 rounded-xl bg-bg-card border border-border-main text-center">
                       <p className="text-[8px] font-semibold text-text-tertiary mb-1">RAM load</p>
@@ -448,30 +526,32 @@ export const RightSizingView: React.FC<RightSizingViewProps> = ({ workloads, isD
                     </div>
                   </div>
 
-                  {/* Storage Slider */}
-                  <div className="flex flex-col lg:flex-row gap-6 items-center bg-bg-hover/50 p-5 rounded-xl border border-border-main">
-                    <div className="flex-[3] w-full space-y-4">
-                      <div className="flex justify-between items-end">
-                        <div className="flex items-center gap-2"><HardDrive className="w-4 h-4 text-amber-500" /><label className="text-[10px] font-semibold text-text-tertiary">Ephemeral storage limit</label></div>
-                        <span className="text-xl font-bold text-amber-500">{adjustedStorageLimit.toFixed(1)}Gi</span>
-                      </div>
-                      <input type="range" min="0.1" max={(selectedWorkload.metrics.storageLimit || 5) * 2} step="0.1" value={adjustedStorageLimit} onChange={(e) => setAdjustedStorageLimit(parseFloat(e.target.value))} className="w-full h-3 bg-bg-hover rounded-full appearance-none cursor-pointer accent-amber-500" />
-                    </div>
-                    <div className="flex-[1] w-full min-w-0 p-4 rounded-xl bg-bg-card border border-border-main text-center">
-                      <p className="text-[8px] font-semibold text-text-tertiary mb-1">Disk load</p>
-                      <div className={`text-lg font-bold ${parseFloat(analysis?.storageEfficiency || '0') > 90 ? 'text-rose-500' : 'text-amber-500'}`}>{analysis?.storageEfficiency}%</div>
-                    </div>
-                  </div>
-
-                  {/* GPU Slider - Only show if workload has GPU resources */}
-                  {(selectedWorkload.metrics.gpuLimit || 0) > 0 && (
+                  {/* Storage Slider - only show when a storage limit is configured */}
+                  {(perPodLimit(selectedWorkload).storage || 0) > 0 && (
                     <div className="flex flex-col lg:flex-row gap-6 items-center bg-bg-hover/50 p-5 rounded-xl border border-border-main">
                       <div className="flex-[3] w-full space-y-4">
                         <div className="flex justify-between items-end">
-                          <div className="flex items-center gap-2"><Cpu className="w-4 h-4 text-violet-500" /><label className="text-[10px] font-semibold text-text-tertiary">GPU limit (simulated)</label></div>
+                          <div className="flex items-center gap-2"><HardDrive className="w-4 h-4 text-amber-500" /><label className="text-[10px] font-semibold text-text-tertiary">Ephemeral storage limit</label></div>
+                          <span className="text-xl font-bold text-amber-500">{adjustedStorageLimit.toFixed(1)}Gi</span>
+                        </div>
+                        <input type="range" min="0.1" max={perPodLimit(selectedWorkload).storage * 2} step="0.1" value={adjustedStorageLimit} onChange={(e) => setAdjustedStorageLimit(parseFloat(e.target.value))} className="w-full h-3 bg-bg-hover rounded-full appearance-none cursor-pointer accent-amber-500" />
+                      </div>
+                      <div className="flex-[1] w-full min-w-0 p-4 rounded-xl bg-bg-card border border-border-main text-center">
+                        <p className="text-[8px] font-semibold text-text-tertiary mb-1">Disk load</p>
+                        <div className={`text-lg font-bold ${parseFloat(analysis?.storageEfficiency || '0') > 90 ? 'text-rose-500' : 'text-amber-500'}`}>{analysis?.storageEfficiency}%</div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* GPU Slider - Only show if workload has GPU resources */}
+                  {(perPodLimit(selectedWorkload).gpu || 0) > 0 && (
+                    <div className="flex flex-col lg:flex-row gap-6 items-center bg-bg-hover/50 p-5 rounded-xl border border-border-main">
+                      <div className="flex-[3] w-full space-y-4">
+                        <div className="flex justify-between items-end">
+                          <div className="flex items-center gap-2"><Cpu className="w-4 h-4 text-violet-500" /><label className="text-[10px] font-semibold text-text-tertiary">GPU limit</label></div>
                           <span className="text-xl font-bold text-violet-500">{adjustedGpuLimit.toFixed(0)} GPU</span>
                         </div>
-                        <input type="range" min="1" max={(selectedWorkload.metrics.gpuLimit || 1) * 2} step="1" value={adjustedGpuLimit} onChange={(e) => setAdjustedGpuLimit(parseFloat(e.target.value))} className="w-full h-3 bg-bg-hover rounded-full appearance-none cursor-pointer accent-violet-500" />
+                        <input type="range" min="1" max={perPodLimit(selectedWorkload).gpu * 2} step="1" value={adjustedGpuLimit} onChange={(e) => setAdjustedGpuLimit(parseFloat(e.target.value))} className="w-full h-3 bg-bg-hover rounded-full appearance-none cursor-pointer accent-violet-500" />
                       </div>
                       <div className="flex-[1] w-full min-w-0 p-4 rounded-xl bg-bg-card border border-border-main text-center">
                         <p className="text-[8px] font-semibold text-text-tertiary mb-1">GPU Util</p>
@@ -487,13 +567,20 @@ export const RightSizingView: React.FC<RightSizingViewProps> = ({ workloads, isD
                 {/* CPU Chart */}
                 <div className="bg-bg-card rounded-2xl border border-border-main p-6 shadow-sm min-w-0">
                   <h3 className="text-xs font-medium text-text-tertiary mb-6 flex items-center gap-2">
-                    <Cpu className="w-4 h-4 text-primary-500" /> CPU demand simulation
+                    <Cpu className="w-4 h-4 text-primary-500" /> CPU P99 peak pod demand
                   </h3>
                   <div className="h-[240px] w-full relative">
                     <ResponsiveContainer width="100%" height="100%">
                       <ComposedChart data={chartData}>
                         <XAxis dataKey="time" hide />
-                        <YAxis domain={[0, 'auto']} hide />
+                        <YAxis
+                          domain={[0, 'auto']}
+                          tick={{ fill: 'var(--kt-text-tertiary)', fontSize: 10 }}
+                          tickFormatter={(v: number) => `${v.toFixed(2)}c`}
+                          axisLine={{ stroke: 'var(--kt-border-main)' }}
+                          tickLine={{ stroke: 'var(--kt-border-main)' }}
+                          width={55}
+                        />
                         <Tooltip content={<CustomTooltip isDarkMode={isDarkMode} type="cpu" />} />
                         <Area type="monotone" dataKey="cpuUsage" stroke="var(--kt-primary-500)" strokeWidth={4} fillOpacity={0.1} fill="var(--kt-primary-500)" isAnimationActive={false} />
                         <ReferenceLine y={adjustedCpuLimit} stroke={analysis?.cpuRisky ? 'var(--kt-danger)' : 'var(--kt-success)'} strokeDasharray="8 8" strokeWidth={3} />
@@ -506,13 +593,20 @@ export const RightSizingView: React.FC<RightSizingViewProps> = ({ workloads, isD
                 {/* RAM Chart */}
                 <div className="bg-bg-card rounded-2xl border border-border-main p-6 shadow-sm min-w-0">
                   <h3 className="text-xs font-medium text-text-tertiary mb-6 flex items-center gap-2">
-                    <MemoryStick className="w-4 h-4 text-emerald-500" /> Memory pressure simulation
+                    <MemoryStick className="w-4 h-4 text-emerald-500" /> Memory P99 peak pod pressure
                   </h3>
                   <div className="h-[240px] w-full relative">
                     <ResponsiveContainer width="100%" height="100%">
                       <ComposedChart data={chartData}>
                         <XAxis dataKey="time" hide />
-                        <YAxis domain={[0, 'auto']} hide />
+                        <YAxis
+                          domain={[0, 'auto']}
+                          tick={{ fill: 'var(--kt-text-tertiary)', fontSize: 10 }}
+                          tickFormatter={(v: number) => `${Math.round(v)}Mi`}
+                          axisLine={{ stroke: 'var(--kt-border-main)' }}
+                          tickLine={{ stroke: 'var(--kt-border-main)' }}
+                          width={55}
+                        />
                         <Tooltip content={<CustomTooltip isDarkMode={isDarkMode} type="memory" />} />
                         <Area type="monotone" dataKey="memoryUsage" stroke="var(--kt-success)" strokeWidth={4} fillOpacity={0.1} fill="var(--kt-success)" isAnimationActive={false} />
                         <ReferenceLine y={adjustedMemoryLimit} stroke={analysis?.memRisky ? 'var(--kt-danger)' : 'var(--kt-success)'} strokeDasharray="8 8" strokeWidth={3} />
@@ -525,13 +619,20 @@ export const RightSizingView: React.FC<RightSizingViewProps> = ({ workloads, isD
                 {/* Storage Chart */}
                 <div className="bg-bg-card rounded-2xl border border-border-main p-6 shadow-sm min-w-0">
                   <h3 className="text-xs font-medium text-text-tertiary mb-6 flex items-center gap-2">
-                    <HardDrive className="w-4 h-4 text-amber-500" /> Ephemeral storage demand
+                    <HardDrive className="w-4 h-4 text-amber-500" /> Ephemeral storage peak pod demand
                   </h3>
                   <div className="h-[240px] w-full relative">
                     <ResponsiveContainer width="100%" height="100%">
                       <ComposedChart data={chartData}>
                         <XAxis dataKey="time" hide />
-                        <YAxis domain={[0, 'auto']} hide />
+                        <YAxis
+                          domain={[0, 'auto']}
+                          tick={{ fill: 'var(--kt-text-tertiary)', fontSize: 10 }}
+                          tickFormatter={(v: number) => `${v.toFixed(1)}Gi`}
+                          axisLine={{ stroke: 'var(--kt-border-main)' }}
+                          tickLine={{ stroke: 'var(--kt-border-main)' }}
+                          width={55}
+                        />
                         <Tooltip content={<CustomTooltip isDarkMode={isDarkMode} type="storage" />} />
                         <Area type="monotone" dataKey="storageUsage" stroke="var(--kt-warning)" strokeWidth={4} fillOpacity={0.1} fill="var(--kt-warning)" isAnimationActive={false} />
                         <ReferenceLine y={adjustedStorageLimit} stroke={analysis?.storageRisky ? 'var(--kt-danger)' : 'var(--kt-warning)'} strokeDasharray="8 8" strokeWidth={3} />
@@ -551,13 +652,20 @@ export const RightSizingView: React.FC<RightSizingViewProps> = ({ workloads, isD
                 {(selectedWorkload.metrics.gpuLimit || 0) > 0 && (
                   <div className="bg-bg-card rounded-2xl border border-border-main p-6 shadow-sm">
                     <h3 className="text-xs font-medium text-text-tertiary mb-6 flex items-center gap-2">
-                      <Cpu className="w-4 h-4 text-violet-500" /> GPU utilization simulation
+                      <Cpu className="w-4 h-4 text-violet-500" /> GPU peak pod utilization
                     </h3>
                     <div className="h-[240px] w-full relative">
                       <ResponsiveContainer width="100%" height="100%">
                         <ComposedChart data={chartData}>
                           <XAxis dataKey="time" hide />
-                          <YAxis domain={[0, 100]} hide />
+                          <YAxis
+                            domain={[0, 100]}
+                            tick={{ fill: 'var(--kt-text-tertiary)', fontSize: 10 }}
+                            tickFormatter={(v: number) => `${v}%`}
+                            axisLine={{ stroke: 'var(--kt-border-main)' }}
+                            tickLine={{ stroke: 'var(--kt-border-main)' }}
+                            width={55}
+                          />
                           <Tooltip content={<CustomTooltip isDarkMode={isDarkMode} type="gpu" />} />
                           <Area type="monotone" dataKey="gpuUsage" stroke="var(--kt-info)" strokeWidth={4} fillOpacity={0.1} fill="var(--kt-info)" isAnimationActive={false} />
                           <ReferenceLine y={adjustedGpuLimit * 100} stroke={analysis?.gpuRisky ? 'var(--kt-danger)' : 'var(--kt-info)'} strokeDasharray="8 8" strokeWidth={3} />
@@ -573,6 +681,11 @@ export const RightSizingView: React.FC<RightSizingViewProps> = ({ workloads, isD
                     </div>
                   </div>
                 )}
+              </div>
+
+              <div className="flex items-center gap-2 text-[10px] text-text-tertiary font-sans px-1">
+                <Info className="w-3.5 h-3.5" />
+                <span>Charts show the P99 of the most overloaded pod for CPU and memory. When Prometheus is unavailable, the current peak pod usage is used instead. Recommendations size limits for the heaviest pod.</span>
               </div>
 
               {/* Recommendation Section */}

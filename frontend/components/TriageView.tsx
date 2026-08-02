@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect, useRef, useCallback } from 'react';
-import { useLocation, Link } from 'react-router-dom';
+import { useLocation, Link, useNavigate } from 'react-router-dom';
 import { Workload, TriageReport, ViewPropsWithChat, DiagnosticPlaybook, getMetricStatusColor } from '../types';
 import { useMonitoring } from '../contexts/MonitoringContext';
 import { usePresence } from '../contexts/PresenceContext';
@@ -102,13 +102,20 @@ const TrafficPathExplorer = ({ workload }: { workload: Workload }) => {
 
 export const TriageView: React.FC<TriageViewProps> = ({ workloads, isDarkMode = true, onOpenChat, defaultTemplate: propTemplate, initialWorkloadId: propId }) => {
   const location = useLocation();
+  const navigate = useNavigate();
   const searchParams = new URL(window.location.href).searchParams;
   const urlWorkload = searchParams.get('workload');
   const urlPlaybook = searchParams.get('playbook');
   const { activeUsers, notifyView, notifyLeave } = usePresence();
   const targetWorkloadId = urlWorkload || location.state?.workloadId || propId;
+  const targetClusterId = location.state?.clusterId as string | undefined;
+  const targetNamespace = location.state?.namespace as string | undefined;
+  const targetKind = location.state?.kind as string | undefined;
+  const targetPodName = location.state?.podName as string | undefined;
   const targetTemplate = urlPlaybook || location.state?.playbook || propTemplate;
+  const historicalReports = (location.state?.historicalReports || []) as { id: number; createdAt: string; severity: string; incidentType?: string; analysis: string }[];
   const [selectedWorkload, setSelectedWorkload] = useState<Workload | null>(null);
+  const [selectedPodName, setSelectedPodName] = useState<string | undefined>(targetPodName);
   const [analysis, setAnalysis] = useState<string | null>(null);
   const [currentReport, setCurrentReport] = useState<TriageReport | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -124,7 +131,11 @@ export const TriageView: React.FC<TriageViewProps> = ({ workloads, isDarkMode = 
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [workloadSearchTerm, setWorkloadSearchTerm] = useState<string>('');
   const [logSearchTerm, setLogSearchTerm] = useState<string>('');
-  const [isLogWrapEnabled, setIsLogWrapEnabled] = useState(false);
+  const [isLogWrapEnabled, setIsLogWrapEnabled] = useState(true);
+  const [targetWorkloadMissing, setTargetWorkloadMissing] = useState(false);
+  const [fetchedLogs, setFetchedLogs] = useState<string[]>([]);
+  const [fetchedPodNames, setFetchedPodNames] = useState<string[]>([]);
+  const [isFetchingLogs, setIsFetchingLogs] = useState(false);
 
   const handleLogSearchChange = (val: string) => {
     setLogSearchTerm(val);
@@ -187,43 +198,21 @@ export const TriageView: React.FC<TriageViewProps> = ({ workloads, isDarkMode = 
 
   const safeWorkloads = workloads || [];
 
-  useEffect(() => {
-    if (!targetWorkloadId) return;
-    const workload = safeWorkloads.find(w => w.id === targetWorkloadId || w.name === targetWorkloadId);
-    if (!workload) return;
-    if (selectedWorkload?.id !== workload.id) {
-      if (selectedWorkload) notifyLeave(`workload-${selectedWorkload.id}`);
-      setSelectedWorkload(workload);
-      notifyView(`workload-${workload.id}`);
-      setIsSidebarOpen(false);
-      const cacheKey = `analysis_${workload.id}_${selectedPlaybook}`;
-      const cached = sessionStorage.getItem(cacheKey);
-      if (cached) { setAnalysis(cached); }
-      else {
-        fetch(`/api/reports?all=true&workloadName=${encodeURIComponent(workload.name)}`)
-          .then(res => res.json())
-          .then(data => {
-            if (data && data.length > 0 && data[0].Analysis && data[0].Analysis !== "No analysis generated.") {
-              setAnalysis(data[0].Analysis);
-              setCurrentReport(data[0]);
-              sessionStorage.setItem(cacheKey, data[0].Analysis);
-            } else triggerAutoAnalysis(workload, selectedPlaybook);
-          })
-          .catch(() => triggerAutoAnalysis(workload, selectedPlaybook));
+  const fetchLogsForWorkload = useCallback(async (workload: Workload, podName?: string): Promise<{ logs: string[]; podNames: string[] }> => {
+    // If a specific pod is requested, fetch its logs directly.
+    if (podName) {
+      try {
+        setIsFetchingLogs(true);
+        const res = await fetch(`/api/cluster/workloads/${encodeURIComponent(workload.namespace)}/${encodeURIComponent(podName)}/logs?cluster=${encodeURIComponent(workload.clusterId)}&kind=Pod`);
+        if (!res.ok) throw new Error(`Pod log fetch failed: ${res.status}`);
+        const data = await res.json();
+        return { logs: data.logs || [], podNames: [podName] };
+      } catch (err) {
+        console.error('Failed to fetch pod logs for triage', err);
+      } finally {
+        setIsFetchingLogs(false);
       }
-    } else if (selectedWorkload !== workload) {
-      setSelectedWorkload(workload);
     }
-  }, [targetWorkloadId, safeWorkloads, targetTemplate, selectedPlaybook]);
-
-  useEffect(() => { return () => { if (selectedWorkload) notifyLeave(`workload-${selectedWorkload.id}`); }; }, [selectedWorkload]);
-  useEffect(() => {
-    if (selectedWorkload && !safeWorkloads.some(w => w.id === selectedWorkload.id)) {
-      setSelectedWorkload(null); setAnalysis(null);
-    }
-  }, [workloads, selectedWorkload]);
-
-  const fetchLogsForWorkload = useCallback(async (workload: Workload): Promise<{ logs: string[]; podNames: string[] }> => {
     if (workload.recentLogs?.length) {
       return { logs: workload.recentLogs, podNames: workload.podNames || [] };
     }
@@ -241,16 +230,89 @@ export const TriageView: React.FC<TriageViewProps> = ({ workloads, isDarkMode = 
     }
   }, []);
 
-  const triggerAutoAnalysis = useCallback(async (workload: Workload, playbook: DiagnosticPlaybook) => {
+  const triggerAutoAnalysis = useCallback(async (workload: Workload, playbook: DiagnosticPlaybook, podName?: string) => {
     setIsAnalyzing(true); setAnalysis(null);
     try {
-      const { logs } = await fetchLogsForWorkload(workload);
-      const { analysis, context } = await analyzeWorkload({ ...workload, recentLogs: logs }, playbook, aiConfig.provider, aiConfig.model);
+      const { logs } = await fetchLogsForWorkload(workload, podName);
+      const { analysis, context } = await analyzeWorkload({ ...workload, recentLogs: logs }, playbook, aiConfig.provider, aiConfig.model, historicalReports, podName);
       setAnalysis(analysis); setEnrichedContext(context);
-      sessionStorage.setItem(`analysis_${workload.id}_${playbook}`, analysis);
-      if (context) sessionStorage.setItem(`context_${workload.id}_${playbook}`, JSON.stringify(context));
+      const cacheSuffix = podName ? `_${podName}` : '';
+      sessionStorage.setItem(`analysis_${workload.id}_${playbook}${cacheSuffix}`, analysis);
+      if (context) sessionStorage.setItem(`context_${workload.id}_${playbook}${cacheSuffix}`, JSON.stringify(context));
     } catch (e) { setAnalysis("Diagnostic interrupted. API error."); } finally { setIsAnalyzing(false); }
-  }, [aiConfig.provider, aiConfig.model, fetchLogsForWorkload]);
+  }, [aiConfig.provider, aiConfig.model, fetchLogsForWorkload, historicalReports]);
+
+  useEffect(() => {
+    if (!targetWorkloadId) {
+      setTargetWorkloadMissing(false);
+      return;
+    }
+
+    // Normalize Kubernetes generated names: pod -> replicaset -> deployment.
+    // Example: docreplay-service-5b5694b6cd-rvx88 -> docreplay-service-5b5694b6cd -> docreplay-service
+    const normalizeName = (name: string): string => {
+      const normalized = name.replace(/-[a-z0-9]{5,10}$/i, '');
+      if (normalized !== name && /-[a-z0-9]{5,10}$/i.test(normalized)) {
+        return normalizeName(normalized);
+      }
+      return normalized;
+    };
+
+    let workload = safeWorkloads.find(w => w.id === targetWorkloadId || w.name === targetWorkloadId);
+
+    if (!workload) {
+      const normalizedTarget = normalizeName(targetWorkloadId);
+      workload = safeWorkloads.find(w => {
+        const normalizedName = normalizeName(w.name);
+        return normalizedName === normalizedTarget &&
+          (!targetNamespace || w.namespace === targetNamespace) &&
+          (!targetClusterId || w.clusterId === targetClusterId) &&
+          (!targetKind || w.kind === targetKind);
+      });
+    }
+
+    if (!workload) {
+      // The report's workload (possibly a deleted pod/replicaset) is no longer present
+      // in the active cluster list, so we cannot auto-run live triage for it.
+      setTargetWorkloadMissing(true);
+      return;
+    }
+
+    setTargetWorkloadMissing(false);
+    if (selectedWorkload?.id !== workload.id) {
+      if (selectedWorkload) notifyLeave(`workload-${selectedWorkload.id}`);
+      setSelectedWorkload(workload);
+      notifyView(`workload-${workload.id}`);
+      setIsSidebarOpen(false);
+      const historyHash = historicalReports.length > 0
+        ? `_h${historicalReports.map(r => r.id).sort((a, b) => a - b).join('-')}`
+        : '';
+      const cacheKey = `analysis_${workload.id}_${selectedPlaybook}${selectedPodName ? `_${selectedPodName}` : ''}${historyHash}`;
+      const cached = sessionStorage.getItem(cacheKey);
+      if (cached && !historicalReports.length) { setAnalysis(cached); }
+      else {
+        fetch(`/api/reports?all=true&workloadName=${encodeURIComponent(workload.name)}`)
+          .then(res => res.json())
+          .then(data => {
+            if (data && data.length > 0 && data[0].Analysis && data[0].Analysis !== "No analysis generated." && !historicalReports.length) {
+              setAnalysis(data[0].Analysis);
+              setCurrentReport(data[0]);
+              sessionStorage.setItem(cacheKey, data[0].Analysis);
+            } else triggerAutoAnalysis(workload, selectedPlaybook, selectedPodName);
+          })
+          .catch(() => triggerAutoAnalysis(workload, selectedPlaybook, selectedPodName));
+      }
+    } else if (selectedWorkload !== workload) {
+      setSelectedWorkload(workload);
+    }
+  }, [targetWorkloadId, safeWorkloads, targetTemplate, selectedPlaybook, targetNamespace, targetClusterId, targetKind, selectedPodName, historicalReports]);
+
+  useEffect(() => { return () => { if (selectedWorkload) notifyLeave(`workload-${selectedWorkload.id}`); }; }, [selectedWorkload]);
+  useEffect(() => {
+    if (selectedWorkload && !safeWorkloads.some(w => w.id === selectedWorkload.id)) {
+      setSelectedWorkload(null); setAnalysis(null);
+    }
+  }, [workloads, selectedWorkload]);
 
   const filteredWorkloads = useMemo(() => {
     return (workloads || []).filter(w => {
@@ -260,10 +322,6 @@ export const TriageView: React.FC<TriageViewProps> = ({ workloads, isDarkMode = 
       return true;
     });
   }, [workloads, namespaceFilter, statusFilter, workloadSearchTerm]);
-
-  const [fetchedLogs, setFetchedLogs] = useState<string[]>([]);
-  const [fetchedPodNames, setFetchedPodNames] = useState<string[]>([]);
-  const [isFetchingLogs, setIsFetchingLogs] = useState(false);
 
   const effectiveWorkload = useMemo<Workload | null>(() => {
     if (!selectedWorkload) return null;
@@ -309,11 +367,13 @@ export const TriageView: React.FC<TriageViewProps> = ({ workloads, isDarkMode = 
     if (logsSnapshot.length > 0 || podsSnapshot.length > 0) return;
 
     setIsFetchingLogs(true);
-    fetch(`/api/cluster/workloads/${encodeURIComponent(selectedWorkload.namespace)}/${encodeURIComponent(selectedWorkload.name)}/logs?cluster=${encodeURIComponent(selectedWorkload.clusterId)}&kind=${encodeURIComponent(selectedWorkload.kind)}`)
+    const logTarget = selectedPodName || selectedWorkload.name;
+    const logKind = selectedPodName ? 'Pod' : selectedWorkload.kind;
+    fetch(`/api/cluster/workloads/${encodeURIComponent(selectedWorkload.namespace)}/${encodeURIComponent(logTarget)}/logs?cluster=${encodeURIComponent(selectedWorkload.clusterId)}&kind=${encodeURIComponent(logKind)}`)
       .then(res => res.json())
       .then(data => {
         setFetchedLogs(data.logs || []);
-        setFetchedPodNames(data.podNames || []);
+        setFetchedPodNames(selectedPodName ? [selectedPodName] : (data.podNames || []));
       })
       .catch(err => {
         console.error("Failed to fetch workload logs", err);
@@ -321,7 +381,7 @@ export const TriageView: React.FC<TriageViewProps> = ({ workloads, isDarkMode = 
         setFetchedPodNames([]);
       })
       .finally(() => setIsFetchingLogs(false));
-  }, [selectedWorkload?.id, selectedWorkload?.clusterId, selectedWorkload?.namespace, selectedWorkload?.name, selectedWorkload?.kind]);
+  }, [selectedWorkload?.id, selectedWorkload?.clusterId, selectedWorkload?.namespace, selectedWorkload?.name, selectedWorkload?.kind, selectedPodName]);
 
   useEffect(() => {
     const fetchPlaybooks = async () => {
@@ -338,9 +398,8 @@ export const TriageView: React.FC<TriageViewProps> = ({ workloads, isDarkMode = 
     setIsAnalyzing(true); setAnalysis(null);
     try {
       const selectedCustom = customPlaybooks.find(p => p.name === selectedPlaybook);
-      const result = selectedCustom
-        ? await analyzeWorkload(effectiveWorkload!, 'General Health', aiConfig.provider, aiConfig.model)
-        : await analyzeWorkload(effectiveWorkload!, selectedPlaybook, aiConfig.provider, aiConfig.model);
+      const playbook = selectedCustom ? 'General Health' : selectedPlaybook;
+      const result = await analyzeWorkload(effectiveWorkload!, playbook, aiConfig.provider, aiConfig.model, historicalReports, selectedPodName);
       setAnalysis(result.analysis); setEnrichedContext(result.context);
     } catch (e) { setAnalysis("Error generating analysis."); } finally { setIsAnalyzing(false); }
   };
@@ -494,11 +553,23 @@ export const TriageView: React.FC<TriageViewProps> = ({ workloads, isDarkMode = 
                 <button onClick={() => setIsSidebarOpen(true)} className="lg:hidden p-2 bg-bg-main border border-border-main text-text-secondary"><ChevronLeft className="w-4 h-4" /></button>
                 <div className="p-2 bg-bg-main border border-border-main shrink-0"><Terminal className="w-5 h-5 text-primary-500" /></div>
                 <div className="min-w-0">
-                  <h2 className="font-sans text-lg font-bold text-text-primary truncate">{selectedWorkload.name}</h2>
+                  <h2 className="font-sans text-lg font-bold text-text-primary truncate">{selectedWorkload.name}{selectedPodName && <span className="text-text-tertiary"> / {selectedPodName}</span>}</h2>
                   <div className="flex items-center gap-2 text-xs text-text-tertiary font-sans">
                     <span>{selectedWorkload.namespace}</span>
                     <span>•</span>
                     <span>{selectedWorkload.kind}</span>
+                    {selectedPodName && (
+                      <>
+                        <span>•</span>
+                        <span className="text-primary-500">Pod triage</span>
+                      </>
+                    )}
+                    {historicalReports.length > 0 && (
+                      <>
+                        <span>•</span>
+                        <span className="text-warning">Aggregated triage ({historicalReports.length} reports)</span>
+                      </>
+                    )}
                   </div>
                 </div>
               </div>
@@ -538,6 +609,13 @@ export const TriageView: React.FC<TriageViewProps> = ({ workloads, isDarkMode = 
                   <div className="flex items-center gap-4 relative z-10">
                     <span className="text-sm font-bold text-text-primary">{selectedWorkload.recommendation.action}</span>
                     <span className="text-xs text-text-tertiary font-sans">{selectedWorkload.recommendation.confidence}% confidence</span>
+                    <button
+                      onClick={() => navigate('/rightsizing', { state: { workloadId: selectedWorkload.id || selectedWorkload.name } })}
+                      className="kt-button kt-button-primary kt-button-sm"
+                      aria-label={`Open rightsizing for ${selectedWorkload.name}`}
+                    >
+                      View details
+                    </button>
                   </div>
                 </div>
               )}
@@ -661,6 +739,21 @@ export const TriageView: React.FC<TriageViewProps> = ({ workloads, isDarkMode = 
                 </div>
               )}
             </div>
+          </div>
+        ) : targetWorkloadMissing ? (
+          <div className="flex-1 flex flex-col items-center justify-center p-8 text-center animate-fade-in">
+            <div className="p-6 bg-warning/10 border border-warning/30 mb-4"><AlertCircle className="w-10 h-10 text-warning" /></div>
+            <h3 className="font-sans text-xl font-bold text-text-primary mb-2">Workload not found</h3>
+            <p className="text-sm text-text-tertiary max-w-sm font-sans mb-6">
+              The report target <span className="text-text-primary font-medium">{targetWorkloadId}</span> could not be matched to a current workload in the selected clusters.
+              It may have been deleted or the report name is a pod/replicaset that no longer exists.
+            </p>
+            <button
+              onClick={() => setTargetWorkloadMissing(false)}
+              className="kt-button kt-button-secondary kt-button-sm"
+            >
+              Dismiss
+            </button>
           </div>
         ) : (
           <div className="flex-1 flex flex-col items-center justify-center p-8 text-center animate-fade-in">

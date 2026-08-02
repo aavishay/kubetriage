@@ -35,7 +35,7 @@ interface MultiClusterData {
 }
 
 interface MultiClusterViewProps {
-  onTriageRequest?: (workloadId: string, playbook: DiagnosticPlaybook) => void;
+  onTriageRequest?: (workloadId: string, playbook: DiagnosticPlaybook, podName?: string) => void;
 }
 
 const COLORS = {
@@ -414,7 +414,18 @@ export const MultiClusterView: React.FC<MultiClusterViewProps> = ({ onTriageRequ
                       <p className="text-sm font-bold text-text-primary">{workload.availableReplicas}/{workload.replicas}</p>
                       <p className="text-[10px] text-text-tertiary font-sans font-medium">Replicas</p>
                     </div>
-                    <button className="p-2 border border-border-main hover:border-primary-500/30 hover:text-primary-500 text-text-tertiary transition-colors"><ArrowUpRight className="w-4 h-4" /></button>
+                    <div className="flex items-center gap-2">
+                      {onTriageRequest && (
+                        <button
+                          onClick={(e) => { e.stopPropagation(); onTriageRequest(workload.name, 'General Health'); }}
+                          className="p-2 border border-border-main hover:border-primary-500/30 hover:text-primary-500 text-text-tertiary transition-colors"
+                          title={`Run AI triage on ${workload.name}`}
+                        >
+                          <Sparkles className="w-4 h-4" />
+                        </button>
+                      )}
+                      <button className="p-2 border border-border-main hover:border-primary-500/30 hover:text-primary-500 text-text-tertiary transition-colors"><ArrowUpRight className="w-4 h-4" /></button>
+                    </div>
                   </div>
                 </div>
               ))}

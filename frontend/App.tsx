@@ -17,6 +17,7 @@ import { OfflineIndicator } from './components/OfflineIndicator';
 const Dashboard = lazy(() => import('./components/Dashboard').then(m => ({ default: m.Dashboard })));
 const TriageView = lazy(() => import('./components/TriageView').then(m => ({ default: m.TriageView })));
 const ScalingEfficiencyView = lazy(() => import('./components/ScalingEfficiencyView').then(m => ({ default: m.ScalingEfficiencyView })));
+const RightSizingView = lazy(() => import('./components/RightSizingView').then(m => ({ default: m.RightSizingView })));
 const CapacityPlanningView = lazy(() => import('./components/CapacityPlanningView').then(m => ({ default: m.CapacityPlanningView })));
 const MultiClusterView = lazy(() => import('./components/MultiClusterView').then(m => ({ default: m.MultiClusterView })));
 const MLIntelligenceView = lazy(() => import('./components/MLIntelligenceView').then(m => ({ default: m.MLIntelligenceView })));
@@ -67,8 +68,8 @@ const AppContent: React.FC = () => {
     navigate('/triage', { state: { template } });
   };
 
-  const handleNavigateToTriage = (workloadId: string, playbook: DiagnosticPlaybook) => {
-    navigate('/triage', { state: { workloadId, playbook } });
+  const handleNavigateToTriage = (workloadId: string, playbook: DiagnosticPlaybook, podName?: string) => {
+    navigate('/triage', { state: { workloadId, playbook, podName } });
   };
 
   if (isCheckingKey) {
@@ -151,6 +152,11 @@ const AppContent: React.FC = () => {
             <Route path="/scaling" element={
               <PageTransition>
                 <ScalingEfficiencyView clusterId={selectedCluster?.id} />
+              </PageTransition>
+            } />
+            <Route path="/rightsizing" element={
+              <PageTransition>
+                <RightSizingView workloads={workloads} onTriageRequest={handleNavigateToTriage} />
               </PageTransition>
             } />
             <Route path="/capacity" element={

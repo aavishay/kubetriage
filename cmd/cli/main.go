@@ -19,6 +19,7 @@ import (
 	"github.com/aavishay/kubetriage/backend/internal/gitops"
 	"github.com/aavishay/kubetriage/backend/internal/k8s"
 	"github.com/aavishay/kubetriage/backend/internal/ml"
+	"github.com/aavishay/kubetriage/backend/internal/prometheus"
 	"github.com/aavishay/kubetriage/backend/internal/telemetry"
 	"github.com/aavishay/kubetriage/backend/internal/ui"
 	"github.com/aavishay/kubetriage/backend/internal/watcher"
@@ -119,6 +120,14 @@ func runServe(cmd *cobra.Command, _ []string) error {
 	}
 	defer aiService.Close()
 	log.Println("AI service initialized")
+
+	// 5b. Prometheus client (optional — required for historical metrics)
+	if err := prometheus.InitPrometheusClient(); err != nil {
+		log.Printf("Warning: Prometheus client initialization failed: %v", err)
+		log.Printf("Historical metrics and right-sizing charts will use current values only.")
+	} else {
+		log.Println("Prometheus client initialized")
+	}
 
 	// 6. Background Watcher
 	w := watcher.InitWatcher(ctx, aiService)

@@ -55,6 +55,37 @@ type TriageReport struct {
 	ApprovalStatus         string `gorm:"default:'None'"` // Pending, Approved, Rejected, None
 }
 
+// WorkloadMetricSnapshot captures a point-in-time resource usage reading for a workload.
+// These snapshots are populated from the Kubernetes Metrics API on each workload refresh
+// and are used to render historical demand curves in the right-sizing view.
+type WorkloadMetricSnapshot struct {
+	gorm.Model
+	ClusterID       string    `gorm:"index:idx_workload_snapshot_time" json:"clusterId"`
+	Namespace       string    `gorm:"index:idx_workload_snapshot_time" json:"namespace"`
+	WorkloadName    string    `gorm:"index:idx_workload_snapshot_time" json:"workloadName"`
+	Kind            string    `json:"kind"`
+	CpuUsage        float64   `json:"cpuUsage"`
+	CpuLimit        float64   `json:"cpuLimit"`
+	CpuLimitPerPod  float64   `json:"cpuLimitPerPod"`
+	MaxCpuUsage     float64   `json:"cpuMaxPodUsage"`
+	CpuHotPodP99    float64   `json:"cpuHotPodP99"`
+	MemoryUsage     float64   `json:"memoryUsage"`
+	MemoryLimit     float64   `json:"memoryLimit"`
+	MemoryLimitPerPod float64 `json:"memoryLimitPerPod"`
+	MaxMemoryUsage  float64   `json:"memoryMaxPodUsage"`
+	MemoryHotPodP99 float64   `json:"memoryHotPodP99"`
+	StorageUsage    float64   `json:"storageUsage"`
+	StorageLimit    float64   `json:"storageLimit"`
+	StorageLimitPerPod float64 `json:"storageLimitPerPod"`
+	MaxStorageUsage float64   `json:"storageMaxPodUsage"`
+	GpuUsage        float64   `json:"gpuUsage"`
+	GpuLimit        float64   `json:"gpuLimit"`
+	GpuLimitPerPod  float64   `json:"gpuLimitPerPod"`
+	MaxGpuUsage     float64   `json:"gpuMaxPodUsage"`
+	PodCount        int32     `json:"podCount"`
+	RecordedAt      time.Time `gorm:"index:idx_workload_snapshot_time" json:"recordedAt"`
+}
+
 // Comment model for Incident Comments
 type Comment struct {
 	ID           uuid.UUID `gorm:"type:uuid;primaryKey"`

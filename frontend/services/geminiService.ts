@@ -8,11 +8,21 @@ const createClient = () => {
     return new GoogleGenAI({ apiKey: process.env.API_KEY || "DEMO_KEY_FOR_BUILD" });
 };
 
+export interface HistoricalReport {
+    id: number;
+    createdAt: string;
+    severity: string;
+    incidentType?: string;
+    analysis: string;
+}
+
 export const analyzeWorkload = async (
     workload: Workload,
     playbook: DiagnosticPlaybook = 'General Health',
     provider: string = 'ollama',
-    model: string = ''
+    model: string = '',
+    historicalReports: HistoricalReport[] = [],
+    podName?: string
 ): Promise<{ analysis: string, reportId?: number, context?: any }> => {
     let playbookInstructions = "";
     switch (playbook) {
@@ -52,6 +62,7 @@ export const analyzeWorkload = async (
                 model,
                 clusterId: workload.clusterId,
                 workloadName: workload.name,
+                podName: podName || undefined,
                 namespace: workload.namespace,
                 kind: workload.kind,
                 status: workload.status,
@@ -71,7 +82,8 @@ export const analyzeWorkload = async (
                     ...workload.scaling,
                     triggers: workload.scaling.config?.triggers || []
                 } : undefined,
-                provisioning: workload.provisioning
+                provisioning: workload.provisioning,
+                historicalReports: historicalReports.slice(0, 10)
             })
         });
 
@@ -98,7 +110,13 @@ export const analyzeWorkload = async (
     }
 };
 
-export const generateRightSizingRecommendation = async (workload: Workload, context: string, profile: OptimizationProfile = 'Balanced'): Promise<string> => {
+export const generateRightSizingRecommendation = async (
+    workload: Workload,
+    context: string,
+    profile: OptimizationProfile = 'Balanced',
+    provider: string = 'gemini',
+    model: string = GEMINI_PRO_MODEL
+): Promise<string> => {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 600000);
 
@@ -108,8 +126,8 @@ export const generateRightSizingRecommendation = async (workload: Workload, cont
             headers: { 'Content-Type': 'application/json' },
             signal: controller.signal,
             body: JSON.stringify({
-                provider: 'gemini',
-                model: GEMINI_PRO_MODEL,
+                provider,
+                model,
                 workloadName: workload.name,
                 kind: workload.kind,
                 namespace: workload.namespace,

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
-  LayoutDashboard, AlertCircle, Settings, Box, ChevronLeft, ChevronRight, Sun, Moon, ChevronsUpDown, Check, Server, Plus, X, Globe, Cloud, Bell, BookOpen, Menu, Key, Zap, FileText, RefreshCw, Trash2, Activity, Brain, Database, GitBranch, Shield, TrendingUp
+  LayoutDashboard, AlertCircle, Settings, Box, ChevronLeft, ChevronRight, Sun, Moon, ChevronsUpDown, Check, Server, Plus, X, Globe, Cloud, Bell, BookOpen, Menu, Key, Zap, FileText, RefreshCw, Trash2, Activity, Brain, Database, GitBranch, Shield, TrendingUp, TrendingDown
 } from 'lucide-react';
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useMonitoring } from '../contexts/MonitoringContext';
@@ -112,6 +112,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
     { path: '/', label: 'Overview', icon: LayoutDashboard },
     { path: '/templates', label: 'Runbooks', icon: BookOpen },
     { path: '/triage', label: 'Triage', icon: AlertCircle },
+    { path: '/rightsizing', label: 'Rightsizing', icon: TrendingDown },
     { path: '/scaling', label: 'Scaling', icon: Activity },
     { path: '/capacity', label: 'Capacity', icon: TrendingUp },
     { path: '/multicluster', label: 'Multi-Cluster', icon: Globe },

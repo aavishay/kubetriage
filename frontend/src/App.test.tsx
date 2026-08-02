@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import App from '../App';
 
 // Global Mocks
@@ -21,13 +21,13 @@ Object.defineProperty(window, 'localStorage', {
 });
 
 describe('App', () => {
-    it('renders without crashing', () => {
+    it('renders without crashing', async () => {
         render(<App />);
         // Check for a known element, e.g., the "API Key Required" screen since mock data usually requires auth/key or defaults to login
         // Or if we are in mock mode, check for something else.
         // Based on App.tsx, initial state !hasApiKey -> "API Key Required"
 
         // We can just check that the wrapper exists or some text
-        expect(screen.getByText(/Loading/i)).toBeInTheDocument();
+        await waitFor(() => expect(screen.getByText(/No workloads found/i)).toBeInTheDocument());
     });
 });

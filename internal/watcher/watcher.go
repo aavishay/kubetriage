@@ -148,8 +148,14 @@ func (w *Watcher) analyzePod(ctx context.Context, cls *k8s.ClusterConn, pod core
 
 	// Resolve Owner (Workload) if possible
 	if len(pod.OwnerReferences) > 0 {
-		report.WorkloadName = pod.OwnerReferences[0].Name
-		report.Kind = pod.OwnerReferences[0].Kind
+		owner := pod.OwnerReferences[0]
+		report.WorkloadName = owner.Name
+		report.Kind = owner.Kind
+		// Walk pod -> replicaset -> deployment (or job -> cronjob) so reports are stored
+		// under the top-level controller name that matches the triage workload list.
+		if cls.ClientSet != nil {
+			report.WorkloadName, report.Kind = k8s.ResolveTopLevelController(ctx, cls.ClientSet, pod.Namespace, owner)
+		}
 	}
 
 
