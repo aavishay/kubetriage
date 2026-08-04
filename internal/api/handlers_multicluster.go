@@ -434,7 +434,6 @@ func analyzeCrossClusterIncidents(clusterStatuses []ClusterStatus, incidentsByCl
 
 			if len(affectedClusters) > 2 {
 				incident.Pattern = "Cascading"
-				incident.Title = "[CASCADING] " + incident.Title
 			}
 
 			crossClusterIncidents = append(crossClusterIncidents, incident)
