@@ -1,28 +1,28 @@
 class Kubetriage < Formula
   desc "Autonomous SRE Guard for Kubernetes"
   homepage "https://github.com/aavishay/kubetriage"
-  version "1.8.6"
+  version "1.8.7"
   license "AGPL-3.0"
 
   on_macos do
     on_arm do
-      url "https://github.com/aavishay/kubetriage/releases/download/v1.8.6/kubetriage-v1.8.6-darwin-arm64.tar.gz"
-      sha256 "3253404422ebe5a155884cc4cc3392055c0d4d09e1740e6357a2c495268c5fd2"
+      url "https://github.com/aavishay/kubetriage/releases/download/v1.8.7/kubetriage-v1.8.7-darwin-arm64.tar.gz"
+      sha256 "76d2465c272c9fc0b6837058e3b0a7280d27c53c22b2ff0ec1a1395037b18d0e"
     end
     on_intel do
-      url "https://github.com/aavishay/kubetriage/releases/download/v1.8.6/kubetriage-v1.8.6-darwin-amd64.tar.gz"
-      sha256 "215390a1ecb250c3ae8034f48921614479ee25a2145300326a607b668f8fc58f"
+      url "https://github.com/aavishay/kubetriage/releases/download/v1.8.7/kubetriage-v1.8.7-darwin-amd64.tar.gz"
+      sha256 "73fbb377cd1783ab1c8c422cba71279e50fc0c9bd8223228a684f9311a7e83e2"
     end
   end
 
   on_linux do
     on_intel do
-      url "https://github.com/aavishay/kubetriage/releases/download/v1.8.6/kubetriage-v1.8.6-linux-amd64.tar.gz"
-      sha256 "53109b1171e546923de2c3b3c99c69c7cfc291dfb89b8122f3dcf115fbe5ecd4"
+      url "https://github.com/aavishay/kubetriage/releases/download/v1.8.7/kubetriage-v1.8.7-linux-amd64.tar.gz"
+      sha256 "9071853e2b7120e6f5a3ec771a21299726d2cd3a743cc8bd37aaea41e27feb2c"
     end
     on_arm do
-      url "https://github.com/aavishay/kubetriage/releases/download/v1.8.6/kubetriage-v1.8.6-linux-arm64.tar.gz"
-      sha256 "b2572ad0280003a6a75528f93c80217ab70d24855a1f37757fb5d8e7fc850554"
+      url "https://github.com/aavishay/kubetriage/releases/download/v1.8.7/kubetriage-v1.8.7-linux-arm64.tar.gz"
+      sha256 "839496f5e5436506ace620b9931e3784e620751db4b5b28d6aea20f1448c9b74"
     end
   end
 
